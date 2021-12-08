@@ -3,7 +3,7 @@
 . ../../config.sh
 
 echo "Compiling..."
-riscv32-unknown-elf-gcc -ffreestanding -TLink.ld -lm -lc -o Mini Mini.c #Startup.s Mini.c
+riscv32-unknown-elf-gcc -ffreestanding -TLink.ld -lm -lc -o Mini Mini.c
 
 echo "Dumping..."
 riscv32-unknown-elf-objdump -D Mini > Mini.dump

@@ -797,7 +797,11 @@ local instructions = {
 		mask = 0xfe00707f,
 		data = 0x00005033,
 		name = "SRL",
-		format = "R"
+		format = "R",
+		cpp = [[
+			auto f = parseFormatR(word);
+			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
+		]]
 	},
 	{
 		mask = 0xfc00707f,
@@ -890,16 +894,17 @@ for i, inst in ipairs(instructions) do
 	if inst.cpp ~= nil then
 		output:printLn("\tTRACE(L\"" .. inst.name .. "\");")
         output:printLn(inst.cpp)
-		output:printLn("return true;")
+		output:printLn("\treturn true;")
 	else
 		output:printLn("\tlog::error << L\"" .. inst.name .. " (not implemented)\" << Endl;")
-		output:printLn("return false;")
+		output:printLn("\treturn false;")
     end
     output:printLn("}")
 end
 output:printLn("else")
 output:printLn("{")
 output:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
+output:printLn("\treturn false;")
 output:printLn("}")
 
 --!>

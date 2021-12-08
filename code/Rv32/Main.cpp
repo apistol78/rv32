@@ -21,12 +21,40 @@ int main(int argc, const char** argv)
 {
 	CommandLine cmdLine(argc, argv);
 
-	Memory memory(0x00800000);	// 8 MiB
+	Memory memory(0x00c00000);	// 12 MiB
 	Video video;
 
 	Bus bus;
-	bus.map(0x00000000, 0x007fffff, &memory);
-	bus.map(0x00800000, 0x0080ffff, &video);
+	bus.map(0x00000000, 0x00bfffff, &memory);
+	bus.map(0x10000000, 0x1000ffff, &video);
+
+	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
+	{
+		std::wstring fileName = cmdLine.getOption(L"image-file").getString();
+		int32_t offset = cmdLine.getOption(L"image-base").getInteger();
+
+		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+		if (!f)
+		{
+			log::error << L"Unable to open image \"" << fileName << L"\"." << Endl;
+			return 1;
+		}
+
+		uint8_t data[1024];
+		for (;;)
+		{
+			int64_t r = f->read(data, sizeof(data));
+			if (r <= 0)
+				break;
+
+			for (int64_t i = 0; i < (int32_t)r; ++i)
+			{
+				bus.writeU8(offset++, data[i]);
+				if (bus.error())
+					return 1;
+			}
+		}
+	}
 
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{
@@ -87,13 +115,19 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	Ref< IStream > f = FileSystem::getInstance().open(L"Trace.log", File::FmWrite);
+	Ref< OutputStream > os = nullptr;	
+	if (cmdLine.hasOption(L't', L"trace"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(L"Trace.log", File::FmWrite);
+		if (f)
+			os = new FileOutputStream(f, new Utf8Encoding());
+	}
 
-	CPU cpu(&bus, new FileOutputStream(f, new Utf8Encoding()));
+	CPU cpu(&bus, os);
 
 	if (cmdLine.hasOption(L's', L"start"))
 	{
-		int32_t start = cmdLine.getOption(L'i', L"image").getInteger();
+		int32_t start = cmdLine.getOption(L's', L"start").getInteger();
 		if (start < 0)
 		{
 			log::error << L"Invalid start address." << Endl;

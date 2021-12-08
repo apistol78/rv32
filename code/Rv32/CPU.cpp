@@ -22,7 +22,7 @@ FormatI parseFormatI(uint32_t word)
 	FormatI f = {
 		(word >> 7) & 0x1f,
 		(word >> 15) & 0x1f,
-		(word >> 20) & 0x000007ff
+		(int32_t)((word >> 20) & 0x000007ff)
 	};
 
 	if ((word & 0x80000000) == 0x80000000)
@@ -41,7 +41,7 @@ FormatJ parseFormatJ(uint32_t word)
 {
 	FormatJ f = {
 		(word >> 7) & 0x1f,
-		(word & 0x000ff000) | ((word & 0x00100000) >> 9) | ((word & 0x7fe00000) >> 20)
+		(int32_t)((word & 0x000ff000) | ((word & 0x00100000) >> 9) | ((word & 0x7fe00000) >> 20))
 	};
 
 	if ((word & 0x80000000) == 0x80000000)
@@ -78,7 +78,7 @@ FormatS parseFormatS(uint32_t word)
 	FormatS f = {
 		(word >> 15) & 0x1f,
 		(word >> 20) & 0x1f,
-		((word >> 20) & 0xfe0) | ((word >> 7) & 0x1f)
+		(int32_t)(((word >> 20) & 0xfe0) | ((word >> 7) & 0x1f))
 	};
 
 	if ((word & 0x80000000) == 0x80000000)
@@ -99,7 +99,7 @@ FormatB parseFormatB(uint32_t word)
 	FormatB f = {
 		(word >> 15) & 0x1f,
 		(word >> 20) & 0x1f,
-		((word << 4) & 0x00000800) | ((word >> 20) & 0x000007e0) | ((word >> 7) & 0x0000001e)
+		(int32_t)(((word << 4) & 0x00000800) | ((word >> 20) & 0x000007e0) | ((word >> 7) & 0x0000001e))
 	};
 
 	if ((word & 0x80000000) == 0x80000000)
@@ -118,7 +118,7 @@ FormatU parseFormatU(uint32_t word)
 {
 	FormatU f = {
 		(word >> 7) & 0x1f,
-		word & 0xfffff000
+		(int32_t)(word & 0xfffff000)
 	};
 	// check this!
 	return f;

@@ -14,22 +14,27 @@ void *_sbrk(int incr) {
 	return prev_heap;
 }
 
+int _open(const char* name, int flags, int mode) {
+	printf("_open %s\n", name);
+	return 4;
+}
+
 int _close(int file) {
-	for(;;);
-  return -1;
+	printf("_close %d\n", file);
+	return 0;
 }
 
 int _fstat(int file, struct stat *st) {
-  st->st_mode = S_IFCHR;
-  return 0;
+	st->st_mode = S_IFCHR;
+	return 0;
 }
 
 int _isatty(int file) {
-  return 1;
+	return 1;
 }
 
 int _lseek(int file, int ptr, int dir) {
-  return 0;
+	return 0;
 }
 
 void _exit(int status) {
@@ -37,30 +42,45 @@ void _exit(int status) {
 }
 
 void _kill(int pid, int sig) {
-	for(;;);
-  return;
+	return;
 }
 
 int _getpid(void) {
-	for(;;);
-  return -1;
+	return -1;
 }
 
-int _write (int file, char * ptr, int len) {
+int _write(int file, char * ptr, int len) {
 	for (int i = 0; i < len; ++i) {
 		*(char*)0x00800000 = *ptr++;
 	}
-  return len;
+	return len;
 }
 
-int _read (int file, char * ptr, int len) {
-	return -1;
+int _read(int file, char* ptr, int len) {
+	printf("_read %d, %d bytes\n", file, len);
+	for (int i = 0; i < len; ++i)
+		*ptr++ = 'A';
+
+	return len;
 }
+
 
 
 void main()
 {
-	const char* test = "Foo\n";
-	printf("Hello world %d!\n", 123);
+	unsigned char v = 'E';
+
+	FILE* fp = fopen("test.wad", "rb");
+	if (fp)
+	{
+		fread(&v, 1, 1, fp);
+		fclose(fp);
+	}
+	else
+		printf("failed to open file\n");
+
+	*(char*)0x00800000 = v;
+	*(char*)0x00800000 = '\n';
+
 	for(;;);
 }
