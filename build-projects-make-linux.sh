@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source environment configuration.
-. "$HOME/private/traktor/scripts/config.sh"
+. "config.sh"
 
 # Generate instructions.
 $TRAKTOR_HOME/bin/latest/linux/releaseshared/Traktor.Run.App code/Instructions.template > code/Rv32/Instructions.inl
