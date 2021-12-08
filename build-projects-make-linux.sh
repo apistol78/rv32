@@ -4,7 +4,7 @@
 . "config.sh"
 
 # Generate instructions.
-$TRAKTOR_HOME/bin/latest/linux/releaseshared/Traktor.Run.App code/Instructions.template > code/Rv32/Instructions.inl
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.template > code/Rv32/Instructions.inl
 
 # Generator configuration.
 export MAKE_OS=linux
@@ -21,7 +21,7 @@ export MAKE_EXECUTABLE_FILE="%s"
 export MAKE_VERBOSE=false
 
 # Build solution files.
-$TRAKTOR_HOME/bin/latest/linux/releaseshared/Traktor.SolutionBuilder.App \
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.SolutionBuilder.App \
 	-f=make2 \
 	-make-solution-template=$TRAKTOR_HOME/resources/build/configurations/make-solution.sbm \
 	-make-project-template=$TRAKTOR_HOME/resources/build/configurations/make-project.sbm \
