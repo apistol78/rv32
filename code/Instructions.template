@@ -11,6 +11,9 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] + r[inst_R_rs2];
 		]]
 	},
 	{
@@ -939,6 +942,7 @@ local instructions = {
 }
 
 -- C++
+--[[
 for i, inst in ipairs(instructions) do
     assert((inst.mask & inst.data) == inst.data)
     if i > 1 then output:print("else if") else output:print("if") end
@@ -959,5 +963,19 @@ output:printLn("{")
 output:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
 output:printLn("\treturn false;")
 output:printLn("}")
+]]
+
+-- Verilog
+for i, inst in ipairs(instructions) do
+	if i > 1 then output:print("else if") else output:print("if") end
+	output:printLn(" ((instruction & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ") begin")
+	if inst.verilog ~= nil then
+		output:printLn("\t`DISPLAY_OP(\"" .. inst.name .. "\");")
+		output:printLn(inst.verilog)
+	else
+		output:printLn("\t`DISPLAY_OP(\"" .. inst.name .. " not implemented.\");")
+	end
+	output:printLn("end")
+end
 
 --!>
