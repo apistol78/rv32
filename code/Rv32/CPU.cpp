@@ -135,8 +135,8 @@ FormatU parseFormatU(uint32_t word)
 #define MEM_RD(addr) m_bus->readU32(addr)
 #define MEM_WR(addr, value) m_bus->writeU32(addr, value)
 
-#define MEM_RD_U16(addr) (m_bus->readU32(addr) & 0xffff)
-#define MEM_WR_U16(addr, value) m_bus->writeU32(addr, m_bus->readU32(addr) | value)
+#define MEM_RD_U16(addr) m_bus->readU16(addr)
+#define MEM_WR_U16(addr, value) m_bus->writeU16(addr, value)
 
 #define MEM_RD_U8(addr) m_bus->readU8(addr);
 #define MEM_WR_U8(addr, value) m_bus->writeU8(addr, value)
@@ -155,7 +155,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
 		m_registers[i] = 0;
 
-	m_registers[2] = 0x003ffff0;
+	m_registers[2] = 0x04000000 - 4;
 }
 
 void CPU::jump(uint32_t address)
@@ -169,12 +169,6 @@ bool CPU::tick()
 
 	if (m_trace)
 		*m_trace << L"PC " << str(L"%08x", m_pc) << L" | SP " << str(L"%08x", m_registers[2]) << Endl;
-/*
-	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
-	{
-		log::info << L"R[" << i << L"] (" << getRegisterName(i) << L") = " << str(L"%08x", m_registers[i]) << Endl;
-	}
-*/
 
 	if ((word & 0x3) == 0x3)
 		m_next = m_pc + 4;
@@ -185,7 +179,10 @@ bool CPU::tick()
 	R(0) = 0;
 
 	if (!decode(word))
+	{
+		log::error << L"Decode failed at PC " << str(L"%08x", m_pc) << Endl;
 		return false;
+	}
 
 	m_pc = m_next;
 	return true;

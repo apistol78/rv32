@@ -41,9 +41,9 @@ int main(int argc, char **argv)
 {
     // save arguments
 
-    static const char* a[] = { "doom", 0 };
+    static const char* a[] = { "doom", "-iwad", "doom1.wad" };
 
-    myargc = 1; // argc;
+    myargc = 3; // argc;
     myargv = a; // argv;
 
     M_FindResponseFile();

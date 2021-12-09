@@ -25,6 +25,18 @@ void Bus::writeU8(uint32_t address, uint8_t value)
 	}
 }
 
+void Bus::writeU16(uint32_t address, uint16_t value)
+{
+	auto mappedDevice = findMappedDevice(address);
+	if (mappedDevice)
+		mappedDevice->device->writeU16(address - mappedDevice->start, value);
+	else
+	{
+		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%04x", value) << L"." << Endl;
+		m_error = true;
+	}
+}
+
 void Bus::writeU32(uint32_t address, uint32_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
@@ -44,7 +56,20 @@ uint8_t Bus::readU8(uint32_t address) const
 		return mappedDevice->device->readU8(address - mappedDevice->start);
 	else
 	{
-		log::error << L"No device at " << str(L"%08x", address) << Endl;
+		log::error << L"No device at " << str(L"%08x", address) << L", trying to read U8." << Endl;
+		m_error = true;
+		return 0;
+	}
+}
+
+uint16_t Bus::readU16(uint32_t address) const
+{
+	auto mappedDevice = findMappedDevice(address);
+	if (mappedDevice)
+		return mappedDevice->device->readU16(address - mappedDevice->start);
+	else
+	{
+		log::error << L"No device at " << str(L"%08x", address) << L", trying to read U16." << Endl;
 		m_error = true;
 		return 0;
 	}
@@ -57,7 +82,7 @@ uint32_t Bus::readU32(uint32_t address) const
 		return mappedDevice->device->readU32(address - mappedDevice->start);
 	else
 	{
-		log::error << L"No device at " << str(L"%08x", address) << Endl;
+		log::error << L"No device at " << str(L"%08x", address) << L", trying to read U32." << Endl;
 		m_error = true;
 		return 0;
 	}

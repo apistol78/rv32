@@ -242,7 +242,14 @@ local instructions = {
 		format = "R",
 		cpp = [[
 			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) / R_s(f.rs2);
+			int32_t dividend = R_s(f.rs1);
+			int32_t divisor = R_s(f.rs2);
+			if (divisor == 0)
+				R_s(f.rd) = -1;
+			else if (dividend == -std::numeric_limits< int32_t >::max() && divisor == -1)
+				R_s(f.rd) = dividend;
+			else
+				R_s(f.rd) = dividend / divisor;
 		]]
 	},
 	{
@@ -252,7 +259,12 @@ local instructions = {
 		format = "R",
 		cpp = [[
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) / R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor ==  0)
+				R_s(f.rd) = -1;
+			else		
+				R_u(f.rd) = dividend / divisor;
 		]]
 	},
 	{
@@ -262,7 +274,12 @@ local instructions = {
 		format = "R",
 		cpp = [[
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) / R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor ==  0)
+				R_s(f.rd) = -1;
+			else		
+				R_u(f.rd) = dividend / divisor;
 		]]
 	},
 	{
@@ -466,7 +483,7 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00000067,
 		name = "JALR",
-		format = "",
+		format = "I",
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
@@ -477,7 +494,11 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00000003,
 		name = "LB",
-		format = "I_mem"
+		format = "I",
+		cpp = [[
+			auto f = parseFormatI(word);
+			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -486,7 +507,7 @@ local instructions = {
 		format = "I",
 		cpp = [[
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD_U8(R(f.rs1) + f.imm);
+			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]]
 	},
 	{
@@ -502,7 +523,7 @@ local instructions = {
 		format = "I",
 		cpp = [[
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);
+			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]]
 	},
 	{
@@ -544,14 +565,18 @@ local instructions = {
 		format = "I",
 		cpp = [[
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD(R(f.rs1) + f.imm);
+			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]]		
 	},
 	{
 		mask = 0x0000707f,
 		data = 0x00006003,
 		name = "LWU",
-		format = "I_mem"
+		format = "I",
+		cpp = [[
+			auto f = parseFormatI(word);
+			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
+		]]	
 	},
 	{
 		mask = 0xfe00707f,
@@ -567,7 +592,13 @@ local instructions = {
 		mask = 0xfe00707f,
 		data = 0x02001033,
 		name = "MULH",
-		format = "R"
+		format = "R",
+		cpp = [[
+			auto f = parseFormatR(word);
+			int64_t lh = (int64_t)R_s(f.rs1);
+			int64_t rh = (int64_t)R_s(f.rs2);
+			R_s(f.rd) = (lh * rh) >> 32;
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -623,7 +654,16 @@ local instructions = {
 		mask = 0xfe00707f,
 		data = 0x02006033,
 		name = "REM",
-		format = "R"
+		format = "R",
+		cpp = [[
+			auto f = parseFormatR(word);
+			int32_t dividend = R_s(f.rs1);
+			int32_t divisor = R_s(f.rs2);
+			if (divisor == 0)
+				R_s(f.rd) = dividend;
+			else
+				R_s(f.rd) = dividend % divisor;
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -632,7 +672,12 @@ local instructions = {
 		format = "R",
 		cpp = [[
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) % R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor == 0)
+				R_u(f.rd) = dividend;
+			else
+				R_u(f.rd) = dividend % divisor;
 		]]
 	},
 	{
@@ -727,13 +772,21 @@ local instructions = {
 		mask = 0xfe00707f,
 		data = 0x00002033,
 		name = "SLT",
-		format = "R"
+		format = "R",
+		cpp = [[
+			auto f = parseFormatR(word);
+			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
+		]]
 	},
 	{
 		mask = 0x0000707f,
 		data = 0x00002013,
 		name = "SLTI",
-		format = "I"
+		format = "I",
+		cpp = [[
+			auto f = parseFormatI(word);
+			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -742,7 +795,7 @@ local instructions = {
 		format = "I",
 		cpp = [[
 			auto f = parseFormatI(word);
-			R_u(f.rd) = (R_u(f.rs1) < R(f.imm)) ? 1 : 0;
+			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		]]
 	},
 	{
@@ -762,7 +815,7 @@ local instructions = {
 		format = "R",
 		cpp = [[
 			auto f = parseFormatR(word);
-			R_s(f.rd) = (R_s(f.rs1) >> R_u(f.rs2)) ? 1 : 0;
+			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		]]
 	},
 	{

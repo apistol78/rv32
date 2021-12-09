@@ -25,6 +25,8 @@ public:
 
     uint32_t pc() const { return m_pc; }
 
+    uint32_t sp() const { return m_registers[2]; }
+
 private:
     traktor::Ref< Bus > m_bus;
     traktor::Ref< traktor::OutputStream > m_trace;

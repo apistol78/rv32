@@ -1,3 +1,16 @@
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+#	include <sys/types.h>
+#	include <sys/stat.h>
+#	include <signal.h>
+#	include <stdio.h>
+#	include <stdlib.h>
+#	include <fcntl.h>
+#	include <errno.h>
+#	include <unistd.h>
+#	include <syslog.h>
+#	include <string.h>
+#endif
+#include <Core/Containers/CircularVector.h>
 #include <Core/Io/FileOutputStream.h>
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/IStream.h>
@@ -17,16 +30,39 @@ using namespace traktor;
 // https://github.com/takahirox/riscv-rust/blob/master/src/cpu.rs
 // https://mindchasers.com/dev/rv-getting-started
 
+bool g_going = true;
+
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+void abortHandler(int s)
+{
+	g_going = false;
+}
+#endif
+
 int main(int argc, const char** argv)
 {
 	CommandLine cmdLine(argc, argv);
 
-	Memory memory(0x00c00000);	// 12 MiB
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+	{
+		struct sigaction sa = { SIG_IGN };
+		sigaction(SIGPIPE, &sa, nullptr);
+	}
+	{
+		struct sigaction sa;
+		sa.sa_handler = abortHandler;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sigaction(SIGINT, &sa, nullptr);
+	}
+#endif
+
+	Memory memory(0x04000000);	// 64 MiB
 	Video video;
 
 	Bus bus;
-	bus.map(0x00000000, 0x00bfffff, &memory);
-	bus.map(0x10000000, 0x1000ffff, &video);
+	bus.map(0x00000000, 0x03ffffff, &memory);
+	bus.map(0x10000000, 0x2fffffff, &video);
 
 	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
 	{
@@ -40,6 +76,9 @@ int main(int argc, const char** argv)
 			return 1;
 		}
 
+		uint32_t start = 0xffffffff;
+		uint32_t end = 0x00000000;
+
 		uint8_t data[1024];
 		for (;;)
 		{
@@ -49,11 +88,17 @@ int main(int argc, const char** argv)
 
 			for (int64_t i = 0; i < (int32_t)r; ++i)
 			{
+				start = std::min< uint32_t >(start, offset);
+				end = std::max< uint32_t >(end, offset);
+
 				bus.writeU8(offset++, data[i]);
 				if (bus.error())
 					return 1;
 			}
 		}
+
+		if (start <= end)
+			log::info << L"Image loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	}
 
 	if (cmdLine.hasOption(L'h', L"hex"))
@@ -70,6 +115,9 @@ int main(int argc, const char** argv)
 
 		uint32_t segment = 0x00000000;
 		uint32_t upper = 0x00000000;
+
+		uint32_t start = 0xffffffff;
+		uint32_t end = 0x00000000;
 
 		StringReader sr(f, new AnsiEncoding());
 		while (sr.readLine(tmp) >= 0)
@@ -93,6 +141,8 @@ int main(int argc, const char** argv)
 				{
 					int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
 					bus.writeU8((upper | addr) + segment, (uint8_t)v);
+					start = std::min(start, (upper | addr) + segment);
+					end = std::max(end, (upper | addr) + segment);
 					addr++;
 				}
 			}
@@ -113,6 +163,9 @@ int main(int argc, const char** argv)
 			else
 				log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
 		}
+
+		if (start <= end)
+			log::info << L"HEX loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	}
 
 	Ref< OutputStream > os = nullptr;	
@@ -136,11 +189,32 @@ int main(int argc, const char** argv)
 		cpu.jump((uint32_t)start);
 	}
 
-	for (;;)
+	// CircularVector< uint32_t, 128 > dbg_pc;
+	// uint32_t dbg_sp = cpu.sp();
+
+	while (g_going)
 	{
+		// if (dbg_pc.full())
+		// 	dbg_pc.pop_front();
+		// dbg_pc.push_back(cpu.pc());
+
 		if (!cpu.tick())
 			break;
 		if (bus.error())
 			break;
+
+		// if (cpu.pc() >= 0x00093d7f)
+		// {
+		// 	log::error << L"PC out of range " << str(L"%08x", cpu.pc()) << L"." << Endl;
+		// 	break;
+		// }
 	}
+
+	// for (int i = 0; i < dbg_pc.size(); ++i)
+	// {
+	// 	log::info << i << L". PC " << str(L"%08x", dbg_pc[i]) << Endl;
+	// }
+
+	// for (uint32_t sp = cpu.sp(); sp <= dbg_sp; sp += 4)
+	// 	log::info << str(L"%08x", sp) << L" : " << str(L"%08x", bus.readU32(sp)) << Endl;
 }

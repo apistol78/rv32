@@ -192,7 +192,14 @@ else if ((word & 0xfe00707f) == 0x02004033)
 {
 	TRACE(L"DIV");
 			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) / R_s(f.rs2);
+			int32_t dividend = R_s(f.rs1);
+			int32_t divisor = R_s(f.rs2);
+			if (divisor == 0)
+				R_s(f.rd) = -1;
+			else if (dividend == -std::numeric_limits< int32_t >::max() && divisor == -1)
+				R_s(f.rd) = dividend;
+			else
+				R_s(f.rd) = dividend / divisor;
 		
 	return true;
 }
@@ -200,7 +207,12 @@ else if ((word & 0xfe00707f) == 0x02005033)
 {
 	TRACE(L"DIVU");
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) / R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor ==  0)
+				R_s(f.rd) = -1;
+			else		
+				R_u(f.rd) = dividend / divisor;
 		
 	return true;
 }
@@ -208,7 +220,12 @@ else if ((word & 0xfe00707f) == 0x0200503b)
 {
 	TRACE(L"DIVUW");
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) / R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor ==  0)
+				R_s(f.rd) = -1;
+			else		
+				R_u(f.rd) = dividend / divisor;
 		
 	return true;
 }
@@ -386,14 +403,17 @@ else if ((word & 0x0000707f) == 0x00000067)
 }
 else if ((word & 0x0000707f) == 0x00000003)
 {
-	log::error << L"LB (not implemented)" << Endl;
-	return false;
+	TRACE(L"LB");
+			auto f = parseFormatI(word);
+			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00004003)
 {
 	TRACE(L"LBU");
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD_U8(R(f.rs1) + f.imm);
+			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		
 	return true;
 }
@@ -406,7 +426,7 @@ else if ((word & 0x0000707f) == 0x00001003)
 {
 	TRACE(L"LH");
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);
+			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		
 	return true;
 }
@@ -440,14 +460,17 @@ else if ((word & 0x0000707f) == 0x00002003)
 {
 	TRACE(L"LW");
 			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD(R(f.rs1) + f.imm);
+			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		
 	return true;
 }
 else if ((word & 0x0000707f) == 0x00006003)
 {
-	log::error << L"LWU (not implemented)" << Endl;
-	return false;
+	TRACE(L"LWU");
+			auto f = parseFormatI(word);
+			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x02000033)
 {
@@ -459,8 +482,13 @@ else if ((word & 0xfe00707f) == 0x02000033)
 }
 else if ((word & 0xfe00707f) == 0x02001033)
 {
-	log::error << L"MULH (not implemented)" << Endl;
-	return false;
+	TRACE(L"MULH");
+			auto f = parseFormatR(word);
+			int64_t lh = (int64_t)R_s(f.rs1);
+			int64_t rh = (int64_t)R_s(f.rs2);
+			R_s(f.rd) = (lh * rh) >> 32;
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x02003033)
 {
@@ -505,14 +533,27 @@ else if ((word & 0x0000707f) == 0x00006013)
 }
 else if ((word & 0xfe00707f) == 0x02006033)
 {
-	log::error << L"REM (not implemented)" << Endl;
-	return false;
+	TRACE(L"REM");
+			auto f = parseFormatR(word);
+			int32_t dividend = R_s(f.rs1);
+			int32_t divisor = R_s(f.rs2);
+			if (divisor == 0)
+				R_s(f.rd) = dividend;
+			else
+				R_s(f.rd) = dividend % divisor;
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x02007033)
 {
 	TRACE(L"REMU");
 			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) % R_u(f.rs2);
+			uint32_t dividend = R_u(f.rs1);
+			uint32_t divisor = R_u(f.rs2);
+			if (divisor == 0)
+				R_u(f.rd) = dividend;
+			else
+				R_u(f.rd) = dividend % divisor;
 		
 	return true;
 }
@@ -590,19 +631,25 @@ else if ((word & 0xfe00707f) == 0x0000103b)
 }
 else if ((word & 0xfe00707f) == 0x00002033)
 {
-	log::error << L"SLT (not implemented)" << Endl;
-	return false;
+	TRACE(L"SLT");
+			auto f = parseFormatR(word);
+			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00002013)
 {
-	log::error << L"SLTI (not implemented)" << Endl;
-	return false;
+	TRACE(L"SLTI");
+			auto f = parseFormatI(word);
+			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00003013)
 {
 	TRACE(L"SLTIU");
 			auto f = parseFormatI(word);
-			R_u(f.rd) = (R_u(f.rs1) < R(f.imm)) ? 1 : 0;
+			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		
 	return true;
 }
@@ -618,7 +665,7 @@ else if ((word & 0xfe00707f) == 0x40005033)
 {
 	TRACE(L"SRA");
 			auto f = parseFormatR(word);
-			R_s(f.rd) = (R_s(f.rs1) >> R_u(f.rs2)) ? 1 : 0;
+			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		
 	return true;
 }

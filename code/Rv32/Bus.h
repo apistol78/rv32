@@ -15,9 +15,13 @@ public:
 
 	void writeU8(uint32_t address, uint8_t value);
 
+	void writeU16(uint32_t address, uint16_t value);
+
 	void writeU32(uint32_t address, uint32_t value);
 
 	uint8_t readU8(uint32_t address) const;
+
+	uint16_t readU16(uint32_t address) const;
 
 	uint32_t readU32(uint32_t address) const;
 
