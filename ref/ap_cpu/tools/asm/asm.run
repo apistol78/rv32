@@ -1,0 +1,452 @@
+import(traktor)
+
+local function trim(s)
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+local function split(inputstr, sep)
+        if sep == nil then
+                sep = "%s"
+        end
+        local t={}
+        for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+                table.insert(t, str)
+        end
+        return t
+end
+
+
+local Operand =
+{
+	None = 0,
+	Register = 1,
+	Numeric = 2,
+	Symbol = 3
+}
+
+
+local function parseRegister(txt)
+	if txt:sub(1, 1) ~= "r" then
+		return nil
+	end
+	local index = tonumber(txt:sub(2))
+	if index < 0 or index > 15 then
+		return nil
+	end
+	return index
+end
+
+local function parseNumber(txt)
+	if txt:sub(1, 1) == "~" then
+		return ~parseNumber(txt:sub(2))
+	elseif txt:sub(1, 2) == "0b" then
+		return tonumber(txt:sub(3), 2)
+	else
+		return tonumber(txt)
+	end	
+end
+
+local function parseOperand(txt)
+	local reg = parseRegister(txt)
+	if reg ~= nil then
+		return { type = Operand.Register, value = reg }
+	end
+
+	local num = parseNumber(txt)
+	if num ~= nil then
+		return { type = Operand.Numeric, value = num }
+	end
+
+	return { type = Operand.Symbol, value = txt }
+end
+
+
+local Type =
+{
+	None = 0,
+	A = 1,
+	AB = 2,
+	Data = 3,
+	AData = 4,
+	DataA = 5,
+	ABData = 6,
+}
+
+-- |6|6|6|6|5|5|5|5|5|5|5|5|5|5|4|4|4|4|4|4|4|4|4|4|3|3|3|3|3|3|3|3|3|3|2|2|2|2|2|2|2|2|2|2|1|1|1|1|1|1|1|1|1|1| | | | | | | | | | |
+-- |3|2|1|0|9|8|7|6|5|4|3|2|1|0|9|8|7|6|5|4|3|2|1|0|9|8|7|6|5|4|3|2|1|0|9|8|7|6|5|4|3|2|1|0|9|8|7|6|5|4|3|2|1|0|9|8|7|6|5|4|3|2|1|0|
+-- |      op       |  ra   |  rb   |                               |                            data                               |
+
+-- None
+-- |0|    op       |               |                               |
+
+-- A
+-- |0|    op       |  ra   |       |                               |
+
+-- AB
+-- |0|    op       |  ra   |  rb   |                               |
+
+-- Data
+-- |1|    op       |               |                               |                         data                                  |
+
+-- AData
+-- |1|    op       |  ra   |       |                               |                         data                                  |
+
+-- ABData
+-- |1|    op       |  ra   |  rb   |                               |                         data                                  |
+
+local opcodes =
+{
+	{ mnemonic = "nop",    code = 0x00, type = Type.None   },
+	{ mnemonic = "load",   code = 0x01, type = Type.AB     },
+	{ mnemonic = "load",   code = 0x81, type = Type.AData  },
+	{ mnemonic = "store",  code = 0x02, type = Type.AB     },
+	{ mnemonic = "store",  code = 0x82, type = Type.DataA  },
+	{ mnemonic = "move",   code = 0x03, type = Type.AB     },
+	{ mnemonic = "move",   code = 0x83, type = Type.AData  },
+	{ mnemonic = "inc",    code = 0x04, type = Type.A      },
+	{ mnemonic = "dec",    code = 0x05, type = Type.A      },
+	{ mnemonic = "add",    code = 0x06, type = Type.AB     },
+	{ mnemonic = "add",    code = 0x86, type = Type.AData  },
+	{ mnemonic = "sub",    code = 0x07, type = Type.AB     },
+	{ mnemonic = "sub",    code = 0x87, type = Type.AData  },
+	{ mnemonic = "mul",    code = 0x08, type = Type.AB     },
+	{ mnemonic = "mul",    code = 0x88, type = Type.AData  },
+	{ mnemonic = "div",    code = 0x09, type = Type.AB     },
+	{ mnemonic = "div",    code = 0x89, type = Type.AData  },
+	{ mnemonic = "shl",    code = 0x0a, type = Type.AB     },
+	{ mnemonic = "shl",    code = 0x8a, type = Type.AData  },
+	{ mnemonic = "shr",    code = 0x0b, type = Type.AB     },
+	{ mnemonic = "shr",    code = 0x8b, type = Type.AData  },
+	{ mnemonic = "not",    code = 0x0c, type = Type.A      },
+	{ mnemonic = "and",    code = 0x0d, type = Type.AB     },
+	{ mnemonic = "and",	   code = 0x8d, type = Type.AData  },
+	{ mnemonic = "or",     code = 0x0e, type = Type.AB     },
+	{ mnemonic = "or",     code = 0x8e, type = Type.AData  },
+	{ mnemonic = "xor",    code = 0x0f, type = Type.AB     },
+	{ mnemonic = "xor",    code = 0x8f, type = Type.AData  },
+	{ mnemonic = "cmpeq",  code = 0x10, type = Type.AB     },
+	{ mnemonic = "cmpeq",  code = 0x90, type = Type.AData  },
+	{ mnemonic = "cmpne",  code = 0x11, type = Type.AB     },
+	{ mnemonic = "cmpne",  code = 0x91, type = Type.AData  },
+	{ mnemonic = "cmplt",  code = 0x12, type = Type.AB     },
+	{ mnemonic = "cmplt",  code = 0x92, type = Type.AData  },
+	{ mnemonic = "cmpgt",  code = 0x13, type = Type.AB     },
+	{ mnemonic = "cmpgt",  code = 0x93, type = Type.AData  },
+	{ mnemonic = "cmple",  code = 0x14, type = Type.AB     },
+	{ mnemonic = "cmple",  code = 0x94, type = Type.AData  },
+	{ mnemonic = "cmpge",  code = 0x15, type = Type.AB     },
+	{ mnemonic = "cmpge",  code = 0x95, type = Type.AData  },
+	{ mnemonic = "jmp",    code = 0x96, type = Type.Data   },
+	{ mnemonic = "jmpz",   code = 0x97, type = Type.Data   },
+	{ mnemonic = "jmpnz",  code = 0x98, type = Type.Data   },
+	{ mnemonic = "push",   code = 0x19, type = Type.A      },
+	{ mnemonic = "push",   code = 0x99, type = Type.Data   },
+	{ mnemonic = "pop",    code = 0x1a, type = Type.A      },
+	{ mnemonic = "call",   code = 0x9b, type = Type.Data   },
+	{ mnemonic = "ret",    code = 0x1c, type = Type.None   },
+}
+
+
+function main(args)
+	if args.size < 1 then
+		stderr:printLn("Missing arguments.")
+		return 1
+	end
+
+	local source = args:get(0)
+
+	local f = FileSystem.getInstance():open(Path(source), File.FmRead)
+	if f == nil then
+		stderr:printLn("Unable to open source \"" .. source .. "\".")
+		return 1
+	end
+
+	local definitions = {}
+	local labels = {}
+	local bin = {}
+	local line = 1
+
+	local sr = StringReader(f, Utf8Encoding())
+	while true do
+		local s = sr:readLine()
+		if s == nil then break end
+
+		for def, subst in pairs(definitions) do
+			s = s:gsub(def, subst)
+		end
+
+		local cmt = s:find(";")
+		if cmt ~= nil then
+			s = s:sub(1, cmt - 1)
+		end
+
+		s = trim(s)
+		if #s > 0 then
+
+			if s:sub(1, 1) == "#" then
+				local prep = {}
+				string.gsub(s, "(%g+)", function (w)
+					table.insert(prep, w)
+				end)
+				if prep[1] == "#define" then
+					definitions[prep[2]] = prep[3]
+				end
+
+			elseif s:sub(-1) == ":" then
+				local symbol = s:sub(1, -2)
+
+				if labels[symbol] == nil then
+					labels[symbol] = {
+						address = 0,
+						refs = {}
+					}
+				end
+
+				labels[symbol].address = #bin;
+
+			else
+				local txt = split(s, "%s,")
+
+				local a1 = nil
+				local a2 = nil
+				local a3 = nil
+
+				local type = Type.None
+
+				if #txt == 2 then
+					a1 = parseOperand(txt[2])
+					if a1 == nil then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					if a1.type == Operand.Numeric or a1.type == Operand.Symbol then
+						type = Type.Data
+					elseif a1.type == Operand.Register then
+						type = Type.A
+					end
+
+				elseif #txt >= 3 then
+					a1 = parseOperand(txt[2])
+					if a1 == nil then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					a2 = parseOperand(txt[3])
+					if a2 == nil then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					if a1.type == Operand.Register then
+						if a2.type == Operand.Register then
+							type = Type.AB
+						elseif a2.type == Operand.Numeric or a2.type == Operand.Symbol then
+							type = Type.AData
+						end
+					elseif a1.type == Operand.Numeric or a1.type == Operand.Symbol then
+						if a2.type ~= Operand.Register then
+							stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+							return 1
+						end
+						type = Type.DataA
+					end
+
+				elseif #txt >= 4 then
+					a1 = parseOperand(txt[2])
+					if a1 == nil then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					a2 = parseOperand(txt[3])
+					if a2 == nil then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					if a1.type ~= Operand.Register then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					if a2.type ~= Operand.Register then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					if a3.type ~= Operand.Numeric and a3.type ~= Operand.Symbol then
+						stderr:printLn("Invalid operand \"" .. txt[2] .. "\" on line " .. line)
+						return 1
+					end
+
+					type = Type.ABData
+				end
+
+				-- Find instruction information.
+				local op = nil
+				for _, v in pairs(opcodes) do
+					if v.mnemonic == txt[1] and v.type == type then
+						op = v
+						break
+					end
+				end
+				if op == nil then
+					stderr:printLn("Unknown instruction \"" .. s .. "\" (" .. type .. ") on line " .. line)
+					return 1
+				end
+
+
+				local a = op.code << 8
+				local b = 0
+
+				if a1 ~= nil and a1.type == Operand.Register then
+					a = a | (a1.value << 4)
+				end
+				if a2 ~= nil and a2.type == Operand.Register then
+					a = a | a2.value
+				end
+
+				a = a << 16
+
+				table.insert(bin, a)
+
+				if (op.code & 0x80) == 0x80 then
+
+					if a1 ~= nil and a1.type == Operand.Numeric then
+						b = (a1.value & 0xffffffff)
+					end
+					if a2 ~= nil and a2.type == Operand.Numeric then
+						b = (a2.value & 0xffffffff)
+					end
+					if a3 ~= nil and a3.type == Operand.Numeric then
+						b = (a3.value & 0xffffffff)
+					end
+
+					if a1 ~= nil and a1.type == Operand.Symbol then
+						local symbol = a1.value
+						if labels[symbol] == nil then
+							labels[symbol] = {
+								address = nil,
+								refs = {}
+							}
+						end
+						table.insert(labels[symbol].refs, #bin + 1)
+					end
+					if a2 ~= nil and a2.type == Operand.Symbol then
+						local symbol = a2.value
+						if labels[symbol] == nil then
+							labels[symbol] = {
+								address = nil,
+								refs = {}
+							}
+						end
+						table.insert(labels[symbol].refs, #bin + 1)
+					end
+					if a3 ~= nil and a3.type == Operand.Symbol then
+						local symbol = a3.value
+						if labels[symbol] == nil then
+							labels[symbol] = {
+								address = nil,
+								refs = {}
+							}
+						end
+						table.insert(labels[symbol].refs, #bin + 1)
+					end
+
+					table.insert(bin, b)
+				end
+
+			end
+		end
+
+		line = line + 1
+	end
+
+	f:close()
+	f = nil
+
+	for symbol, label in pairs(labels) do
+		if label.address == nil then
+			stderr:printLn("Symbol \"" .. symbol .. "\" not declared.")
+			return 1
+		end
+		for _, ref in ipairs(label.refs) do
+			bin[ref] = bin[ref] | (label.address & 0xffffffff)
+		end
+	end
+
+
+	local memwidth = 16
+
+	if memwidth == 16 then
+		for _, v in pairs(bin) do
+			stdout:printLn(string.format("%04x", (v >> 16) & 0xffff))
+			stdout:printLn(string.format("%04x", v & 0xffff))
+		end
+	elseif memwidth == 32 then
+		for _, v in pairs(bin) do
+			stdout:printLn(string.format("%08x", v & 0xffffffff))
+		end
+	end
+
+--[[
+	-- Disassemble
+	local i = 1
+	while i <= #bin do
+		local c = bin[i]
+
+		local op = ((c >> 16) & 0xff00) >> 8
+
+		stdout:print("0x" .. string.format("%08x", i - 1) .. ": " .. string.format("%02x", op))
+
+		local nfo = nil
+
+		for _, v in pairs(opcodes) do
+			if v.code == op then
+				nfo = v
+				break
+			end
+		end
+
+		if nfo ~= nil then
+			stdout:print("  " .. string.format("%8s", nfo.mnemonic))
+
+			local r0 = ((c >> 16) & 0x00f0) >> 4
+			local r1 = ((c >> 16) & 0x000f)
+
+			local data = 0
+			if (op & 0x80) == 0x80 then
+				data = bin[i + 1]
+			end
+
+			if nfo.type == Type.A then
+				stdout:print("  r" .. r0)
+			elseif nfo.type == Type.AB then
+				stdout:print("  r" .. r0 .. ", r" .. r1)
+			elseif nfo.type == Type.Data then
+				stdout:print("  0x" .. string.format("%08x", data))
+			elseif nfo.type == Type.AData then
+				stdout:print("  r" .. r0 .. ", 0x" .. string.format("%08x", data))
+			elseif nfo.type == Type.DataA then
+				stdout:print("  0x" .. string.format("%08x", data) .. ", r" .. r0)
+			elseif nfo.type == Type.ABData then
+				stdout:print("  r" .. r0 .. ", r" .. r1 .. ", 0x" .. string.format("%08x", data))
+			end
+		else
+			stdout:print("** invalid opcode **")
+		end
+
+		stdout:printLn("")
+
+		if (op & 0x80) == 0x80 then
+			i = i + 2
+		else
+			i = i + 1
+		end
+	end
+]]
+
+	return 0
+end
