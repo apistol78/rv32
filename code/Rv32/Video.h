@@ -28,6 +28,11 @@ public:
 
 	virtual uint32_t readU32(uint32_t address) const override final;
 
+	traktor::drawing::Image* getImage() const { return m_image; }
+
+	bool shouldPresent() { bool dirty = m_dirty; m_dirty = false; return dirty; }
+
 private:
 	traktor::Ref< traktor::drawing::Image > m_image;
+	bool m_dirty = true;
 };

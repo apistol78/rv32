@@ -20,6 +20,18 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
+#include <Ui/Application.h>
+#include <Ui/Bitmap.h>
+#include <Ui/Image.h>
+#include <Ui/Form.h>
+#include <Ui/TableLayout.h>
+#if defined(_WIN32)
+#	include <Ui/Win32/WidgetFactoryWin32.h>
+#elif defined(__APPLE__)
+#	include <Ui/Cocoa/WidgetFactoryCocoa.h>
+#elif defined(__LINUX__) || defined(__RPI__)
+#	include <Ui/X11/WidgetFactoryX11.h>
+#endif
 #include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
 #include "Rv32/Memory.h"
@@ -55,6 +67,23 @@ int main(int argc, const char** argv)
 		sa.sa_flags = 0;
 		sigaction(SIGINT, &sa, nullptr);
 	}
+#endif
+
+#if defined(_WIN32)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryWin32(),
+		nullptr
+	);
+#elif defined(__APPLE__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryCocoa(),
+		nullptr
+	);
+#elif defined(__LINUX__) || defined(__RPI__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryX11(),
+		nullptr
+	);
 #endif
 
 	Memory memory(0x04000000);	// 64 MiB
@@ -192,23 +221,48 @@ int main(int argc, const char** argv)
 	// CircularVector< uint32_t, 128 > dbg_pc;
 	// uint32_t dbg_sp = cpu.sp();
 
+	Ref< ui::Form > form = new ui::Form();
+	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%", 0, 0));
+
+	Ref< ui::Bitmap > uiImage = new ui::Bitmap(640, 400);
+	Ref< ui::Image > image = new ui::Image();
+	image->create(form, uiImage, ui::Image::WsScale);
+
+	form->show();
+
 	while (g_going)
 	{
+		if (!ui::Application::getInstance()->process())
+			break;
+
 		// if (dbg_pc.full())
 		// 	dbg_pc.pop_front();
 		// dbg_pc.push_back(cpu.pc());
 
-		if (!cpu.tick())
-			break;
-		if (bus.error())
-			break;
+		for (int32_t i = 0; i < 10000; ++i)
+		{
+			if (!cpu.tick())
+				break;
+			if (bus.error())
+				break;
+		}
 
 		// if (cpu.pc() >= 0x00093d7f)
 		// {
 		// 	log::error << L"PC out of range " << str(L"%08x", cpu.pc()) << L"." << Endl;
 		// 	break;
 		// }
+
+		if (video.shouldPresent() && video.getImage())
+		{
+			uiImage->copyImage(video.getImage());
+			image->setImage(uiImage);
+			//form->update();
+		}
 	}
+
+	form->destroy();
+	form = nullptr;
 
 	// for (int i = 0; i < dbg_pc.size(); ++i)
 	// {

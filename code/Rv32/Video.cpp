@@ -45,8 +45,12 @@ void Video::writeU32(uint32_t address, uint32_t value)
 		usleep(value * 1000);
 	else if (address == 0x00000200)
 	{
+
+		/*
 		m_image->save(L"Capture.png");
 		log::info << L"Framebuffer captured." << Endl;
+		*/
+		m_dirty = true;
 	}
 	else if (address >= 0x10000000)
 	{
