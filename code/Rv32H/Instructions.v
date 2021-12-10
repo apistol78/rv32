@@ -1,352 +1,704 @@
 if ((instruction & 32'hfe00707f) == 32'h00000033) begin
-	`DISPLAY_OP("ADD");
-			r[inst_B_rd] <= r[inst_B_rs1] + r[inst_B_rs2];
+	$display("ADD");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+			r[inst_R_rd] <= r[inst_R_rs1] + r[inst_R_rs2];
+			`DECODE_DONE;
 		
 end
 else if ((instruction & 32'h0000707f) == 32'h00000013) begin
-	`DISPLAY_OP("ADDI not implemented.");
+	$display("ADDI");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			r[inst_I_rd] <= r[inst_I_rs1] + inst_I_imm;
+			`DECODE_DONE;
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h0000001b) begin
-	`DISPLAY_OP("ADDIW not implemented.");
+	$display("ADDIW");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			r[inst_I_rd] <= r[inst_I_rs1] + inst_I_imm;
+			`DECODE_DONE;
+		
 end
 else if ((instruction & 32'hfe00707f) == 32'h0000003b) begin
-	`DISPLAY_OP("ADDW not implemented.");
+	$display("ADDW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+			r[inst_R_rd] <= r[inst_R_rs1] + r[inst_R_rs2];
+			`DECODE_DONE;
+		
 end
 else if ((instruction & 32'hf800707f) == 32'h0000302f) begin
-	`DISPLAY_OP("AMOADD.D not implemented.");
+	$display("AMOADD.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h0000202f) begin
-	`DISPLAY_OP("AMOADD.W not implemented.");
+	$display("AMOADD.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h6000302f) begin
-	`DISPLAY_OP("AMOAND.D not implemented.");
+	$display("AMOAND.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h6000202f) begin
-	`DISPLAY_OP("AMOAND.W not implemented.");
+	$display("AMOAND.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'he000302f) begin
-	`DISPLAY_OP("AMOMAXU.D not implemented.");
+	$display("AMOMAXU.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'he000202f) begin
-	`DISPLAY_OP("AMOMAXU.W not implemented.");
+	$display("AMOMAXU.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h4000302f) begin
-	`DISPLAY_OP("AMOOR.D not implemented.");
+	$display("AMOOR.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h4000202f) begin
-	`DISPLAY_OP("AMOOR.W not implemented.");
+	$display("AMOOR.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h0800302f) begin
-	`DISPLAY_OP("AMOSWAP.D not implemented.");
+	$display("AMOSWAP.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h0800202f) begin
-	`DISPLAY_OP("AMOSWAP.W not implemented.");
+	$display("AMOSWAP.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00007033) begin
-	`DISPLAY_OP("AND not implemented.");
+	$display("AND");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+			r[inst_R_rd] <= r[inst_R_rs1] & r[inst_R_rs2];
+			`DECODE_DONE;
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h00007013) begin
-	`DISPLAY_OP("ANDI not implemented.");
+	$display("ANDI");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000007f) == 32'h00000017) begin
-	`DISPLAY_OP("AUIPC not implemented.");
+	$display("AUIPC");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00000063) begin
-	`DISPLAY_OP("BEQ not implemented.");
+	$display("BEQ");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00005063) begin
-	`DISPLAY_OP("BGE not implemented.");
+	$display("BGE");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00007063) begin
-	`DISPLAY_OP("BGEU not implemented.");
+	$display("BGEU");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00004063) begin
-	`DISPLAY_OP("BLT not implemented.");
+	$display("BLT");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00006063) begin
-	`DISPLAY_OP("BLTU not implemented.");
+	$display("BLTU");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00001063) begin
-	`DISPLAY_OP("BNE not implemented.");
+	$display("BNE");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00003073) begin
-	`DISPLAY_OP("CSRRC not implemented.");
+	$display("CSRRC");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00007073) begin
-	`DISPLAY_OP("CSRRCI not implemented.");
+	$display("CSRRCI");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002073) begin
-	`DISPLAY_OP("CSRRS not implemented.");
+	$display("CSRRS");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00006073) begin
-	`DISPLAY_OP("CSRRSI not implemented.");
+	$display("CSRRSI");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00001073) begin
-	`DISPLAY_OP("CSRRW not implemented.");
+	$display("CSRRW");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00005073) begin
-	`DISPLAY_OP("CSRRWI not implemented.");
+	$display("CSRRWI");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02004033) begin
-	`DISPLAY_OP("DIV not implemented.");
+	$display("DIV");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02005033) begin
-	`DISPLAY_OP("DIVU not implemented.");
+	$display("DIVU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0200503b) begin
-	`DISPLAY_OP("DIVUW not implemented.");
+	$display("DIVUW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0200403b) begin
-	`DISPLAY_OP("DIVW not implemented.");
+	$display("DIVW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h00100073) begin
-	`DISPLAY_OP("EBREAK not implemented.");
+	$display("EBREAK");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h00000073) begin
-	`DISPLAY_OP("ECALL not implemented.");
+	$display("ECALL");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00007f) == 32'h02000053) begin
-	`DISPLAY_OP("FADD.D not implemented.");
+	$display("FADD.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'hd2200053) begin
-	`DISPLAY_OP("FCVT.D.L not implemented.");
+	$display("FCVT.D.L");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'h42000053) begin
-	`DISPLAY_OP("FCVT.D.S not implemented.");
+	$display("FCVT.D.S");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'hd2000053) begin
-	`DISPLAY_OP("FCVT.D.W not implemented.");
+	$display("FCVT.D.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'hd2100053) begin
-	`DISPLAY_OP("FCVT.D.WU not implemented.");
+	$display("FCVT.D.WU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'h40100053) begin
-	`DISPLAY_OP("FCVT.S.D not implemented.");
+	$display("FCVT.S.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0007f) == 32'hc2000053) begin
-	`DISPLAY_OP("FCVT.W.D not implemented.");
+	$display("FCVT.W.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00007f) == 32'h1a000053) begin
-	`DISPLAY_OP("FDIV.D not implemented.");
+	$display("FDIV.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h0000000f) begin
-	`DISPLAY_OP("FENCE not implemented.");
+	$display("FENCE");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h0000100f) begin
-	`DISPLAY_OP("FENCE.I not implemented.");
+	$display("FENCE.I");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'ha2002053) begin
-	`DISPLAY_OP("FEQ.D not implemented.");
+	$display("FEQ.D");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00003007) begin
-	`DISPLAY_OP("FLD not implemented.");
+	$display("FLD");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'ha2000053) begin
-	`DISPLAY_OP("FLE.D not implemented.");
+	$display("FLE.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'ha2001053) begin
-	`DISPLAY_OP("FLT.D not implemented.");
+	$display("FLT.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002007) begin
-	`DISPLAY_OP("FLW not implemented.");
+	$display("FLW");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0600007f) == 32'h02000043) begin
-	`DISPLAY_OP("FMADD.D not implemented.");
+	$display("FMADD.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00007f) == 32'h12000053) begin
-	`DISPLAY_OP("FMUL.D not implemented.");
+	$display("FMUL.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0707f) == 32'hf2000053) begin
-	`DISPLAY_OP("FMV.D.X not implemented.");
+	$display("FMV.D.X");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0707f) == 32'he2000053) begin
-	`DISPLAY_OP("FMV.X.D not implemented.");
+	$display("FMV.X.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0707f) == 32'he0000053) begin
-	`DISPLAY_OP("FMV.X.W not implemented.");
+	$display("FMV.X.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfff0707f) == 32'hf0000053) begin
-	`DISPLAY_OP("FMV.W.X not implemented.");
+	$display("FMV.W.X");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0600007f) == 32'h0200004b) begin
-	`DISPLAY_OP("FNMSUB.D not implemented.");
+	$display("FNMSUB.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00003027) begin
-	`DISPLAY_OP("FSD not implemented.");
+	$display("FSD");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h22000053) begin
-	`DISPLAY_OP("FSGNJ.D not implemented.");
+	$display("FSGNJ.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h22002053) begin
-	`DISPLAY_OP("FSGNJX.D not implemented.");
+	$display("FSGNJX.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00007f) == 32'h0a000053) begin
-	`DISPLAY_OP("FSUB.D not implemented.");
+	$display("FSUB.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002027) begin
-	`DISPLAY_OP("FSW not implemented.");
+	$display("FSW");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000007f) == 32'h0000006f) begin
-	`DISPLAY_OP("JAL not implemented.");
+	$display("JAL");
+			$display("R(%d), imm %d", inst_J_rd, inst_J_imm);
+		
+			r[inst_J_rd] <= pc_next;
+			pc_next <= pc + $signed(inst_J_imm);
+			`DECODE_DONE;
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h00000067) begin
-	`DISPLAY_OP("JALR not implemented.");
+	$display("JALR");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00000003) begin
-	`DISPLAY_OP("LB not implemented.");
+	$display("LB");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			if (decode_step == 0) begin
+				o_address <= r[inst_I_rs1] + inst_I_imm;
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					r[inst_I_rd] <= i_data[7:0];
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h00004003) begin
-	`DISPLAY_OP("LBU not implemented.");
+	$display("LBU");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			if (decode_step == 0) begin
+				o_address <= r[inst_I_rs1] + inst_I_imm;
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					r[inst_I_rd] <= i_data[7:0];
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h00003003) begin
-	`DISPLAY_OP("LD not implemented.");
+	$display("LD");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00001003) begin
-	`DISPLAY_OP("LH not implemented.");
+	$display("LH");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			if (decode_step == 0) begin
+				o_address <= r[inst_I_rs1] + inst_I_imm;
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					r[inst_I_rd] <= i_data[15:0];
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		
 end
 else if ((instruction & 32'h0000707f) == 32'h00005003) begin
-	`DISPLAY_OP("LHU not implemented.");
+	$display("LHU");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+			if (decode_step == 0) begin
+				o_address <= r[inst_I_rs1] + inst_I_imm;
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					r[inst_I_rd] <= i_data[15:0];
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		
 end
 else if ((instruction & 32'hf9f0707f) == 32'h1000302f) begin
-	`DISPLAY_OP("LR.D not implemented.");
+	$display("LR.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf9f0707f) == 32'h1000202f) begin
-	`DISPLAY_OP("LR.W not implemented.");
+	$display("LR.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000007f) == 32'h00000037) begin
-	`DISPLAY_OP("LUI not implemented.");
+	$display("LUI");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002003) begin
-	`DISPLAY_OP("LW not implemented.");
+	$display("LW");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00006003) begin
-	`DISPLAY_OP("LWU not implemented.");
+	$display("LWU");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02000033) begin
-	`DISPLAY_OP("MUL not implemented.");
+	$display("MUL");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02001033) begin
-	`DISPLAY_OP("MULH not implemented.");
+	$display("MULH");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02003033) begin
-	`DISPLAY_OP("MULHU not implemented.");
+	$display("MULHU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02002033) begin
-	`DISPLAY_OP("MULHSU not implemented.");
+	$display("MULHSU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0200003b) begin
-	`DISPLAY_OP("MULW not implemented.");
+	$display("MULW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h30200073) begin
-	`DISPLAY_OP("MRET not implemented.");
+	$display("MRET");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00006033) begin
-	`DISPLAY_OP("OR not implemented.");
+	$display("OR");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00006013) begin
-	`DISPLAY_OP("ORI not implemented.");
+	$display("ORI");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02006033) begin
-	`DISPLAY_OP("REM not implemented.");
+	$display("REM");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h02007033) begin
-	`DISPLAY_OP("REMU not implemented.");
+	$display("REMU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0200703b) begin
-	`DISPLAY_OP("REMUW not implemented.");
+	$display("REMUW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0200603b) begin
-	`DISPLAY_OP("REMW not implemented.");
+	$display("REMW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00000023) begin
-	`DISPLAY_OP("SB not implemented.");
+	$display("SB");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h1800302f) begin
-	`DISPLAY_OP("SC.D not implemented.");
+	$display("SC.D");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hf800707f) == 32'h1800202f) begin
-	`DISPLAY_OP("SC.W not implemented.");
+	$display("SC.W");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00003023) begin
-	`DISPLAY_OP("SD not implemented.");
+	$display("SD");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe007fff) == 32'h12000073) begin
-	`DISPLAY_OP("SFENCE.VMA not implemented.");
+	$display("SFENCE.VMA");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00001023) begin
-	`DISPLAY_OP("SH not implemented.");
+	$display("SH");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00001033) begin
-	`DISPLAY_OP("SLL not implemented.");
+	$display("SLL");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfc00707f) == 32'h00001013) begin
-	`DISPLAY_OP("SLLI not implemented.");
+	$display("SLLI");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0000101b) begin
-	`DISPLAY_OP("SLLIW not implemented.");
+	$display("SLLIW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0000103b) begin
-	`DISPLAY_OP("SLLW not implemented.");
+	$display("SLLW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00002033) begin
-	`DISPLAY_OP("SLT not implemented.");
+	$display("SLT");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002013) begin
-	`DISPLAY_OP("SLTI not implemented.");
+	$display("SLTI");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00003013) begin
-	`DISPLAY_OP("SLTIU not implemented.");
+	$display("SLTIU");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00003033) begin
-	`DISPLAY_OP("SLTU not implemented.");
+	$display("SLTU");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h40005033) begin
-	`DISPLAY_OP("SRA not implemented.");
+	$display("SRA");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfc00707f) == 32'h40005013) begin
-	`DISPLAY_OP("SRAI not implemented.");
+	$display("SRAI");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfc00707f) == 32'h4000501b) begin
-	`DISPLAY_OP("SRAIW not implemented.");
+	$display("SRAIW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h4000503b) begin
-	`DISPLAY_OP("SRAW not implemented.");
+	$display("SRAW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h10200073) begin
-	`DISPLAY_OP("SRET not implemented.");
+	$display("SRET");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00005033) begin
-	`DISPLAY_OP("SRL not implemented.");
+	$display("SRL");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfc00707f) == 32'h00005013) begin
-	`DISPLAY_OP("SRLI not implemented.");
+	$display("SRLI");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfc00707f) == 32'h0000501b) begin
-	`DISPLAY_OP("SRLIW not implemented.");
+	$display("SRLIW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h0000503b) begin
-	`DISPLAY_OP("SRLW not implemented.");
+	$display("SRLW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h40000033) begin
-	`DISPLAY_OP("SUB not implemented.");
+	$display("SUB");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h4000003b) begin
-	`DISPLAY_OP("SUBW not implemented.");
+	$display("SUBW");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00002023) begin
-	`DISPLAY_OP("SW not implemented.");
+	$display("SW");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h00200073) begin
-	`DISPLAY_OP("URET not implemented.");
+	$display("URET");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hffffffff) == 32'h10500073) begin
-	`DISPLAY_OP("WFI not implemented.");
+	$display("WFI");
+	$display("Not implemented.");
 end
 else if ((instruction & 32'hfe00707f) == 32'h00004033) begin
-	`DISPLAY_OP("XOR not implemented.");
+	$display("XOR");
+			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		
+	$display("Not implemented.");
 end
 else if ((instruction & 32'h0000707f) == 32'h00004013) begin
-	`DISPLAY_OP("XORI not implemented.");
+	$display("XORI");
+			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+		
+	$display("Not implemented.");
+end
+else begin
+	$display("Unknown instruction.");
 end
 
 

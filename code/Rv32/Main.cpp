@@ -69,22 +69,27 @@ int main(int argc, const char** argv)
 	}
 #endif
 
+	bool headless = true;
+
+	if (!headless)
+	{
 #if defined(_WIN32)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryWin32(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryWin32(),
+			nullptr
+		);
 #elif defined(__APPLE__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryCocoa(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryCocoa(),
+			nullptr
+		);
 #elif defined(__LINUX__) || defined(__RPI__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryX11(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryX11(),
+			nullptr
+		);
 #endif
+	}
 
 	Memory memory(0x04000000);	// 64 MiB
 	Video video;
@@ -197,6 +202,31 @@ int main(int argc, const char** argv)
 			log::info << L"HEX loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	}
 
+	if (cmdLine.hasOption(L'd', L"dump"))
+	{
+		int32_t base = cmdLine.getOption(L"dump-base").getInteger();
+		int32_t length = cmdLine.getOption(L"dump-length").getInteger();
+
+		std::wstring fileName = cmdLine.getOption(L'd', L"dump").getString();
+		std::wstring tmp;
+
+		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmWrite);
+		if (!f)
+		{
+			log::error << L"Unable to create \"" << fileName << L"\"." << Endl;
+			return 1;
+		}
+
+		FileOutputStream fos(f, new AnsiEncoding());
+		for (int32_t i = base; i < base + length; i += 4)
+		{
+			uint32_t v = bus.readU32(i);
+			fos << str(L"%08x", v) << Endl;
+		}
+
+		log::info << L"Memory dumped." << Endl;
+	}
+
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
 	{
@@ -221,14 +251,22 @@ int main(int argc, const char** argv)
 	// CircularVector< uint32_t, 128 > dbg_pc;
 	// uint32_t dbg_sp = cpu.sp();
 
-	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%", 0, 0));
+	Ref< ui::Form > form;
+	Ref< ui::Bitmap > uiImage;
+	Ref< ui::Image > image;
+	
+	if (!headless)
+	{
+		form = new ui::Form();
+		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%", 0, 0));
 
-	Ref< ui::Bitmap > uiImage = new ui::Bitmap(640, 400);
-	Ref< ui::Image > image = new ui::Image();
-	image->create(form, uiImage, ui::Image::WsScale);
+		uiImage = new ui::Bitmap(640, 400);
+		
+		image = new ui::Image();
+		image->create(form, uiImage, ui::Image::WsScale);
 
-	form->show();
+		form->show();
+	}
 
 	while (g_going)
 	{
@@ -253,7 +291,7 @@ int main(int argc, const char** argv)
 		// 	break;
 		// }
 
-		if (video.shouldPresent() && video.getImage())
+		if (!headless && video.shouldPresent() && video.getImage())
 		{
 			uiImage->copyImage(video.getImage());
 			image->setImage(uiImage);
@@ -261,8 +299,11 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	form->destroy();
-	form = nullptr;
+	if (form)
+	{
+		form->destroy();
+		form = nullptr;
+	}
 
 	// for (int i = 0; i < dbg_pc.size(); ++i)
 	// {

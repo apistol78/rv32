@@ -6,9 +6,10 @@
 # Generate instructions.
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.template > code/Rv32H/Instructions.v
 
-if iverilog -I code/Rv32H -o build/verilog/CPU.out code/Rv32H/CPU.v; then
-	#vvp ap_cpu_tb.out
-	echo "Compile succesful"
+mkdir -p build/verilog
+if iverilog -I code/Rv32H -o build/verilog/CPU_tb.out code/Rv32H/CPU_tb.v; then
+	echo "Compile successful"
+	vvp build/verilog/CPU_tb.out
 else
 	echo "-- Compile error --"
 fi
