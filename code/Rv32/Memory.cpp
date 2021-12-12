@@ -1,4 +1,6 @@
 #include <cstring>
+#include <Core/Log/Log.h>
+#include <Core/Misc/String.h>
 #include "Rv32/Memory.h"
 
 using namespace traktor;
@@ -11,19 +13,51 @@ Memory::Memory(uint32_t capacity)
 	std::memset(m_data.ptr(), 0, capacity);
 }
 
-void Memory::writeU8(uint32_t address, uint8_t value)
+void Memory::setReadOnly(bool readOnly)
 {
-	*(uint8_t*)(m_data.c_ptr() + address) = value;
+	m_readOnly = readOnly;
 }
 
-void Memory::writeU16(uint32_t address, uint16_t value)
+bool Memory::writeU8(uint32_t address, uint8_t value)
 {
-	*(uint16_t*)(m_data.c_ptr() + address) = value;
+	if (!m_readOnly)
+	{
+		*(uint8_t*)(m_data.c_ptr() + address) = value;
+		return true;
+	}
+	else
+	{
+		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
+		return false;
+	}
 }
 
-void Memory::writeU32(uint32_t address, uint32_t value)
+bool Memory::writeU16(uint32_t address, uint16_t value)
 {
-	*(uint32_t*)(m_data.c_ptr() + address) = value;
+	if (!m_readOnly)
+	{
+		*(uint16_t*)(m_data.c_ptr() + address) = value;
+		return true;
+	}
+	else
+	{
+		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
+		return false;
+	}
+}
+
+bool Memory::writeU32(uint32_t address, uint32_t value)
+{
+	if (!m_readOnly)
+	{
+		*(uint32_t*)(m_data.c_ptr() + address) = value;
+		return true;
+	}
+	else
+	{
+		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
+		return false;
+	}
 }
 
 uint8_t Memory::readU8(uint32_t address) const

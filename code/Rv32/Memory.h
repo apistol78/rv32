@@ -10,11 +10,13 @@ class Memory : public Device
 public:
 	explicit Memory(uint32_t capacity);
 
-	virtual void writeU8(uint32_t address, uint8_t value) override final;
+	void setReadOnly(bool readOnly);
 
-	virtual void writeU16(uint32_t address, uint16_t value) override final;
+	virtual bool writeU8(uint32_t address, uint8_t value) override final;
 
-	virtual void writeU32(uint32_t address, uint32_t value) override final;
+	virtual bool writeU16(uint32_t address, uint16_t value) override final;
+
+	virtual bool writeU32(uint32_t address, uint32_t value) override final;
 
 	virtual uint8_t readU8(uint32_t address) const override final;
 
@@ -24,4 +26,5 @@ public:
 
 private:
 	traktor::AutoArrayPtr< uint8_t > m_data;
+	bool m_readOnly = false;
 };

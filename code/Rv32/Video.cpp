@@ -28,18 +28,20 @@ Video::Video()
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
-void Video::writeU8(uint32_t address, uint8_t value)
+bool Video::writeU8(uint32_t address, uint8_t value)
 {
 	//log::info << L"VIDEO | " << str(L"%02x", value) << L" (" << (int32_t)value << L")" << Endl;
 	log::info << (wchar_t)value;
+	return true;
 }
 
-void Video::writeU16(uint32_t address, uint16_t value)
+bool Video::writeU16(uint32_t address, uint16_t value)
 {
 	log::info << L"VIDEO | " << str(L"%04x", value) << L" (" << (int32_t)value << L")" << Endl;
+	return true;
 }
 
-void Video::writeU32(uint32_t address, uint32_t value)
+bool Video::writeU32(uint32_t address, uint32_t value)
 {
 	if (address == 0x00000100)
 		usleep(value * 1000);
@@ -65,6 +67,7 @@ void Video::writeU32(uint32_t address, uint32_t value)
 	}
 	else
 		log::info << L"VIDEO | " << str(L"%08x", value) << L" (" << (int32_t)value << L")" << Endl;
+	return true;
 }
 
 uint8_t Video::readU8(uint32_t address) const

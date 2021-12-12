@@ -911,6 +911,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
+				$display("STORE BYTE, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
 				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
 				o_rw <= 0;
 				o_request <= 1;				
@@ -919,13 +920,18 @@ local instructions = {
 			else if (decode_step == 1) begin
 				if (i_ready) begin
 					o_data <= { i_data[31:8], r[inst_S_rs2][7:0] };
-					o_rw <= 1;
-					o_request <= 1;
+					o_request <= 0;
 					decode_step <= 2;
 				end
 			end
 			else if (decode_step == 2) begin
+				o_rw <= 1;
+				o_request <= 1;
+				decode_step <= 3;
+			end
+			else if (decode_step == 3) begin
 				if (i_ready) begin
+					o_rw <= 0;
 					o_request <= 0;
 					`DECODE_DONE;
 				end
@@ -1167,14 +1173,16 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
+				$display("STORE, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
 				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
 				o_data <= r[inst_S_rs2];
-				o_rw <= 0;
+				o_rw <= 1;
 				o_request <= 1;				
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
+					o_rw <= 0;
 					o_request <= 0;
 					`DECODE_DONE;
 				end
@@ -1223,6 +1231,15 @@ local instructions = {
 	},
 }
 
+local function trim(s)
+   return s:match'^%s*(.*%S)' or ''
+end
+
+local function lines(s)
+	if s:sub(-1)~="\n" then s=s.."\n" end
+	return string.gmatch(s,'[^\r\n]+')
+end
+
 function main(argv)
 
 	local language = argv:get(0)
@@ -1257,10 +1274,14 @@ function main(argv)
 			stdout:printLn("\t$display(\"" .. inst.name .. "\");")
 			local pfx = prefixes[inst.format];
 			if pfx ~= nil and pfx.verilog ~= nil then
-				stdout:printLn(pfx.verilog)
+				stdout:printLn("\t" .. trim(pfx.verilog))
 			end
 			if inst.verilog ~= nil then
-				stdout:printLn(inst.verilog)
+				for ln in lines(inst.verilog) do
+					if #ln > 0 then
+						stdout:printLn("\t" .. ln)
+					end
+				end
 			else
 				stdout:printLn("\t$display(\"Not implemented.\");")
 			end

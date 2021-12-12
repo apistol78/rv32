@@ -155,7 +155,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
 		m_registers[i] = 0;
 
-	m_registers[2] = 0x04000000 - 4;
+	m_registers[2] = 0x00030000 - 4;
 }
 
 void CPU::jump(uint32_t address)

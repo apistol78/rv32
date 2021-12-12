@@ -91,12 +91,17 @@ int main(int argc, const char** argv)
 #endif
 	}
 
-	Memory memory(0x04000000);	// 64 MiB
+	Memory rom(0x20000);
+	Memory ram(0x10000);
 	Video video;
 
 	Bus bus;
-	bus.map(0x00000000, 0x03ffffff, &memory);
+	bus.map(0x00000200, 0x0001ffff, &rom);
+	bus.map(0x00020000, 0x0002ffff, &ram);
 	bus.map(0x10000000, 0x2fffffff, &video);
+
+	for (int i = 0; i < 0xffff; ++i)
+		ram.writeU8(i, 0xcc);
 
 	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
 	{
@@ -202,30 +207,7 @@ int main(int argc, const char** argv)
 			log::info << L"HEX loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	}
 
-	if (cmdLine.hasOption(L'd', L"dump"))
-	{
-		int32_t base = cmdLine.getOption(L"dump-base").getInteger();
-		int32_t length = cmdLine.getOption(L"dump-length").getInteger();
-
-		std::wstring fileName = cmdLine.getOption(L'd', L"dump").getString();
-		std::wstring tmp;
-
-		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmWrite);
-		if (!f)
-		{
-			log::error << L"Unable to create \"" << fileName << L"\"." << Endl;
-			return 1;
-		}
-
-		FileOutputStream fos(f, new AnsiEncoding());
-		for (int32_t i = base; i < base + length; i += 4)
-		{
-			uint32_t v = bus.readU32(i);
-			fos << str(L"%08x", v) << Endl;
-		}
-
-		log::info << L"Memory dumped." << Endl;
-	}
+	rom.setReadOnly(true);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -248,8 +230,8 @@ int main(int argc, const char** argv)
 		cpu.jump((uint32_t)start);
 	}
 
-	// CircularVector< uint32_t, 128 > dbg_pc;
-	// uint32_t dbg_sp = cpu.sp();
+	CircularVector< std::pair< uint32_t, uint32_t >, 128 > dbg_pc;
+	uint32_t dbg_sp = cpu.sp();
 
 	Ref< ui::Form > form;
 	Ref< ui::Bitmap > uiImage;
@@ -270,32 +252,39 @@ int main(int argc, const char** argv)
 
 	while (g_going)
 	{
-		if (!ui::Application::getInstance()->process())
-			break;
-
-		// if (dbg_pc.full())
-		// 	dbg_pc.pop_front();
-		// dbg_pc.push_back(cpu.pc());
-
-		for (int32_t i = 0; i < 10000; ++i)
+		if (!headless)
 		{
+			if (!ui::Application::getInstance()->process())
+				break;
+
+			for (int32_t i = 0; i < 10000; ++i)
+			{
+				if (dbg_pc.full())
+					dbg_pc.pop_front();
+				dbg_pc.push_back({ cpu.pc(), cpu.sp() });
+
+				if (!cpu.tick())
+					break;
+				if (bus.error())
+					break;
+			}
+
+			if (video.shouldPresent() && video.getImage())
+			{
+				uiImage->copyImage(video.getImage());
+				image->setImage(uiImage);
+			}
+		}
+		else
+		{
+			if (dbg_pc.full())
+				dbg_pc.pop_front();
+			dbg_pc.push_back({ cpu.pc(), cpu.sp() });
+
 			if (!cpu.tick())
 				break;
 			if (bus.error())
-				break;
-		}
-
-		// if (cpu.pc() >= 0x00093d7f)
-		// {
-		// 	log::error << L"PC out of range " << str(L"%08x", cpu.pc()) << L"." << Endl;
-		// 	break;
-		// }
-
-		if (!headless && video.shouldPresent() && video.getImage())
-		{
-			uiImage->copyImage(video.getImage());
-			image->setImage(uiImage);
-			//form->update();
+				break;			
 		}
 	}
 
@@ -305,10 +294,10 @@ int main(int argc, const char** argv)
 		form = nullptr;
 	}
 
-	// for (int i = 0; i < dbg_pc.size(); ++i)
-	// {
-	// 	log::info << i << L". PC " << str(L"%08x", dbg_pc[i]) << Endl;
-	// }
+	for (int i = 0; i < dbg_pc.size(); ++i)
+	{
+		log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;
+	}
 
 	// for (uint32_t sp = cpu.sp(); sp <= dbg_sp; sp += 4)
 	// 	log::info << str(L"%08x", sp) << L" : " << str(L"%08x", bus.readU32(sp)) << Endl;

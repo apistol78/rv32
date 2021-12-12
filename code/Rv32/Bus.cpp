@@ -17,7 +17,10 @@ void Bus::writeU8(uint32_t address, uint8_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
-		mappedDevice->device->writeU8(address - mappedDevice->start, value);
+	{
+		if (!mappedDevice->device->writeU8(address - mappedDevice->start, value))
+			m_error = true;
+	}
 	else
 	{
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%02x", value) << L"." << Endl;
@@ -29,7 +32,10 @@ void Bus::writeU16(uint32_t address, uint16_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
-		mappedDevice->device->writeU16(address - mappedDevice->start, value);
+	{
+		if (!mappedDevice->device->writeU16(address - mappedDevice->start, value))
+			m_error = true;
+	}
 	else
 	{
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%04x", value) << L"." << Endl;
@@ -41,7 +47,10 @@ void Bus::writeU32(uint32_t address, uint32_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
-		mappedDevice->device->writeU32(address - mappedDevice->start, value);
+	{
+		if (!mappedDevice->device->writeU32(address - mappedDevice->start, value))
+			m_error = true;
+	}
 	else
 	{
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%08x", value) << L"." << Endl;

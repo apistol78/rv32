@@ -20,7 +20,6 @@ module CPU (
 	reg [31:0] pc;
 	reg [31:0] pc_next;
 	reg [31:0] r[31:0];
-
 	reg [31:0] instruction;
 
 	// https://en.wikipedia.org/wiki/RISC-V#ISA_base_and_extensions
@@ -69,7 +68,6 @@ module CPU (
 			o_request <= 0;
 		end
 		else begin
-
 			if (state == STATE_FETCH_ISSUE) begin
 				//$display("STATE_FETCH_ISSUE, pc = %x", pc);
 				o_address <= pc;
@@ -79,7 +77,6 @@ module CPU (
 				r[0] <= 0;
 				state <= STATE_FETCH_READ;
 			end
-
 			else if (state == STATE_FETCH_READ) begin
 				if (i_ready) begin
 					//$display("STATE_FETCH_READ, i_data = %x", i_data);
@@ -89,15 +86,13 @@ module CPU (
 					decode_step <= 0;
 				end
 			end
-
 			else if (state == STATE_DECODE) begin
-				$display("---");
-				$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+				//$display("---");
+				//$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
 				`include "Instructions.v"
 			end
-
 			else if (state == STATE_DECODE_FINISH) begin
-				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
+				//$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
 				pc <= pc_next;
 				state <= STATE_FETCH_ISSUE;
 			end
