@@ -1,21 +1,35 @@
-<!--
 
 -- https://github.com/takahirox/riscv-rust/blob/master/src/cpu.rs
 
 local prefixes = {
 	I = {
 		verilog = [[
-			$display("R(%d) = R(%d) + %d", inst_I_rd, inst_I_rs1, inst_I_imm);
+			$display("I: R(%d) = R(%d) op %d (%d)", inst_I_rd, inst_I_rs1, inst_I_imm, $signed(inst_I_imm));
 		]]
 	},
 	J = {
 		verilog = [[
-			$display("R(%d), imm %d", inst_J_rd, inst_J_imm);
+			$display("J: R(%d), imm %d (%d)", inst_J_rd, inst_J_imm, $signed(inst_J_imm));
 		]]
 	},	
 	R = {
 		verilog = [[
-			$display("R(%d) = R(%d) + R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+			$display("R: R(%d) = R(%d) op R(%d)", inst_R_rd, inst_R_rs1, inst_R_rs2);
+		]]
+	},
+	U = {
+		verilog = [[
+			$display("U: R(%d), imm %d (%d)", inst_U_rd, inst_U_imm, $signed(inst_U_imm));
+		]]
+	},
+	B = {
+		verilog = [[
+			$display("B: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+		]]
+	},
+	S = {
+		verilog = [[
+			$display("S: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
 		]]
 	}
 }
@@ -45,7 +59,7 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         ]],
 		verilog = [[
-			r[inst_I_rd] <= r[inst_I_rs1] + inst_I_imm;
+			r[inst_I_rd] <= r[inst_I_rs1] + $signed(inst_I_imm);
 			`DECODE_DONE;
 		]]		
 	},
@@ -159,7 +173,11 @@ local instructions = {
         cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
-        ]]
+        ]],
+		verilog = [[
+			r[inst_I_rd] <= r[inst_I_rs1] & inst_I_imm;
+			`DECODE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000007f,
@@ -169,6 +187,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatU(word);
 			R_u(f.rd) = PC + f.imm;
+		]],
+		verilog = [[
+			r[inst_U_rd] <= pc + $signed(inst_U_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -180,6 +202,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if (r[inst_B_rs1] == r[inst_B_rs2])
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -191,6 +218,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if ($signed(r[inst_B_rs1]) >= $signed(r[inst_B_rs2]))
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -202,6 +234,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if (r[inst_B_rs1] >= r[inst_B_rs2])
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -213,6 +250,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if ($signed(r[inst_B_rs1]) < $signed(r[inst_B_rs2]))
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -224,6 +266,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if (r[inst_B_rs1] >= r[inst_B_rs2])
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -235,6 +282,11 @@ local instructions = {
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
+		]],
+		verilog = [[
+			if (r[inst_B_rs1] != r[inst_B_rs2])
+				pc_next <= pc + $signed(inst_B_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -432,7 +484,7 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00002007,
 		name = "FLW",
-		format = "I_mem"
+		format = "I"
 	},
 	{
 		mask = 0x0600007f,
@@ -531,6 +583,11 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = R(f.rs1) + f.imm;
+		]],
+		verilog = [[
+			r[inst_I_rd] <= pc_next;
+			pc_next <= r[inst_I_rs1] + $signed(inst_I_imm);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -551,7 +608,7 @@ local instructions = {
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
-					r[inst_I_rd] <= i_data[7:0];
+					r[inst_I_rd] <= { { 24{ i_data[7] } }, i_data[6:0] };
 					o_request <= 0;
 					`DECODE_DONE;
 				end
@@ -607,7 +664,7 @@ local instructions = {
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
-					r[inst_I_rd] <= i_data[15:0];
+					r[inst_I_rd] <= { { 16{ i_data[15] } }, i_data[14:0] };
 					o_request <= 0;
 					`DECODE_DONE;
 				end
@@ -659,6 +716,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatU(word);
 			R_s(f.rd) = f.imm;
+		]],
+		verilog = [[
+			r[inst_U_rd] <= inst_U_imm;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -669,7 +730,24 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
-		]]		
+		]],
+		verilog = [[
+			if (decode_step == 0) begin
+				$display("LOAD WORD, addr %x", r[inst_I_rs1] + $signed(inst_I_imm));
+				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					$display("LOAD WORD, data %x", i_data);
+					r[inst_I_rd] <= i_data;
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -679,7 +757,22 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
-		]]	
+		]],
+		verilog = [[
+			if (decode_step == 0) begin
+				o_address <= r[inst_I_rs1] + inst_I_imm;
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					r[inst_I_rd] <= i_data[31:0];
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -689,6 +782,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= $signed(r[inst_R_rs1]) * $signed(r[inst_R_rs2]);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -741,6 +838,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] | r[inst_R_rs2];
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -751,6 +852,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
+		]],
+		verilog = [[
+			r[inst_I_rd] <= r[inst_I_rs1] | inst_I_imm;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -803,6 +908,28 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
+		]],
+		verilog = [[
+			if (decode_step == 0) begin
+				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					o_data <= { i_data[31:8], r[inst_S_rs2][7:0] };
+					o_rw <= 1;
+					o_request <= 1;
+					decode_step <= 2;
+				end
+			end
+			else if (decode_step == 2) begin
+				if (i_ready) begin
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end
 		]]
 	},
 	{
@@ -847,6 +974,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] << r[inst_R_rs2];
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -857,6 +988,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] << instruction[25:20];
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -879,6 +1014,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
+		]],
+		verilog = [[
+			r[inst_R_rd] <= ($signed(r[inst_R_rs1]) < $signed(r[inst_R_rs2])) ? 1 : 0;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -889,6 +1028,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
+		]],
+		verilog = [[
+			r[inst_I_rd] <= ($signed(r[inst_I_rs1]) < $signed(inst_I_imm)) ? 1 : 0;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -899,6 +1042,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
+		]],
+		verilog = [[
+			r[inst_I_rd] <= (r[inst_I_rs1] < inst_I_imm) ? 1 : 0;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -909,6 +1056,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
+		]],
+		verilog = [[
+			r[inst_R_rd] <= (r[inst_R_rs1] < r[inst_R_rs2]) ? 1 : 0;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -929,6 +1080,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] >> instruction[25:20];
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -989,6 +1144,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= $signed(r[inst_R_rs1]) - $signed(r[inst_R_rs2]);
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -1005,6 +1164,21 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
+		]],
+		verilog = [[
+			if (decode_step == 0) begin
+				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
+				o_data <= r[inst_S_rs2];
+				o_rw <= 0;
+				o_request <= 1;				
+				decode_step <= 1;
+			end
+			else if (decode_step == 1) begin
+				if (i_ready) begin
+					o_request <= 0;
+					`DECODE_DONE;
+				end
+			end			
 		]]
 	},
 	{
@@ -1027,6 +1201,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
+		]],
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] ^ r[inst_R_rs2];
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -1037,52 +1215,64 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
-		]]
+		]],
+		verilog = [[
+			r[inst_I_rd] <= r[inst_I_rs1] ^ inst_I_imm;
+			`DECODE_DONE;
+		]]	
 	},
 }
 
--- C++
---[[
-for i, inst in ipairs(instructions) do
-    assert((inst.mask & inst.data) == inst.data)
-    if i > 1 then output:print("else if") else output:print("if") end
-    output:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
-    output:printLn("{")
-	if inst.cpp ~= nil then
-		output:printLn("\tTRACE(L\"" .. inst.name .. "\");")
-        output:printLn(inst.cpp)
-		output:printLn("\treturn true;")
-	else
-		output:printLn("\tlog::error << L\"" .. inst.name .. " (not implemented)\" << Endl;")
-		output:printLn("\treturn false;")
-    end
-    output:printLn("}")
-end
-output:printLn("else")
-output:printLn("{")
-output:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
-output:printLn("\treturn false;")
-output:printLn("}")
-]]
+function main(argv)
 
--- Verilog
-for i, inst in ipairs(instructions) do
-	if i > 1 then output:print("else if") else output:print("if") end
-	output:printLn(" ((instruction & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ") begin")
-	output:printLn("\t$display(\"" .. inst.name .. "\");")
-	local pfx = prefixes[inst.format];
-	if pfx ~= nil and pfx.verilog ~= nil then
-		output:printLn(pfx.verilog)
-	end
-	if inst.verilog ~= nil then
-		output:printLn(inst.verilog)
-	else
-		output:printLn("\t$display(\"Not implemented.\");")
-	end
-	output:printLn("end")
-end
-output:printLn("else begin")
-output:printLn("\t$display(\"Unknown instruction.\");")
-output:printLn("end")
+	local language = argv:get(0)
+	if language == "cpp" then
 
---!>
+		for i, inst in ipairs(instructions) do
+			assert((inst.mask & inst.data) == inst.data)
+			if i > 1 then stdout:print("else if") else stdout:print("if") end
+			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
+			stdout:printLn("{")
+			if inst.cpp ~= nil then
+				stdout:printLn("\tTRACE(L\"" .. inst.name .. "\");")
+				stdout:printLn(inst.cpp)
+				stdout:printLn("\treturn true;")
+			else
+				stdout:printLn("\tlog::error << L\"" .. inst.name .. " (not implemented)\" << Endl;")
+				stdout:printLn("\treturn false;")
+			end
+			stdout:printLn("}")
+		end
+		stdout:printLn("else")
+		stdout:printLn("{")
+		stdout:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
+		stdout:printLn("\treturn false;")
+		stdout:printLn("}")
+
+	elseif language == "verilog" then 
+
+		for i, inst in ipairs(instructions) do
+			if i > 1 then stdout:print("else if") else stdout:print("if") end
+			stdout:printLn(" ((instruction & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ") begin")
+			stdout:printLn("\t$display(\"" .. inst.name .. "\");")
+			local pfx = prefixes[inst.format];
+			if pfx ~= nil and pfx.verilog ~= nil then
+				stdout:printLn(pfx.verilog)
+			end
+			if inst.verilog ~= nil then
+				stdout:printLn(inst.verilog)
+			else
+				stdout:printLn("\t$display(\"Not implemented.\");")
+			end
+			stdout:printLn("end")
+		end
+		stdout:printLn("else begin")
+		stdout:printLn("\t$display(\"Unknown instruction.\");")
+		stdout:printLn("end")
+
+	else
+
+		stderr:printLn("Unknown language \"" .. language .. "\".")
+
+	end
+end

@@ -3,9 +3,6 @@
 # Source environment configuration.
 . "config.sh"
 
-# Generate instructions.
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.template > code/Rv32/Instructions.inl
-
 # Generator configuration.
 export MAKE_OS=linux
 export MAKE_DIALECT=make
@@ -26,8 +23,3 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.SolutionBuilder.App \
 	-make-solution-template=$TRAKTOR_HOME/resources/build/configurations/make-solution.sbm \
 	-make-project-template=$TRAKTOR_HOME/resources/build/configurations/make-project.sbm \
 	Rv32.xms
-
-# Build emulator.
-pushd build/linux
-make -f Rv32.mak ReleaseStatic
-popd

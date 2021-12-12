@@ -6,12 +6,12 @@ module BRAM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] memory [0:255];
+	reg [31:0] memory [0:32'hffff];
 
     // Clear entire memory.
     integer i;
     initial begin
-        for (i = 0; i < 256; i = i + 1)
+        for (i = 0; i <= 32'hffff; i = i + 1)
             memory[i] = 0;
     end
 

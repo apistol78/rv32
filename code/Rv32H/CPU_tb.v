@@ -1,6 +1,7 @@
 `include "CPU.v"
 `include "BRAM.v"
 `include "BROM.v"
+`include "Video_tb.v"
 
 //`timescale 1 ns/10 ps  // time-unit = 1 ns, precision = 10 ps
 
@@ -33,6 +34,20 @@ module CPU_tab;
 		.o_rdata(ram_rdata)
 	);
 
+	// Video
+	wire video_enable;
+	wire video_rw;
+	wire [31:0] video_address;
+	wire [31:0] video_wdata;
+	wire [31:0] video_rdata;
+	Video_tb video(
+		.i_enable(video_enable),
+		.i_rw(video_rw),
+		.i_address(video_address),
+		.i_wdata(video_wdata),
+		.o_rdata(video_rdata)
+	);
+
     // CPU
 	wire cpu_rw;
 	wire cpu_request;
@@ -55,16 +70,22 @@ module CPU_tab;
 
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h00000000 && cpu_address < 32'h00001000);
+	assign rom_enable = cpu_request && (cpu_address >= 32'h00000200 && cpu_address < 32'h00020000);
 	assign rom_address = cpu_address - 32'h00000000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h00001000 && cpu_address < 32'h00002000);
+	assign ram_enable = cpu_request && (cpu_address >= 32'h00020000 && cpu_address < 32'h00030000);
 	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h00001000;
+	assign ram_address = cpu_address - 32'h00020000;
 	assign ram_wdata = cpu_wdata;
+
+	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign video_rw = cpu_rw;
+	assign video_address = cpu_address - 32'h10000000;
+	assign video_wdata = cpu_wdata;
 
     assign cpu_rdata = rom_enable ? rom_rdata : 'z;
     assign cpu_rdata = ram_enable ? ram_rdata : 'z;
+    assign cpu_rdata = video_enable ? video_rdata : 'z;
 
 
 	// Generate clock.
@@ -77,7 +98,7 @@ module CPU_tab;
 
 	// Simulate.
 	initial begin
-    
+		/*
 		$dumpfile("CPU_tb.vcd");
 		$dumpvars(0, clock);
 		$dumpvars(0, cpu_request);
@@ -92,12 +113,13 @@ module CPU_tab;
         $dumpvars(0, ram_address);
         $dumpvars(0, ram_rdata);
         $dumpvars(0, ram_wdata);
+		*/
     
         #2
         reset <= 0;
         
 
-		repeat(30) @(posedge clock);
+		repeat(300) @(posedge clock);
 
 		$finish;
 	end

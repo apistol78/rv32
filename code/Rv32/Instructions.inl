@@ -770,5 +770,3 @@ else
 	log::error << L"Unknown instruction." << Endl;
 	return false;
 }
-
-
