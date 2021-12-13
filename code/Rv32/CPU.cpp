@@ -168,7 +168,7 @@ bool CPU::tick()
 	const uint32_t word = m_bus->readU32(m_pc);
 
 	if (m_trace)
-		*m_trace << L"PC " << str(L"%08x", m_pc) << L" | SP " << str(L"%08x", m_registers[2]) << Endl;
+		*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;
 
 	if ((word & 0x3) == 0x3)
 		m_next = m_pc + 4;
@@ -183,6 +183,9 @@ bool CPU::tick()
 		log::error << L"Decode failed at PC " << str(L"%08x", m_pc) << Endl;
 		return false;
 	}
+
+	if (m_trace)
+		*m_trace << L"STATE_DECODE_FINISH, PC: " << str(L"%08x", m_pc) << L", PC_NEXT: " << str(L"%08x", m_next) << Endl << Endl;
 
 	m_pc = m_next;
 	return true;

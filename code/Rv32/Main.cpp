@@ -99,10 +99,10 @@ int main(int argc, const char** argv)
 	bus.map(0x00000200, 0x0001ffff, &rom);
 	bus.map(0x00020000, 0x0002ffff, &ram);
 	bus.map(0x10000000, 0x2fffffff, &video);
-
+/*
 	for (int i = 0; i < 0xffff; ++i)
 		ram.writeU8(i, 0xcc);
-
+*/
 	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
 	{
 		std::wstring fileName = cmdLine.getOption(L"image-file").getString();
@@ -230,7 +230,7 @@ int main(int argc, const char** argv)
 		cpu.jump((uint32_t)start);
 	}
 
-	CircularVector< std::pair< uint32_t, uint32_t >, 128 > dbg_pc;
+	CircularVector< std::pair< uint32_t, uint32_t >, 16 > dbg_pc;
 	uint32_t dbg_sp = cpu.sp();
 
 	Ref< ui::Form > form;

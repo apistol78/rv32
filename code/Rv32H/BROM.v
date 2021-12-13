@@ -7,6 +7,7 @@ module BROM(
 	reg [31:0] memory [0:32'hffff];
 
     // Read ROM.
+	// initial $readmemh("code/Bare/Bare.vmem", memory);
 	initial $readmemh("code/Mini/Mini.vmem", memory);
 
 	always @ (posedge i_enable) begin

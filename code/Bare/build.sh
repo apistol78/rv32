@@ -3,7 +3,7 @@
 . ../../config.sh
 
 echo "Compiling..."
-riscv32-unknown-elf-gcc -nostdlib -ffreestanding -TLink.ld -o Bare Bare.s
+riscv32-unknown-elf-gcc -nostdlib -ffreestanding -TLink.ld -o Bare Bare.s Bare.c
 
 echo "Dumping..."
 riscv32-unknown-elf-objdump -D Bare > Bare.dump

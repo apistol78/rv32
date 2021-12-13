@@ -22,6 +22,8 @@ module CPU (
 	reg [31:0] r[31:0];
 	reg [31:0] instruction;
 
+	wire [1:0] address_byte = o_address[1:0];
+
 	// https://en.wikipedia.org/wiki/RISC-V#ISA_base_and_extensions
 
 	// B format
@@ -36,7 +38,7 @@ module CPU (
 
 	// J format
 	wire [4:0] inst_J_rd = instruction[11:7];
-	wire [31:0] inst_J_imm = { { 12{ instruction[20] } }, instruction[19:12], instruction[20], instruction[30:21], 1'b0 };
+	wire [31:0] inst_J_imm = { { 12{ instruction[31] } }, instruction[19:12], instruction[20], instruction[30:21], 1'b0 };
 
 	// R format
 	wire [4:0] inst_R_rd = instruction[11:7];
@@ -50,7 +52,9 @@ module CPU (
 
 	// U format
 	wire [4:0] inst_U_rd = instruction[11:7];
-	wire [31:0] inst_U_imm = { instruction[31:12], 12'b0 };	
+	wire [31:0] inst_U_imm = { instruction[31:12], 12'b0 };
+
+	integer i;
 
 	always @ (posedge i_clock)
 	begin
@@ -60,9 +64,11 @@ module CPU (
 			decode_step <= 0;
 			pc <= 32'h0200;
 			pc_next <= 0;
-			r[0] <= 0;
+
+        	for (i = 0; i < 32; i++)
+            	r[i] = 0;
 			r[2] <= 32'h00030000 - 4;	// sp
-			r[11] <= 0;
+
 			instruction <= 0;
 			o_rw <= 0;
 			o_request <= 0;
@@ -88,11 +94,12 @@ module CPU (
 			end
 			else if (state == STATE_DECODE) begin
 				//$display("---");
-				//$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+				$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
 				`include "Instructions.v"
 			end
 			else if (state == STATE_DECODE_FINISH) begin
-				//$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
+				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
+				$display("");
 				pc <= pc_next;
 				state <= STATE_FETCH_ISSUE;
 			end
