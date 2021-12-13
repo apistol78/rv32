@@ -3,7 +3,7 @@
 `include "BROM.v"
 `include "Video_tb.v"
 
-//`timescale 1 ns/10 ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1 ns/10 ps  // time-unit = 1 ns, precision = 10 ps
 
 module CPU_tab;
 
@@ -116,7 +116,7 @@ module CPU_tab;
         reset <= 0;
         
 
-		repeat(40000) @(posedge clock);
+		repeat(100000) @(posedge clock);
 
 		$finish;
 	end

@@ -116,8 +116,8 @@ int mkdir(const char *path, mode_t mode) {
 void main()
 {
 
-
-	printf("Hello world!\n");
+	for (int i = 0; i < 10; ++i)
+		printf("Hello world %d!\n", i);
 
 	/*
 	unsigned char v[6] = "EEEEE";

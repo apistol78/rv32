@@ -59,7 +59,7 @@ module CPU (
 	always @ (posedge i_clock)
 	begin
 		if (i_reset == 1'b1) begin
-			$display("RESET");
+			// $display("RESET");
 			state <= STATE_FETCH_ISSUE;
 			decode_step <= 0;
 			pc <= 32'h0200;
@@ -93,13 +93,12 @@ module CPU (
 				end
 			end
 			else if (state == STATE_DECODE) begin
-				//$display("---");
-				$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+				//$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
 				`include "Instructions.v"
 			end
 			else if (state == STATE_DECODE_FINISH) begin
-				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
-				$display("");
+				//$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
+				//$display("");
 				pc <= pc_next;
 				state <= STATE_FETCH_ISSUE;
 			end

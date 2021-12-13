@@ -17,11 +17,11 @@ module BRAM(
 
 	always @ (posedge i_enable) begin
         if (!i_rw) begin
-            $display("-- read mem %x (%x) --", i_address, memory[i_address >> 2]);
+            // $display("-- read mem %x (%x) --", i_address, memory[i_address >> 2]);
 		    o_rdata <= memory[i_address >> 2];
         end
         else begin
-            $display("-- write mem %x (%x) --", i_address, i_wdata);
+            // $display("-- write mem %x (%x) --", i_address, i_wdata);
             memory[i_address >> 2] <= i_wdata;
         end
 	end
