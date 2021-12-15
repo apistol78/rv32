@@ -136,10 +136,6 @@ module SoC(
       input              UART_RX,
       output             UART_TX
 );
-
-	//reg reset = 1'b1;
-	//reg clock = 1'b0;
-	
 	assign reset = !CPU_RESET_n;
 	assign clock = CLOCK_50_B5B;
 
@@ -166,6 +162,19 @@ module SoC(
 		.i_wdata(ram_wdata),
 		.o_rdata(ram_rdata)
 	);
+	
+	// Mapped LEDS
+	wire led_enable;
+	wire led_rw;
+	wire [31:0] led_address;
+	wire [31:0] led_wdata;
+	LED_Mapped led(
+		.i_enable(led_enable),
+		.i_rw(led_rw),
+		.i_address(led_address),
+		.i_wdata(led_wdata),
+		.o_leds(LEDR)
+	);
 
 	// CPU
 	wire cpu_rw;
@@ -185,8 +194,6 @@ module SoC(
 		.o_data(cpu_wdata)
 	);
 
-
-
 	//=====================================
 
 	assign rom_enable = cpu_request && (cpu_address >= 32'h00000200 && cpu_address < 32'h00020000);
@@ -197,6 +204,11 @@ module SoC(
 	assign ram_address = cpu_address - 32'h00020000;
 	assign ram_wdata = cpu_wdata;
 
+	assign led_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign led_rw = cpu_rw;
+	assign led_address = cpu_address - 32'h10000000;
+	assign led_wdata = cpu_wdata;
+	
 //	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 //	assign video_rw = cpu_rw;
 //	assign video_address = cpu_address - 32'h10000000;
@@ -206,9 +218,5 @@ module SoC(
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
 		32'h00000000;
-//	assign cpu_rdata = ram_enable ? ram_rdata : 'z;
-//	assign cpu_rdata = video_enable ? video_rdata : 'z;
-
-	assign LEDR = 10'b1010101010;
 
 endmodule
