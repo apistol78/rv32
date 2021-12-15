@@ -65,7 +65,7 @@ module CPU (
 			pc <= 32'h0200;
 			pc_next <= 0;
 
-        	for (i = 0; i < 32; i++)
+        	for (i = 0; i < 32; i = i + 1)
             	r[i] = 0;
 			r[2] <= 32'h00030000 - 4;	// sp
 
