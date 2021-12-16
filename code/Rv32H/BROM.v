@@ -6,9 +6,9 @@ module BROM(
 
 	reg [31:0] data [0:165];
 
-    // Read ROM.
-	initial $readmemh("code/Bare/Bare.vmem", data);
-	//initial $readmemh("../code/Bare/Bare.vmem", data);
+   // Read ROM.
+	// initial $readmemh("code/Bare/Bare.vmem", data);
+	initial $readmemh("../code/Bare/Bare.vmem", data);
 	
 	// initial $readmemh("code/Mini/Mini.vmem", data);
 	// initial $readmemh("../code/Mini/Mini.vmem", data);

@@ -183,6 +183,29 @@ module SoC(
 		.o_rdata(ram_rdata)
 	);
 	
+	// SRAM
+	wire sram_enable;
+	wire sram_rw;
+	wire [31:0] sram_address;
+	wire [31:0] sram_wdata;
+	wire [31:0] sram_rdata;
+	wire sram_ready;
+	SRAM_interface sram(
+		.i_clock(clock),
+		.i_enable(sram_enable),
+		.i_rw(sram_rw),
+		.i_address(sram_address),
+		.i_wdata(sram_wdata),
+		.o_rdata(sram_rdata),
+		.o_ready(sram_ready),
+		// ---
+		.SRAM_A(SRAM_A),
+		.SRAM_D(SRAM_D),
+		.SRAM_CE_n(SRAM_CE_n),
+		.SRAM_OE_n(SRAM_OE_n),
+		.SRAM_WE_n(SRAM_WE_n)
+	);
+	
 	// Mapped LEDS
 	wire led_enable;
 	wire led_rw;
@@ -200,7 +223,7 @@ module SoC(
 	// CPU
 	wire cpu_rw;
 	wire cpu_request;
-	reg cpu_ready = 1;
+	wire cpu_ready;
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
@@ -229,6 +252,11 @@ module SoC(
 	assign ram_address = cpu_address - 32'h0002_0000;
 	assign ram_wdata = cpu_wdata;
 
+	assign sram_enable = cpu_request && (cpu_address >= 32'h0003_0000 && cpu_address < 32'h0003_0000 + 32'h0040_0000);
+	assign sram_rw = cpu_rw;
+	assign sram_address = cpu_address - 32'h0003_0000;
+	assign sram_wdata = cpu_wdata;
+	
 	assign led_enable = cpu_request && (cpu_address >= 32'h1000_0000 && cpu_address < 32'h2000_0000);
 	assign led_rw = cpu_rw;
 	assign led_address = cpu_address - 32'h1000_0000;
@@ -242,6 +270,13 @@ module SoC(
 	assign cpu_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
+		sram_enable ? sram_rdata :
 		32'h00000000;
+		
+	assign cpu_ready =
+		rom_enable ? 1'b1 :
+		ram_enable ? 1'b1 :
+		sram_enable ? sram_ready :
+		1'b1;
 
 endmodule

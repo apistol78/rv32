@@ -9,53 +9,50 @@ module SRAM_tb(
     output reg o_ready
 );
 
-	reg [31:0] data [0:32'h1fff];
+	reg [31:0] data [0:32'h0040_0000 - 1];
 
     reg [4:0] tick;
     reg [31:0] addr;
     reg [31:0] wdata;
 
-	integer i;
 	initial begin
-		for (i = 0; i < 32'h1000; i = i + 1) begin
-			data[i] = 0;
-			data[i + 32'h1000] = 0;
-		end
-        o_ready = 0;
-	end
-
-	always @ (posedge i_enable) begin
-        o_ready <= 0;
-		if (!i_rw) begin
-            o_rdata <= 32'hxxxx_xxxx;
-            addr <= i_address;
-            tick <= 4;
-		end
-		else begin
-            wdata <= i_wdata;
-            addr <= i_address;
-            tick <= 4;
-		end
+		o_ready = 0;
+		tick <= 4;
 	end
 
     always @ (posedge i_clock) begin
         if (i_enable) begin
-            tick <= tick - 1;
-            if (tick == 0) begin
+		  
+				if (tick == 4) begin
+					if (!i_rw) begin
+							o_rdata <= 32'hxxxx_xxxx;
+							addr <= i_address;
+					end
+					else begin
+							wdata <= i_wdata;
+							addr <= i_address;
+					end
+					tick <= tick - 1;
+				end
+				else if (tick == 0) begin
+                o_ready <= 1;
                 if (!i_rw) begin
                     $display("mem read ready");
                     o_rdata <= data[addr >> 2];
-                    o_ready <= 1;
                 end
                 else begin
                     $display("mem write ready");
                     data[addr >> 2] <= wdata;
-                    o_ready <= 1;
                 end
             end
+				else begin
+					tick <= tick - 1;
+				end
+				
         end
         else begin
             o_ready <= 0;
+				tick <= 4;
         end
     end
 
