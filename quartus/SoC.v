@@ -138,17 +138,16 @@ module SoC(
 );
 
 	assign reset = !CPU_RESET_n;
+	assign clock = CLOCK_50_B5B;
 
-	
-	// assign clock = CLOCK_50_B5B;
-
+	/*
 	reg [23:0] counter = 0;
 	always @(posedge CLOCK_50_B5B) begin
 		counter <= counter + 1;
 	end
 	
 	wire clock = counter[10];
-	
+	*/
 	
 	
 	/*
