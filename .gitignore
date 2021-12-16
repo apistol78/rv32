@@ -1,6 +1,11 @@
 /build
 /.vs
 /code/Doom/doomgeneric/build
+/quartus/db
+/quartus/output_files
+/quartus/incremental*
 *.hex
 *.dump
 *.log
+*.bak
+*.vcd

@@ -32,72 +32,64 @@ module SRAM_interface(
         if (i_enable) begin
         	if (!i_rw) begin	// read
         		case (state)
-        			2'b00:
-						begin
-							SRAM_A <= i_address >> 2;
-							SRAM_CE_n <= 0;
-							SRAM_OE_n <= 0;
-							state <= 2'b01;
-						end
+        			2'b00: begin
+						SRAM_A <= i_address >> 2;
+						SRAM_CE_n <= 0;
+						SRAM_OE_n <= 0;
+						state <= 2'b01;
+					end
 						
-        			2'b01:
-						begin
-							o_rdata[31:16] <= SRAM_D;
-							SRAM_CE_n <= 1;
-							SRAM_OE_n <= 1;
-							state <= 2'b10;
-						end
+        			2'b01: begin
+						o_rdata[31:16] <= SRAM_D;
+						SRAM_CE_n <= 1;
+						SRAM_OE_n <= 1;
+						state <= 2'b10;
+					end
 						
-        			2'b10:
-						begin
-							SRAM_A <= (i_address >> 2) + 1;
-							SRAM_CE_n <= 0;
-							SRAM_OE_n <= 0;
-							state <= 2'b11;
-						end
+        			2'b10: begin
+						SRAM_A <= (i_address >> 2) + 1;
+						SRAM_CE_n <= 0;
+						SRAM_OE_n <= 0;
+						state <= 2'b11;
+					end
 						
-        			2'b11:
-						begin
-							o_rdata[15:0] <= SRAM_D;
-							o_ready <= 1;
-							SRAM_CE_n <= 1;
-							SRAM_OE_n <= 1;
-						end
+        			2'b11: begin
+						o_rdata[15:0] <= SRAM_D;
+						o_ready <= 1;
+						SRAM_CE_n <= 1;
+						SRAM_OE_n <= 1;
+					end
         		endcase
         	end
         	else begin	// write
         		case (state)
-        			2'b00:
-						begin
-							wdata <= i_wdata[31:16];
-							SRAM_A <= i_address >> 2;
-							SRAM_CE_n <= 0;
-							SRAM_WE_n <= 0;
-							state <= 2'b01;
-						end
+        			2'b00: begin
+						wdata <= i_wdata[31:16];
+						SRAM_A <= i_address >> 2;
+						SRAM_CE_n <= 0;
+						SRAM_WE_n <= 0;
+						state <= 2'b01;
+					end
 						
-        			2'b01:
-						begin
-							SRAM_CE_n <= 1;
-							SRAM_WE_n <= 1;
-							state <= 2'b10;
-						end
+        			2'b01: begin
+						SRAM_CE_n <= 1;
+						SRAM_WE_n <= 1;
+						state <= 2'b10;
+					end
 						
-        			2'b10:
-						begin
-							wdata <= i_wdata[15:0];
-							SRAM_A <= (i_address >> 2) + 1;
-							SRAM_CE_n <= 0;
-							SRAM_WE_n <= 0;
-							state <= 2'b11;
-						end
+        			2'b10: begin
+						wdata <= i_wdata[15:0];
+						SRAM_A <= (i_address >> 2) + 1;
+						SRAM_CE_n <= 0;
+						SRAM_WE_n <= 0;
+						state <= 2'b11;
+					end
 						
-        			2'b11:
-        				begin
-							o_ready <= 1;
-							SRAM_CE_n <= 1;
-							SRAM_WE_n <= 1;
-						end
+        			2'b11: begin
+						o_ready <= 1;
+						SRAM_CE_n <= 1;
+						SRAM_WE_n <= 1;
+					end
         		endcase
         	end
         end
