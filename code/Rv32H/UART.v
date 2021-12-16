@@ -1,0 +1,75 @@
+
+module UART #(
+    parameter CLOCK_RATE = 50000000,
+    parameter BAUD_RATE = 9600
+)(
+	input wire i_clock,
+	input wire i_enable,
+	input wire i_rw,
+	input wire [31:0] i_wdata,
+	//output reg [31:0] o_rdata,
+    output reg o_ready,
+
+    input wire UART_RX,
+    output reg UART_TX
+);
+
+	localparam STATE_IDLE		= 3'b000;
+	localparam STATE_START_BIT	= 3'b001;
+	localparam STATE_DATA_BITS	= 3'b010;
+	localparam STATE_STOP_BIT	= 3'b011;
+
+	reg [2:0] state = STATE_IDLE;
+	reg [7:0] data = 0;
+	reg [4:0] count = 0;
+
+	wire baud_clock;
+	ClockDivider #(
+		CLOCK_RATE,
+		BAUD_RATE
+	) tx_clock(
+		.i_clock(i_clock),
+		.o_clock(baud_clock)
+	);
+	
+	initial begin
+		o_ready <= 1;
+	end
+
+	always @ (posedge baud_clock) begin
+		case (state)
+			STATE_IDLE: begin
+				UART_TX <= 1;
+				if (i_rw && i_enable) begin
+					data <= i_wdata[31:24] | i_wdata[23:16] | i_wdata[15:8] | i_wdata[7:0];
+					count <= 0;
+					state <= STATE_START_BIT;
+					o_ready <= 0;
+				end
+			end
+
+			STATE_START_BIT: begin
+				UART_TX <= 0;
+				state <= STATE_DATA_BITS;
+			end
+
+			STATE_DATA_BITS: begin
+				UART_TX <= data[count];
+				if (count >= 7) begin
+					state <= STATE_STOP_BIT;
+				end else begin
+					count <= count + 1;
+				end
+			end
+
+			STATE_STOP_BIT: begin
+				UART_TX <= 1;
+				o_ready <= 1;
+				if (!i_enable) begin
+					state <= STATE_IDLE;
+				end
+			end
+		endcase
+	end
+
+endmodule

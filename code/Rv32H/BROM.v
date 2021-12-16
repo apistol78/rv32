@@ -4,7 +4,7 @@ module BROM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] data [0:165];
+	reg [31:0] data [0:185];
 
    // Read ROM.
 	// initial $readmemh("code/Bare/Bare.vmem", data);

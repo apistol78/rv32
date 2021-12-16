@@ -147,7 +147,7 @@ module SoC(
 		counter <= counter + 1;
 	end
 	
-	wire clock = counter[21];
+	wire clock = counter[10];
 	
 	
 	
@@ -219,6 +219,25 @@ module SoC(
 		.i_wdata(led_wdata),
 		.o_leds(LEDR)
 	);
+	
+	// UART
+	wire uart_enable;
+	wire uart_rw;
+	wire [31:0] uart_wdata;
+	wire uart_ready;
+	UART #(
+		50000000,
+		9600
+	) uart(
+		.i_clock(CLOCK_50_B5B),
+		.i_enable(uart_enable),
+		.i_rw(uart_rw),
+		.i_wdata(uart_wdata),
+		.o_ready(uart_ready),
+		// ---
+		.UART_RX(UART_RX),
+		.UART_TX(UART_TX)
+	);
 
 	// CPU
 	wire cpu_rw;
@@ -262,6 +281,10 @@ module SoC(
 	assign led_address = cpu_address - 32'h1000_0000;
 	assign led_wdata = cpu_wdata;
 	
+	assign uart_enable = cpu_request && (cpu_address >= 32'h2000_0000 && cpu_address < 32'h3000_0000);
+	assign uart_rw = cpu_rw;
+	assign uart_wdata = cpu_wdata;
+	
 //	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 //	assign video_rw = cpu_rw;
 //	assign video_address = cpu_address - 32'h10000000;
@@ -277,6 +300,7 @@ module SoC(
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
 		sram_enable ? sram_ready :
+		uart_enable ? uart_ready :
 		1'b1;
 
 endmodule
