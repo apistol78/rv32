@@ -136,9 +136,29 @@ module SoC(
       input              UART_RX,
       output             UART_TX
 );
-	assign reset = !CPU_RESET_n;
-	assign clock = CLOCK_50_B5B;
 
+	assign reset = !CPU_RESET_n;
+
+	
+	// assign clock = CLOCK_50_B5B;
+
+	reg [23:0] counter = 0;
+	always @(posedge CLOCK_50_B5B) begin
+		counter <= counter + 1;
+	end
+	
+	wire clock = counter[21];
+	
+	
+	
+	/*
+	reg clock = 1'b0;
+	always @(posedge CLOCK_125_p) begin
+		clock <= !clock;
+	end
+	*/
+
+	
 	// ROM
 	wire rom_enable;
 	wire [31:0] rom_address;
@@ -169,6 +189,7 @@ module SoC(
 	wire [31:0] led_address;
 	wire [31:0] led_wdata;
 	LED_Mapped led(
+		.i_clock(clock),
 		.i_enable(led_enable),
 		.i_rw(led_rw),
 		.i_address(led_address),
@@ -183,6 +204,7 @@ module SoC(
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
+	wire [31:0] cpu_pc;
 	CPU cpu(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -191,22 +213,25 @@ module SoC(
 		.i_ready(cpu_ready),
 		.o_address(cpu_address),
 		.i_data(cpu_rdata),
-		.o_data(cpu_wdata)
+		.o_data(cpu_wdata),
+		.o_pc(cpu_pc)
 	);
 
+	assign LEDG = cpu_pc[7:0];
+	
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h00000200 && cpu_address < 32'h00020000);
-	assign rom_address = cpu_address - 32'h00000000;
+	assign rom_enable = cpu_request && (cpu_address >= 32'h0000_0200 && cpu_address < 32'h0002_0000);
+	assign rom_address = cpu_address - 32'h0000_0000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h00020000 && cpu_address < 32'h00030000);
+	assign ram_enable = cpu_request && (cpu_address >= 32'h0002_0000 && cpu_address < 32'h0002_0000 + 32'h0000_8000);
 	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h00020000;
+	assign ram_address = cpu_address - 32'h0002_0000;
 	assign ram_wdata = cpu_wdata;
 
-	assign led_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign led_enable = cpu_request && (cpu_address >= 32'h1000_0000 && cpu_address < 32'h2000_0000);
 	assign led_rw = cpu_rw;
-	assign led_address = cpu_address - 32'h10000000;
+	assign led_address = cpu_address - 32'h1000_0000;
 	assign led_wdata = cpu_wdata;
 	
 //	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);

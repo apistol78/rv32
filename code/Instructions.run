@@ -617,9 +617,7 @@ local instructions = {
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
 				// $display("\tLOAD BYTE, address <= %x", r[inst_I_rs1] + $signed(inst_I_imm));
-				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			// 2: wait until load finish.
@@ -632,7 +630,7 @@ local instructions = {
 						2'b10: r[inst_I_rd] <= { { 24{ i_data[23] } }, i_data[22:16] };
 						2'b11: r[inst_I_rd] <= { { 24{ i_data[31] } }, i_data[30:24] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -651,9 +649,7 @@ local instructions = {
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
 				// $display("\tLOAD UBYTE, address %x", r[inst_I_rs1] + $signed(inst_I_imm));
-				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			// 2: wait until load finish.
@@ -666,7 +662,7 @@ local instructions = {
 						2'b10: r[inst_I_rd] <= { 24'b0, i_data[23:16] };
 						2'b11: r[inst_I_rd] <= { 24'b0, i_data[31:24] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -690,9 +686,7 @@ local instructions = {
 		verilog = [[
 			if (decode_step == 0) begin
 				// $display("\tLOAD SHALF, address <= %x", r[inst_I_rs1] + $signed(inst_I_imm));
-				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
@@ -702,7 +696,7 @@ local instructions = {
 						2'b00: r[inst_I_rd] <= { { 16{ i_data[15] } }, i_data[14:0] };
 						2'b10: r[inst_I_rd] <= { { 16{ i_data[31] } }, i_data[30:16] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -720,9 +714,7 @@ local instructions = {
 		verilog = [[
 			if (decode_step == 0) begin
 				// $display("\tLOAD HALF, address <= %x", r[inst_I_rs1] + $signed(inst_I_imm));
-				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
@@ -733,7 +725,7 @@ local instructions = {
 						2'b00: r[inst_I_rd] <= { 16'b0, i_data[15:0] };
 						2'b10: r[inst_I_rd] <= { 16'b0, i_data[31:16] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -777,16 +769,14 @@ local instructions = {
 		verilog = [[
 			if (decode_step == 0) begin
 				// $display("\tLOAD WORD, address <= %x (%b)", r[inst_I_rs1] + $signed(inst_I_imm), o_request);
-				o_address <= r[inst_I_rs1] + $signed(inst_I_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
 					// $display("\tLOAD WORD, data => %x", i_data);
 					r[inst_I_rd] <= i_data;
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -803,15 +793,13 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
-				o_address <= r[inst_I_rs1] + inst_I_imm;
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_I_rs1] + inst_I_imm);
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
 					r[inst_I_rd] <= i_data[31:0];
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -956,9 +944,7 @@ local instructions = {
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
 				// $display("\tSTORE BYTE, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
-				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
 				decode_step <= 1;
 			end
 			// 2: patch into word after load finished.
@@ -971,14 +957,14 @@ local instructions = {
 						2'b10: o_data <= {      i_data[31:24], r[inst_S_rs2][7:0],       i_data[15:8],        i_data[7:0] };
 						2'b11: o_data <= { r[inst_S_rs2][7:0],      i_data[23:16],       i_data[15:8],        i_data[7:0] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					decode_step <= 2;
 				end
 			end
 			// 3: store 32-bit word into memory.
 			else if (decode_step == 2) begin
 				o_rw <= 1;
-				o_request <= 1;
+				request <= 1;
 				decode_step <= 3;
 			end
 			// 4: wait until store finished.
@@ -986,7 +972,7 @@ local instructions = {
 				if (i_ready) begin
 					// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
 					o_rw <= 0;
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -1029,9 +1015,7 @@ local instructions = {
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
 				// $display("\tSTORE HALF, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
-				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
-				o_rw <= 0;
-				o_request <= 1;				
+				`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
 				decode_step <= 1;
 			end
 			// 2: patch into word after load finished.
@@ -1041,21 +1025,21 @@ local instructions = {
 						2'b00: o_data <= {       i_data[31:16], r[inst_S_rs2][15:0] };
 						2'b10: o_data <= { r[inst_S_rs2][15:0],        i_data[15:0] };
 					endcase
-					o_request <= 0;
+					request <= 0;
 					decode_step <= 2;
 				end
 			end
 			// 3: store 32-bit word into memory.
 			else if (decode_step == 2) begin
 				o_rw <= 1;
-				o_request <= 1;
+				request <= 1;
 				decode_step <= 3;
 			end
 			// 4: wait until store finished.
 			else if (decode_step == 3) begin
 				if (i_ready) begin
 					o_rw <= 0;
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end
@@ -1267,16 +1251,13 @@ local instructions = {
 		verilog = [[
 			if (decode_step == 0) begin
 				// $display("\tSTORE WORD, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
-				o_address <= r[inst_S_rs1] + $signed(inst_S_imm);
-				o_data <= r[inst_S_rs2];
-				o_rw <= 1;
-				o_request <= 1;				
+				`MEM_WRITE_REQ(r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
 					o_rw <= 0;
-					o_request <= 0;
+					request <= 0;
 					`DECODE_DONE;
 				end
 			end			
