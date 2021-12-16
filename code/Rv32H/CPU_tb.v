@@ -70,17 +70,17 @@ module CPU_tab;
 
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h00000200 && cpu_address < 32'h00020000);
-	assign rom_address = cpu_address - 32'h00000000;
+	assign rom_enable = cpu_request && (cpu_address >= 32'h0000_0200 && cpu_address < 32'h0002_0000);
+	assign rom_address = cpu_address - 32'h0000_0000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h00020000 && cpu_address < 32'h00030000);
+	assign ram_enable = cpu_request && (cpu_address >= 32'h0002_0000 && cpu_address < 32'h0002_0000 + 32'h0000_8000);
 	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h00020000;
+	assign ram_address = cpu_address - 32'h0002_0000;
 	assign ram_wdata = cpu_wdata;
 
-	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign video_enable = cpu_request && (cpu_address >= 32'h1000_0000 && cpu_address < 32'h2000_0000);
 	assign video_rw = cpu_rw;
-	assign video_address = cpu_address - 32'h10000000;
+	assign video_address = cpu_address - 32'h1000_0000;
 	assign video_wdata = cpu_wdata;
 
     assign cpu_rdata = rom_enable ? rom_rdata : 'z;
@@ -116,7 +116,7 @@ module CPU_tab;
         reset <= 0;
         
 
-		repeat(100000) @(posedge clock);
+		repeat(200) @(posedge clock);
 
 		$finish;
 	end

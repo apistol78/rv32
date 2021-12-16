@@ -6,24 +6,24 @@ module BRAM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] memory [0:32'h2fff];
+	reg [31:0] memory [0:32'h1fff];
 
-    // Clear entire memory.
-//    integer i;
-//    initial begin
-//        for (i = 0; i <= 32'hffff; i = i + 1)
-//            memory[i] = 0;
-//    end
+	// Clear entire memory.
+	integer i;
+	initial begin
+		for (i = 0; i <= 32'h1fff; i = i + 1)
+			memory[i] = 0;
+	end
 
 	always @ (posedge i_enable) begin
-        if (!i_rw) begin
-            // $display("-- read mem %x (%x) --", i_address, memory[i_address >> 2]);
-		    o_rdata <= memory[i_address >> 2];
-        end
-        else begin
-            // $display("-- write mem %x (%x) --", i_address, i_wdata);
-            memory[i_address >> 2] <= i_wdata;
-        end
+		if (!i_rw) begin
+			// $display("-- read mem %x (%x) --", i_address, memory[i_address >> 2]);
+			o_rdata <= memory[i_address >> 2];
+		end
+		else begin
+			// $display("-- write mem %x (%x) --", i_address, i_wdata);
+			memory[i_address >> 2] <= i_wdata;
+		end
 	end
 
 endmodule

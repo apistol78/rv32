@@ -4,12 +4,12 @@ module BROM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] memory [0:21946];
+	reg [31:0] memory [0:157];
 
     // Read ROM.
-	// initial $readmemh("code/Bare/Bare.vmem", memory);
-	//initial $readmemh("code/Mini/Mini.vmem", memory);
-	initial $readmemh("../code/Mini/Mini.vmem", memory);
+	initial $readmemh("code/Bare/Bare.vmem", memory);
+	// initial $readmemh("code/Mini/Mini.vmem", memory);
+	// initial $readmemh("../code/Mini/Mini.vmem", memory);
 
 	always @ (posedge i_enable) begin
 		o_rdata <= memory[i_address >> 2];

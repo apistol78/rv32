@@ -54,12 +54,14 @@ module CPU (
 	wire [4:0] inst_U_rd = instruction[11:7];
 	wire [31:0] inst_U_imm = { instruction[31:12], 12'b0 };
 
+	`include "Instructions_i.v"
+
 	integer i;
 
 	always @ (posedge i_clock)
 	begin
 		if (i_reset == 1'b1) begin
-			// $display("RESET");
+			$display("RESET");
 			state <= STATE_FETCH_ISSUE;
 			decode_step <= 0;
 			pc <= 32'h0200;
@@ -67,7 +69,8 @@ module CPU (
 
         	for (i = 0; i < 32; i = i + 1)
             	r[i] = 0;
-			r[2] <= 32'h00030000 - 4;	// sp
+
+			r[2] <= 32'h0002_0000 + 32'h0000_8000 - 4;	// sp
 
 			instruction <= 0;
 			o_rw <= 0;
@@ -75,7 +78,7 @@ module CPU (
 		end
 		else begin
 			if (state == STATE_FETCH_ISSUE) begin
-				//$display("STATE_FETCH_ISSUE, pc = %x", pc);
+				// $display("STATE_FETCH_ISSUE, pc = %x", pc);
 				o_address <= pc;
 				o_rw <= 0;
 				o_request <= 1;
@@ -85,7 +88,7 @@ module CPU (
 			end
 			else if (state == STATE_FETCH_READ) begin
 				if (i_ready) begin
-					//$display("STATE_FETCH_READ, i_data = %x", i_data);
+					// $display("STATE_FETCH_READ, i_data = %x", i_data);
 					instruction <= i_data;
 					o_request <= 0;
 					state <= STATE_DECODE;
@@ -93,12 +96,11 @@ module CPU (
 				end
 			end
 			else if (state == STATE_DECODE) begin
-				//$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
-				`include "Instructions.v"
+				$display("STATE_DECODE[%d], PC: %x, SP: %x, ZERO: %x", decode_step, pc, r[2], r[15]);
+				`include "Instructions_d.v"
 			end
 			else if (state == STATE_DECODE_FINISH) begin
-				//$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
-				//$display("");
+				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
 				pc <= pc_next;
 				state <= STATE_FETCH_ISSUE;
 			end

@@ -3,6 +3,5 @@
 
 _start:
     call    main
-    #sw      sp, 0(sp)
-    #lw	    s2, 0(sp)
-    j       _start
+__end:
+    j       __end
