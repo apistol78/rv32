@@ -1,17 +1,24 @@
 
+typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+typedef void (*call_fn_t)();
 
 void main()
 {
-	unsigned char* video = (unsigned char*)0x10000000;
-	unsigned char* sram = (unsigned char*)0x00030000;
-	unsigned char cnt = 1;
-	unsigned char tmp;
-
+	volatile uint8_t* video = (volatile uint8_t*)0x40000000;
 	for (;;)
 	{
-		*(unsigned char*)sram = cnt;
-		tmp = *(unsigned char*)sram;
-		*(unsigned char*)video = tmp;
-		cnt++;
+		*video = 'H';
+		*video = 'e';
+		*video = 'l';
+		*video = 'l';
+		*video = 'o';
+		*video = ' ';
+		*video = 'W';
+		*video = 'o';
+		*video = 'r';
+		*video = 'l';
+		*video = 'd';
+		*video = '\n';
 	}
 }

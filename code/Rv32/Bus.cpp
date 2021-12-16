@@ -101,7 +101,7 @@ const Bus::MappedDevice* Bus::findMappedDevice(uint32_t address) const
 {
 	for (auto& mappedDevice : m_mappedDevices)
 	{
-		if (address >= mappedDevice.start && address <= mappedDevice.end)
+		if (address >= mappedDevice.start && address < mappedDevice.end)
 			return &mappedDevice;
 	}
 	return nullptr;

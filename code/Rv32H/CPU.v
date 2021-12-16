@@ -77,13 +77,13 @@ module CPU (
 		state <= STATE_FETCH_ISSUE;
 		decode_step <= 0;
 		
-		pc <= 32'h0000_0200;
-		pc_next <= 32'h0000_0200;
+		pc <= 32'h0000_0000;
+		pc_next <= 32'h0000_0000;
 
       for (i = 0; i < 32; i = i + 1)
         	r[i] <= 0;
 
-		r[2] <= 32'h0002_0000 + 32'h0000_8000 - 4;	// sp
+		r[2] <= 32'h0002_0000;	// sp
 
 		instruction <= 0;
 		o_rw <= 0;

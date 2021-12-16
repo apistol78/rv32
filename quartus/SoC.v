@@ -207,13 +207,11 @@ module SoC(
 	
 	// Mapped LEDS
 	wire led_enable;
-	wire led_rw;
 	wire [31:0] led_address;
 	wire [31:0] led_wdata;
 	LED_Mapped led(
 		.i_clock(clock),
 		.i_enable(led_enable),
-		.i_rw(led_rw),
 		.i_address(led_address),
 		.i_wdata(led_wdata),
 		.o_leds(LEDR)
@@ -262,32 +260,26 @@ module SoC(
 	
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h0000_0200 && cpu_address < 32'h0002_0000);
-	assign rom_address = cpu_address - 32'h0000_0000;
+	assign rom_enable = cpu_request && (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
+	assign rom_address = cpu_address - 32'h00000000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h0002_0000 && cpu_address < 32'h0002_0000 + 32'h0000_8000);
+	assign ram_enable = cpu_request && (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
 	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h0002_0000;
+	assign ram_address = cpu_address - 32'h00010000;
 	assign ram_wdata = cpu_wdata;
 
-	assign sram_enable = cpu_request && (cpu_address >= 32'h0003_0000 && cpu_address < 32'h0003_0000 + 32'h0040_0000);
+	assign sram_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram_rw = cpu_rw;
-	assign sram_address = cpu_address - 32'h0003_0000;
+	assign sram_address = cpu_address - 32'h10000000;
 	assign sram_wdata = cpu_wdata;
 	
-	assign led_enable = cpu_request && (cpu_address >= 32'h1000_0000 && cpu_address < 32'h2000_0000);
-	assign led_rw = cpu_rw;
-	assign led_address = cpu_address - 32'h1000_0000;
+	assign led_enable = cpu_request && (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
+	assign led_address = cpu_address - 32'h50000000;
 	assign led_wdata = cpu_wdata;
 	
-	assign uart_enable = cpu_request && (cpu_address >= 32'h2000_0000 && cpu_address < 32'h3000_0000);
+	assign uart_enable = cpu_request && (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
 	assign uart_rw = cpu_rw;
 	assign uart_wdata = cpu_wdata;
-	
-//	assign video_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-//	assign video_rw = cpu_rw;
-//	assign video_address = cpu_address - 32'h10000000;
-//	assign video_wdata = cpu_wdata;
 
 	assign cpu_rdata =
 		rom_enable ? rom_rdata :

@@ -123,6 +123,19 @@ if (is_S) begin
 	end
 
 end
+else if (is_J) begin
+
+	// JAL
+	if (is_JAL) begin
+		$display("	JAL");
+		$display("\tJ: R(%d), imm %d (%d)", inst_J_rd, inst_J_imm, $signed(inst_J_imm));
+				r[inst_J_rd] <= pc_next;
+				pc_next <= $signed(pc) + $signed(inst_J_imm);
+				`DECODE_DONE;
+			
+	end
+
+end
 else if (is_I) begin
 
 	// ADDI
@@ -347,19 +360,6 @@ else if (is_I) begin
 		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_I_rd, inst_I_rs1, inst_I_imm, $signed(inst_I_imm));
 			$display("\t   R(%d) = %x", inst_I_rs1, r[inst_I_rs1]);
 				r[inst_I_rd] <= r[inst_I_rs1] ^ inst_I_imm;
-				`DECODE_DONE;
-			
-	end
-
-end
-else if (is_J) begin
-
-	// JAL
-	if (is_JAL) begin
-		$display("	JAL");
-		$display("\tJ: R(%d), imm %d (%d)", inst_J_rd, inst_J_imm, $signed(inst_J_imm));
-				r[inst_J_rd] <= pc_next;
-				pc_next <= $signed(pc) + $signed(inst_J_imm);
 				`DECODE_DONE;
 			
 	end

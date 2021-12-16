@@ -150,12 +150,12 @@ T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
 CPU::CPU(Bus* bus, OutputStream* trace)
 :   m_bus(bus)
 ,	m_trace(trace)
-,   m_pc(0x200)
+,   m_pc(0x00000000)
 {
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
-		m_registers[i] = 0;
+		m_registers[i] = 0x00000000;
 
-	m_registers[2] = 0x00030000 - 4;
+	m_registers[2] = 0x00020000;
 }
 
 void CPU::jump(uint32_t address)

@@ -35,6 +35,7 @@
 #include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
 #include "Rv32/Memory.h"
+#include "Rv32/UART.h"
 #include "Rv32/Video.h"
 
 using namespace traktor;
@@ -91,18 +92,21 @@ int main(int argc, const char** argv)
 #endif
 	}
 
-	Memory rom(0x20000);
-	Memory ram(0x10000);
+	Memory rom(0x00010000);
+	Memory ram(0x00010000);
+	Memory sram(0x00010000);
+	Memory sdram(0x00010000);
 	Video video;
+	UART uart;
 
 	Bus bus;
-	bus.map(0x00000200, 0x0001ffff, &rom);
-	bus.map(0x00020000, 0x0002ffff, &ram);
-	bus.map(0x10000000, 0x2fffffff, &video);
-/*
-	for (int i = 0; i < 0xffff; ++i)
-		ram.writeU8(i, 0xcc);
-*/
+	bus.map(0x00000000, 0x00010000, &rom);
+	bus.map(0x00010000, 0x00020000, &ram);
+	bus.map(0x10000000, 0x20000000, &sram);
+	bus.map(0x20000000, 0x40000000, &sdram);
+	bus.map(0x40000000, 0x50000000, &video);
+	bus.map(0x50000010, 0x50000020, &uart);
+
 	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
 	{
 		std::wstring fileName = cmdLine.getOption(L"image-file").getString();
@@ -207,6 +211,7 @@ int main(int argc, const char** argv)
 			log::info << L"HEX loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	}
 
+	// Lock ROM from being mutable.
 	rom.setReadOnly(true);
 
 	Ref< OutputStream > os = nullptr;	

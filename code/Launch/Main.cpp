@@ -8,7 +8,28 @@
 
 using namespace traktor;
 
-bool loadHEX(const std::wstring& fileName, AlignedVector< uint8_t >& outMemory)
+void writePoke(uint32_t address, uint8_t data)
+{
+	log::info <<
+		L"0x01, " <<
+		str(L"0x%02x", address & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 8) & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 16) & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 24) & 0xff) << L", " <<
+		str(L"0x%02x", data) << L", " << Endl;
+}
+
+void writeJump(uint32_t address)
+{
+	log::info <<
+		L"0x02, " <<
+		str(L"0x%02x", address & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 8) & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 16) & 0xff) << L", " <<
+		str(L"0x%02x", (address >> 24) & 0xff) << L", " << Endl;
+}
+
+bool uploadHEX(const std::wstring& fileName)
 {
 	std::wstring tmp;
 
@@ -47,8 +68,7 @@ bool loadHEX(const std::wstring& fileName, AlignedVector< uint8_t >& outMemory)
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
 				const uint32_t linear = (upper | addr) + segment;
 
-				outMemory.resize(std::max< uint32_t >(linear + 1, outMemory.size()), 0x00);
-				outMemory[linear] = v;
+				writePoke(linear, v);
 
 				start = std::min(start, linear);
 				end = std::max(end, linear);
@@ -71,69 +91,24 @@ bool loadHEX(const std::wstring& fileName, AlignedVector< uint8_t >& outMemory)
 			upper <<= 16;
 		}
 		else if (type == 0x05)
-			continue;
+		{
+			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
+			writeJump(linear);
+		}
 		else
 			log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
 	}
 
-	log::info << L"HEX loaded, adress range " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
-	return true;
-}
-
-bool writeVerilog(const std::wstring& fileName, uint8_t word, const AlignedVector< uint8_t >& image)
-{
-	std::wstring tmp;
-
-	Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmWrite);
-	if (!f)
-	{
-		log::error << L"Unable to create \"" << fileName << L"\"." << Endl;
-		return false;
-	}
-
-	FileOutputStream fos(f, new AnsiEncoding());
-	switch (word)
-	{
-	default:
-	case 8:
-		{
-			for (uint32_t i = 0; i < image.size(); ++i)
-				fos << str(L"%02x", image[i]) << Endl;
-			log::info << image.size() << L" 8-bit words written." << Endl;
-		}
-		break;
-
-	case 16:
-		{
-			for (uint32_t i = 0; i < image.size(); i += 2)
-				fos << str(L"%04x", *(uint16_t*)(image.c_ptr() + i)) << Endl;
-			log::info << (image.size() / 2) << L" 16-bit words written." << Endl;
-		}
-		break;
-
-	case 32:
-		{
-			for (uint32_t i = 0; i < image.size(); i += 4)
-				fos << str(L"%08x", *(uint32_t*)(image.c_ptr() + i)) << Endl;
-			log::info << (image.size() / 4) << L" 32-bit words written." << Endl;
-		}
-		break;
-	}
-
+	log::info << L"HEX uploaded, adress range " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	return true;
 }
 
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
-	AlignedVector< uint8_t > image;
 
-	if (!loadHEX(commandLine.getString(0), image))
+	if (!uploadHEX(commandLine.getString(0)))
 		return 1;
 
-	if (!writeVerilog(commandLine.getString(1), commandLine.getOption('w', L"word").getInteger(), image))
-		return 2;
-
-	log::info << L"Image converted succesfully." << Endl;
 	return 0;
 }

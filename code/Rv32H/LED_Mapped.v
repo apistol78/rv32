@@ -1,7 +1,6 @@
 module LED_Mapped(
 	input wire i_clock,
 	input wire i_enable,
-	input wire i_rw,
 	input wire [31:0] i_address,
 	input wire [31:0] i_wdata,
 	output wire [9:0] o_leds
@@ -20,10 +19,8 @@ module LED_Mapped(
 	end
 	
 	always @ (posedge i_enable) begin
-        if (!i_rw) begin
-				leds[8] <= !leds[8];
-				leds[7:0] <= i_wdata[31:24] | i_wdata[23:16] | i_wdata[15:8] | i_wdata[7:0];
-        end
+ 		leds[8] <= !leds[8];
+		leds[7:0] <= i_wdata[31:24] | i_wdata[23:16] | i_wdata[15:8] | i_wdata[7:0];
 	end
 
 endmodule

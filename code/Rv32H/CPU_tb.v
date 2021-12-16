@@ -84,37 +84,39 @@ module CPU_tab;
 		.o_data(cpu_wdata)
 	);
 
-
-
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h0000_0200 && cpu_address < 32'h0002_0000);
-	assign rom_address = cpu_address - 32'h0000_0000;
+	assign rom_enable = cpu_request && (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
+	assign rom_address = cpu_address - 32'h00000000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h0002_0000 && cpu_address < 32'h0002_0000 + 32'h0000_8000);
+	assign ram_enable = cpu_request && (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
 	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h0002_0000;
+	assign ram_address = cpu_address - 32'h00010000;
 	assign ram_wdata = cpu_wdata;
 
-	assign sram_enable = cpu_request && (cpu_address >= 32'h0003_0000 && cpu_address < 32'h0003_0000 + 32'h0000_8000);
+	assign sram_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram_rw = cpu_rw;
-	assign sram_address = cpu_address - 32'h0003_0000;
+	assign sram_address = cpu_address - 32'h10000000;
 	assign sram_wdata = cpu_wdata;
 
-	assign video_enable = cpu_request && (cpu_address >= 32'h1000_0000 && cpu_address < 32'h2000_0000);
+	assign video_enable = cpu_request && (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
 	assign video_rw = cpu_rw;
-	assign video_address = cpu_address - 32'h1000_0000;
+	assign video_address = cpu_address - 32'h40000000;
 	assign video_wdata = cpu_wdata;
 
-    assign cpu_rdata = rom_enable ? rom_rdata : 'z;
-    assign cpu_rdata = ram_enable ? ram_rdata : 'z;
-	assign cpu_rdata = sram_enable ? sram_rdata : 'z;
-    assign cpu_rdata = video_enable ? video_rdata : 'z;
+	assign cpu_rdata =
+		rom_enable ? rom_rdata :
+		ram_enable ? ram_rdata :
+		sram_enable ? sram_rdata :
+		video_enable ? video_rdata :
+		32'h00000000;
 
-	assign cpu_ready = rom_enable ? 1'b1 : 'z;
-	assign cpu_ready = ram_enable ? 1'b1 : 'z;
-	assign cpu_ready = sram_enable ? sram_ready : 'z;
-	assign cpu_ready = video_enable ? 1'b1 : 'z;
+	assign cpu_ready =
+		rom_enable ? 1'b1 :
+		ram_enable ? 1'b1 :
+		sram_enable ? sram_ready :
+		video_enable ? 1'b1 :
+		1'b1;
 
 	// Generate clock.
 	initial begin
@@ -122,7 +124,6 @@ module CPU_tab;
 			clock <= !clock;
 		end
 	end
-
 
 	// Simulate.
 	initial begin
@@ -142,12 +143,10 @@ module CPU_tab;
     
         #2
         reset <= 0;
-        
 
 		repeat(200) @(posedge clock);
 
 		$finish;
 	end
-			
 	
 endmodule
