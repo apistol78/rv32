@@ -2,11 +2,17 @@
 
 #include <Core/Ref.h>
 #include <Core/Misc/AutoPtr.h>
+#include <Core/Timer/Timer.h>
 #include "Rv32/Device.h"
 
-namespace traktor::drawing
+namespace traktor
 {
-	class Image;
+	namespace drawing
+	{
+
+		class Image;
+
+	}
 }
 
 class Video : public Device
@@ -34,5 +40,6 @@ public:
 
 private:
 	traktor::Ref< traktor::drawing::Image > m_image;
+	traktor::Timer m_timer;
 	bool m_dirty = true;
 };

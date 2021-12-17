@@ -221,6 +221,7 @@ module SoC(
 	wire uart_enable;
 	wire uart_rw;
 	wire [31:0] uart_wdata;
+	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
 		50000000,
@@ -230,6 +231,7 @@ module SoC(
 		.i_enable(uart_enable),
 		.i_rw(uart_rw),
 		.i_wdata(uart_wdata),
+		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
 		// ---
 		.UART_RX(UART_RX),
@@ -285,13 +287,15 @@ module SoC(
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
 		sram_enable ? sram_rdata :
+		uart_enable ? uart_rdata :
 		32'h00000000;
 		
 	assign cpu_ready =
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
 		sram_enable ? sram_ready :
+		led_enable ? 1'b1 :
 		uart_enable ? uart_ready :
-		1'b1;
+		1'b0;
 
 endmodule

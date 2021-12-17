@@ -4,10 +4,10 @@ module BROM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] data [0:53];
+	reg [31:0] data [0:160];
 
-	initial $readmemh("code/Firmware/Firmware.vmem", data);
-	//initial $readmemh("../code/Firmware/Firmware.vmem", data);
+	//initial $readmemh("code/Firmware/Firmware.vmem", data);
+	initial $readmemh("../code/Firmware/Firmware.vmem", data);
 	
 	always @ (posedge i_enable) begin
 		o_rdata <= data[i_address >> 2];

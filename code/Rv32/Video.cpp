@@ -1,17 +1,10 @@
 #include <cstdio>
-
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
-
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadManager.h>
 #include <Drawing/Image.h>
 #include <Drawing/PixelFormat.h>
-
 #include "Rv32/Video.h"
 
 using namespace traktor;
@@ -44,7 +37,7 @@ bool Video::writeU16(uint32_t address, uint16_t value)
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
 	if (address == 0x00000100)
-		usleep(value * 1000);
+		ThreadManager::getInstance().getCurrentThread()->sleep(value);
 	else if (address == 0x00000200)
 	{
 
@@ -83,12 +76,7 @@ uint16_t Video::readU16(uint32_t address) const
 uint32_t Video::readU32(uint32_t address) const
 {
 	if (address == 0x00000100)
-	{
-		struct timeval tp;
-		struct timezone tzp;
-		gettimeofday(&tp, &tzp);
-		return (tp.tv_sec * 1000) + (tp.tv_usec / 1000);        
-	}
+		return (uint32_t)(m_timer.getElapsedTime() * 1000.0);
 	else
 		return 0;
 }

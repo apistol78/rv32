@@ -5,35 +5,41 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadManager.h>
+#include "Launch/Serial.h"
 
 using namespace traktor;
 
-void writePoke(uint32_t address, uint8_t data)
+template < typename T >
+void write(Serial& serial, T value)
 {
-	log::info <<
-		L"0x01, " <<
-		str(L"0x%02x", address & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 8) & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 16) & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 24) & 0xff) << L", " <<
-		str(L"0x%02x", data) << L", " << Endl;
+	const uint8_t* v = (const uint8_t*)&value;
+	for (int i = 0; i < sizeof(T); ++i)
+	{
+		serial.write(v++, 1);
+		ThreadManager::getInstance().getCurrentThread()->sleep(20);
+	}
 }
 
-void writeJump(uint32_t address)
+void writePoke(Serial& serial, uint32_t address, uint8_t data)
 {
-	log::info <<
-		L"0x02, " <<
-		str(L"0x%02x", address & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 8) & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 16) & 0xff) << L", " <<
-		str(L"0x%02x", (address >> 24) & 0xff) << L", " << Endl;
+	write< uint8_t >(serial, 0x01);
+	write< uint32_t >(serial, address);
+	write< uint8_t >(serial, data);
 }
 
-bool uploadHEX(const std::wstring& fileName)
+void writeJump(Serial& serial, uint32_t address)
+{
+	write< uint8_t >(serial, 0x02);
+	write< uint32_t >(serial, address);
+}
+
+bool uploadHEX(Serial& serial, const std::wstring& fileName)
 {
 	std::wstring tmp;
 
-	Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 	if (!f)
 	{
 		log::error << L"Unable to open HEX \"" << fileName << L"\"." << Endl;
@@ -63,15 +69,17 @@ bool uploadHEX(const std::wstring& fileName)
 
 		if (type == 0x00)
 		{
+			log::info << L"TEXT " << str(L"%08x", (upper | addr) + segment) << L"..." << Endl;
+
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
 				const uint32_t linear = (upper | addr) + segment;
 
-				writePoke(linear, v);
+				writePoke(serial, linear, v);
 
-				start = std::min(start, linear);
-				end = std::max(end, linear);
+				start = std::min< uint32_t >(start, linear);
+				end = std::max< uint32_t >(end, linear);
 
 				addr++;
 			}
@@ -93,7 +101,8 @@ bool uploadHEX(const std::wstring& fileName)
 		else if (type == 0x05)
 		{
 			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
-			writeJump(linear);
+			log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
+			writeJump(serial, linear);
 		}
 		else
 			log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
@@ -106,9 +115,34 @@ bool uploadHEX(const std::wstring& fileName)
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
+	Serial serial;
 
-	if (!uploadHEX(commandLine.getString(0)))
+	Serial::Configuration configuration;
+	configuration.baudRate = 9600;
+	configuration.stopBits = 1;
+	configuration.parity = Serial::Parity::No;
+	configuration.byteSize = 8;
+	configuration.dtrControl = Serial::DtrControl::Disable;
+
+	if (!serial.open(3, configuration))
+	{
+		log::error << L"Unable to open serial port." << Endl;
 		return 1;
+	}
+
+	if (!uploadHEX(serial, commandLine.getString(0)))
+		return 1;
+
+	/*
+	uint8_t cnt = 0x03;
+	for (;;)
+	{
+		write< uint8_t >(serial, cnt);
+		cnt += 1;
+		if (cnt <= 0x02)
+			cnt = 0x03;
+	}
+	*/
 
 	return 0;
 }
