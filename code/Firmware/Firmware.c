@@ -5,13 +5,12 @@ typedef void (*call_fn_t)();
 
 uint8_t uart_rx_u8()
 {
-	volatile uint8_t* uart = (volatile uint8_t*)0x50000010;
-	return *uart;
+	volatile uint32_t* uart = (volatile uint32_t*)0x50000010;
+	return (uint8_t)*uart;
 }
 
 uint32_t uart_rx_u32()
 {
-	volatile uint8_t* uart = (volatile uint8_t*)0x50000010;
 	uint8_t tmp[4];
 	tmp[0] = uart_rx_u8();
 	tmp[1] = uart_rx_u8();
@@ -22,19 +21,37 @@ uint32_t uart_rx_u32()
 
 void uart_tx_u8(uint8_t data)
 {
-	volatile uint8_t* uart = (volatile uint8_t*)0x50000010;
-	*uart = data;
+	volatile uint32_t* uart = (volatile uint32_t*)0x50000010;
+	*uart = (uint32_t)data;
 }
 
 void main()
 {
+	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
 	uint8_t cmd;
 	uint32_t addr;
 	uint8_t data;
 
+	// verify sram
+	{
+		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
+		for (uint32_t i = 0; i < 1024; ++i)
+			sram[i] = 0x1122330000 + i;
+		for (uint32_t i = 0; i < 1024; ++i)
+		{
+			if (sram[i] != 0x1122330000 + i)
+			{
+				*leds = 0xffffffff;
+				for (;;);
+			}
+		}
+	}
+
 	for (;;)
 	{
 		cmd = uart_rx_u8();
+
+		*leds = (uint32_t)cmd;
 
 		// poke
 		if (cmd == 0x01)
