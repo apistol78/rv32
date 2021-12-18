@@ -12,7 +12,7 @@ void main()
 	{
 		*leds = (uint32_t)cnt;
 
-		for (i = 0; i < 10; ++i)
+		for (i = 0; i < 1000; ++i)
 			;
 
 		++cnt;

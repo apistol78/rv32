@@ -71,19 +71,26 @@ void main()
 			if (addr >= 0x10000000 && addr <=  0x10001000)
 			{
 				*(uint8_t*)addr = data;
-				uart_tx_u8(0x81);
+				uart_tx_u8(data);
 			}
 			else
 				fatal_error();
 		}
 
-		// jump to
+		// peek
 		else if (cmd == 0x02)
+		{
+			addr = uart_rx_u32();
+			uart_tx_u8(*(uint8_t*)addr);
+		}
+
+		// jump to
+		else if (cmd == 0x03)
 		{
 			addr = uart_rx_u32();
 			if (addr == 0x10000000)
 			{
-				uart_tx_u8(0x82);
+				uart_tx_u8(0x80);
 				((call_fn_t)addr)();
 			}
 			else
