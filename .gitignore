@@ -4,7 +4,6 @@
 /quartus/db
 /quartus/output_files
 /quartus/incremental*
-*.hex
 *.dump
 *.log
 *.bak
