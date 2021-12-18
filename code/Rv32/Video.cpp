@@ -23,14 +23,13 @@ Video::Video()
 
 bool Video::writeU8(uint32_t address, uint8_t value)
 {
-	//log::info << L"VIDEO | " << str(L"%02x", value) << L" (" << (int32_t)value << L")" << Endl;
-	log::info << (wchar_t)value;
+	log::info << L"VIDEO | 8-bit " << str(L"%02x", value) << L" (" << (wchar_t)value << L")" << Endl;
 	return true;
 }
 
 bool Video::writeU16(uint32_t address, uint16_t value)
 {
-	log::info << L"VIDEO | " << str(L"%04x", value) << L" (" << (int32_t)value << L")" << Endl;
+	log::info << L"VIDEO | 16-bit " << str(L"%04x", value) << L" (" << (int32_t)value << L")" << Endl;
 	return true;
 }
 
@@ -39,14 +38,7 @@ bool Video::writeU32(uint32_t address, uint32_t value)
 	if (address == 0x00000100)
 		ThreadManager::getInstance().getCurrentThread()->sleep(value);
 	else if (address == 0x00000200)
-	{
-
-		/*
-		m_image->save(L"Capture.png");
-		log::info << L"Framebuffer captured." << Endl;
-		*/
 		m_dirty = true;
-	}
 	else if (address >= 0x10000000)
 	{
 		uint32_t offset = address - 0x10000000;
@@ -59,7 +51,7 @@ bool Video::writeU32(uint32_t address, uint32_t value)
 		));
 	}
 	else
-		log::info << L"VIDEO | " << str(L"%08x", value) << L" (" << (int32_t)value << L")" << Endl;
+		log::info << L"VIDEO | 32-bit 0x" << str(L"%08x", value) << L" (" << (int32_t)value << L")" << Endl;
 	return true;
 }
 

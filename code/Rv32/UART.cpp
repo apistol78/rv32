@@ -289,5 +289,11 @@ uint16_t UART::readU16(uint32_t address) const
 
 uint32_t UART::readU32(uint32_t address) const
 {
-	return 0;
+	if (m_count < sizeof(data))
+	{
+		log::info << L"READ UART " << str(L"%02x", data[m_count]) << Endl;
+		return (uint32_t)data[m_count++];
+	}
+	else
+		return 0;
 }

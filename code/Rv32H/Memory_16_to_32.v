@@ -1,6 +1,6 @@
 
-// SRAM interface
-module SRAM_interface(
+// 16-bit memory to 32-bit memory interface.
+module Memory_16_to_32(
     input wire i_clock,
 	input wire i_enable,
 	input wire i_rw,
@@ -9,11 +9,14 @@ module SRAM_interface(
 	output reg [31:0] o_rdata,
     output reg o_ready,
 
-	output reg [17:0] SRAM_A,
-	inout wire [15:0] SRAM_D,
-	output reg SRAM_CE_n,
-	output reg SRAM_OE_n,
-	output reg SRAM_WE_n    
+    // 16-bit device.
+    output wire o_ram_clock,
+	output wire o_ram_enable,
+	output wire o_ram_rw,
+	output reg [17:0] o_ram_address,
+	output wire [15:0] o_ram_wdata,
+	input wire [15:0] i_ram_rdata,
+	input wire i_ram_ready
 );
 
 	reg [2:0] state = 0;
