@@ -400,7 +400,10 @@ local instructions = {
 		mask = 0xffffffff,
 		data = 0x00100073,
 		name = "EBREAK",
-		format = ""
+		format = "",
+		verilog = [[
+			$finish;
+		]]
 	},
 	{
 		mask = 0xffffffff,
@@ -1359,12 +1362,9 @@ function main(argv)
 				end
 			end
 			if #t > 0 then
-
 				if count > 1 then stdout:print("else if") else stdout:print("if") end
 				stdout:printLn(" (is_" .. prefix .. ") begin")
-
 				for i, inst in ipairs(t) do
-
 					stdout:printLn("")
 					stdout:printLn("\t// " .. inst.name)
 					if i > 1 then stdout:print("\telse if") else stdout:print("\tif") end
@@ -1382,47 +1382,39 @@ function main(argv)
 						end
 					end
 					stdout:printLn("\tend")
-
 				end
-
 				stdout:printLn("")
 				stdout:printLn("end")
 				count = count + 1
-
 			end
 		end
 
---[[
-		local count = 0
+		-- Non format, such as EBREAK
+		local t = {}
 		for i, inst in ipairs(instructions) do
-			if inst.verilog ~= nil then
-				stdout:printLn("")
-				stdout:printLn("// " .. inst.name)
-				if count > 0 then stdout:print("else if") else stdout:print("if") end
-				stdout:printLn(" (is_" .. inst.name .. ") begin")
-				if debug then
-					stdout:printLn("\t$display(\"\t" .. inst.name .. "\");")
-					local pfx = prefixes[inst.format];
-					if pfx ~= nil and pfx.verilog ~= nil then
-						stdout:printLn("\t" .. trim(pfx.verilog))
-					end
-				end
-				for ln in lines(inst.verilog) do
-					if #ln > 0 then
-						stdout:printLn("\t" .. ln)
-					end
-				end
-				stdout:printLn("end")
-				count = count + 1
+			if inst.verilog ~= nil and inst.format == "" then
+				table.insert(t, inst)
 			end
 		end
-
-		if debug then
-			stdout:printLn("else begin")
-			stdout:printLn("\t$display(\"Unknown instruction %x.\", instruction);")
+		for i, inst in ipairs(t) do
+			stdout:printLn("")
+			stdout:printLn("// " .. inst.name)
+			if i > 1 then stdout:print("\telse if") else stdout:print("\tif") end
+			stdout:printLn(" (is_" .. inst.name .. ") begin")
+			if debug then
+				stdout:printLn("\t$display(\"\t" .. inst.name .. "\");")
+				local pfx = prefixes[inst.format];
+				if pfx ~= nil and pfx.verilog ~= nil then
+					stdout:printLn("\t" .. trim(pfx.verilog))
+				end
+			end
+			for ln in lines(inst.verilog) do
+				if #ln > 0 then
+					stdout:printLn(ln)
+				end
+			end
 			stdout:printLn("end")
 		end
-]]
 
 	elseif language == "verilog_inst_wire" then
 

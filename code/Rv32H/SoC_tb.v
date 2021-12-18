@@ -155,23 +155,11 @@ module SoC_tb;
 	initial begin
 		$dumpfile("SoC_tb.vcd");
 		$dumpvars(0, SoC_tb);
-
-/*
-		$dumpvars(0, cpu_request);
-		$dumpvars(0, cpu_address);
-        $dumpvars(0, cpu_rdata);
-		
-		$dumpvars(0, ram_enable);
-        $dumpvars(0, ram_address);
-		$dumpvars(0, ram_rw);
-        $dumpvars(0, ram_rdata);
-        $dumpvars(0, ram_wdata);
-*/
     
         #2
         reset <= 0;
 
-		repeat(2000) @(posedge clock);
+		repeat(5000) @(posedge clock);
 
 		$finish;
 	end
