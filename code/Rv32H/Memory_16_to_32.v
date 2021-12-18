@@ -35,7 +35,7 @@ module Memory_16_to_32(
 					3'd0: begin
 						o_ram_enable <= 1;
 						o_ram_rw <= 0;
-						o_ram_address <= i_address >> 1;
+						o_ram_address <= (i_address >> 1) & 32'hfffffffe;
 						state <= 3'd1;
 					end
 						
@@ -50,7 +50,7 @@ module Memory_16_to_32(
 					3'd2: begin
 						o_ram_enable <= 1;
 						o_ram_rw <= 0;
-						o_ram_address <= (i_address >> 1) + 1;
+						o_ram_address <= ((i_address >> 1) & 32'hfffffffe) + 1;
 						state <= 3'd3;
 					end
 						
@@ -69,7 +69,7 @@ module Memory_16_to_32(
 					3'd0: begin
 						o_ram_enable <= 1;
 						o_ram_rw <= 1;
-						o_ram_address <= i_address >> 1;
+						o_ram_address <= (i_address >> 1) & 32'hfffffffe;
 						o_ram_wdata <= i_wdata[15:0];
 						state <= 3'd1;
 					end
@@ -84,7 +84,7 @@ module Memory_16_to_32(
 					3'd2: begin
 						o_ram_enable <= 1;
 						o_ram_rw <= 1;
-						o_ram_address <= (i_address >> 1) + 1;
+						o_ram_address <= ((i_address >> 1) & 32'hfffffffe) + 1;
 						o_ram_wdata <= i_wdata[31:16];
 						state <= 3'd3;
 					end

@@ -2,6 +2,7 @@
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/FileOutputStream.h>
 #include <Core/Io/StringReader.h>
+#include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
@@ -18,21 +19,45 @@ void write(Serial& serial, T value)
 	for (int i = 0; i < sizeof(T); ++i)
 	{
 		serial.write(v++, 1);
-		ThreadManager::getInstance().getCurrentThread()->sleep(20);
+		ThreadManager::getInstance().getCurrentThread()->sleep(30);
 	}
 }
 
-void writePoke(Serial& serial, uint32_t address, uint8_t data)
+template < typename T >
+T read(Serial& serial)
+{
+	T value = 0;
+	serial.read(&value, sizeof(T));
+	return value;
+}
+
+bool writePoke(Serial& serial, uint32_t address, uint8_t data)
 {
 	write< uint8_t >(serial, 0x01);
 	write< uint32_t >(serial, address);
 	write< uint8_t >(serial, data);
+	uint8_t echo = read< uint8_t >(serial);
+	if (echo != data)
+	{
+		log::error << L"Invalid echo, sent " << str(L"%02x", data) << L", got back " << str(L"%02x", echo) << Endl;
+		return false;
+	}
+	else
+		return true;
 }
 
-void writeJump(Serial& serial, uint32_t address)
+uint8_t writePeek(Serial& serial, uint32_t address)
 {
 	write< uint8_t >(serial, 0x02);
 	write< uint32_t >(serial, address);
+	return read< uint8_t >(serial);
+}
+
+bool writeJump(Serial& serial, uint32_t address)
+{
+	write< uint8_t >(serial, 0x03);
+	write< uint32_t >(serial, address);
+	return read< uint8_t >(serial) == 0x80;
 }
 
 bool uploadHEX(Serial& serial, const std::wstring& fileName)
@@ -76,7 +101,11 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
 				const uint32_t linear = (upper | addr) + segment;
 
-				writePoke(serial, linear, v);
+				if (!writePoke(serial, linear, v))
+				{
+					log::error << L"Failed to poke" << Endl;
+					return false;
+				}
 
 				start = std::min< uint32_t >(start, linear);
 				end = std::max< uint32_t >(end, linear);
@@ -102,7 +131,11 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 		{
 			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
 			log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
-			writeJump(serial, linear);
+			if (!writeJump(serial, linear))
+			{
+				log::error << L"Failed to jump" << Endl;
+				return false;
+			}
 		}
 		else
 			log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
@@ -132,17 +165,6 @@ int main(int argc, const char** argv)
 
 	if (!uploadHEX(serial, commandLine.getString(0)))
 		return 1;
-
-	/*
-	uint8_t cnt = 0x03;
-	for (;;)
-	{
-		write< uint8_t >(serial, cnt);
-		cnt += 1;
-		if (cnt <= 0x02)
-			cnt = 0x03;
-	}
-	*/
 
 	return 0;
 }

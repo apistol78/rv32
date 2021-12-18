@@ -138,25 +138,14 @@ module SoC(
 );
 
 	assign reset = !CPU_RESET_n;
-	assign clock = CLOCK_50_B5B;
+	//assign clock = CLOCK_50_B5B;
 
-	/*
 	reg [23:0] counter = 0;
 	always @(posedge CLOCK_50_B5B) begin
 		counter <= counter + 1;
 	end
+	wire clock = counter[2];	// 1 works for SRAM but not UART
 	
-	wire clock = counter[10];
-	*/
-	
-	
-	/*
-	reg clock = 1'b0;
-	always @(posedge CLOCK_125_p) begin
-		clock <= !clock;
-	end
-	*/
-
 	
 	// ROM
 	wire rom_enable;
@@ -183,28 +172,55 @@ module SoC(
 	);
 	
 	// SRAM
-	wire sram_enable;
-	wire sram_rw;
-	wire [31:0] sram_address;
-	wire [31:0] sram_wdata;
-	wire [31:0] sram_rdata;
-	wire sram_ready;
+	wire sram16_clock;
+	wire sram16_enable;
+	wire sram16_rw;
+	wire [17:0] sram16_address;
+	wire [15:0] sram16_wdata;
+	wire [15:0] sram16_rdata;
+	wire sram16_ready;
 	SRAM_interface sram(
-		.i_clock(clock),
-		.i_enable(sram_enable),
-		.i_rw(sram_rw),
-		.i_address(sram_address),
-		.i_wdata(sram_wdata),
-		.o_rdata(sram_rdata),
-		.o_ready(sram_ready),
+		.i_clock(sram16_clock),
+		.i_enable(sram16_enable),
+		.i_rw(sram16_rw),
+		.i_address(sram16_address),
+		.i_wdata(sram16_wdata),
+		.o_rdata(sram16_rdata),
+		.o_ready(sram16_ready),
 		// ---
 		.SRAM_A(SRAM_A),
 		.SRAM_D(SRAM_D),
 		.SRAM_CE_n(SRAM_CE_n),
 		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n)
+		.SRAM_WE_n(SRAM_WE_n),
+		.SRAM_LB_n(SRAM_LB_n),
+		.SRAM_UB_n(SRAM_UB_n)
 	);
-	
+
+	wire sram32_enable;
+	wire sram32_rw;
+	wire [31:0] sram32_address;
+	wire [31:0] sram32_wdata;
+	wire [31:0] sram32_rdata;
+	wire sram32_ready;
+	Memory_16_to_32 sram32(
+		.i_clock(clock),
+		.i_enable(sram32_enable),
+		.i_rw(sram32_rw),
+		.i_address(sram32_address),
+		.i_wdata(sram32_wdata),
+		.o_rdata(sram32_rdata),
+		.o_ready(sram32_ready),
+
+		.o_ram_clock(sram16_clock),
+		.o_ram_enable(sram16_enable),
+		.o_ram_rw(sram16_rw),
+		.o_ram_address(sram16_address),
+		.o_ram_wdata(sram16_wdata),
+		.i_ram_rdata(sram16_rdata),
+		.i_ram_ready(sram16_ready)
+	);
+
 	// Mapped LEDS
 	wire led_enable;
 	wire [31:0] led_address;
@@ -270,10 +286,10 @@ module SoC(
 	assign ram_address = cpu_address - 32'h00010000;
 	assign ram_wdata = cpu_wdata;
 
-	assign sram_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram_rw = cpu_rw;
-	assign sram_address = cpu_address - 32'h10000000;
-	assign sram_wdata = cpu_wdata;
+	assign sram32_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign sram32_rw = cpu_rw;
+	assign sram32_address = cpu_address - 32'h10000000;
+	assign sram32_wdata = cpu_wdata;
 	
 	assign led_enable = cpu_request && (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 	assign led_address = cpu_address - 32'h50000000;
@@ -286,14 +302,14 @@ module SoC(
 	assign cpu_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
-		sram_enable ? sram_rdata :
+		sram32_enable ? sram32_rdata :
 		uart_enable ? uart_rdata :
 		32'h00000000;
 		
 	assign cpu_ready =
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
-		sram_enable ? sram_ready :
+		sram32_enable ? sram32_ready :
 		led_enable ? 1'b1 :
 		uart_enable ? uart_ready :
 		1'b0;
