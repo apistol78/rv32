@@ -35,11 +35,14 @@ void main()
 	// verify sram
 	{
 		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
+		
 		for (uint32_t i = 0; i < 1024; ++i)
-			sram[i] = 0x1122330000 + i;
+			sram[i] = 0x11220000 + i;
+
 		for (uint32_t i = 0; i < 1024; ++i)
 		{
-			if (sram[i] != 0x1122330000 + i)
+			*leds = sram[i];
+			if (sram[i] != 0x11220000 + i)
 			{
 				*leds = 0xffffffff;
 				for (;;);

@@ -105,6 +105,7 @@ int main(int argc, const char** argv)
 	bus.map(0x10000000, 0x20000000, &sram);
 	bus.map(0x20000000, 0x40000000, &sdram);
 	bus.map(0x40000000, 0x50000000, &video);
+	bus.map(0x50000000, 0x50000010, &video);
 	bus.map(0x50000010, 0x50000020, &uart);
 
 	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
