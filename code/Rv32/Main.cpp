@@ -101,7 +101,7 @@ int main(int argc, const char** argv)
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
-	bus.map(0x00010000, 0x00020000, &ram);
+	bus.map(0x00010000, 0x00012000, &ram);
 	bus.map(0x10000000, 0x20000000, &sram);
 	bus.map(0x20000000, 0x40000000, &sdram);
 	bus.map(0x40000000, 0x50000000, &video);

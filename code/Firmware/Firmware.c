@@ -36,22 +36,24 @@ void main()
 	{
 		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
 		
-		for (uint32_t i = 0; i < 1024; ++i)
-			sram[i] = 0x11220000 + i;
+		for (uint32_t i = 0; i < 16; ++i)
+			sram[i] = 0x1122ab00 + i;
 
-		for (uint32_t i = 0; i < 1024; ++i)
+		for (uint32_t i = 0; i < 16; ++i)
 		{
-			*leds = sram[i];
-			if (sram[i] != 0x11220000 + i)
+			//*leds = sram[i];
+			if (sram[i] != 0x1122ab00 + i)
 			{
 				*leds = 0xffffffff;
 				for (;;);
 			}
 		}
+
 	}
 
 	for (;;)
 	{
+/*
 		cmd = uart_rx_u8();
 
 		*leds = (uint32_t)cmd;
@@ -70,5 +72,6 @@ void main()
 			addr = uart_rx_u32();
 			((call_fn_t)addr)();
 		}
+*/
 	}
 }

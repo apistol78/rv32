@@ -768,13 +768,13 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
-				// $display("\tLOAD WORD, address <= %x (%b)", r[inst_I_rs1] + $signed(inst_I_imm), o_request);
+				$display("\tLOAD WORD, address <= %x (%b)", r[inst_I_rs1] + $signed(inst_I_imm), o_request);
 				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (i_ready) begin
-					// $display("\tLOAD WORD, data => %x", i_data);
+					$display("\tLOAD WORD, data => %x", i_data);
 					r[inst_I_rd] <= i_data;
 					request <= 0;
 					`DECODE_DONE;
@@ -1250,7 +1250,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
-				// $display("\tSTORE WORD, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
+				$display("\tSTORE WORD, address %x, value %x", r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
 				`MEM_WRITE_REQ(r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
 				decode_step <= 1;
 			end

@@ -83,7 +83,7 @@ module CPU (
       for (i = 0; i < 32; i = i + 1)
         	r[i] <= 0;
 
-		r[2] <= 32'h0002_0000;	// sp
+		r[2] <= 32'h0001_2000;	// sp
 
 		instruction <= 0;
 		o_rw <= 0;

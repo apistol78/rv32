@@ -1,12 +1,13 @@
 `include "CPU.v"
 `include "BRAM.v"
 `include "BROM.v"
+`include "Memory_16_to_32.v"
 `include "SRAM_tb.v"
 `include "Video_tb.v"
 
-`timescale 1 ns/10 ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1us / 100ns // time-unit = 1 ns, precision = 10 ps
 
-module CPU_tab;
+module SoC_tb;
 
     reg reset = 1'b1;
 	reg clock = 1'b0;
@@ -36,20 +37,45 @@ module CPU_tab;
 	);
 
 	// SRAM
-	wire sram_enable;
-	wire sram_rw;
-	wire [31:0] sram_address;
-	wire [31:0] sram_wdata;
-	wire [31:0] sram_rdata;
-	wire sram_ready;
-	SRAM_tb sram(
+	wire sram16_clock;
+	wire sram16_enable;
+	wire sram16_rw;
+	wire [17:0] sram16_address;
+	wire [15:0] sram16_wdata;
+	wire [15:0] sram16_rdata;
+	wire sram16_ready;
+	SRAM_tb sram16(
+		.i_clock(sram16_clock),
+		.i_enable(sram16_enable),
+		.i_rw(sram16_rw),
+		.i_address(sram16_address),
+		.i_wdata(sram16_wdata),
+		.o_rdata(sram16_rdata),
+		.o_ready(sram16_ready)
+	);
+
+	wire sram32_enable;
+	wire sram32_rw;
+	wire [31:0] sram32_address;
+	wire [31:0] sram32_wdata;
+	wire [31:0] sram32_rdata;
+	wire sram32_ready;
+	Memory_16_to_32 sram32(
 		.i_clock(clock),
-		.i_enable(sram_enable),
-		.i_rw(sram_rw),
-		.i_address(sram_address),
-		.i_wdata(sram_wdata),
-		.o_rdata(sram_rdata),
-		.o_ready(sram_ready)
+		.i_enable(sram32_enable),
+		.i_rw(sram32_rw),
+		.i_address(sram32_address),
+		.i_wdata(sram32_wdata),
+		.o_rdata(sram32_rdata),
+		.o_ready(sram32_ready),
+
+		.o_ram_clock(sram16_clock),
+		.o_ram_enable(sram16_enable),
+		.o_ram_rw(sram16_rw),
+		.o_ram_address(sram16_address),
+		.o_ram_wdata(sram16_wdata),
+		.i_ram_rdata(sram16_rdata),
+		.i_ram_ready(sram16_ready)
 	);
 
 	// Video
@@ -94,10 +120,10 @@ module CPU_tab;
 	assign ram_address = cpu_address - 32'h00010000;
 	assign ram_wdata = cpu_wdata;
 
-	assign sram_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram_rw = cpu_rw;
-	assign sram_address = cpu_address - 32'h10000000;
-	assign sram_wdata = cpu_wdata;
+	assign sram32_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign sram32_rw = cpu_rw;
+	assign sram32_address = cpu_address - 32'h10000000;
+	assign sram32_wdata = cpu_wdata;
 
 	assign video_enable = cpu_request && (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
 	assign video_rw = cpu_rw;
@@ -107,14 +133,14 @@ module CPU_tab;
 	assign cpu_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
-		sram_enable ? sram_rdata :
+		sram32_enable ? sram32_rdata :
 		video_enable ? video_rdata :
 		32'h00000000;
 
 	assign cpu_ready =
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
-		sram_enable ? sram_ready :
+		sram32_enable ? sram32_ready :
 		video_enable ? 1'b1 :
 		1'b1;
 
@@ -127,9 +153,10 @@ module CPU_tab;
 
 	// Simulate.
 	initial begin
+		$dumpfile("SoC_tb.vcd");
+		$dumpvars(0, SoC_tb);
+
 /*
-		$dumpfile("CPU_tb.vcd");
-		$dumpvars(0, clock);
 		$dumpvars(0, cpu_request);
 		$dumpvars(0, cpu_address);
         $dumpvars(0, cpu_rdata);
@@ -144,7 +171,7 @@ module CPU_tab;
         #2
         reset <= 0;
 
-		repeat(200) @(posedge clock);
+		repeat(2000) @(posedge clock);
 
 		$finish;
 	end

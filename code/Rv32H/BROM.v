@@ -6,9 +6,12 @@ module BROM(
 
 	reg [31:0] data [0:160];
 
-	//initial $readmemh("code/Firmware/Firmware.vmem", data);
+`ifdef __ICARUS__
+	initial $readmemh("code/Firmware/Firmware.vmem", data);
+`else
 	initial $readmemh("../code/Firmware/Firmware.vmem", data);
-	
+`endif
+
 	always @ (posedge i_enable) begin
 		o_rdata <= data[i_address >> 2];
 	end
