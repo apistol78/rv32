@@ -633,7 +633,7 @@ local instructions = {
 						2'b10: r[inst_I_rd] <= { { 24{ i_data[23] } }, i_data[22:16] };
 						2'b11: r[inst_I_rd] <= { { 24{ i_data[31] } }, i_data[30:24] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -665,7 +665,7 @@ local instructions = {
 						2'b10: r[inst_I_rd] <= { 24'b0, i_data[23:16] };
 						2'b11: r[inst_I_rd] <= { 24'b0, i_data[31:24] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -699,7 +699,7 @@ local instructions = {
 						2'b00: r[inst_I_rd] <= { { 16{ i_data[15] } }, i_data[14:0] };
 						2'b10: r[inst_I_rd] <= { { 16{ i_data[31] } }, i_data[30:16] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -728,7 +728,7 @@ local instructions = {
 						2'b00: r[inst_I_rd] <= { 16'b0, i_data[15:0] };
 						2'b10: r[inst_I_rd] <= { 16'b0, i_data[31:16] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -771,7 +771,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (decode_step == 0) begin
-				$display("\tLOAD WORD, address <= %x (%b)", r[inst_I_rs1] + $signed(inst_I_imm), o_request);
+				$display("\tLOAD WORD, address <= %x", r[inst_I_rs1] + $signed(inst_I_imm));
 				`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 				decode_step <= 1;
 			end
@@ -779,7 +779,7 @@ local instructions = {
 				if (`BUS_READY) begin
 					$display("\tLOAD WORD, data => %x", i_data);
 					r[inst_I_rd] <= i_data;
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -802,7 +802,7 @@ local instructions = {
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
 					r[inst_I_rd] <= i_data[31:0];
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -953,14 +953,14 @@ local instructions = {
 			// 2: patch into word after load finished.
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
-					// $display("\tSTORE BYTE, address %x, patch %d, i_data %x", o_address, address_byte, i_data);
+					$display("\tSTORE BYTE, address %x, patch %d, i_data %x, value %x", o_address, address_byte, i_data, r[inst_S_rs2][7:0]);
 					case ( address_byte  )
 						2'b00: o_data <= {      i_data[31:24],      i_data[23:16],       i_data[15:8], r[inst_S_rs2][7:0] };
 						2'b01: o_data <= {      i_data[31:24],      i_data[23:16], r[inst_S_rs2][7:0],        i_data[7:0] };
 						2'b10: o_data <= {      i_data[31:24], r[inst_S_rs2][7:0],       i_data[15:8],        i_data[7:0] };
 						2'b11: o_data <= { r[inst_S_rs2][7:0],      i_data[23:16],       i_data[15:8],        i_data[7:0] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					decode_step <= 2;
 				end
 			end
@@ -975,7 +975,7 @@ local instructions = {
 				if (`BUS_READY) begin
 					// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
 					o_rw <= 0;
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -1028,7 +1028,7 @@ local instructions = {
 						2'b00: o_data <= {       i_data[31:16], r[inst_S_rs2][15:0] };
 						2'b10: o_data <= { r[inst_S_rs2][15:0],        i_data[15:0] };
 					endcase
-					request <= 0;
+					`BUS_REQUEST_END;
 					decode_step <= 2;
 				end
 			end
@@ -1042,7 +1042,7 @@ local instructions = {
 			else if (decode_step == 3) begin
 				if (`BUS_READY) begin
 					o_rw <= 0;
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end
@@ -1260,7 +1260,7 @@ local instructions = {
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
 					o_rw <= 0;
-					request <= 0;
+					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
 			end			

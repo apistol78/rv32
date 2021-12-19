@@ -13,109 +13,7 @@ if (is_J) begin
 	end
 
 end
-if (is_S) begin
-
-	// SB
-	if (is_SB) begin
-		$display("	SB");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tSTORE BYTE, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
-					`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
-					decode_step <= 1;
-				end
-				// 2: patch into word after load finished.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						// $display("\tSTORE BYTE, address %x, patch %d, i_data %x", o_address, address_byte, i_data);
-						case ( address_byte  )
-							2'b00: o_data <= {      i_data[31:24],      i_data[23:16],       i_data[15:8], r[inst_S_rs2][7:0] };
-							2'b01: o_data <= {      i_data[31:24],      i_data[23:16], r[inst_S_rs2][7:0],        i_data[7:0] };
-							2'b10: o_data <= {      i_data[31:24], r[inst_S_rs2][7:0],       i_data[15:8],        i_data[7:0] };
-							2'b11: o_data <= { r[inst_S_rs2][7:0],      i_data[23:16],       i_data[15:8],        i_data[7:0] };
-						endcase
-						request <= 0;
-						decode_step <= 2;
-					end
-				end
-				// 3: store 32-bit word into memory.
-				else if (decode_step == 2) begin
-					o_rw <= 1;
-					request <= 1;
-					decode_step <= 3;
-				end
-				// 4: wait until store finished.
-				else if (decode_step == 3) begin
-					if (`BUS_READY) begin
-						// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
-						o_rw <= 0;
-						request <= 0;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// SH
-	else if (is_SH) begin
-		$display("	SH");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tSTORE HALF, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
-					`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
-					decode_step <= 1;
-				end
-				// 2: patch into word after load finished.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						case ( address_byte  )
-							2'b00: o_data <= {       i_data[31:16], r[inst_S_rs2][15:0] };
-							2'b10: o_data <= { r[inst_S_rs2][15:0],        i_data[15:0] };
-						endcase
-						request <= 0;
-						decode_step <= 2;
-					end
-				end
-				// 3: store 32-bit word into memory.
-				else if (decode_step == 2) begin
-					o_rw <= 1;
-					request <= 1;
-					decode_step <= 3;
-				end
-				// 4: wait until store finished.
-				else if (decode_step == 3) begin
-					if (`BUS_READY) begin
-						o_rw <= 0;
-						request <= 0;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// SW
-	else if (is_SW) begin
-		$display("	SW");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
-				if (decode_step == 0) begin
-					$display("\tSTORE WORD, address %x, value %x", r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
-					`MEM_WRITE_REQ(r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						o_rw <= 0;
-						request <= 0;
-						`DECODE_DONE;
-					end
-				end			
-			
-	end
-
-end
-else if (is_I) begin
+if (is_I) begin
 
 	// ADDI
 	if (is_ADDI) begin
@@ -179,7 +77,7 @@ else if (is_I) begin
 							2'b10: r[inst_I_rd] <= { { 24{ i_data[23] } }, i_data[22:16] };
 							2'b11: r[inst_I_rd] <= { { 24{ i_data[31] } }, i_data[30:24] };
 						endcase
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -207,7 +105,7 @@ else if (is_I) begin
 							2'b10: r[inst_I_rd] <= { 24'b0, i_data[23:16] };
 							2'b11: r[inst_I_rd] <= { 24'b0, i_data[31:24] };
 						endcase
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -231,7 +129,7 @@ else if (is_I) begin
 							2'b00: r[inst_I_rd] <= { { 16{ i_data[15] } }, i_data[14:0] };
 							2'b10: r[inst_I_rd] <= { { 16{ i_data[31] } }, i_data[30:16] };
 						endcase
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -256,7 +154,7 @@ else if (is_I) begin
 							2'b00: r[inst_I_rd] <= { 16'b0, i_data[15:0] };
 							2'b10: r[inst_I_rd] <= { 16'b0, i_data[31:16] };
 						endcase
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -269,7 +167,7 @@ else if (is_I) begin
 		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_I_rd, inst_I_rs1, inst_I_imm, $signed(inst_I_imm));
 			$display("\t   R(%d) = %x", inst_I_rs1, r[inst_I_rs1]);
 				if (decode_step == 0) begin
-					$display("\tLOAD WORD, address <= %x (%b)", r[inst_I_rs1] + $signed(inst_I_imm), o_request);
+					$display("\tLOAD WORD, address <= %x", r[inst_I_rs1] + $signed(inst_I_imm));
 					`MEM_READ_REQ(r[inst_I_rs1] + $signed(inst_I_imm));
 					decode_step <= 1;
 				end
@@ -277,7 +175,7 @@ else if (is_I) begin
 					if (`BUS_READY) begin
 						$display("\tLOAD WORD, data => %x", i_data);
 						r[inst_I_rd] <= i_data;
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -296,7 +194,7 @@ else if (is_I) begin
 				else if (decode_step == 1) begin
 					if (`BUS_READY) begin
 						r[inst_I_rd] <= i_data[31:0];
-						request <= 0;
+						`BUS_REQUEST_END;
 						`DECODE_DONE;
 					end
 				end
@@ -339,69 +237,6 @@ else if (is_I) begin
 		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_I_rd, inst_I_rs1, inst_I_imm, $signed(inst_I_imm));
 			$display("\t   R(%d) = %x", inst_I_rs1, r[inst_I_rs1]);
 				r[inst_I_rd] <= r[inst_I_rs1] ^ inst_I_imm;
-				`DECODE_DONE;
-			
-	end
-
-end
-else if (is_B) begin
-
-	// BEQ
-	if (is_BEQ) begin
-		$display("	BEQ");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (r[inst_B_rs1] == r[inst_B_rs2])
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
-				`DECODE_DONE;
-			
-	end
-
-	// BGE
-	else if (is_BGE) begin
-		$display("	BGE");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if ($signed(r[inst_B_rs1]) >= $signed(r[inst_B_rs2]))
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
-				`DECODE_DONE;
-			
-	end
-
-	// BGEU
-	else if (is_BGEU) begin
-		$display("	BGEU");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (r[inst_B_rs1] >= r[inst_B_rs2])
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
-				`DECODE_DONE;
-			
-	end
-
-	// BLT
-	else if (is_BLT) begin
-		$display("	BLT");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if ($signed(r[inst_B_rs1]) < $signed(r[inst_B_rs2]))
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
-				`DECODE_DONE;
-			
-	end
-
-	// BLTU
-	else if (is_BLTU) begin
-		$display("	BLTU");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (r[inst_B_rs1] < r[inst_B_rs2])
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
-				`DECODE_DONE;
-			
-	end
-
-	// BNE
-	else if (is_BNE) begin
-		$display("	BNE");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (r[inst_B_rs1] != r[inst_B_rs2])
-					pc_next <= $signed(pc) + $signed(inst_B_imm);
 				`DECODE_DONE;
 			
 	end
@@ -544,6 +379,171 @@ else if (is_U) begin
 		$display("\tU: R(%d), imm %d (%d)", inst_U_rd, inst_U_imm, $signed(inst_U_imm));
 				r[inst_U_rd] <= inst_U_imm;
 				`DECODE_DONE;
+			
+	end
+
+end
+else if (is_B) begin
+
+	// BEQ
+	if (is_BEQ) begin
+		$display("	BEQ");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if (r[inst_B_rs1] == r[inst_B_rs2])
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+	// BGE
+	else if (is_BGE) begin
+		$display("	BGE");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if ($signed(r[inst_B_rs1]) >= $signed(r[inst_B_rs2]))
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+	// BGEU
+	else if (is_BGEU) begin
+		$display("	BGEU");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if (r[inst_B_rs1] >= r[inst_B_rs2])
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+	// BLT
+	else if (is_BLT) begin
+		$display("	BLT");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if ($signed(r[inst_B_rs1]) < $signed(r[inst_B_rs2]))
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+	// BLTU
+	else if (is_BLTU) begin
+		$display("	BLTU");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if (r[inst_B_rs1] < r[inst_B_rs2])
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+	// BNE
+	else if (is_BNE) begin
+		$display("	BNE");
+		$display("\tB: R(%d), R(%d), %d (%d)", inst_B_rs1, inst_B_rs2, inst_B_imm, $signed(inst_B_imm));
+				if (r[inst_B_rs1] != r[inst_B_rs2])
+					pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`DECODE_DONE;
+			
+	end
+
+end
+else if (is_S) begin
+
+	// SB
+	if (is_SB) begin
+		$display("	SB");
+		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
+				// 1: fetch 32-bit word from memory.
+				if (decode_step == 0) begin
+					// $display("\tSTORE BYTE, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
+					`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
+					decode_step <= 1;
+				end
+				// 2: patch into word after load finished.
+				else if (decode_step == 1) begin
+					if (`BUS_READY) begin
+						$display("\tSTORE BYTE, address %x, patch %d, i_data %x, value %x", o_address, address_byte, i_data, r[inst_S_rs2][7:0]);
+						case ( address_byte  )
+							2'b00: o_data <= {      i_data[31:24],      i_data[23:16],       i_data[15:8], r[inst_S_rs2][7:0] };
+							2'b01: o_data <= {      i_data[31:24],      i_data[23:16], r[inst_S_rs2][7:0],        i_data[7:0] };
+							2'b10: o_data <= {      i_data[31:24], r[inst_S_rs2][7:0],       i_data[15:8],        i_data[7:0] };
+							2'b11: o_data <= { r[inst_S_rs2][7:0],      i_data[23:16],       i_data[15:8],        i_data[7:0] };
+						endcase
+						`BUS_REQUEST_END;
+						decode_step <= 2;
+					end
+				end
+				// 3: store 32-bit word into memory.
+				else if (decode_step == 2) begin
+					o_rw <= 1;
+					request <= 1;
+					decode_step <= 3;
+				end
+				// 4: wait until store finished.
+				else if (decode_step == 3) begin
+					if (`BUS_READY) begin
+						// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
+						o_rw <= 0;
+						`BUS_REQUEST_END;
+						`DECODE_DONE;
+					end
+				end
+			
+	end
+
+	// SH
+	else if (is_SH) begin
+		$display("	SH");
+		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
+				// 1: fetch 32-bit word from memory.
+				if (decode_step == 0) begin
+					// $display("\tSTORE HALF, address %x", r[inst_S_rs1] + $signed(inst_S_imm));
+					`MEM_READ_REQ(r[inst_S_rs1] + $signed(inst_S_imm));
+					decode_step <= 1;
+				end
+				// 2: patch into word after load finished.
+				else if (decode_step == 1) begin
+					if (`BUS_READY) begin
+						case ( address_byte  )
+							2'b00: o_data <= {       i_data[31:16], r[inst_S_rs2][15:0] };
+							2'b10: o_data <= { r[inst_S_rs2][15:0],        i_data[15:0] };
+						endcase
+						`BUS_REQUEST_END;
+						decode_step <= 2;
+					end
+				end
+				// 3: store 32-bit word into memory.
+				else if (decode_step == 2) begin
+					o_rw <= 1;
+					request <= 1;
+					decode_step <= 3;
+				end
+				// 4: wait until store finished.
+				else if (decode_step == 3) begin
+					if (`BUS_READY) begin
+						o_rw <= 0;
+						`BUS_REQUEST_END;
+						`DECODE_DONE;
+					end
+				end
+			
+	end
+
+	// SW
+	else if (is_SW) begin
+		$display("	SW");
+		$display("\tS: R(%d), R(%d), %d (%d)", inst_S_rs1, inst_S_rs2, inst_S_imm, $signed(inst_S_imm));
+				if (decode_step == 0) begin
+					$display("\tSTORE WORD, address %x, value %x", r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
+					`MEM_WRITE_REQ(r[inst_S_rs1] + $signed(inst_S_imm), r[inst_S_rs2]);
+					decode_step <= 1;
+				end
+				else if (decode_step == 1) begin
+					if (`BUS_READY) begin
+						o_rw <= 0;
+						`BUS_REQUEST_END;
+						`DECODE_DONE;
+					end
+				end			
 			
 	end
 

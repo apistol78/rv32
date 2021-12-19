@@ -22,6 +22,9 @@ module CPU (
 		o_rw <= 1; \
 		request <= 1;
 
+	`define BUS_REQUEST_END \
+		request <= 0;
+	
 	`define BUS_READY \
 		ready
 
