@@ -823,6 +823,7 @@ set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[22] -
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[23] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[26] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_global_assignment -name VERILOG_FILE ../code/Rv32H/Bus.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/Memory_16_to_32.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/UART_TX.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/UART_RX.v
@@ -834,6 +835,5 @@ set_global_assignment -name VERILOG_FILE ../code/Rv32H/BROM.v -hdl_version Veril
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/BRAM.v -hdl_version Verilog_2001
 set_global_assignment -name VERILOG_FILE SoC.v -hdl_version Verilog_2001
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/LED_Mapped.v
-set_global_assignment -name SIGNALTAP_FILE SoC.stp
 set_global_assignment -name SLD_FILE db/SoC_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
