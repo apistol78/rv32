@@ -2,7 +2,7 @@ module CPU (
 	input wire i_reset,
 	input wire i_clock,				// CPU clock
 	output reg o_rw,				// Data read/write
-	output wire o_request,			// IO request.
+	output reg o_request,			// IO request.
 	input wire i_ready,				// IO request ready.
 	output reg [31:0] o_address,	// Address
 	input wire [31:0] i_data,		// Read data
@@ -14,19 +14,24 @@ module CPU (
 	`define MEM_READ_REQ(ADDR) \
 		o_address <= ADDR; \
 		o_rw <= 0; \
-		request <= 1;
+		o_request <= 1;
 
 	`define MEM_WRITE_REQ(ADDR, DATA) \
 		o_address <= ADDR; \
 		o_data <= DATA; \
 		o_rw <= 1; \
-		request <= 1;
+		o_request <= 1;
 
+	`define BUS_READ \
+		o_rw <= 0;
+	`define BUS_WRITE \
+		o_rw <= 1;
+	`define BUS_REQUEST_START \
+		o_request <= 1;
 	`define BUS_REQUEST_END \
-		request <= 0;
-	
+		o_request <= 0;
 	`define BUS_READY \
-		ready
+		i_ready
 
 	localparam STATE_FETCH_ISSUE		= 3'b001;
 	localparam STATE_FETCH_READ     	= 3'b010;
@@ -39,14 +44,10 @@ module CPU (
 	reg [31:0] pc_next;
 	reg [31:0] r[31:0];
 	reg [31:0] instruction;
-	reg request;
-	reg requestN;
 
 	assign o_pc = { 29'b0, state };
-	assign o_request = requestN;
 	
 	wire [1:0] address_byte = o_address[1:0];
-	wire ready = i_ready & requestN;
 
 	// https://en.wikipedia.org/wiki/RISC-V#ISA_base_and_extensions
 
@@ -95,15 +96,9 @@ module CPU (
 		r[2] <= 32'h0001_2000;	// sp
 
 		instruction <= 0;
-		request <= 0;
-		requestN <= 0;
-
+		o_address <= 0;
+		o_request <= 0;
 		o_rw <= 0;
-	end
-	
-	always @ (posedge i_clock)
-	begin
-		requestN <= request;
 	end
 	
 	always @ (posedge i_clock)
@@ -119,7 +114,7 @@ module CPU (
 			if (`BUS_READY) begin
 				// $display("STATE_FETCH_READ, i_data = %x", i_data);
 				instruction <= i_data;
-				request <= 0;
+				o_request <= 0;
 				state <= STATE_DECODE;
 				decode_step <= 0;
 			end

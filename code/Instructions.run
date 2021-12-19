@@ -966,15 +966,15 @@ local instructions = {
 			end
 			// 3: store 32-bit word into memory.
 			else if (decode_step == 2) begin
-				o_rw <= 1;
-				request <= 1;
+				`BUS_WRITE;
+				`BUS_REQUEST_START;
 				decode_step <= 3;
 			end
 			// 4: wait until store finished.
 			else if (decode_step == 3) begin
 				if (`BUS_READY) begin
 					// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
-					o_rw <= 0;
+					`BUS_READ;
 					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
@@ -1034,14 +1034,14 @@ local instructions = {
 			end
 			// 3: store 32-bit word into memory.
 			else if (decode_step == 2) begin
-				o_rw <= 1;
-				request <= 1;
+				`BUS_WRITE;
+				`BUS_REQUEST_START;
 				decode_step <= 3;
 			end
 			// 4: wait until store finished.
 			else if (decode_step == 3) begin
 				if (`BUS_READY) begin
-					o_rw <= 0;
+					`BUS_READ;
 					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
@@ -1259,7 +1259,7 @@ local instructions = {
 			end
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
-					o_rw <= 0;
+					`BUS_READ;
 					`BUS_REQUEST_END;
 					`DECODE_DONE;
 				end
