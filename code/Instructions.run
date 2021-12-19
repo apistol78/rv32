@@ -625,7 +625,7 @@ local instructions = {
 			end
 			// 2: wait until load finish.
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tLOAD BYTE, data => %x (%d)", i_data, address_byte);
 					case ( address_byte  )
 						2'b00: r[inst_I_rd] <= { { 24{ i_data[7]  } }, i_data[6:0] };
@@ -657,7 +657,7 @@ local instructions = {
 			end
 			// 2: wait until load finish.
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tLOAD UBYTE, data => %x (%d)", i_data, address_byte);
 					case ( address_byte  )
 						2'b00: r[inst_I_rd] <= { 24'b0, i_data[7:0] };
@@ -693,7 +693,7 @@ local instructions = {
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
 					case ( address_byte  )
 						2'b00: r[inst_I_rd] <= { { 16{ i_data[15] } }, i_data[14:0] };
@@ -721,7 +721,7 @@ local instructions = {
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
 					r[inst_I_rd] <= i_data[15:0];
 					case ( address_byte  )
@@ -776,7 +776,7 @@ local instructions = {
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					$display("\tLOAD WORD, data => %x", i_data);
 					r[inst_I_rd] <= i_data;
 					request <= 0;
@@ -800,7 +800,7 @@ local instructions = {
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					r[inst_I_rd] <= i_data[31:0];
 					request <= 0;
 					`DECODE_DONE;
@@ -952,7 +952,7 @@ local instructions = {
 			end
 			// 2: patch into word after load finished.
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tSTORE BYTE, address %x, patch %d, i_data %x", o_address, address_byte, i_data);
 					case ( address_byte  )
 						2'b00: o_data <= {      i_data[31:24],      i_data[23:16],       i_data[15:8], r[inst_S_rs2][7:0] };
@@ -972,7 +972,7 @@ local instructions = {
 			end
 			// 4: wait until store finished.
 			else if (decode_step == 3) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
 					o_rw <= 0;
 					request <= 0;
@@ -1023,7 +1023,7 @@ local instructions = {
 			end
 			// 2: patch into word after load finished.
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					case ( address_byte  )
 						2'b00: o_data <= {       i_data[31:16], r[inst_S_rs2][15:0] };
 						2'b10: o_data <= { r[inst_S_rs2][15:0],        i_data[15:0] };
@@ -1040,7 +1040,7 @@ local instructions = {
 			end
 			// 4: wait until store finished.
 			else if (decode_step == 3) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					o_rw <= 0;
 					request <= 0;
 					`DECODE_DONE;
@@ -1258,7 +1258,7 @@ local instructions = {
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
-				if (i_ready) begin
+				if (`BUS_READY) begin
 					o_rw <= 0;
 					request <= 0;
 					`DECODE_DONE;

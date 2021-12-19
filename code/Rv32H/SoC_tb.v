@@ -5,7 +5,7 @@
 `include "SRAM_tb.v"
 `include "Video_tb.v"
 
-`timescale 1us / 100ns // time-unit = 1 ns, precision = 10 ps
+`timescale 10ns / 1ns // time-unit = 1 ns, precision = 10 ps
 
 module SoC_tb;
 
@@ -159,7 +159,7 @@ module SoC_tb;
         #2
         reset <= 0;
 
-		repeat(5000) @(posedge clock);
+		repeat(1000) @(posedge clock);
 
 		$finish;
 	end
