@@ -2,6 +2,7 @@
 `include "CPU.v"
 `include "BRAM.v"
 `include "BROM.v"
+`include "FIFO.v"
 `include "Memory_16_to_32.v"
 `include "SRAM_tb.v"
 `include "Video_tb.v"
@@ -136,6 +137,26 @@ module SoC_tb;
 		.o_bus_wdata(bus_wdata)		
 	);
 
+	// FIFO
+	wire fifo_empty;
+	wire fifo_full;
+	reg fifo_write = 0;
+	reg [7:0] fifo_wdata = 0;
+	reg fifo_read = 0;
+	wire [7:0] fifo_rdata;
+	FIFO #(
+		.DEPTH(4)
+	) fifo(
+		.i_clock_in(clock),
+		.i_clock_out(clock),
+		.o_empty(fifo_empty),
+		.o_full(fifo_full),
+		.i_write(fifo_write),
+		.i_wdata(fifo_wdata),
+		.i_read(fifo_read),
+		.o_rdata(fifo_rdata)
+	);
+
 	//=====================================
 
 	assign rom_enable = bus_request && (bus_address >= 32'h00000000 && bus_address < 32'h00010000);
@@ -181,7 +202,52 @@ module SoC_tb;
 	initial begin
 		$dumpfile("SoC_tb.vcd");
 		$dumpvars(0, SoC_tb);
-    
+
+
+		#3
+
+		fifo_wdata <= 8'h11;
+		fifo_write <= 1;
+		#2
+		fifo_write <= 0;
+		#2
+
+		fifo_wdata <= 8'h22;
+		fifo_write <= 1;
+		#2
+		fifo_write <= 0;
+		#2
+
+		fifo_wdata <= 8'h33;
+		fifo_write <= 1;
+		#2
+		fifo_write <= 0;
+		#2
+
+		fifo_read <= 1;
+		#2
+		fifo_read <= 0;
+		#2
+		fifo_read <= 1;
+		#2
+		fifo_read <= 0;
+		#2
+		fifo_read <= 1;
+		#2
+		fifo_read <= 0;
+
+		#2
+		fifo_wdata <= 8'h44;
+		fifo_write <= 1;
+		#2
+		fifo_write <= 0;
+		#2
+
+		fifo_read <= 1;
+		#2
+		fifo_read <= 0;
+
+
         #2
         reset <= 0;
 
