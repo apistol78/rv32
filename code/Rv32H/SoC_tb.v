@@ -7,6 +7,7 @@
 `include "FIFO.v"
 `include "I2C.v"
 `include "Memory_16_to_32.v"
+`include "SD.v"
 `include "SRAM_tb.v"
 `include "Video_tb.v"
 
@@ -194,6 +195,25 @@ module SoC_tb;
 		.I2C_SDA(I2C_SDA)
 	);
 
+	// SD
+	wire sd_enable;
+	wire sd_rw;
+	wire [31:0] sd_wdata;
+	wire [31:0] sd_rdata;
+	wire SD_CLK;
+	wire SD_CMD;
+	wire [3:0] SD_DAT;
+	SD sd(
+		.i_enable(sd_enable),
+		.i_rw(sd_rw),
+		.i_wdata(sd_wdata),
+		.o_rdata(sd_rdata),
+		// ---
+		.SD_CLK(SD_CLK),
+		.SD_CMD(SD_CMD),
+		.SD_DAT(SD_DAT)
+	);
+
 	//=====================================
 
 	assign rom_enable = bus_request && (bus_address >= 32'h00000000 && bus_address < 32'h00010000);
@@ -226,6 +246,10 @@ module SoC_tb;
 	assign i2c_rw = bus_rw;
 	assign i2c_wdata = bus_wdata;
 
+	assign sd_enable = bus_request && (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
+	assign sd_rw = bus_rw;
+	assign sd_wdata = bus_wdata;
+
 	assign bus_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
@@ -233,6 +257,7 @@ module SoC_tb;
 		video_enable ? video_rdata :
 		gpio_enable ? gpio_rdata :
 		i2c_enable ? i2c_rdata :
+		sd_enable ? sd_rdata :
 		32'h00000000;
 
 	assign bus_ready =
@@ -244,6 +269,7 @@ module SoC_tb;
 		video_enable ? 1'b1 :
 		gpio_enable ? 1'b1 :
 		i2c_enable ? 1'b1 :
+		sd_enable ? 1'b1 :
 		1'b0;
 
 	// Generate clock.

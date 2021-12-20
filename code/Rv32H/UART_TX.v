@@ -58,7 +58,7 @@ module UART_TX #(
 					if (count >= 7) begin
 						state <= STATE_STOP_BIT;
 					end else begin
-						count <= count + 1;
+						count <= count + 5'd1;
 					end
 				end
 

@@ -15,12 +15,11 @@ module I2C (
 	wire [3:0] wvalue = i_wdata[3:0];
 
 	assign I2C_SCL = scl;
-	assign I2C_SDA = sda ? 1'bz : 0;	// pulled up
+	assign I2C_SDA = sda ? 1'bz : 1'b0;	// pulled up
 
 	always @ (posedge i_enable) begin
 		if (!i_rw) begin
-			o_rdata[1] <= scl;
-			o_rdata[0] <= I2C_SDA;
+			o_rdata <= { 30'b0, scl, I2C_SDA };
 		end
 		else begin	// write
 			sda <= (sda & wmask[0]) | wvalue[0];
