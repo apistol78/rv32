@@ -29,24 +29,45 @@ module UART_RX #(
 		.o_clock(baud_rx_clock)
 	);
 	
+	wire rx_fifo_empty;
+	reg rx_fifo_write = 0;
+	reg rx_fifo_read = 0;
+	wire [7:0] rx_fifo_rdata;
+	FIFO rx_fifo(
+		.o_empty(rx_fifo_empty),
+		.i_write(rx_fifo_write),
+		.i_wdata(data),
+		.i_read(rx_fifo_read),
+		.o_rdata(rx_fifo_rdata)
+	);
+	
 	initial begin
 		o_rdata <= 32'h0;
 		o_received <= 0;
 	end
-
-	always @ (posedge baud_rx_clock) begin
-
-		if (!i_enable) begin
+	
+	always @ (posedge i_clock) begin
+		if (i_enable) begin
+			if (!rx_fifo_empty) begin
+				rx_fifo_read <= 1;
+				o_rdata <= { rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata };
+				o_received <= 1;
+			end
+		end
+		else begin
+			rx_fifo_read <= 0;
 			o_received <= 0;
 		end
+	end
 
+	always @ (posedge baud_rx_clock) begin
 		case (state)
 			STATE_IDLE: begin
+				rx_fifo_write <= 0;
 				if (UART_RX == 1'b0) begin
 					state <= STATE_DATA_BITS;
 					sample <= 16-1 + 4;
 					count <= 0;
-					o_received <= 0;
 				end
 			end
 			
@@ -69,8 +90,7 @@ module UART_RX #(
 				if (sample == 0) begin
 					if (UART_RX == 1'b1) begin
 						state <= STATE_IDLE;
-						o_rdata <= { data, data, data, data };
-						o_received <= 1;
+						rx_fifo_write <= 1;
 					end
 				end else begin
 					sample = sample - 1;
