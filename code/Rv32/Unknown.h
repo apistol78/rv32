@@ -1,22 +1,13 @@
 #pragma once
 
-#include <Core/Ref.h>
-#include <Core/Containers/AlignedVector.h>
 #include "Rv32/Device.h"
 
-namespace traktor
-{
-
-class IStream;
-
-}
-
-class UART : public Device
+class Unknown : public Device
 {
 	T_RTTI_CLASS;
 
 public:
-	explicit UART(traktor::IStream* stream);
+	explicit Unknown(const std::wstring& deviceName);
 
 	virtual bool writeU8(uint32_t address, uint8_t value) override final;
 
@@ -31,6 +22,5 @@ public:
 	virtual uint32_t readU32(uint32_t address) const override final;
 
 private:
-    traktor::AlignedVector< uint8_t > m_stream;
-	mutable uint32_t m_position = 0;
+	std::wstring m_deviceName;
 };

@@ -36,6 +36,7 @@
 #include "Rv32/CPU.h"
 #include "Rv32/Memory.h"
 #include "Rv32/UART.h"
+#include "Rv32/Unknown.h"
 #include "Rv32/Video.h"
 
 using namespace traktor;
@@ -92,12 +93,29 @@ int main(int argc, const char** argv)
 #endif
 	}
 
+	Ref< IStream > uartStream;
+	if (cmdLine.hasOption(L'u', L"uart"))
+	{
+		uartStream = FileSystem::getInstance().open(
+			cmdLine.getOption(L'u', L"uart").getString(),
+			File::FmRead
+		);
+		if (!uartStream)
+		{
+			log::error << L"Unable to open UART stream." << Endl;
+			return 1;
+		}
+	}
+
 	Memory rom(0x00010000);
 	Memory ram(0x00010000);
 	Memory sram(0x00010000);
 	Memory sdram(0x00010000);
 	Video video;
-	UART uart;
+	Unknown led(L"LED");
+	UART uart(uartStream);
+	Unknown gpio(L"GPIO");
+	Unknown i2c(L"I2C");
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
@@ -105,45 +123,10 @@ int main(int argc, const char** argv)
 	bus.map(0x10000000, 0x20000000, &sram);
 	bus.map(0x20000000, 0x40000000, &sdram);
 	bus.map(0x40000000, 0x50000000, &video);
-	bus.map(0x50000000, 0x50000010, &video);
+	bus.map(0x50000000, 0x50000010, &led);
 	bus.map(0x50000010, 0x50000020, &uart);
-
-	if (cmdLine.hasOption(L"image-file") && cmdLine.hasOption(L"image-base"))
-	{
-		std::wstring fileName = cmdLine.getOption(L"image-file").getString();
-		int32_t offset = cmdLine.getOption(L"image-base").getInteger();
-
-		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
-		if (!f)
-		{
-			log::error << L"Unable to open image \"" << fileName << L"\"." << Endl;
-			return 1;
-		}
-
-		uint32_t start = 0xffffffff;
-		uint32_t end = 0x00000000;
-
-		uint8_t data[1024];
-		for (;;)
-		{
-			int64_t r = f->read(data, sizeof(data));
-			if (r <= 0)
-				break;
-
-			for (int64_t i = 0; i < (int32_t)r; ++i)
-			{
-				start = std::min< uint32_t >(start, offset);
-				end = std::max< uint32_t >(end, offset);
-
-				bus.writeU8(offset++, data[i]);
-				if (bus.error())
-					return 1;
-			}
-		}
-
-		if (start <= end)
-			log::info << L"Image loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
-	}
+	bus.map(0x50000020, 0x50000030, &gpio);
+	bus.map(0x50000030, 0x50000040, &i2c);
 
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{

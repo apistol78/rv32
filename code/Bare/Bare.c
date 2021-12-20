@@ -19,7 +19,7 @@ typedef unsigned int uint32_t;
 
 void i2c_dly()
 {
-	for (uint32_t i = 0; i < 10000; ++i)
+	for (volatile uint32_t i = 0; i < 100000; ++i)
 		;
 }
 
@@ -111,6 +111,12 @@ void main()
 	for (;;)
 	{
 		*leds = (uint32_t)cnt;
+
+		i2c_start();
+		i2c_tx(0x11);
+		i2c_tx(0x22);
+		i2c_tx(0x33);
+		i2c_stop();
 
 		*gpio = 0xffffffff;
 

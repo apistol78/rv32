@@ -265,7 +265,7 @@ module SoC(
 		.i_wdata(gpio_wdata),
 		.o_rdata(gpio_rdata),
 		// ---
-		.io_GPIO(GPIO)
+		.GPIO(GPIO)
 	);
 	
 	// I2C

@@ -3,6 +3,7 @@
 `include "CPU.v"
 `include "BRAM.v"
 `include "BROM.v"
+`include "GPIO.v"
 `include "FIFO.v"
 `include "I2C.v"
 `include "Memory_16_to_32.v"
@@ -158,20 +159,36 @@ module SoC_tb;
 		.o_rdata(fifo_rdata)
 	);
 
+	// GPIO
+	wire gpio_enable;
+	wire gpio_rw;
+	wire [31:0] gpio_wdata;
+	wire [31:0] gpio_rdata;
+	wire [35:0] GPIO;
+	GPIO gpio(
+		.i_enable(gpio_enable),
+		.i_rw(gpio_rw),
+		.i_wdata(gpio_wdata),
+		.o_rdata(gpio_rdata),
+		// ---
+		.GPIO(GPIO)
+	);
+
 	// I2C
-	reg i2c_enable;
-	reg [31:0] i2c_wdata;
-	wire i2c_ready;
+	wire i2c_enable;
+	wire i2c_rw;
+	wire [31:0] i2c_wdata;
+	wire [31:0] i2c_rdata;
 	wire I2C_SCL;
 	wire I2C_SDA;
 	I2C #(
 		50000000,
 		5000000
 	) i2c(
-		.i_clock(clock),
 		.i_enable(i2c_enable),
+		.i_rw(i2c_rw),
 		.i_wdata(i2c_wdata),
-		.o_ready(i2c_ready),
+		.o_rdata(i2c_rdata),
 		// ---
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA(I2C_SDA)
@@ -192,24 +209,42 @@ module SoC_tb;
 	assign sram32_address = bus_address - 32'h10000000;
 	assign sram32_wdata = bus_wdata;
 
+	wire led_enable = bus_request && (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
+
+	wire uart_enable = bus_request && (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
+
 	assign video_enable = bus_request && (bus_address >= 32'h40000000 && bus_address < 32'h50000000);
 	assign video_rw = bus_rw;
 	assign video_address = bus_address - 32'h40000000;
 	assign video_wdata = bus_wdata;
+
+	assign gpio_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
+	assign gpio_rw = bus_rw;
+	assign gpio_wdata = bus_wdata;
+	
+	assign i2c_enable = bus_request && (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
+	assign i2c_rw = bus_rw;
+	assign i2c_wdata = bus_wdata;
 
 	assign bus_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
 		sram32_enable ? sram32_rdata :
 		video_enable ? video_rdata :
+		gpio_enable ? gpio_rdata :
+		i2c_enable ? i2c_rdata :
 		32'h00000000;
 
 	assign bus_ready =
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
 		sram32_enable ? sram32_ready :
+		led_enable ? 1'b1 :
+		uart_enable ? 1'b1 :
 		video_enable ? 1'b1 :
-		1'b1;
+		gpio_enable ? 1'b1 :
+		i2c_enable ? 1'b1 :
+		1'b0;
 
 	// Generate clock.
 	initial begin
@@ -222,58 +257,6 @@ module SoC_tb;
 	initial begin
 		$dumpfile("SoC_tb.vcd");
 		$dumpvars(0, SoC_tb);
-
-		#3
-
-		i2c_wdata <= 32'hff_aa_b1_b2;
-		i2c_enable <= 1;
-
-		//@(posedge i2c_ready);
-
-/*
-		#3
-
-		fifo_wdata <= 8'h11;
-		fifo_write <= 1;
-		#2
-		fifo_write <= 0;
-		#2
-
-		fifo_wdata <= 8'h22;
-		fifo_write <= 1;
-		#2
-		fifo_write <= 0;
-		#2
-
-		fifo_wdata <= 8'h33;
-		fifo_write <= 1;
-		#2
-		fifo_write <= 0;
-		#2
-
-		fifo_read <= 1;
-		#2
-		fifo_read <= 0;
-		#2
-		fifo_read <= 1;
-		#2
-		fifo_read <= 0;
-		#2
-		fifo_read <= 1;
-		#2
-		fifo_read <= 0;
-
-		#2
-		fifo_wdata <= 8'h44;
-		fifo_write <= 1;
-		#2
-		fifo_write <= 0;
-		#2
-
-		fifo_read <= 1;
-		#2
-		fifo_read <= 0;
-*/
 
         #2
         reset <= 0;

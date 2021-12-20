@@ -40,6 +40,8 @@ void main()
 	uint32_t addr;
 	uint8_t data;
 
+	*leds = 0x00000000;
+
 	// verify sram
 	{
 		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
@@ -49,17 +51,15 @@ void main()
 
 		for (uint32_t i = 0; i < 16; ++i)
 		{
-			*leds = (i + 1);
 			if (sram[i] != 0x1122ab00 + i)
 				fatal_error(1);
 		}
 	}
 
-	*leds = 0x00000000;
-
 	for (;;)
 	{
-		cmd = uart_rx_u8();
+		if ((cmd = uart_rx_u8()) == 0)
+			continue;
 
 		*leds = (uint32_t)cmd;
 
@@ -68,7 +68,7 @@ void main()
 		{
 			addr = uart_rx_u32();
 			data = uart_rx_u8();
-			if (addr >= 0x10000000 && addr <=  0x10001000)
+			if (addr >= 0x10000000 && addr < 0x40000000)
 			{
 				*(uint8_t*)addr = data;
 				uart_tx_u8(data);
@@ -81,20 +81,23 @@ void main()
 		else if (cmd == 0x02)
 		{
 			addr = uart_rx_u32();
-			uart_tx_u8(*(uint8_t*)addr);
+			if (addr >= 0x10000000 && addr < 0x40000000)
+				uart_tx_u8(*(uint8_t*)addr);
+			else
+				fatal_error(3);
 		}
 
 		// jump to
 		else if (cmd == 0x03)
 		{
 			addr = uart_rx_u32();
-			if (addr == 0x10000000)
+			if (addr >= 0x10000000 && addr <= 0x40000000)
 			{
 				uart_tx_u8(0x80);
 				((call_fn_t)addr)();
 			}
 			else
-				fatal_error(3);
+				fatal_error(4);
 		}
 
 /*

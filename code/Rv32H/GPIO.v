@@ -5,11 +5,11 @@ module GPIO (
 	input wire [31:0] i_wdata,
 	output reg [31:0] o_rdata,
 
-	inout [35:0] io_GPIO
+	inout [35:0] GPIO
 );
 	reg [35:0] gpio = 0;
 
-	assign io_GPIO = gpio;
+	assign GPIO = gpio;
 
 	always @ (posedge i_enable) begin
 		if (!i_rw) begin
