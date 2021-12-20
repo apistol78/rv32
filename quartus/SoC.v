@@ -224,13 +224,11 @@ module SoC(
 
 	// Mapped LEDS
 	wire led_enable;
-	wire [31:0] led_address;
 	wire [31:0] led_wdata;
 	LED_Mapped led(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_enable(led_enable),
-		.i_address(led_address),
 		.i_wdata(led_wdata),
 		.o_leds(LEDR)
 	);
@@ -256,6 +254,23 @@ module SoC(
 		.UART_TX(UART_TX)
 	);
 
+	// I2C
+	wire i2c_enable;
+	wire [31:0] i2c_wdata;
+	wire i2c_ready;
+	I2C #(
+		50000000,
+		20000
+	) i2c(
+		.i_clock(clock),
+		.i_enable(i2c_enable),
+		.i_wdata(i2c_wdata),
+		.o_ready(i2c_ready),
+		// ---
+		.I2C_SCL(I2C_SCL),
+		.I2C_SDA(I2C_SDA)
+	);
+	
 	// CPU
 	wire cpu_rw;
 	wire cpu_request;
@@ -320,13 +335,15 @@ module SoC(
 	assign sram32_wdata = bus_wdata;
 	
 	assign led_enable = bus_request && (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
-	assign led_address = bus_address - 32'h50000000;
 	assign led_wdata = bus_wdata;
 	
 	assign uart_enable = bus_request && (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
 	assign uart_rw = bus_rw;
 	assign uart_wdata = bus_wdata;
 
+	assign i2c_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
+	assign i2c_wdata = bus_wdata;
+	
 	assign bus_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
@@ -340,6 +357,7 @@ module SoC(
 		sram32_enable ? sram32_ready :
 		led_enable ? 1'b1 :
 		uart_enable ? uart_ready :
+		i2c_enable ? i2c_ready :
 		1'b0;
 
 endmodule

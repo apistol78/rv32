@@ -2,7 +2,6 @@ module LED_Mapped(
 	input wire i_reset,
 	input wire i_clock,
 	input wire i_enable,
-	input wire [31:0] i_address,
 	input wire [31:0] i_wdata,
 	output wire [9:0] o_leds
 );
