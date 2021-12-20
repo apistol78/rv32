@@ -145,7 +145,7 @@ module SoC(
 	always @(posedge CLOCK_50_B5B) begin
 		counter <= counter + 1;
 	end
-	wire clock = counter[2];	// 0 works for SRAM, 2 for UART
+	wire clock = counter[2];
 	*/
 	
 	// ROM
@@ -227,6 +227,7 @@ module SoC(
 	wire [31:0] led_address;
 	wire [31:0] led_wdata;
 	LED_Mapped led(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_enable(led_enable),
 		.i_address(led_address),
@@ -285,6 +286,7 @@ module SoC(
 	wire [31:0] bus_rdata;
 	wire [31:0] bus_wdata;	
 	Bus bus(
+		.i_reset(reset),
 		.i_clock(clock),
 
 		.i_cpu_rw(cpu_rw),

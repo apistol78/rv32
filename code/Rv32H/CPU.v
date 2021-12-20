@@ -86,47 +86,60 @@ module CPU (
 	initial begin
 		state <= STATE_FETCH_ISSUE;
 		decode_step <= 0;
-		
 		pc <= 32'h0000_0000;
 		pc_next <= 32'h0000_0000;
-
-	  	for (i = 0; i < 32; i = i + 1)
+		for (i = 0; i < 32; i = i + 1)
 			r[i] <= 0;
-
 		r[2] <= 32'h0001_2000;	// sp
-
 		instruction <= 0;
-		o_address <= 0;
+		o_rw <= 0;		
 		o_request <= 0;
-		o_rw <= 0;
+		o_address <= 0;
+		o_data <= 0;
 	end
 	
-	always @ (posedge i_clock)
+	always @ (posedge i_clock, posedge i_reset)
 	begin
-		if (state == STATE_FETCH_ISSUE) begin
-			// $display("STATE_FETCH_ISSUE, pc = %x", pc);
-			`MEM_READ_REQ(pc);
-			pc_next <= pc + 4;
-			r[0] <= 0;
-			state <= STATE_FETCH_READ;
-		end
-		else if (state == STATE_FETCH_READ) begin
-			if (`BUS_READY) begin
-				// $display("STATE_FETCH_READ, i_data = %x", i_data);
-				instruction <= i_data;
-				o_request <= 0;
-				state <= STATE_DECODE;
-				decode_step <= 0;
-			end
-		end
-		else if (state == STATE_DECODE) begin
-			$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
-			`include "Instructions_d.v"
-		end
-		else if (state == STATE_DECODE_FINISH) begin
-			$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
-			pc <= pc_next;
+		if (i_reset) begin
 			state <= STATE_FETCH_ISSUE;
+			decode_step <= 0;
+			pc <= 32'h0000_0000;
+			pc_next <= 32'h0000_0000;
+			for (i = 0; i < 32; i = i + 1)
+				r[i] <= 0;
+			r[2] <= 32'h0001_2000;	// sp
+			instruction <= 0;
+			o_rw <= 0;		
+			o_request <= 0;
+			o_address <= 0;
+			o_data <= 0;
+		end
+		else begin
+			if (state == STATE_FETCH_ISSUE) begin
+				// $display("STATE_FETCH_ISSUE, pc = %x", pc);
+				`MEM_READ_REQ(pc);
+				pc_next <= pc + 4;
+				r[0] <= 0;
+				state <= STATE_FETCH_READ;
+			end
+			else if (state == STATE_FETCH_READ) begin
+				if (`BUS_READY) begin
+					// $display("STATE_FETCH_READ, i_data = %x", i_data);
+					instruction <= i_data;
+					o_request <= 0;
+					state <= STATE_DECODE;
+					decode_step <= 0;
+				end
+			end
+			else if (state == STATE_DECODE) begin
+				$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+				`include "Instructions_d.v"
+			end
+			else if (state == STATE_DECODE_FINISH) begin
+				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
+				pc <= pc_next;
+				state <= STATE_FETCH_ISSUE;
+			end
 		end
 	end
 

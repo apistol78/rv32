@@ -2,6 +2,7 @@
 Bus timing controller.
 */
 module Bus(
+	input wire i_reset,
 	input wire i_clock,
 
 	input wire i_cpu_rw,
@@ -19,7 +20,7 @@ module Bus(
 	output wire [31:0] o_bus_wdata
 );
 	reg [31:0] rdata;
-	reg [2:0] state = 0;
+	reg [2:0] state;
 
 	assign o_cpu_rdata = rdata;
 	assign o_bus_rw = i_cpu_rw;
@@ -27,40 +28,48 @@ module Bus(
 	assign o_bus_wdata = i_cpu_wdata;
 
 	initial begin
+		state <= 0;
 		o_cpu_ready <= 0;
 		o_bus_request <= 0;
 	end
 
-	always @(posedge i_clock) begin
-		case (state)
-			0: begin
-				o_cpu_ready <= 0;
-				if (i_cpu_request) begin
-					state <= 1;
-				end                
-			end
-
-			1: begin
-				o_bus_request <= 1;
-				state <= 2;
-			end
-
-			2: begin
-				if (i_bus_ready) begin
-					rdata <= i_bus_rdata;
-					o_bus_request <= 0;
-					o_cpu_ready <= 1;
-					state <= 3;
-				end
-			end
-
-			3: begin
-				if (!i_cpu_request) begin
+	always @(posedge i_clock, posedge i_reset) begin
+		if (i_reset) begin
+			state <= 0;
+			o_cpu_ready <= 0;
+			o_bus_request <= 0;
+		end
+		else begin
+			case (state)
+				0: begin
 					o_cpu_ready <= 0;
-					state <= 0;
-				end 
-			end
-		endcase 
+					if (i_cpu_request) begin
+						state <= 1;
+					end                
+				end
+
+				1: begin
+					o_bus_request <= 1;
+					state <= 2;
+				end
+
+				2: begin
+					if (i_bus_ready) begin
+						rdata <= i_bus_rdata;
+						o_bus_request <= 0;
+						o_cpu_ready <= 1;
+						state <= 3;
+					end
+				end
+
+				3: begin
+					if (!i_cpu_request) begin
+						o_cpu_ready <= 0;
+						state <= 0;
+					end 
+				end
+			endcase
+		end
 	end
 
 endmodule
