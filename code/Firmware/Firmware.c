@@ -25,10 +25,10 @@ void uart_tx_u8(uint8_t data)
 	*uart = (uint32_t)data;
 }
 
-void fatal_error()
+void fatal_error(uint8_t error)
 {
 	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
-	*leds = 0xffffffff;
+	*leds = 0x80 | error;
 	__asm__ volatile ("ebreak");
 	for (;;);
 }
@@ -51,7 +51,7 @@ void main()
 		{
 			*leds = (i + 1);
 			if (sram[i] != 0x1122ab00 + i)
-				fatal_error();
+				fatal_error(1);
 		}
 	}
 
@@ -74,7 +74,7 @@ void main()
 				uart_tx_u8(data);
 			}
 			else
-				fatal_error();
+				fatal_error(2);
 		}
 
 		// peek
@@ -94,7 +94,7 @@ void main()
 				((call_fn_t)addr)();
 			}
 			else
-				fatal_error();
+				fatal_error(3);
 		}
 
 /*
