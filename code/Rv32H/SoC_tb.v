@@ -1,8 +1,10 @@
 `include "Bus.v"
+`include "ClockDivider.v"
 `include "CPU.v"
 `include "BRAM.v"
 `include "BROM.v"
 `include "FIFO.v"
+`include "I2C.v"
 `include "Memory_16_to_32.v"
 `include "SRAM_tb.v"
 `include "Video_tb.v"
@@ -147,14 +149,32 @@ module SoC_tb;
 	FIFO #(
 		.DEPTH(4)
 	) fifo(
-		.i_clock_in(clock),
-		.i_clock_out(clock),
+		.i_clock(clock),
 		.o_empty(fifo_empty),
 		.o_full(fifo_full),
 		.i_write(fifo_write),
 		.i_wdata(fifo_wdata),
 		.i_read(fifo_read),
 		.o_rdata(fifo_rdata)
+	);
+
+	// I2C
+	reg i2c_enable;
+	reg [31:0] i2c_wdata;
+	wire i2c_ready;
+	wire I2C_SCL;
+	wire I2C_SDA;
+	I2C #(
+		50000000,
+		5000000
+	) i2c(
+		.i_clock(clock),
+		.i_enable(i2c_enable),
+		.i_wdata(i2c_wdata),
+		.o_ready(i2c_ready),
+		// ---
+		.I2C_SCL(I2C_SCL),
+		.I2C_SDA(I2C_SDA)
 	);
 
 	//=====================================
@@ -203,7 +223,14 @@ module SoC_tb;
 		$dumpfile("SoC_tb.vcd");
 		$dumpvars(0, SoC_tb);
 
+		#3
 
+		i2c_wdata <= 32'hff_aa_b1_b2;
+		i2c_enable <= 1;
+
+		//@(posedge i2c_ready);
+
+/*
 		#3
 
 		fifo_wdata <= 8'h11;
@@ -246,7 +273,7 @@ module SoC_tb;
 		fifo_read <= 1;
 		#2
 		fifo_read <= 0;
-
+*/
 
         #2
         reset <= 0;
