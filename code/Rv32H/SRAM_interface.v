@@ -6,25 +6,34 @@ module SRAM_interface(
 	input wire i_rw,
 	input wire [17:0] i_address,
 	input wire [15:0] i_wdata,
-	output reg [15:0] o_rdata,
+	output wire [15:0] o_rdata,
 	output wire o_ready,
 
-	output reg [17:0] SRAM_A,
+	output wire [17:0] SRAM_A,
 	inout wire [15:0] SRAM_D,
-	output reg SRAM_CE_n,
-	output reg SRAM_OE_n,
-	output reg SRAM_WE_n,
-	output reg SRAM_LB_n,
-	output reg SRAM_UB_n
+	output wire SRAM_CE_n,
+	output wire SRAM_OE_n,
+	output wire SRAM_WE_n,
+	output wire SRAM_LB_n,
+	output wire SRAM_UB_n
 );
 
-	localparam STATE_END = 30;
+	//localparam STATE_END = 30;
 
-	reg [6:0] state = 0;
+	//reg [6:0] state = 0;
 	
+	assign SRAM_A = i_address;
 	assign SRAM_D = (i_enable && i_rw) ? i_wdata : 16'hzzzz;
-	assign o_ready = (i_enable && state == STATE_END);
+	assign SRAM_CE_n = !i_enable;
+	assign SRAM_OE_n = !(i_enable && !i_rw);
+	assign SRAM_WE_n = !(i_enable && i_rw);
+	assign SRAM_LB_n = 0;
+	assign SRAM_UB_n = 0;
+	assign o_rdata = SRAM_D;
 	
+	assign o_ready = 1; //(i_enable && state == STATE_END);
+	
+	/*
 	initial begin
 		SRAM_CE_n <= 1;
 		SRAM_OE_n <= 1;
@@ -106,5 +115,6 @@ module SRAM_interface(
 			SRAM_WE_n <= 1;			
 		end
 	end
-
+	*/
+	
 endmodule
