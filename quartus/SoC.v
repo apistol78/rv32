@@ -2,7 +2,7 @@
 //`define ENABLE_HSMC_XCVR
 //`define ENABLE_SMA
 //`define ENABLE_REFCLK
-//`define ENABLE_GPIO
+`define ENABLE_GPIO
 
 module SoC(
 
@@ -253,19 +253,31 @@ module SoC(
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
 	);
-
+	
+	// GPIO
+	wire gpio_enable;
+	wire gpio_rw;
+	wire [31:0] gpio_wdata;
+	wire [31:0] gpio_rdata;
+	GPIO gpio(
+		.i_enable(gpio_enable),
+		.i_rw(gpio_rw),
+		.i_wdata(gpio_wdata),
+		.o_rdata(gpio_rdata),
+		// ---
+		.io_GPIO(GPIO)
+	);
+	
 	// I2C
 	wire i2c_enable;
+	wire i2c_rw;
 	wire [31:0] i2c_wdata;
-	wire i2c_ready;
-	I2C #(
-		50000000,
-		20000
-	) i2c(
-		.i_clock(clock),
+	wire [31:0] i2c_rdata;
+	I2C i2c(
 		.i_enable(i2c_enable),
+		.i_rw(i2c_rw),
 		.i_wdata(i2c_wdata),
-		.o_ready(i2c_ready),
+		.o_rdata(i2c_rdata),
 		// ---
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA(I2C_SDA)
@@ -341,7 +353,12 @@ module SoC(
 	assign uart_rw = bus_rw;
 	assign uart_wdata = bus_wdata;
 
-	assign i2c_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
+	assign gpio_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
+	assign gpio_rw = bus_rw;
+	assign gpio_wdata = bus_wdata;
+	
+	assign i2c_enable = bus_request && (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
+	assign i2c_rw = bus_rw;
 	assign i2c_wdata = bus_wdata;
 	
 	assign bus_rdata =
@@ -349,6 +366,8 @@ module SoC(
 		ram_enable ? ram_rdata :
 		sram32_enable ? sram32_rdata :
 		uart_enable ? uart_rdata :
+		gpio_enable ? gpio_rdata :
+		i2c_enable ? i2c_rdata :
 		32'h00000000;
 		
 	assign bus_ready =
@@ -357,7 +376,8 @@ module SoC(
 		sram32_enable ? sram32_ready :
 		led_enable ? 1'b1 :
 		uart_enable ? uart_ready :
-		i2c_enable ? i2c_ready :
+		gpio_enable ? 1'b1 :
+		i2c_enable ? 1'b1 :
 		1'b0;
 
 endmodule
