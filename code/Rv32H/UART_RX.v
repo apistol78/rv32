@@ -6,7 +6,7 @@ module UART_RX #(
 	input wire i_clock,
 	input wire i_enable,
 	output reg [31:0] o_rdata,
-    output reg o_received,
+    output reg o_ready,
 
     input wire UART_RX
 );
@@ -19,6 +19,7 @@ module UART_RX #(
 	reg [7:0] data = 0;
 	reg [6:0] sample = 0;
 	reg [6:0] count = 0;
+	reg [2:0] rds = 0;
 
 	wire baud_rx_clock;
 	ClockDivider #(
@@ -33,7 +34,10 @@ module UART_RX #(
 	reg rx_fifo_write = 0;
 	reg rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
-	FIFO rx_fifo(
+	FIFO #(
+		.DEPTH(64)
+	) rx_fifo(
+		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
@@ -43,20 +47,31 @@ module UART_RX #(
 	
 	initial begin
 		o_rdata <= 32'h0;
-		o_received <= 0;
+		o_ready <= 0;
 	end
 	
 	always @ (posedge i_clock) begin
 		if (i_enable) begin
-			if (!rx_fifo_empty) begin
-				rx_fifo_read <= 1;
-				o_rdata <= { rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata };
-				o_received <= 1;
-			end
+			case (rds)
+				0: begin
+					if (!rx_fifo_empty) begin
+						rx_fifo_read <= 1;
+						rds <= 1;
+					end
+				end
+				1: begin
+					rds <= 2;
+				end
+				2: begin
+					o_rdata <= { rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata, rx_fifo_rdata };
+					o_ready <= 1;
+				end
+			endcase
 		end
 		else begin
 			rx_fifo_read <= 0;
-			o_received <= 0;
+			o_ready <= 0;
+			rds <= 0;
 		end
 	end
 

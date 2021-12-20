@@ -138,14 +138,15 @@ module SoC(
 );
 
 	assign reset = !CPU_RESET_n;
-	//assign clock = CLOCK_50_B5B;
+	assign clock = CLOCK_50_B5B;
 
-	reg [23:0] counter = 0;
+	/*
+	reg [3:0] counter = 0;
 	always @(posedge CLOCK_50_B5B) begin
 		counter <= counter + 1;
 	end
-	wire clock = counter[2];	// 1 works for SRAM but not UART
-	
+	wire clock = counter[2];	// 0 works for SRAM, 2 for UART
+	*/
 	
 	// ROM
 	wire rom_enable;
@@ -275,38 +276,63 @@ module SoC(
 	);
 
 	assign LEDG = cpu_pc[7:0];
+
+	// Bus
+	wire bus_rw;
+	wire bus_request;
+	wire bus_ready;
+	wire [31:0] bus_address;
+	wire [31:0] bus_rdata;
+	wire [31:0] bus_wdata;	
+	Bus bus(
+		.i_clock(clock),
+
+		.i_cpu_rw(cpu_rw),
+		.i_cpu_request(cpu_request),
+		.o_cpu_ready(cpu_ready),
+		.i_cpu_address(cpu_address),
+		.o_cpu_rdata(cpu_rdata),
+		.i_cpu_wdata(cpu_wdata),
+
+		.o_bus_rw(bus_rw),
+		.o_bus_request(bus_request),
+		.i_bus_ready(bus_ready),
+		.o_bus_address(bus_address),
+		.i_bus_rdata(bus_rdata),
+		.o_bus_wdata(bus_wdata)		
+	);
 	
 	//=====================================
 
-	assign rom_enable = cpu_request && (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
-	assign rom_address = cpu_address - 32'h00000000;
+	assign rom_enable = bus_request && (bus_address >= 32'h00000000 && bus_address < 32'h00010000);
+	assign rom_address = bus_address - 32'h00000000;
 
-	assign ram_enable = cpu_request && (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
-	assign ram_rw = cpu_rw;
-	assign ram_address = cpu_address - 32'h00010000;
-	assign ram_wdata = cpu_wdata;
+	assign ram_enable = bus_request && (bus_address >= 32'h00010000 && bus_address < 32'h00020000);
+	assign ram_rw = bus_rw;
+	assign ram_address = bus_address - 32'h00010000;
+	assign ram_wdata = bus_wdata;
 
-	assign sram32_enable = cpu_request && (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram32_rw = cpu_rw;
-	assign sram32_address = cpu_address - 32'h10000000;
-	assign sram32_wdata = cpu_wdata;
+	assign sram32_enable = bus_request && (bus_address >= 32'h10000000 && bus_address < 32'h20000000);
+	assign sram32_rw = bus_rw;
+	assign sram32_address = bus_address - 32'h10000000;
+	assign sram32_wdata = bus_wdata;
 	
-	assign led_enable = cpu_request && (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
-	assign led_address = cpu_address - 32'h50000000;
-	assign led_wdata = cpu_wdata;
+	assign led_enable = bus_request && (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
+	assign led_address = bus_address - 32'h50000000;
+	assign led_wdata = bus_wdata;
 	
-	assign uart_enable = cpu_request && (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
-	assign uart_rw = cpu_rw;
-	assign uart_wdata = cpu_wdata;
+	assign uart_enable = bus_request && (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
+	assign uart_rw = bus_rw;
+	assign uart_wdata = bus_wdata;
 
-	assign cpu_rdata =
+	assign bus_rdata =
 		rom_enable ? rom_rdata :
 		ram_enable ? ram_rdata :
 		sram32_enable ? sram32_rdata :
 		uart_enable ? uart_rdata :
 		32'h00000000;
 		
-	assign cpu_ready =
+	assign bus_ready =
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
 		sram32_enable ? sram32_ready :

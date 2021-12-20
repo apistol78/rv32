@@ -15,7 +15,7 @@ module UART #(
 );
 
 	wire rx_enable;
-	wire rx_received;
+	wire rx_ready;
 	UART_RX #(
 		.CLOCK_RATE(CLOCK_RATE),
 		.BAUD_RATE(BAUD_RATE)
@@ -23,7 +23,7 @@ module UART #(
 		.i_clock(i_clock),
 		.i_enable(rx_enable),
 		.o_rdata(o_rdata),
-		.o_received(rx_received),
+		.o_ready(rx_ready),
 		.UART_RX(UART_RX)
 	);
 
@@ -45,7 +45,7 @@ module UART #(
 	
 	assign o_ready =
 		tx_enable ? tx_ready :
-		rx_enable ? rx_received :
+		rx_enable ? rx_ready :
 		1'b0;
 
 endmodule

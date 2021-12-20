@@ -39,7 +39,7 @@ module SRAM_interface(
 				case (state)
 					0: begin
 						SRAM_A <= i_address;
-						state <= 1;
+						state <= 5;
 					end
 					
 					1, 2, 3, 4: begin
@@ -49,7 +49,7 @@ module SRAM_interface(
 					5: begin
 						SRAM_CE_n <= 0;
 						SRAM_OE_n <= 0;
-						state <= 6;
+						state <= 10;
 					end
 					
 					6, 7, 8, 9: begin
@@ -66,7 +66,7 @@ module SRAM_interface(
 				case (state)
 					0: begin
 						SRAM_A <= i_address;
-						state <= 1;
+						state <= 5;
 					end
 					
 					1, 2, 3, 4: begin
@@ -76,7 +76,7 @@ module SRAM_interface(
 					5: begin
 						SRAM_CE_n <= 0;
 						SRAM_WE_n <= 0;
-						state <= 6;
+						state <= 10;
 					end
 					
 					6, 7, 8, 9: begin
@@ -86,7 +86,7 @@ module SRAM_interface(
 					10: begin
 						SRAM_CE_n <= 1;
 						SRAM_WE_n <= 1;
-						state <= 11;
+						state <= 15;
 					end
 						
 					11, 12, 13, 14: begin
