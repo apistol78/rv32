@@ -19,7 +19,7 @@ void write(Serial& serial, T value)
 	for (int i = 0; i < sizeof(T); ++i)
 	{
 		serial.write(v++, 1);
-		ThreadManager::getInstance().getCurrentThread()->sleep(30);
+		ThreadManager::getInstance().getCurrentThread()->sleep(1);
 	}
 }
 
