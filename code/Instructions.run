@@ -219,7 +219,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (r[inst_B_rs1] == r[inst_B_rs2])
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -235,7 +235,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if ($signed(r[inst_B_rs1]) >= $signed(r[inst_B_rs2]))
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -251,7 +251,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (r[inst_B_rs1] >= r[inst_B_rs2])
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -267,7 +267,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if ($signed(r[inst_B_rs1]) < $signed(r[inst_B_rs2]))
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -283,7 +283,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (r[inst_B_rs1] < r[inst_B_rs2])
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -299,7 +299,7 @@ local instructions = {
 		]],
 		verilog = [[
 			if (r[inst_B_rs1] != r[inst_B_rs2])
-				pc_next <= $signed(pc) + $signed(inst_B_imm);
+				`GOTO($signed(pc) + $signed(inst_B_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -586,8 +586,8 @@ local instructions = {
 			PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			r[inst_J_rd] <= pc_next;
-			pc_next <= $signed(pc) + $signed(inst_J_imm);
+			r[inst_J_rd] <= pc + 4;
+			`GOTO($signed(pc) + $signed(inst_J_imm));
 			`DECODE_DONE;
 		]]
 	},
@@ -602,8 +602,8 @@ local instructions = {
 			PC_NEXT = R(f.rs1) + f.imm;
 		]],
 		verilog = [[
-			r[inst_I_rd] <= pc_next;
-			pc_next <= $signed(r[inst_I_rs1]) + $signed(inst_I_imm);
+			r[inst_I_rd] <= pc + 4;
+			`GOTO($signed(r[inst_I_rs1]) + $signed(inst_I_imm));
 			`DECODE_DONE;
 		]]
 	},

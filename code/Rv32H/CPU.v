@@ -9,7 +9,10 @@ module CPU (
 	output reg [31:0] o_data,		// Write data,
 	output wire [31:0] o_pc
 );
-	`define DECODE_DONE state <= STATE_DECODE_FINISH;
+	`define DECODE_DONE state <= STATE_RETIRE;
+	
+	`define GOTO(ADDR) \
+		pc_next <= ADDR;
 
 	`define MEM_READ_REQ(ADDR) \
 		o_address <= ADDR; \
@@ -33,10 +36,10 @@ module CPU (
 	`define BUS_READY \
 		i_ready
 
-	localparam STATE_FETCH_ISSUE		= 3'b001;
-	localparam STATE_FETCH_READ     	= 3'b010;
-	localparam STATE_DECODE				= 3'b011;
-	localparam STATE_DECODE_FINISH	= 3'b100;
+	localparam STATE_FETCH_ISSUE	= 3'b001;
+	localparam STATE_FETCH_READ     = 3'b010;
+	localparam STATE_DECODE			= 3'b011;
+	localparam STATE_RETIRE			= 3'b100;
 
 	reg [2:0] state;
 	reg [2:0] decode_step;
@@ -115,31 +118,35 @@ module CPU (
 			o_data <= 0;
 		end
 		else begin
-			if (state == STATE_FETCH_ISSUE) begin
-				// $display("STATE_FETCH_ISSUE, pc = %x", pc);
-				`MEM_READ_REQ(pc);
-				pc_next <= pc + 4;
-				r[0] <= 0;
-				state <= STATE_FETCH_READ;
-			end
-			else if (state == STATE_FETCH_READ) begin
-				if (`BUS_READY) begin
-					// $display("STATE_FETCH_READ, i_data = %x", i_data);
-					instruction <= i_data;
-					o_request <= 0;
-					state <= STATE_DECODE;
-					decode_step <= 0;
+			case (state)
+				STATE_FETCH_ISSUE: begin
+					`MEM_READ_REQ(pc);
+					state <= STATE_FETCH_READ;
 				end
-			end
-			else if (state == STATE_DECODE) begin
-				$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
-				`include "Instructions_d.v"
-			end
-			else if (state == STATE_DECODE_FINISH) begin
-				$display("STATE_DECODE_FINISH, PC: %x, PC_NEXT: %x", pc, pc_next);
-				pc <= pc_next;
-				state <= STATE_FETCH_ISSUE;
-			end
+				
+				STATE_FETCH_READ: begin
+					if (`BUS_READY) begin
+						instruction <= i_data;
+						o_request <= 0;
+						state <= STATE_DECODE;
+						decode_step <= 0;
+						pc_next <= pc + 4;
+						r[0] <= 0;
+					end
+				end
+
+				STATE_DECODE: begin
+					$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+					`include "Instructions_d.v"
+				end
+
+				STATE_RETIRE: begin
+					$display("STATE_RETIRE, PC: %x, PC_NEXT: %x", pc, pc_next);
+					`MEM_READ_REQ(pc_next);
+					pc <= pc_next;
+					state <= STATE_FETCH_READ;					
+				end
+			endcase
 		end
 	end
 

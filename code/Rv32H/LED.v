@@ -1,4 +1,4 @@
-module LED_Mapped(
+module LED(
 	input wire i_reset,
 	input wire i_clock,
 	input wire i_enable,

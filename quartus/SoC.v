@@ -225,7 +225,7 @@ module SoC(
 	// Mapped LEDS
 	wire led_enable;
 	wire [31:0] led_wdata;
-	LED_Mapped led(
+	LED led(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_enable(led_enable),
@@ -239,6 +239,7 @@ module SoC(
 	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
+	wire uart_waiting;
 	UART #(
 		50000000,
 		9600
@@ -249,6 +250,7 @@ module SoC(
 		.i_wdata(uart_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
+		.o_waiting(uart_waiting),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
@@ -257,11 +259,13 @@ module SoC(
 	// GPIO
 	wire gpio_enable;
 	wire gpio_rw;
+	wire [31:0] gpio_address;
 	wire [31:0] gpio_wdata;
 	wire [31:0] gpio_rdata;
 	GPIO gpio(
 		.i_enable(gpio_enable),
 		.i_rw(gpio_rw),
+		.i_address(gpio_address),
 		.i_wdata(gpio_wdata),
 		.o_rdata(gpio_rdata),
 		// ---
@@ -319,8 +323,6 @@ module SoC(
 		.o_pc(cpu_pc)
 	);
 
-	assign LEDG = cpu_pc[7:0];
-
 	// Bus
 	wire bus_rw;
 	wire bus_request;
@@ -371,6 +373,7 @@ module SoC(
 
 	assign gpio_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
 	assign gpio_rw = bus_rw;
+	assign gpio_address = bus_address - 32'h50000020;
 	assign gpio_wdata = bus_wdata;
 	
 	assign i2c_enable = bus_request && (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
@@ -401,5 +404,7 @@ module SoC(
 		i2c_enable ? 1'b1 :
 		sd_enable ? 1'b1 :
 		1'b0;
+
+	assign LEDG = { uart_waiting, 2'b00, cpu_pc[2:0] };
 
 endmodule

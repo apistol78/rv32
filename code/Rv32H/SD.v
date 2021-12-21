@@ -23,9 +23,9 @@ module SD (
 			o_rdata <= { 26'b0, SD_DAT, SD_CMD, SD_CLK };
 		end
 		else begin	// write
-            SD_CLK <= (SD_CLK & mask[0]) | write[0];
-            sd_cmd <= (sd_cmd & mask[1]) | write[1];
-            sd_dat <= (sd_dat & mask[5:2]) | write[5:2];
+            SD_CLK <= (SD_CLK & ~mask[0]) | write[0];
+            sd_cmd <= (sd_cmd & ~mask[1]) | write[1];
+            sd_dat <= (sd_dat & ~mask[5:2]) | write[5:2];
 		end
 	end
 endmodule

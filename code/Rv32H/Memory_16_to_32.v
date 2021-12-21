@@ -19,11 +19,13 @@ module Memory_16_to_32(
 	input wire i_ram_ready
 );
 
-	reg [2:0] state = 0;
+	reg [2:0] state;
 	
 	assign o_ram_clock = i_clock;
 	
 	initial begin
+		state = 0;
+		o_ready <= 0;
 		o_ram_enable <= 0;
 		o_ram_rw <= 0;
 	end
@@ -100,10 +102,10 @@ module Memory_16_to_32(
 			end
 		end
 		else begin
-			state <= 2'b00;
+			state <= 3'd0;
+			o_ready <= 0;
 			o_ram_enable <= 0;
 			o_ram_rw <= 0;
-			o_ready <= 0;
 		end
 	end
 

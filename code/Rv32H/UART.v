@@ -9,6 +9,7 @@ module UART #(
 	input wire [31:0] i_wdata,
 	output wire [31:0] o_rdata,
     output wire o_ready,
+	output wire o_waiting,
 
     input wire UART_RX,
     output wire UART_TX
@@ -24,6 +25,7 @@ module UART #(
 		.i_enable(rx_enable),
 		.o_rdata(o_rdata),
 		.o_ready(rx_ready),
+		.o_waiting(o_waiting),
 		.UART_RX(UART_RX)
 	);
 

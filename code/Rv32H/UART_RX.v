@@ -7,7 +7,8 @@ module UART_RX #(
 	input wire i_enable,
 	output reg [31:0] o_rdata,
     output reg o_ready,
-
+	output reg o_waiting,
+	
     input wire UART_RX
 );
 
@@ -48,6 +49,7 @@ module UART_RX #(
 	initial begin
 		o_rdata <= 32'h0;
 		o_ready <= 0;
+		o_waiting <= 0;
 	end
 	
 	always @ (posedge i_clock) begin
@@ -55,8 +57,12 @@ module UART_RX #(
 			case (rds)
 				0: begin
 					if (!rx_fifo_empty) begin
+						o_waiting <= 0;
 						rx_fifo_read <= 1;
 						rds <= 1;
+					end
+					else begin
+						o_waiting <= 1;
 					end
 				end
 				1: begin
