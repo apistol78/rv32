@@ -287,7 +287,7 @@ module SoC_tb;
         #2
         reset <= 0;
 
-		repeat(1000) @(posedge clock);
+		repeat(30000) @(posedge clock);
 
 		$finish;
 	end

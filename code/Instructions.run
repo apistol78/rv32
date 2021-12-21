@@ -626,12 +626,12 @@ local instructions = {
 			// 2: wait until load finish.
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
-					// $display("\tLOAD BYTE, data => %x (%d)", i_data, address_byte);
+					$display("\tLOAD BYTE, address <= %x, data => %x (%d)", r[inst_I_rs1] + $signed(inst_I_imm), i_data, address_byte);
 					case ( address_byte  )
-						2'b00: r[inst_I_rd] <= { { 24{ i_data[7]  } }, i_data[6:0] };
-						2'b01: r[inst_I_rd] <= { { 24{ i_data[15] } }, i_data[14:8] };
-						2'b10: r[inst_I_rd] <= { { 24{ i_data[23] } }, i_data[22:16] };
-						2'b11: r[inst_I_rd] <= { { 24{ i_data[31] } }, i_data[30:24] };
+						2'b00: r[inst_I_rd] <= $signed({ { 24{ i_data[7]  } }, i_data[6:0] });
+						2'b01: r[inst_I_rd] <= $signed({ { 24{ i_data[15] } }, i_data[14:8] });
+						2'b10: r[inst_I_rd] <= $signed({ { 24{ i_data[23] } }, i_data[22:16] });
+						2'b11: r[inst_I_rd] <= $signed({ { 24{ i_data[31] } }, i_data[30:24] });
 					endcase
 					`BUS_REQUEST_END;
 					`DECODE_DONE;
@@ -1320,7 +1320,7 @@ end
 function main(argv)
 
 	local language = argv:get(0)
-	local debug = true
+	local debug = false
 
 	if language == "cpp" then
 

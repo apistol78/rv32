@@ -136,12 +136,12 @@ module CPU (
 				end
 
 				STATE_DECODE: begin
-					$display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
+					// $display("STATE_DECODE[%d], PC: %x, SP: %x", decode_step, pc, r[2]);
 					`include "Instructions_d.v"
 				end
 
 				STATE_RETIRE: begin
-					$display("STATE_RETIRE, PC: %x, PC_NEXT: %x", pc, pc_next);
+					// $display("STATE_RETIRE, PC: %x, PC_NEXT: %x", pc, pc_next);
 					`MEM_READ_REQ(pc_next);
 					pc <= pc_next;
 					state <= STATE_FETCH_READ;					
