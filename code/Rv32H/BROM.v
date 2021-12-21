@@ -4,7 +4,7 @@ module BROM(
 	output reg [31:0] o_rdata
 );
 
-	reg [31:0] data [0:300];
+	reg [31:0] data [0:400];
 
 `ifdef __ICARUS__
 	initial $readmemh("code/Firmware/Firmware.vmem", data);
