@@ -178,7 +178,9 @@ void adv7513_power_up()
 void main()
 {
 	volatile uint32_t* video = (volatile uint32_t*)0x40000000;
-	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
+	volatile uint32_t* vctrl = (volatile uint32_t*)0x4ffffff0;
+
+	//volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
 	// *leds = 0x00;
 
 	// adv7513_power_up();
@@ -191,8 +193,6 @@ void main()
 
 	for (;;)
 	{
-		*leds = b;
-
 		for (int y = 0; y < 240; ++y)
 		{
 			for (int x = 0; x < 320; ++x)
@@ -202,8 +202,9 @@ void main()
 			}
 			g++;
 		}
-
 		b++;
+
+		*vctrl = 1;
 	}
 
 }

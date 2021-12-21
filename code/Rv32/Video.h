@@ -2,7 +2,6 @@
 
 #include <Core/Ref.h>
 #include <Core/Misc/AutoPtr.h>
-#include <Core/Timer/Timer.h>
 #include "Rv32/Device.h"
 
 namespace traktor
@@ -36,10 +35,11 @@ public:
 
 	traktor::drawing::Image* getImage() const { return m_image; }
 
-	bool shouldPresent() { bool dirty = m_dirty; m_dirty = false; return dirty; }
+	bool shouldPresent() { return m_dirty; }
+
+	void clearPresent() { m_dirty = false; }
 
 private:
 	traktor::Ref< traktor::drawing::Image > m_image;
-	traktor::Timer m_timer;
 	bool m_dirty = true;
 };

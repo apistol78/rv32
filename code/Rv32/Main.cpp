@@ -24,7 +24,7 @@
 #include <Ui/Bitmap.h>
 #include <Ui/Image.h>
 #include <Ui/Form.h>
-#include <Ui/TableLayout.h>
+#include <Ui/FloodLayout.h>
 #if defined(_WIN32)
 #	include <Ui/Win32/WidgetFactoryWin32.h>
 #elif defined(__APPLE__)
@@ -71,7 +71,7 @@ int main(int argc, const char** argv)
 	}
 #endif
 
-	bool headless = true;
+	bool headless = cmdLine.hasOption(L"headless");
 
 	if (!headless)
 	{
@@ -229,13 +229,14 @@ int main(int argc, const char** argv)
 	if (!headless)
 	{
 		form = new ui::Form();
-		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%", 0, 0));
+		form->create(L"RV32", ui::dpi96(640), ui::dpi96(480), ui::Form::WsDefault, new ui::FloodLayout());
 
-		uiImage = new ui::Bitmap(640, 400);
+		uiImage = new ui::Bitmap(320, 240);
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale);
 
+		form->update();
 		form->show();
 	}
 
@@ -256,12 +257,16 @@ int main(int argc, const char** argv)
 					break;
 				if (bus.error())
 					break;
+
+				if (video.shouldPresent())
+					break;
 			}
 
 			if (video.shouldPresent() && video.getImage())
 			{
 				uiImage->copyImage(video.getImage());
 				image->setImage(uiImage);
+				video.clearPresent();
 			}
 		}
 		else

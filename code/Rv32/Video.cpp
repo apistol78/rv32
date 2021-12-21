@@ -15,8 +15,8 @@ Video::Video()
 {
 	m_image = new drawing::Image(
 		drawing::PixelFormat::getR8G8B8X8(),
-		640,
-		400
+		320,
+		240
 	);
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
@@ -35,23 +35,19 @@ bool Video::writeU16(uint32_t address, uint16_t value)
 
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
-	if (address == 0x00000100)
-		ThreadManager::getInstance().getCurrentThread()->sleep(value);
-	else if (address == 0x00000200)
+	if (address == 0x0ffffff0)
 		m_dirty = true;
-	else if (address >= 0x10000000)
+	else if (address < (320 * 240) * 4)
 	{
-		uint32_t offset = address - 0x10000000;
+		uint32_t offset = address / 4;
 
-		uint32_t x = offset % 640;
-		uint32_t y = offset / 640;
+		uint32_t x = offset % 320;
+		uint32_t y = offset / 320;
 
 		m_image->setPixel(x, y, Color4f::fromColor4ub(
 			Color4ub(value)
 		));
 	}
-	else
-		log::info << L"VIDEO | 32-bit 0x" << str(L"%08x", value) << L" (" << (int32_t)value << L")" << Endl;
 	return true;
 }
 
@@ -67,8 +63,5 @@ uint16_t Video::readU16(uint32_t address) const
 
 uint32_t Video::readU32(uint32_t address) const
 {
-	if (address == 0x00000100)
-		return (uint32_t)(m_timer.getElapsedTime() * 1000.0);
-	else
-		return 0;
+	return 0;
 }
