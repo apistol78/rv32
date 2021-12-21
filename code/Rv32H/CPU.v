@@ -84,16 +84,16 @@ module CPU (
 
 	`include "Instructions_i.v"
 
-	integer i;
+	//integer i;
 	
 	initial begin
 		state <= STATE_FETCH_ISSUE;
 		decode_step <= 0;
 		pc <= 32'h0000_0000;
 		pc_next <= 32'h0000_0000;
-		for (i = 0; i < 32; i = i + 1)
-			r[i] <= 0;
-		r[2] <= 32'h0001_2000;	// sp
+		//for (i = 0; i < 32; i = i + 1)
+		//	r[i] <= 0;
+		r[2] <= 32'h0001_0400;	// sp
 		instruction <= 0;
 		o_rw <= 0;		
 		o_request <= 0;
@@ -108,9 +108,9 @@ module CPU (
 			decode_step <= 0;
 			pc <= 32'h0000_0000;
 			pc_next <= 32'h0000_0000;
-			for (i = 0; i < 32; i = i + 1)
-				r[i] <= 0;
-			r[2] <= 32'h0001_2000;	// sp
+			//for (i = 0; i < 32; i = i + 1)
+			//	r[i] <= 0;
+			r[2] <= 32'h0001_0400;	// sp
 			instruction <= 0;
 			o_rw <= 0;		
 			o_request <= 0;

@@ -36,7 +36,7 @@ module UART_RX #(
 	reg rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
 	FIFO #(
-		.DEPTH(64)
+		.DEPTH(32)
 	) rx_fifo(
 		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
@@ -87,7 +87,7 @@ module UART_RX #(
 				rx_fifo_write <= 0;
 				if (UART_RX == 1'b0) begin
 					state <= STATE_DATA_BITS;
-					sample <= 16-1 + 4;
+					sample <= 16-1 + 7;
 					count <= 0;
 				end
 			end
@@ -112,6 +112,10 @@ module UART_RX #(
 					if (UART_RX == 1'b1) begin
 						state <= STATE_IDLE;
 						rx_fifo_write <= 1;
+					end
+					else begin
+						// no stop bit detected, ignore received data.
+						state <= STATE_IDLE;
 					end
 				end else begin
 					sample = sample - 1;

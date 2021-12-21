@@ -823,6 +823,8 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=1" -
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=1" -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=000000000000000000000000" -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=24" -section_id auto_signaltap_0
+set_global_assignment -name VERILOG_FILE ../code/Rv32H/VRAM.v
+set_global_assignment -name VERILOG_FILE ../code/Rv32H/VGA.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/LED.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/SD.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/GPIO.v

@@ -139,14 +139,54 @@ module SoC(
 
 	assign reset = !CPU_RESET_n;
 	assign clock = CLOCK_50_B5B;
-
+	
 	/*
-	reg [3:0] counter = 0;
-	always @(posedge CLOCK_50_B5B) begin
-		counter <= counter + 1;
-	end
-	wire clock = counter[2];
+	// VGA clock
+	wire clock25;
+	wire locked;
+	PLL25 pll25(
+		.refclk(clock),
+		.rst(reset),
+		.outclk_0(clock25),
+		.locked(locked)
+	);
 	*/
+  
+	wire vga_enable;
+	wire [15:0] vga_address;
+  
+	// VRAM
+	wire vram_enable;
+	wire vram_rw;
+	wire [31:0] vram_address;
+	wire [31:0] vram_wdata;
+	wire vram_ready;
+	VRAM vram(
+		.i_clock(clock),
+	
+		.i_video_address(vga_address),
+		.i_video_enable(vga_enable),
+		.o_video_rdata(HDMI_TX_D),
+		
+		.i_enable(vram_enable),
+		.i_rw(vram_rw),
+		.i_address(vram_address),
+		.i_wdata(vram_wdata),
+		.o_ready(vram_ready)
+	);
+  
+	// VGA signal generator
+	VGA vga(
+		.i_clock(clock),
+		.o_hsync(HDMI_TX_HS),
+		.o_vsync(HDMI_TX_VS),
+		.o_data_enable(vga_enable),
+		.o_vga_address(vga_address),
+		.o_vga_clock(HDMI_TX_CLK)
+	);
+	
+	assign HDMI_TX_DE = vga_enable;
+	
 	
 	// ROM
 	wire rom_enable;
@@ -222,7 +262,7 @@ module SoC(
 		.i_ram_ready(sram16_ready)
 	);
 
-	// Mapped LEDS
+	// LEDS
 	wire led_enable;
 	wire [31:0] led_wdata;
 	LED led(
@@ -364,6 +404,11 @@ module SoC(
 	assign sram32_address = bus_address - 32'h10000000;
 	assign sram32_wdata = bus_wdata;
 	
+	assign vram_enable = bus_request && (bus_address >= 32'h40000000 && bus_address < 32'h50000000);
+	assign vram_rw = bus_rw;
+	assign vram_address = bus_address - 32'h40000000;
+	assign vram_wdata = bus_wdata;
+	
 	assign led_enable = bus_request && (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
 	assign led_wdata = bus_wdata;
 	
@@ -398,6 +443,7 @@ module SoC(
 		rom_enable ? 1'b1 :
 		ram_enable ? 1'b1 :
 		sram32_enable ? sram32_ready :
+		vram_enable ? vram_ready :
 		led_enable ? 1'b1 :
 		uart_enable ? uart_ready :
 		gpio_enable ? 1'b1 :

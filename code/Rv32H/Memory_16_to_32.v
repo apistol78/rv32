@@ -32,7 +32,7 @@ module Memory_16_to_32(
 
 	always @ (posedge i_clock) begin
 		if (i_enable) begin
-			if (!i_rw) begin	// read
+			if (!i_rw) begin
 				case (state)
 					3'd0: begin
 						o_ram_enable <= 1;
@@ -66,8 +66,8 @@ module Memory_16_to_32(
 					end
 				endcase
 			end
-			else begin	// write
-				case (state)
+			else begin
+				case (state)	// synopsys full_case
 					3'd0: begin
 						o_ram_enable <= 1;
 						o_ram_rw <= 1;
