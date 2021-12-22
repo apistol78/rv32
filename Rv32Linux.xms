@@ -278,6 +278,7 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>$(TRAKTOR_HOME)/code</item>
+						<item>code</item>
 					</includePaths>
 					<definitions>
 						<item>_DEBUG</item>
@@ -302,6 +303,7 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>$(TRAKTOR_HOME)/code</item>
+						<item>code</item>
 					</includePaths>
 					<definitions>
 						<item>NDEBUG</item>
@@ -326,6 +328,7 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>$(TRAKTOR_HOME)/code</item>
+						<item>code</item>
 					</includePaths>
 					<definitions>
 						<item>T_STATIC</item>
@@ -350,6 +353,7 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>$(TRAKTOR_HOME)/code</item>
+						<item>code</item>
 					</includePaths>
 					<definitions>
 						<item>T_STATIC</item>

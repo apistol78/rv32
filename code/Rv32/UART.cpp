@@ -100,6 +100,7 @@ UART::UART(IStream* stream)
 
 bool UART::writeU8(uint32_t address, uint8_t value)
 {
+	log::info << wchar_t(value);
 	return true;
 }
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-../../build/linux/ReleaseStatic/Rv32 -h=Mini.hex -t
+../../build/linux/ReleaseStatic/Rv32 -h=../Firmware/Firmware.hex -u=Mini.hex

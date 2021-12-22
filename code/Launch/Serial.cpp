@@ -1,10 +1,11 @@
-#include <windows.h>
 #include <Core/Misc/String.h>
 #include "Serial.h"
 
 using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"Serial", Serial, IStream)
+
+#if defined(_WIN32)
 
 bool Serial::open(int32_t port, const Configuration& configuration)
 {
@@ -144,3 +145,60 @@ void Serial::flush()
 {
 	FlushFileBuffers(m_hcomm);
 }
+
+#elif defined(__LINUX__)
+
+bool Serial::open(int32_t port, const Configuration& configuration)
+{
+	return true;
+}
+
+void Serial::close()
+{
+}
+
+bool Serial::canRead() const
+{
+	return true;
+}
+
+bool Serial::canWrite() const
+{
+	return true;
+}
+
+bool Serial::canSeek() const
+{
+	return false;
+}
+
+int64_t Serial::tell() const
+{
+	return 0;
+}
+
+int64_t Serial::available() const
+{
+	return 0;
+}
+
+int64_t Serial::seek(SeekOriginType origin, int64_t offset)
+{
+	return 0;
+}
+
+int64_t Serial::read(void* block, int64_t nbytes)
+{
+	return -1;
+}
+
+int64_t Serial::write(const void* block, int64_t nbytes)
+{
+	return -1;
+}
+
+void Serial::flush()
+{
+}
+
+#endif

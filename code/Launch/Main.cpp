@@ -17,10 +17,7 @@ void write(Serial& serial, T value)
 {
 	const uint8_t* v = (const uint8_t*)&value;
 	for (int i = 0; i < sizeof(T); ++i)
-	{
 		serial.write(v++, 1);
-		//ThreadManager::getInstance().getCurrentThread()->sleep(5);
-	}
 }
 
 template < typename T >
@@ -165,6 +162,15 @@ int main(int argc, const char** argv)
 
 	if (!uploadHEX(serial, commandLine.getString(0)))
 		return 1;
+
+	if (commandLine.hasOption('t', L"terminal"))
+	{
+		for (;;)
+		{
+			uint8_t ch = read< uint8_t >(serial);
+			log::info << (wchar_t)ch;
+		}
+	}
 
 	return 0;
 }

@@ -1,6 +1,9 @@
 #pragma once
 
-#include <windows.h>
+#if defined(_WIN32)
+#	include <windows.h>
+#elif defined(__LINUX__)
+#endif
 #include <Core/Io/IStream.h>
 
 class Serial : public traktor::IStream
@@ -56,5 +59,7 @@ public:
 	virtual void flush() override final;
 
 private:
+#if defined(_WIN32)
 	HANDLE m_hcomm = INVALID_HANDLE_VALUE;
+#endif
 };
