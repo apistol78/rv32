@@ -1330,6 +1330,11 @@ function main(argv)
 			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
 			stdout:printLn("{")
 			stdout:printLn("\tTRACE(L\"\t" .. inst.name .. "\");")
+
+			if inst.verilog == nil then
+				stdout:printLn("\tlog::info << L\"No verilog implementation of " .. inst.name .. "\" << Endl;")
+			end
+
 			local pfx = prefixes[inst.format];
 			if pfx ~= nil and pfx.cpp ~= nil then
 				stdout:printLn("\t" .. trim(pfx.cpp))
