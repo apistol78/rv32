@@ -1,3 +1,4 @@
+#include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/IStream.h>
 #include <Core/Io/StringReader.h>
@@ -20,6 +21,7 @@ void write(AlignedVector< uint8_t >& outStream, T value)
 
 bool decodeHEX(IStream* stream, AlignedVector< uint8_t >& outStream)
 {
+	StaticVector< uint8_t, 16 > record;
 	std::wstring tmp;
 
 	uint32_t segment = 0x00000000;
@@ -45,20 +47,44 @@ bool decodeHEX(IStream* stream, AlignedVector< uint8_t >& outStream)
 
 		if (type == 0x00)
 		{
+			if (ln > 16)
+			{
+				log::error << L"Too long record." << Endl;
+				return false;
+			}
+
+			const uint32_t linear = (upper | addr) + segment;
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&linear;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];			
+
+			// Parse record and calculate checksum.
+			record.resize(0);
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
-				const uint32_t linear = (upper | addr) + segment;
-
-				write< uint8_t >(outStream, 0x01);
-				write< uint32_t >(outStream, linear);
-				write< uint8_t >(outStream, v);
-				
-				start = std::min< uint32_t >(start, linear);
-				end = std::max< uint32_t >(end, linear);
-
-				addr++;
+				record.push_back((uint8_t)v);
+				cs ^= (uint8_t)v;
 			}
+
+			write< uint8_t >(outStream, 0x01);
+			write< uint32_t >(outStream, linear);
+			write< uint8_t >(outStream, (uint8_t)record.size());
+
+			for (int32_t i = 0; i < record.size(); ++i)
+				write< uint8_t >(outStream, record[i]);			
+
+			write< uint8_t >(outStream, cs);
+
+			addr += record.size();
+
+			start = std::min< uint32_t >(start, linear);
+			end = std::max< uint32_t >(end, linear);
 		}
 		else if (type == 0x01)
 			break;
@@ -77,8 +103,18 @@ bool decodeHEX(IStream* stream, AlignedVector< uint8_t >& outStream)
 		else if (type == 0x05)
 		{
 			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
-			write< uint8_t >(outStream, 0x03);
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&linear;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];			
+
+			write< uint8_t >(outStream, 0x02);
 			write< uint32_t >(outStream, linear);
+			write< uint8_t >(outStream, cs);
 		}
 		else
 			log::warning << L"Unhandled HEX record type " << type << L"." << Endl;

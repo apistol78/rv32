@@ -36,20 +36,16 @@ void fatal_error(uint8_t error)
 void main()
 {
 	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
-	uint8_t cmd;
-	uint32_t addr;
-	uint8_t data;
-
 	*leds = 0x00000000;
 
 	// verify sram
 	{
 		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
 		
-		for (uint32_t i = 0; i < 16; ++i)
+		for (uint32_t i = 0; i < 256; ++i)
 			sram[i] = 0x1122ab00 + i;
 
-		for (uint32_t i = 0; i < 16; ++i)
+		for (uint32_t i = 0; i < 256; ++i)
 		{
 			if (sram[i] != 0x1122ab00 + i)
 				fatal_error(1);
@@ -58,52 +54,68 @@ void main()
 
 	for (;;)
 	{
-		if ((cmd = uart_rx_u8()) == 0)
-			continue;
-
+		uint8_t cmd = uart_rx_u8();
 		*leds = (uint32_t)cmd;
 
 		// poke
 		if (cmd == 0x01)
 		{
-			addr = uart_rx_u32();
-			data = uart_rx_u8();
-			if (addr >= 0x10000000 && addr < 0x40000000)
+			uint32_t addr = uart_rx_u32();
+			uint8_t nb = uart_rx_u8();
+			uint8_t cs = 0;
+
+			if (nb == 0 || nb > 16)
 			{
-				*(uint8_t*)addr = data;
-				uart_tx_u8(data);
+				uart_tx_u8(0x81);	// Invalid data.
+				continue;
+			}
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&addr;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			// Receive 
+			uint8_t r[16];
+			for (uint8_t i = 0; i < nb; ++i)
+			{
+				uint8_t d = uart_rx_u8();
+				r[i] = d;
+				cs ^= d;
+			}
+
+			if (cs == uart_rx_u8())
+			{
+				for (uint8_t i = 0; i < nb; ++i)
+					*(uint8_t*)addr++ = r[i];
+				uart_tx_u8(0x80);	// Ok
 			}
 			else
-				fatal_error(2);
-		}
-
-		// peek
-		else if (cmd == 0x02)
-		{
-			addr = uart_rx_u32();
-			if (addr >= 0x10000000 && addr < 0x40000000)
-				uart_tx_u8(*(uint8_t*)addr);
-			else
-				fatal_error(3);
+				uart_tx_u8(0x82);	// Invalid checksum.
 		}
 
 		// jump to
-		else if (cmd == 0x03)
+		else if (cmd == 0x02)
 		{
-			addr = uart_rx_u32();
-			if (addr >= 0x10000000 && addr <= 0x40000000)
+			uint32_t addr = uart_rx_u32();
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&addr;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			if (cs == uart_rx_u8())
 			{
-				uart_tx_u8(0x80);
+				uart_tx_u8(0x80);	// Ok
 				((call_fn_t)addr)();
 			}
 			else
-				fatal_error(4);
+				uart_tx_u8(0x82);	// Invalid checksum.
 		}
-
-/*
-		// unknown command
-		else
-			fatal_error();
-*/
 	}
 }
