@@ -71,15 +71,13 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 
 	//PurgeComm(m_hcomm, PURGE_RXCLEAR | PURGE_TXCLEAR);
 
-	/*
 	COMMTIMEOUTS cto;                   
-	cto.ReadIntervalTimeout = 3;
-	cto.ReadTotalTimeoutMultiplier = 3;
-	cto.ReadTotalTimeoutConstant = 2;
-	cto.WriteTotalTimeoutMultiplier = 3;
-	cto.WriteTotalTimeoutConstant = 2;
+	cto.ReadIntervalTimeout = 0;
+	cto.ReadTotalTimeoutMultiplier = 0;
+	cto.ReadTotalTimeoutConstant = 0;
+	cto.WriteTotalTimeoutMultiplier = 0;
+	cto.WriteTotalTimeoutConstant = 0;
 	SetCommTimeouts(m_hcomm, &cto);
-	*/
 
 	return true;
 }

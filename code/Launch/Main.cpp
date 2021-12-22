@@ -29,6 +29,7 @@ bool writePoke(Serial& serial, uint32_t address, uint8_t data)
 	write< uint8_t >(serial, 0x01);
 	write< uint32_t >(serial, address);
 	write< uint8_t >(serial, data);
+	serial.flush();
 	uint8_t echo = read< uint8_t >(serial);
 	if (echo != data)
 	{
@@ -43,6 +44,7 @@ uint8_t writePeek(Serial& serial, uint32_t address)
 {
 	write< uint8_t >(serial, 0x02);
 	write< uint32_t >(serial, address);
+	serial.flush();
 	return read< uint8_t >(serial);
 }
 
@@ -50,6 +52,7 @@ bool writeJump(Serial& serial, uint32_t address)
 {
 	write< uint8_t >(serial, 0x03);
 	write< uint32_t >(serial, address);
+	serial.flush();
 	return read< uint8_t >(serial) == 0x80;
 }
 
