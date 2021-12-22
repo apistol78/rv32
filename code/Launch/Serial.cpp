@@ -31,6 +31,9 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 	dcb.Parity = NOPARITY;
 	dcb.ByteSize = configuration.byteSize;
 	dcb.fDtrControl = DTR_CONTROL_DISABLE;
+	dcb.fOutX = FALSE;
+	dcb.fInX = FALSE;
+	dcb.fRtsControl = RTS_CONTROL_DISABLE;
 	SetCommState(m_hcomm, &dcb);
 
 	switch (configuration.stopBits)

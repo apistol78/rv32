@@ -6,8 +6,6 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/ThreadManager.h>
 #include "Launch/Serial.h"
 
 using namespace traktor;
@@ -15,9 +13,7 @@ using namespace traktor;
 template < typename T >
 void write(Serial& serial, T value)
 {
-	const uint8_t* v = (const uint8_t*)&value;
-	for (int i = 0; i < sizeof(T); ++i)
-		serial.write(v++, 1);
+	serial.write(&value, sizeof(T));
 }
 
 template < typename T >
@@ -100,8 +96,12 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 
 				if (!writePoke(serial, linear, v))
 				{
-					log::error << L"Failed to poke" << Endl;
-					return false;
+					log::error << L"Failed to poke, retry..." << Endl;
+					if (!writePoke(serial, linear, v))
+					{
+						log::error << L"Failed to poke, abort." << Endl;
+						return false;
+					}
 				}
 
 				start = std::min< uint32_t >(start, linear);
@@ -165,10 +165,11 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('t', L"terminal"))
 	{
+		log::info << L"Terminal ready! Waiting for data..." << Endl;
 		for (;;)
 		{
 			uint8_t ch = read< uint8_t >(serial);
-			log::info << (wchar_t)ch;
+			log::info << (wchar_t)ch << Endl;
 		}
 	}
 

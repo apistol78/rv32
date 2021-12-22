@@ -280,6 +280,7 @@ module SoC(
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	wire uart_waiting;
+	wire [1:0] uart_state;
 	UART #(
 		50000000,
 		9600
@@ -291,6 +292,7 @@ module SoC(
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
 		.o_waiting(uart_waiting),
+		.o_state(uart_state),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
@@ -451,6 +453,8 @@ module SoC(
 		sd_enable ? 1'b1 :
 		1'b0;
 
-	assign LEDG = { uart_waiting, 2'b00, cpu_pc[2:0] };
+	// 7:0
+	// w|ss|ppp
+	assign LEDG = { 2'b00, uart_waiting, uart_state, cpu_pc[2:0] };
 
 endmodule
