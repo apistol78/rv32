@@ -283,7 +283,7 @@ module SoC(
 	wire [1:0] uart_state;
 	UART #(
 		50000000,
-		9600
+		115200
 	) uart(
 		.i_clock(CLOCK_50_B5B),
 		.i_enable(uart_enable),

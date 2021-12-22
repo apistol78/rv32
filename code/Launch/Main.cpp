@@ -148,7 +148,7 @@ int main(int argc, const char** argv)
 	Serial serial;
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 9600;
+	configuration.baudRate = 115200; //  9600;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
