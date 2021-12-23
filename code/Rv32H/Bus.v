@@ -7,26 +7,30 @@ module Bus(
 
 	input wire i_cpu_rw,
 	input wire i_cpu_request,
-	output reg o_cpu_ready,
+	output wire o_cpu_ready,
 	input wire [31:0] i_cpu_address,
 	output wire [31:0] o_cpu_rdata,
 	input wire [31:0] i_cpu_wdata,
 
 	output wire o_bus_rw,
-	output reg o_bus_request,
+	output wire o_bus_request,
 	input wire i_bus_ready,
 	output wire [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata,
 	output wire [31:0] o_bus_wdata
 );
-	reg [31:0] rdata;
-	reg [1:0] state;
+//	reg [31:0] rdata;
+//	reg [1:0] state;
 
-	assign o_cpu_rdata = rdata;
+	assign o_cpu_ready = i_bus_ready && i_cpu_request;
+	assign o_cpu_rdata = i_bus_rdata;
+
 	assign o_bus_rw = i_cpu_rw;
+	assign o_bus_request = i_cpu_request;
 	assign o_bus_address = i_cpu_address;
 	assign o_bus_wdata = i_cpu_wdata;
 
+/*
 	initial begin
 		state <= 2'b00;
 		o_cpu_ready <= 0;
@@ -67,5 +71,5 @@ module Bus(
 			endcase
 		end
 	end
-
+*/
 endmodule
