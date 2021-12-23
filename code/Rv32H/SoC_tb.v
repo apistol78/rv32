@@ -1,4 +1,3 @@
-`include "Bus.v"
 `include "ClockDivider.v"
 `include "CPU.v"
 `include "BRAM.v"
@@ -18,33 +17,39 @@ module SoC_tb;
     reg reset = 1'b1;
 	reg clock = 1'b0;
 
-    // ROM
-	wire rom_enable;
+	// ROM
+	wire rom_select;
 	wire [31:0] rom_address;
 	wire [31:0] rom_rdata;
+	wire rom_ready;
 	BROM rom(
-		.i_enable(rom_enable),
+		.i_clock(clock),
+		.i_request(rom_select && cpu_request),
 		.i_address(rom_address),
-		.o_rdata(rom_rdata)
+		.o_rdata(rom_rdata),
+		.o_ready(rom_ready)
 	);
 
 	// RAM
-	wire ram_enable;
+	wire ram_select;
 	wire ram_rw;
 	wire [31:0] ram_address;
 	wire [31:0] ram_wdata;
 	wire [31:0] ram_rdata;
+	wire ram_ready;
 	BRAM ram(
-		.i_enable(ram_enable),
+		.i_clock(clock),
+		.i_request(ram_select && cpu_request),
 		.i_rw(ram_rw),
 		.i_address(ram_address),
 		.i_wdata(ram_wdata),
-		.o_rdata(ram_rdata)
+		.o_rdata(ram_rdata),
+		.o_ready(ram_ready)
 	);
 
 	// SRAM
 	wire sram16_clock;
-	wire sram16_enable;
+	wire sram16_request;
 	wire sram16_rw;
 	wire [17:0] sram16_address;
 	wire [15:0] sram16_wdata;
@@ -52,7 +57,7 @@ module SoC_tb;
 	wire sram16_ready;
 	SRAM_tb sram16(
 		.i_clock(sram16_clock),
-		.i_enable(sram16_enable),
+		.i_request(sram16_request),
 		.i_rw(sram16_rw),
 		.i_address(sram16_address),
 		.i_wdata(sram16_wdata),
@@ -68,7 +73,7 @@ module SoC_tb;
 	wire sram32_ready;
 	Memory_16_to_32 sram32(
 		.i_clock(clock),
-		.i_enable(sram32_enable),
+		.i_request(sram32_select && cpu_request),
 		.i_rw(sram32_rw),
 		.i_address(sram32_address),
 		.i_wdata(sram32_wdata),
@@ -76,7 +81,7 @@ module SoC_tb;
 		.o_ready(sram32_ready),
 
 		.o_ram_clock(sram16_clock),
-		.o_ram_enable(sram16_enable),
+		.o_ram_request(sram16_request),
 		.o_ram_rw(sram16_rw),
 		.o_ram_address(sram16_address),
 		.o_ram_wdata(sram16_wdata),
@@ -85,17 +90,71 @@ module SoC_tb;
 	);
 
 	// Video
-	wire video_enable;
+	wire video_select;
 	wire video_rw;
 	wire [31:0] video_address;
 	wire [31:0] video_wdata;
 	wire [31:0] video_rdata;
 	Video_tb video(
-		.i_enable(video_enable),
+		.i_enable(video_select && cpu_request),
 		.i_rw(video_rw),
 		.i_address(video_address),
 		.i_wdata(video_wdata),
 		.o_rdata(video_rdata)
+	);
+
+	// GPIO
+	wire gpio_select;
+	wire gpio_rw;
+	wire [31:0] gpio_wdata;
+	wire [31:0] gpio_rdata;
+	wire [35:0] GPIO;
+	GPIO gpio(
+		.i_enable(gpio_select && cpu_request),
+		.i_rw(gpio_rw),
+		.i_wdata(gpio_wdata),
+		.o_rdata(gpio_rdata),
+		// ---
+		.GPIO(GPIO)
+	);
+
+	// I2C
+	wire i2c_select;
+	wire i2c_rw;
+	wire [31:0] i2c_wdata;
+	wire [31:0] i2c_rdata;
+	wire I2C_SCL;
+	wire I2C_SDA;
+	I2C #(
+		50000000,
+		5000000
+	) i2c(
+		.i_enable(i2c_select && cpu_request),
+		.i_rw(i2c_rw),
+		.i_wdata(i2c_wdata),
+		.o_rdata(i2c_rdata),
+		// ---
+		.I2C_SCL(I2C_SCL),
+		.I2C_SDA(I2C_SDA)
+	);
+
+	// SD
+	wire sd_select;
+	wire sd_rw;
+	wire [31:0] sd_wdata;
+	wire [31:0] sd_rdata;
+	wire SD_CLK;
+	wire SD_CMD;
+	wire [3:0] SD_DAT;
+	SD sd(
+		.i_enable(sd_select && cpu_request),
+		.i_rw(sd_rw),
+		.i_wdata(sd_wdata),
+		.o_rdata(sd_rdata),
+		// ---
+		.SD_CLK(SD_CLK),
+		.SD_CMD(SD_CMD),
+		.SD_DAT(SD_DAT)
 	);
 
     // CPU
@@ -116,160 +175,63 @@ module SoC_tb;
 		.o_data(cpu_wdata)
 	);
 
-	// Bus
-	wire bus_rw;
-	wire bus_request;
-	wire bus_ready;
-	wire [31:0] bus_address;
-	wire [31:0] bus_rdata;
-	wire [31:0] bus_wdata;	
-	Bus bus(
-		.i_clock(clock),
-
-		.i_cpu_rw(cpu_rw),
-		.i_cpu_request(cpu_request),
-		.o_cpu_ready(cpu_ready),
-		.i_cpu_address(cpu_address),
-		.o_cpu_rdata(cpu_rdata),
-		.i_cpu_wdata(cpu_wdata),
-
-		.o_bus_rw(bus_rw),
-		.o_bus_request(bus_request),
-		.i_bus_ready(bus_ready),
-		.o_bus_address(bus_address),
-		.i_bus_rdata(bus_rdata),
-		.o_bus_wdata(bus_wdata)		
-	);
-
-	// FIFO
-	wire fifo_empty;
-	wire fifo_full;
-	reg fifo_write = 0;
-	reg [7:0] fifo_wdata = 0;
-	reg fifo_read = 0;
-	wire [7:0] fifo_rdata;
-	FIFO #(
-		.DEPTH(4)
-	) fifo(
-		.i_clock(clock),
-		.o_empty(fifo_empty),
-		.o_full(fifo_full),
-		.i_write(fifo_write),
-		.i_wdata(fifo_wdata),
-		.i_read(fifo_read),
-		.o_rdata(fifo_rdata)
-	);
-
-	// GPIO
-	wire gpio_enable;
-	wire gpio_rw;
-	wire [31:0] gpio_wdata;
-	wire [31:0] gpio_rdata;
-	wire [35:0] GPIO;
-	GPIO gpio(
-		.i_enable(gpio_enable),
-		.i_rw(gpio_rw),
-		.i_wdata(gpio_wdata),
-		.o_rdata(gpio_rdata),
-		// ---
-		.GPIO(GPIO)
-	);
-
-	// I2C
-	wire i2c_enable;
-	wire i2c_rw;
-	wire [31:0] i2c_wdata;
-	wire [31:0] i2c_rdata;
-	wire I2C_SCL;
-	wire I2C_SDA;
-	I2C #(
-		50000000,
-		5000000
-	) i2c(
-		.i_enable(i2c_enable),
-		.i_rw(i2c_rw),
-		.i_wdata(i2c_wdata),
-		.o_rdata(i2c_rdata),
-		// ---
-		.I2C_SCL(I2C_SCL),
-		.I2C_SDA(I2C_SDA)
-	);
-
-	// SD
-	wire sd_enable;
-	wire sd_rw;
-	wire [31:0] sd_wdata;
-	wire [31:0] sd_rdata;
-	wire SD_CLK;
-	wire SD_CMD;
-	wire [3:0] SD_DAT;
-	SD sd(
-		.i_enable(sd_enable),
-		.i_rw(sd_rw),
-		.i_wdata(sd_wdata),
-		.o_rdata(sd_rdata),
-		// ---
-		.SD_CLK(SD_CLK),
-		.SD_CMD(SD_CMD),
-		.SD_DAT(SD_DAT)
-	);
 
 	//=====================================
 
-	assign rom_enable = bus_request && (bus_address >= 32'h00000000 && bus_address < 32'h00010000);
-	assign rom_address = bus_address - 32'h00000000;
+	assign rom_select = (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
+	assign rom_address = cpu_address - 32'h00000000;
 
-	assign ram_enable = bus_request && (bus_address >= 32'h00010000 && bus_address < 32'h00020000);
-	assign ram_rw = bus_rw;
-	assign ram_address = bus_address - 32'h00010000;
-	assign ram_wdata = bus_wdata;
+	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
+	assign ram_rw = cpu_rw;
+	assign ram_address = cpu_address - 32'h00010000;
+	assign ram_wdata = cpu_wdata;
 
-	assign sram32_enable = bus_request && (bus_address >= 32'h10000000 && bus_address < 32'h20000000);
-	assign sram32_rw = bus_rw;
-	assign sram32_address = bus_address - 32'h10000000;
-	assign sram32_wdata = bus_wdata;
+	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign sram32_rw = cpu_rw;
+	assign sram32_address = cpu_address - 32'h10000000;
+	assign sram32_wdata = cpu_wdata;
 
-	wire led_enable = bus_request && (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
+	assign led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 
-	wire uart_enable = bus_request && (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
+	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
 
-	assign video_enable = bus_request && (bus_address >= 32'h40000000 && bus_address < 32'h50000000);
-	assign video_rw = bus_rw;
-	assign video_address = bus_address - 32'h40000000;
-	assign video_wdata = bus_wdata;
+	assign video_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
+	assign video_rw = cpu_rw;
+	assign video_address = cpu_address - 32'h40000000;
+	assign video_wdata = cpu_wdata;
 
-	assign gpio_enable = bus_request && (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
-	assign gpio_rw = bus_rw;
-	assign gpio_wdata = bus_wdata;
+	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
+	assign gpio_rw = cpu_rw;
+	assign gpio_wdata = cpu_wdata;
 	
-	assign i2c_enable = bus_request && (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
-	assign i2c_rw = bus_rw;
-	assign i2c_wdata = bus_wdata;
+	assign i2c_select = (cpu_address >= 32'h50000030 && cpu_address < 32'h50000040);
+	assign i2c_rw = cpu_rw;
+	assign i2c_wdata = cpu_wdata;
 
-	assign sd_enable = bus_request && (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
-	assign sd_rw = bus_rw;
-	assign sd_wdata = bus_wdata;
+	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
+	assign sd_rw = cpu_rw;
+	assign sd_wdata = cpu_wdata;
 
-	assign bus_rdata =
-		rom_enable ? rom_rdata :
-		ram_enable ? ram_rdata :
-		sram32_enable ? sram32_rdata :
-		video_enable ? video_rdata :
-		gpio_enable ? gpio_rdata :
-		i2c_enable ? i2c_rdata :
-		sd_enable ? sd_rdata :
+	assign cpu_rdata =
+		rom_select ? rom_rdata :
+		ram_select ? ram_rdata :
+		sram32_select ? sram32_rdata :
+		video_select ? video_rdata :
+		gpio_select ? gpio_rdata :
+		i2c_select ? i2c_rdata :
+		sd_select ? sd_rdata :
 		32'h00000000;
 
-	assign bus_ready =
-		rom_enable ? 1'b1 :
-		ram_enable ? 1'b1 :
-		sram32_enable ? sram32_ready :
-		led_enable ? 1'b1 :
-		uart_enable ? 1'b1 :
-		video_enable ? 1'b1 :
-		gpio_enable ? 1'b1 :
-		i2c_enable ? 1'b1 :
-		sd_enable ? 1'b1 :
+	assign cpu_ready =
+		rom_select ? rom_ready :
+		ram_select ? ram_ready :
+		sram32_select ? sram32_ready :
+		led_select ? 1'b1 :
+		uart_select ? 1'b1 :
+		video_select ? 1'b1 :
+		gpio_select ? 1'b1 :
+		i2c_select ? 1'b1 :
+		sd_select ? 1'b1 :
 		1'b0;
 
 	// Generate clock.

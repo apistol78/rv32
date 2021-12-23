@@ -2,7 +2,7 @@
 // Fake SRAM module, for testing wait signal.
 module SRAM_tb(
 	input wire i_clock,
-	input wire i_enable,
+	input wire i_request,
 	input wire i_rw,
 	input wire [17:0] i_address,
 	input wire [15:0] i_wdata,
@@ -26,7 +26,7 @@ module SRAM_tb(
 	end
 
 	always @ (posedge i_clock) begin
-		if (i_enable) begin
+		if (i_request) begin
 			state <= state + 1;
 		end
 		else begin
@@ -39,7 +39,7 @@ module SRAM_tb(
 	end
 
 	always @ (posedge i_clock) begin
-		if (i_enable && !i_rw) begin
+		if (i_request && !i_rw) begin
 			case (state)
 				0: begin
 					address <= i_address;
@@ -57,7 +57,7 @@ module SRAM_tb(
 				end
 			endcase
 		end
-		else if (i_enable && i_rw) begin
+		else if (i_request && i_rw) begin
 			case (state)
 				0: begin
 					address <= i_address;
