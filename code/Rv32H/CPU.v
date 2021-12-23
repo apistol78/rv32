@@ -9,7 +9,8 @@ module CPU (
 	output reg [31:0] o_data,		// Write data,
 	output wire [31:0] o_pc
 );
-	`define DECODE_DONE state <= STATE_RETIRE;
+	`define DECODE_DONE \
+		state <= STATE_RETIRE;
 	
 	`define GOTO(ADDR) \
 		pc_next <= ADDR;
@@ -35,11 +36,15 @@ module CPU (
 		o_request <= 0;
 	`define BUS_READY \
 		i_ready
+		
+	`define ERROR
+		//state <= STATE_ERROR;
 
 	localparam STATE_FETCH_ISSUE	= 3'b001;
 	localparam STATE_FETCH_READ     = 3'b010;
 	localparam STATE_DECODE			= 3'b011;
 	localparam STATE_RETIRE			= 3'b100;
+	localparam STATE_ERROR			= 3'b111;
 
 	reg [2:0] state;
 	reg [2:0] decode_step;
@@ -83,16 +88,12 @@ module CPU (
 	wire [31:0] inst_U_imm = { instruction[31:12], 12'b0 };
 
 	`include "Instructions_i.v"
-
-	//integer i;
 	
 	initial begin
 		state <= STATE_FETCH_ISSUE;
 		decode_step <= 0;
 		pc <= 32'h0000_0000;
 		pc_next <= 32'h0000_0000;
-		//for (i = 0; i < 32; i = i + 1)
-		//	r[i] <= 0;
 		r[2] <= 32'h0001_0400;	// sp
 		instruction <= 0;
 		o_rw <= 0;		
@@ -108,8 +109,6 @@ module CPU (
 			decode_step <= 0;
 			pc <= 32'h0000_0000;
 			pc_next <= 32'h0000_0000;
-			//for (i = 0; i < 32; i = i + 1)
-			//	r[i] <= 0;
 			r[2] <= 32'h0001_0400;	// sp
 			instruction <= 0;
 			o_rw <= 0;		

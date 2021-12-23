@@ -823,6 +823,7 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=1" -
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=1" -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=000000000000000000000000" -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=24" -section_id auto_signaltap_0
+set_global_assignment -name SDC_FILE SoC.sdc
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/VRAM.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/VGA.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/LED.v
@@ -830,7 +831,6 @@ set_global_assignment -name VERILOG_FILE ../code/Rv32H/SD.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/GPIO.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/I2C.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/FIFO.v
-set_global_assignment -name VERILOG_FILE ../code/Rv32H/Bus.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/Memory_16_to_32.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/UART_TX.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/UART_RX.v
@@ -841,5 +841,6 @@ set_global_assignment -name VERILOG_FILE ../code/Rv32H/CPU.v -hdl_version Verilo
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/BROM.v -hdl_version Verilog_2001
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/BRAM.v -hdl_version Verilog_2001
 set_global_assignment -name VERILOG_FILE SoC.v -hdl_version Verilog_2001
+set_global_assignment -name SDC_FILE SRAM.sdc
 set_global_assignment -name SLD_FILE db/SoC_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

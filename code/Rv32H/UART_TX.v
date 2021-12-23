@@ -4,7 +4,7 @@ module UART_TX #(
     parameter BAUD_RATE = 9600
 )(
 	input wire i_clock,
-	input wire i_enable,
+	input wire i_request,
 	input wire [31:0] i_wdata,
 	output wire o_ready,
 
@@ -30,11 +30,11 @@ module UART_TX #(
 		.o_clock(baud_tx_clock)
 	);
 	
-	assign o_ready = i_enable && ready;
+	assign o_ready = i_request && ready;
 
-	always @ (posedge baud_tx_clock or negedge i_enable) begin
+	always @ (posedge baud_tx_clock or negedge i_request) begin
 
-		if (~i_enable) begin
+		if (~i_request) begin
 			state <= STATE_IDLE;
 			ready <= 0;
 		end

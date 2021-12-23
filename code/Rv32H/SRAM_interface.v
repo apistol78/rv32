@@ -2,7 +2,7 @@
 // SRAM interface
 module SRAM_interface(
 	input wire i_clock,
-	input wire i_enable,
+	input wire i_request,
 	input wire i_rw,
 	input wire [17:0] i_address,
 	input wire [15:0] i_wdata,
@@ -23,15 +23,15 @@ module SRAM_interface(
 	//reg [6:0] state = 0;
 	
 	assign SRAM_A = i_address;
-	assign SRAM_D = (i_enable && i_rw) ? i_wdata : 16'hzzzz;
-	assign SRAM_CE_n = !i_enable;
-	assign SRAM_OE_n = !(i_enable && !i_rw);
-	assign SRAM_WE_n = !(i_enable && i_rw);
+	assign SRAM_D = (i_request && i_rw) ? i_wdata : 16'hzzzz;
+	assign SRAM_CE_n = !i_request;
+	assign SRAM_OE_n = !(i_request && !i_rw);
+	assign SRAM_WE_n = !(i_request && i_rw);
 	assign SRAM_LB_n = 0;
 	assign SRAM_UB_n = 0;
 	assign o_rdata = SRAM_D;
 	
-	assign o_ready = 1; //(i_enable && state == STATE_END);
+	assign o_ready = 1; //(i_request && state == STATE_END);
 	
 	/*
 	initial begin
@@ -43,7 +43,7 @@ module SRAM_interface(
 	end
 
 	always @ (posedge i_clock) begin
-		if (i_enable) begin
+		if (i_request) begin
 			if (!i_rw) begin	// read
 				case (state)
 					0: begin

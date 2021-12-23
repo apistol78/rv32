@@ -1,3 +1,4 @@
+#include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/FileOutputStream.h>
@@ -24,40 +25,9 @@ T read(Serial& serial)
 	return value;
 }
 
-bool writePoke(Serial& serial, uint32_t address, uint8_t data)
-{
-	write< uint8_t >(serial, 0x01);
-	write< uint32_t >(serial, address);
-	write< uint8_t >(serial, data);
-	serial.flush();
-	uint8_t echo = read< uint8_t >(serial);
-	if (echo != data)
-	{
-		log::error << L"Invalid echo, sent " << str(L"%02x", data) << L", got back " << str(L"%02x", echo) << Endl;
-		return false;
-	}
-	else
-		return true;
-}
-
-uint8_t writePeek(Serial& serial, uint32_t address)
-{
-	write< uint8_t >(serial, 0x02);
-	write< uint32_t >(serial, address);
-	serial.flush();
-	return read< uint8_t >(serial);
-}
-
-bool writeJump(Serial& serial, uint32_t address)
-{
-	write< uint8_t >(serial, 0x03);
-	write< uint32_t >(serial, address);
-	serial.flush();
-	return read< uint8_t >(serial) == 0x80;
-}
-
 bool uploadHEX(Serial& serial, const std::wstring& fileName)
 {
+	StaticVector< uint8_t, 16 > record;
 	std::wstring tmp;
 
 	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
@@ -90,28 +60,53 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 
 		if (type == 0x00)
 		{
+			if (ln > 16)
+			{
+				log::error << L"Too long record." << Endl;
+				return false;
+			}
+
 			log::info << L"TEXT " << str(L"%08x", (upper | addr) + segment) << L"..." << Endl;
 
+			const uint32_t linear = (upper | addr) + segment;
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&linear;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			// Parse record and calculate checksum.
+			record.resize(0);
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
-				const uint32_t linear = (upper | addr) + segment;
-
-				if (!writePoke(serial, linear, v))
-				{
-					log::error << L"Failed to poke, retry..." << Endl;
-					if (!writePoke(serial, linear, v))
-					{
-						log::error << L"Failed to poke, abort." << Endl;
-						return false;
-					}
-				}
-
-				start = std::min< uint32_t >(start, linear);
-				end = std::max< uint32_t >(end, linear);
-
-				addr++;
+				record.push_back((uint8_t)v);
+				cs ^= (uint8_t)v;
 			}
+
+			write< uint8_t >(serial, 0x01);
+			write< uint32_t >(serial, linear);
+			write< uint8_t >(serial, (uint8_t)record.size());
+
+			for (int32_t i = 0; i < record.size(); ++i)
+				write< uint8_t >(serial, record[i]);
+
+			write< uint8_t >(serial, cs);
+
+			uint8_t reply = read< uint8_t >(serial);
+			if (reply != 0x80)
+			{
+				log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+				return false;
+			}
+
+			addr += record.size();
+
+			start = std::min< uint32_t >(start, linear);
+			end = std::max< uint32_t >(end, linear);
 		}
 		else if (type == 0x01)
 			break;
@@ -131,9 +126,24 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 		{
 			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
 			log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
-			if (!writeJump(serial, linear))
+
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&linear;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			write< uint8_t >(serial, 0x02);
+			write< uint32_t >(serial, linear);
+			write< uint8_t >(serial, cs);
+
+			uint8_t reply = read< uint8_t >(serial);
+			if (reply != 0x80)
 			{
-				log::error << L"Failed to jump" << Endl;
+				log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
 				return false;
 			}
 		}

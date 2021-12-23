@@ -8,7 +8,7 @@ module VRAM(
 	output wire [23:0] o_video_rdata,
 
 	// CPU
-	input wire i_enable,
+	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,
 	input wire [31:0] i_wdata,
@@ -23,13 +23,15 @@ module VRAM(
 	assign o_video_rdata = i_video_enable ? data[i_video_address] : 0;
 	
 	always @ (posedge i_clock) begin
-		if (i_enable && i_rw) begin
+		if (i_request && i_rw) begin
+			if (i_address != 32'h4ffffff0)
 				data[i_address >> 2] <= i_wdata[23:0];
-				o_ready <= 1;
-		end
-		else begin
-			o_ready <= 0;
+			else
+				/* present */;
 		end
 	end
+
+	always @(posedge i_clock)
+		o_ready <= i_request;
 
 endmodule

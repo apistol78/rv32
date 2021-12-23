@@ -4,7 +4,7 @@ module UART_RX #(
     parameter BAUD_RATE = 9600
 )(
 	input wire i_clock,
-	input wire i_enable,
+	input wire i_request,
 	output reg [31:0] o_rdata,
     output reg o_ready,
 	output reg o_waiting,
@@ -59,7 +59,7 @@ module UART_RX #(
 	end
 	
 	always @ (posedge i_clock) begin
-		if (i_enable) begin
+		if (i_request) begin
 			case (rds)
 				2'b00: begin
 					if (!rx_fifo_empty) begin
