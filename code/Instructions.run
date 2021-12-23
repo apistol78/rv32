@@ -1404,8 +1404,7 @@ function main(argv)
 		for i, inst in ipairs(t) do
 			stdout:printLn("")
 			stdout:printLn("// " .. inst.name)
-			if i > 1 then stdout:print("\telse if") else stdout:print("\tif") end
-			stdout:printLn(" (is_" .. inst.name .. ") begin")
+			stdout:printLn("else if (is_" .. inst.name .. ") begin")
 			if debug then
 				stdout:printLn("\t$display(\"\t" .. inst.name .. "\");")
 				local pfx = prefixes[inst.format];
@@ -1420,6 +1419,14 @@ function main(argv)
 			end
 			stdout:printLn("end")
 		end
+
+		-- Error
+		stdout:printLn("")
+		stdout:printLn("// Unknown instruction.")
+		stdout:printLn("else begin")
+		stdout:printLn("\t`ERROR;")
+		stdout:printLn("end")
+
 
 	elseif language == "verilog_inst_wire" then
 
