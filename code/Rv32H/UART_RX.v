@@ -105,7 +105,7 @@ module UART_RX #(
 					count <= 0;
 				end
 				else begin
-					sample <= sample + 1;
+					sample <= sample + 8'd1;
 				end
 			end
 			
@@ -115,12 +115,12 @@ module UART_RX #(
 					if (count >= 7) begin
 						state <= STATE_STOP_BIT;
 					end else begin
-						count <= count + 1;
+						count <= count + 8'd1;
 					end
 					sample <= 0;
 				end
 				else begin
-					sample <= sample + 1;
+					sample <= sample + 8'd1;
 				end
 			end
 			
@@ -136,7 +136,7 @@ module UART_RX #(
 //					end
 				end
 				else begin
-					sample <= sample + 1;
+					sample <= sample + 8'd1;
 				end
 			end
 		endcase

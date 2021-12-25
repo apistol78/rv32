@@ -53,6 +53,18 @@ module CPU (
 	reg [31:0] r[31:0];
 	reg [31:0] instruction;
 
+	/*
+	// mulhu
+	reg [31:0] m64_al;
+	reg [31:0] m64_ah;
+	reg [31:0] m64_bl;
+	reg [31:0] m64_bh;
+	reg [31:0] m64_p0;
+	reg [31:0] m64_p1;
+	reg [31:0] m64_p2;
+	reg [31:0] m64_p3;
+	*/
+
 	assign o_pc = { 29'b0, state };
 	
 	wire [1:0] address_byte = o_address[1:0];
@@ -89,11 +101,15 @@ module CPU (
 
 	`include "Instructions_i.v"
 	
+	integer i;
+
 	initial begin
 		state <= STATE_FETCH_ISSUE;
 		decode_step <= 0;
 		pc <= 32'h0000_0000;
 		pc_next <= 32'h0000_0000;
+		for (i = 0; i < 32; i = i + 1)
+			r[i] <= 32'h0000_0000;
 		r[2] <= 32'h0001_0400;	// sp
 		instruction <= 0;
 		o_rw <= 0;		
@@ -102,13 +118,18 @@ module CPU (
 		o_data <= 0;
 	end
 	
-	always @ (posedge i_clock, posedge i_reset)
+	// 6 + 26 + 32
+//	reg [57:0] icache [0:63];
+
+	always @ (posedge i_clock)
 	begin
 		if (i_reset) begin
 			state <= STATE_FETCH_ISSUE;
 			decode_step <= 0;
 			pc <= 32'h0000_0000;
 			pc_next <= 32'h0000_0000;
+			for (i = 0; i < 32; i = i + 1)
+				r[i] <= 32'h0000_0000;
 			r[2] <= 32'h0001_0400;	// sp
 			instruction <= 0;
 			o_rw <= 0;		
@@ -131,6 +152,8 @@ module CPU (
 						decode_step <= 0;
 						pc_next <= pc + 4;
 						r[0] <= 0;
+
+//						icache[pc[5:0]] <= { pc[31:6], i_data };
 					end
 				end
 
@@ -141,9 +164,19 @@ module CPU (
 
 				STATE_RETIRE: begin
 					// $display("STATE_RETIRE, PC: %x, PC_NEXT: %x", pc, pc_next);
-					`MEM_READ_REQ(pc_next);
-					pc <= pc_next;
-					state <= STATE_FETCH_READ;					
+//					if (icache[pc_next[5:0]][57:32] == pc_next[31:6]) begin
+//						instruction <= icache[pc_next[5:0]][31:0];
+//						state <= STATE_DECODE;
+//						decode_step <= 0;
+//						pc <= pc_next;
+//						pc_next <= pc_next + 4;
+//						r[0] <= 0;
+//					end
+//					else begin
+						`MEM_READ_REQ(pc_next);
+						pc <= pc_next;
+						state <= STATE_FETCH_READ;
+//					end
 				end
 			endcase
 		end

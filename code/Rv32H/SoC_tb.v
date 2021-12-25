@@ -125,10 +125,7 @@ module SoC_tb;
 	wire [31:0] i2c_rdata;
 	wire I2C_SCL;
 	wire I2C_SDA;
-	I2C #(
-		50000000,
-		5000000
-	) i2c(
+	I2C i2c(
 		.i_enable(i2c_select && cpu_request),
 		.i_rw(i2c_rw),
 		.i_wdata(i2c_wdata),

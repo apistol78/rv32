@@ -15,11 +15,11 @@ module LED(
 	initial o_ready = 0;
 
 	initial begin
-		leds <= 10'b1010101010;
+		leds <= 10'b1011111101;
 		last_request <= 0;
 	end
 	
-	always @ (posedge i_clock, posedge i_reset) begin
+	always @ (posedge i_clock) begin
 		if (i_reset) begin
 			leds <= 10'b1010101010;
 			last_request <= 0;

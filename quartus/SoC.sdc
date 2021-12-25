@@ -113,17 +113,20 @@ proc timing_sram { clkSRAM } {
     set delay_out_min   $fpga_tcomin
 
     # -> TSU / TH
-    set_input_delay -clock CLKSRAM_virt -max $delay_in_max [get_ports SRAM_DQ[*]]
-    set_input_delay -clock CLKSRAM_virt -min $delay_in_min [get_ports SRAM_DQ[*]]
+    set_input_delay -clock CLKSRAM_virt -max $delay_in_max [get_ports SRAM_D[*]]
+    set_input_delay -clock CLKSRAM_virt -min $delay_in_min [get_ports SRAM_D[*]]
     # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_DQ[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_DQ[*]]
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_D[*]]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_D[*]]
     # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_ADDR[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_ADDR[*]]
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_A[*]]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_A[*]]
     # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_BE_n[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_BE_n[*]]
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_LB_n[*]]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_LB_n[*]]
+    # -> TCO
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_UB_n[*]]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_UB_n[*]]
     # -> TCO
     set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_OE_n]
     set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_OE_n]

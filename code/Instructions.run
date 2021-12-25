@@ -354,7 +354,13 @@ local instructions = {
 				R_s(f.rd) = dividend;
 			else
 				R_s(f.rd) = dividend / divisor;
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= $signed(r[inst_R_rs1]) / $signed(r[inst_R_rs2]);
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -369,7 +375,13 @@ local instructions = {
 				R_s(f.rd) = -1;
 			else		
 				R_u(f.rd) = dividend / divisor;
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= r[inst_I_rs1] / r[inst_R_rs2];
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -384,7 +396,13 @@ local instructions = {
 				R_s(f.rd) = -1;
 			else		
 				R_u(f.rd) = dividend / divisor;
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= r[inst_I_rs1] / r[inst_R_rs2];
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -394,7 +412,13 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R(f.rd) = R(f.rs1) / R(f.rs2);
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= $signed(r[inst_R_rs1]) / $signed(r[inst_R_rs2]);
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xffffffff,
@@ -844,7 +868,37 @@ local instructions = {
 			uint64_t lh = (uint64_t)R(f.rs1);
 			uint64_t rh = (uint64_t)R(f.rs2);
 			R(f.rd) = (lh * rh) >> 32;
-		]]
+		]],
+--[[
+		verilog = [[
+			if (decode_step == 0) begin
+				// Split operands into halves.
+				m64_al = r[inst_R_rs1][15:0];
+				m64_ah = r[inst_R_rs1][31:16];
+				m64_bl = r[inst_R_rs2][15:0];
+				m64_bh = r[inst_R_rs2][31:16];
+			end
+			else if (decode_step == 1) begin
+				// Compute partial products.
+				m64_p0 = m64_al * m64_bl;
+				m64_p1 = m64_al * m64_bh;
+				m64_p2 = m64_ah * m64_bl;
+				m64_p3 = m64_ah * m64_bh;
+			end
+			else if (decode_step == 2) begin
+				// Sum partial products.
+				r[inst_R_rd] <= 
+					m64_p3 +
+					(m64_p2 >> 16) +
+					(m64_p1 >> 16) +
+					(
+						((m64_p0 >> 16) + m64_p1[15:0] + m64_p2[15:0]) >> 16
+					);
+
+				`DECODE_DONE;
+			end
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -905,7 +959,13 @@ local instructions = {
 				R_s(f.rd) = dividend;
 			else
 				R_s(f.rd) = dividend % divisor;
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= $signed(r[inst_R_rs1]) % $signed(r[inst_R_rs2]);
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -920,7 +980,13 @@ local instructions = {
 				R_u(f.rd) = dividend;
 			else
 				R_u(f.rd) = dividend % divisor;
-		]]
+		]],
+--[[
+		verilog = [[
+			r[inst_R_rd] <= r[inst_R_rs1] % r[inst_R_rs2];
+			`DECODE_DONE;			
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -1367,7 +1433,7 @@ function main(argv)
 				end
 			end
 			if #t > 0 then
-				if count > 1 then stdout:print("else if") else stdout:print("if") end
+				if count > 0 then stdout:print("else if") else stdout:print("if") end
 				stdout:printLn(" (is_" .. prefix .. ") begin")
 				for i, inst in ipairs(t) do
 					stdout:printLn("")

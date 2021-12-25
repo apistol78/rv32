@@ -28,9 +28,16 @@ void uart_tx_u8(uint8_t data)
 void fatal_error(uint8_t error)
 {
 	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
-	*leds = 0x80 | error;
-	__asm__ volatile ("ebreak");
-	for (;;);
+	for (;;)
+	{
+		*leds = 0x80 | error;
+		for (uint32_t i = 0; i < 1000000; ++i)
+			__asm__ volatile ("nop");
+		*leds = 0x00 | error;
+		for (uint32_t i = 0; i < 1000000; ++i)
+			__asm__ volatile ("nop");
+	}
+//	__asm__ volatile ("ebreak");
 }
 
 void main()

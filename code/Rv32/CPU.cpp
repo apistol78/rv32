@@ -143,6 +143,27 @@ FormatU parseFormatU(uint32_t word)
 
 #define TRACE(s) if (m_trace) { *m_trace << s << Endl; }
 
+
+
+uint32_t icache[64][2];
+
+uint32_t getFromICache(uint32_t pc)
+{
+	uint32_t slot = pc & 63;
+	if (icache[slot][0] == pc)
+		return icache[slot][1];
+	else
+		return 0;
+}
+
+void putIntoICache(uint32_t pc, uint32_t word)
+{
+	uint32_t slot = pc & 63;
+	icache[slot][0] = pc;
+	icache[slot][1] = word;
+}
+
+
 }
 
 T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
@@ -165,7 +186,14 @@ void CPU::jump(uint32_t address)
 
 bool CPU::tick()
 {
-	const uint32_t word = m_bus->readU32(m_pc);
+	uint32_t word;
+	
+	word = getFromICache(m_pc);
+	if (word == 0)
+	{
+		word = m_bus->readU32(m_pc);
+		putIntoICache(m_pc, word);
+	}
 
 	if (m_trace)
 		*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;

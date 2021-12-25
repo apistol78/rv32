@@ -1,3 +1,4 @@
+#include <stdlib.h>
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
@@ -34,7 +35,6 @@ typedef unsigned int uint32_t;
 	{ *(volatile uint32_t*)0x50000024 = 0x00020002; }
 */
 
-/*
 void i2c_dly()
 {
 	for (volatile uint32_t i = 0; i < 10; ++i)
@@ -121,7 +121,6 @@ uint8_t i2c_tx(uint8_t d)
 	return b;
 }
 
-
 const struct {
 	uint8_t reg;
 	uint8_t val;
@@ -172,7 +171,36 @@ void adv7513_power_up()
 		i2c_stop();
 	}
 }
-*/
+
+void draw_line(int x0, int y0, int x1, int y1)
+{
+	volatile uint32_t* video = (volatile uint32_t*)0x40000000;
+    int dx, dy, p, x, y;
+ 
+	dx = x1 - x0;
+	dy = y1 - y0;
+	 
+	x = x0;
+	y = y0;
+	 
+	p = 2 * dy - dx;
+	 
+	while (x < x1)
+	{
+		if (p >= 0)
+		{
+			video[x + y * 320] = 0x00ffffff;
+			y = y + 1;
+			p = p + 2 * dy - 2 * dx;
+		}
+		else
+		{
+			video[x + y * 320] = 0x00ffffff;
+			p = p + 2 * dy;
+		}
+		x = x + 1;
+	}
+}
 
 
 void main()
@@ -180,31 +208,26 @@ void main()
 	volatile uint32_t* video = (volatile uint32_t*)0x40000000;
 	volatile uint32_t* vctrl = (volatile uint32_t*)0x4ffffff0;
 
-	//volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
-	// *leds = 0x00;
-
-	// adv7513_power_up();
-
-
-	uint8_t r = 0;
-	uint8_t g = 0;
-	uint8_t b = 0;
-
+	//adv7513_power_up();
 
 	for (;;)
 	{
-		for (int y = 0; y < 240; ++y)
-		{
-			for (int x = 0; x < 320; ++x)
-			{
-				video[x + y * 320] = (r << 16) | (g << 8) | b;
-				r++;
-			}
-			g++;
-		}
-		b++;
+		/*
+		int x1 = rand() % 320;
+		int y1 = rand() % 240;
+		int x2 = rand() % 320;
+		int y2 = rand() % 240;
+		*/
+	int x1 = 50;
+	int y1 = 50;
+	int x2 = 200;
+	int y2 = 150;
+
+		draw_line(
+			x1, y1,
+			x2, y2
+		);
 
 		*vctrl = 1;
 	}
-
 }
