@@ -17,4 +17,4 @@ derive_clocks -period "1 MHz"
 derive_clock_uncertainty
 
 # generate SRAM timing.
-timing_sram [get_ports CLOCK_50_B5B];
+timing_sram CLOCK_50_B5B

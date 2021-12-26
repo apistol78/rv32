@@ -6,12 +6,8 @@ module Registers(
 	input wire [4:0] i_rs2_idx,
 	input wire [4:0] i_rd_idx,
 
-	input wire i_need_rs1,
-	input wire i_need_rs2,
-	input wire i_need_rd,
-
-	output reg [31:0] o_rs1,
-	output reg [31:0] o_rs2,
+	output wire [31:0] o_rs1,
+	output wire [31:0] o_rs2,
 	input wire [31:0] i_rd,
 
 	input wire i_wr_request
@@ -28,10 +24,8 @@ module Registers(
 	end
 	*/
 
-	always @(*) begin
-		o_rs1 = i_need_rs1 && (i_rs1_idx != 0) ? r[i_rs1_idx] : 32'h0;
-		o_rs2 = i_need_rs2 && (i_rs2_idx != 0) ? r[i_rs2_idx] : 32'h0;	
-	end
+	assign o_rs1 = (i_rs1_idx != 0) ? r[i_rs1_idx] : 32'h0;
+	assign o_rs2 = (i_rs2_idx != 0) ? r[i_rs2_idx] : 32'h0;	
 
 	always @(posedge i_clock, posedge i_reset)
 	begin
@@ -72,7 +66,7 @@ module Registers(
 		
 		end
 		else begin
-			if (i_wr_request && i_need_rd) begin
+			if (i_wr_request) begin
 				$display("WRITE REGISTER rd[%d] = %x", i_rd_idx, i_rd);
 				r[i_rd_idx] <= i_rd;
 			end

@@ -29,16 +29,6 @@ module UART_RX #(
 	
 	assign o_state = state;
 
-	wire baud_rx_clock;
-	ClockDivider #(
-		CLOCK_RATE,
-		BAUD_RATE * 16
-	) rx_clock(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.o_clock(baud_rx_clock)
-	);
-	
 	wire rx_fifo_empty;
 	reg rx_fifo_write = 0;
 	reg rx_fifo_read = 0;
@@ -53,6 +43,16 @@ module UART_RX #(
 		.i_wdata(data),
 		.i_read(rx_fifo_read),
 		.o_rdata(rx_fifo_rdata)
+	);
+	
+	wire baud_rx_clock;
+	ClockDivider #(
+		CLOCK_RATE,
+		BAUD_RATE * 16
+	) rx_clock(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.o_clock(baud_rx_clock)
 	);
 	
 	initial begin
@@ -123,7 +123,7 @@ module UART_RX #(
 				end
 				
 				STATE_START_BIT: begin
-					if (sample >= 6) begin
+					if (sample >= 7) begin
 						state <= STATE_DATA_BITS;
 						sample <= 0;
 						count <= 0;

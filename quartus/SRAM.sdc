@@ -40,11 +40,11 @@ proc timing_sram { clkSRAM } {
     set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_A[*]]
     set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_A[*]]
     # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_LB_n[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_LB_n[*]]
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_LB_n]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_LB_n]
     # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_UB_n[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_UB_n[*]]
+    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_UB_n]
+    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_UB_n]
     # -> TCO
     set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_OE_n]
     set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_OE_n]

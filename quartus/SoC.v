@@ -153,9 +153,7 @@ module SoC(
   
 	// VRAM
 	wire vram_select;
-	wire vram_rw;
 	wire [31:0] vram_address;
-	wire [31:0] vram_wdata;
 	wire vram_ready;
 	VRAM vram(
 		.i_clock(CLOCK_50_B5B),
@@ -165,9 +163,9 @@ module SoC(
 		.o_video_rdata(HDMI_TX_D),
 		
 		.i_request(vram_select && cpu_request),
-		.i_rw(vram_rw),
+		.i_rw(cpu_rw),
 		.i_address(vram_address),
-		.i_wdata(vram_wdata),
+		.i_wdata(cpu_wdata),
 		.o_ready(vram_ready)
 	);
   
@@ -199,17 +197,15 @@ module SoC(
 
 	// RAM
 	wire ram_select;
-	wire ram_rw;
 	wire [31:0] ram_address;
-	wire [31:0] ram_wdata;
 	wire [31:0] ram_rdata;
 	wire ram_ready;
 	BRAM ram(
 		.i_clock(clock),
 		.i_request(ram_select && cpu_request),
-		.i_rw(ram_rw),
+		.i_rw(cpu_rw),
 		.i_address(ram_address),
-		.i_wdata(ram_wdata),
+		.i_wdata(cpu_wdata),
 		.o_rdata(ram_rdata),
 		.o_ready(ram_ready)
 	);
@@ -240,18 +236,16 @@ module SoC(
 	);
 
 	wire sram32_select;
-	wire sram32_rw;
 	wire [31:0] sram32_address;
-	wire [31:0] sram32_wdata;
 	wire [31:0] sram32_rdata;
 	wire sram32_ready;
 	Memory_16_to_32 sram32(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(sram32_select && cpu_request),
-		.i_rw(sram32_rw),
+		.i_rw(cpu_rw),
 		.i_address(sram32_address),
-		.i_wdata(sram32_wdata),
+		.i_wdata(cpu_wdata),
 		.o_rdata(sram32_rdata),
 		.o_ready(sram32_ready),
 
@@ -265,21 +259,18 @@ module SoC(
 
 	// LEDS
 	wire led_select;
-	wire [31:0] led_wdata;
 	wire led_ready;
 	LED led(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(led_select && cpu_request),
-		.i_wdata(led_wdata),
+		.i_wdata(cpu_wdata),
 		.o_ready(led_ready),
 		.LEDR(LEDR)
 	);
 	
 	// UART
 	wire uart_select;
-	wire uart_rw;
-	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	wire uart_waiting;
@@ -291,8 +282,8 @@ module SoC(
 		.i_reset(reset),
 		.i_clock(CLOCK_50_B5B),
 		.i_request(uart_select && cpu_request),
-		.i_rw(uart_rw),
-		.i_wdata(uart_wdata),
+		.i_rw(cpu_rw),
+		.i_wdata(cpu_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
 		.o_waiting(uart_waiting),
@@ -302,57 +293,58 @@ module SoC(
 		.UART_TX(UART_TX)
 	);
 	
+	/*
 	// GPIO
 	wire gpio_select;
-	wire gpio_rw;
 	wire [31:0] gpio_address;
-	wire [31:0] gpio_wdata;
 	wire [31:0] gpio_rdata;
 	wire gpio_ready;
 	GPIO gpio(
 		.i_clock(clock),
 		.i_request(gpio_select && cpu_request),
-		.i_rw(gpio_rw),
+		.i_rw(cpu_rw),
 		.i_address(gpio_address),
-		.i_wdata(gpio_wdata),
+		.i_wdata(cpu_wdata),
 		.o_rdata(gpio_rdata),
 		.o_ready(gpio_ready),
 		// ---
 		.GPIO(GPIO)
 	);
+	*/
 
 	// I2C
 	wire i2c_select;
-	wire i2c_rw;
-	wire [31:0] i2c_wdata;
 	wire [31:0] i2c_rdata;
+	wire i2c_ready;
 	I2C i2c(
-		.i_enable(i2c_select && cpu_request),
-		.i_rw(i2c_rw),
-		.i_wdata(i2c_wdata),
+		.i_clock(clock),
+		.i_request(i2c_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_wdata(cpu_wdata),
 		.o_rdata(i2c_rdata),
+		.o_ready(i2c_ready),
 		// ---
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA(I2C_SDA)
 	);
 	
-	/*
 	// SD
 	wire sd_select;
-	wire sd_rw;
-	wire [31:0] sd_wdata;
 	wire [31:0] sd_rdata;
+	wire sd_ready;
 	SD sd(
-		.i_enable(sd_select && cpu_request),
-		.i_rw(sd_rw),
-		.i_wdata(sd_wdata),
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(sd_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_wdata(cpu_wdata),
 		.o_rdata(sd_rdata),
+		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
 		.SD_CMD(SD_CMD),
 		.SD_DAT(SD_DAT)
 	);
-	*/
 
 	// CPU
 	wire cpu_rw;
@@ -361,7 +353,7 @@ module SoC(
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
-	wire [31:0] cpu_pc;
+	wire [2:0] cpu_state;
 	CPU cpu(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -371,7 +363,7 @@ module SoC(
 		.o_address(cpu_address),
 		.i_data(cpu_rdata),
 		.o_data(cpu_wdata),
-		.o_pc(cpu_pc)
+		.o_state(cpu_state)
 	);
 	
 	//=====================================
@@ -380,50 +372,35 @@ module SoC(
 	assign rom_address = cpu_address - 32'h00000000;
 
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
-	assign ram_rw = cpu_rw;
 	assign ram_address = cpu_address - 32'h00010000;
-	assign ram_wdata = cpu_wdata;
 
 	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram32_rw = cpu_rw;
 	assign sram32_address = cpu_address - 32'h10000000;
-	assign sram32_wdata = cpu_wdata;
 	
 	assign vram_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
-	assign vram_rw = cpu_rw;
 	assign vram_address = cpu_address - 32'h40000000;
-	assign vram_wdata = cpu_wdata;
 	
 	assign led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
-	assign led_wdata = cpu_wdata;
 	
 	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
-	assign uart_rw = cpu_rw;
-	assign uart_wdata = cpu_wdata;
 
+	/*
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
-	assign gpio_rw = cpu_rw;
 	assign gpio_address = cpu_address - 32'h50000020;
-	assign gpio_wdata = cpu_wdata;
+	*/
 	
 	assign i2c_select = (cpu_address >= 32'h50000030 && cpu_address < 32'h50000040);
-	assign i2c_rw = cpu_rw;
-	assign i2c_wdata = cpu_wdata;
 	
-	/*
 	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
-	assign sd_rw = cpu_rw;
-	assign sd_wdata = cpu_wdata;
-	*/
 
 	assign cpu_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 		sram32_select ? sram32_rdata :
 		uart_select ? uart_rdata :
-		gpio_select ? gpio_rdata :
+		//gpio_select ? gpio_rdata :
+		sd_select ? sd_rdata :
 		i2c_select ? i2c_rdata :
-		// sd_select ? sd_rdata :
 		32'h00000000;
 		
 	assign cpu_ready =
@@ -433,13 +410,12 @@ module SoC(
 		vram_select ? vram_ready :
 		led_select ? led_ready :
 		uart_select ? uart_ready :
-		gpio_select ? gpio_ready :
-		i2c_select ? 1'b1 :
-		// sd_select ? 1'b1 :
+		//gpio_select ? gpio_ready :
+		sd_select ? sd_ready :
+		i2c_select ? i2c_ready :
 		1'b0;
 
 	// 7:0
-	// w|ss|ppp
-	assign LEDG = { 3'b00, led_select, gpio_select, cpu_pc[2:0] };
+	assign LEDG = { SD_DAT, sd_select, cpu_state };
 
 endmodule

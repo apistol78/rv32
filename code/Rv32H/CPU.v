@@ -7,7 +7,7 @@ module CPU (
 	output reg [31:0] o_address,	// Address
 	input wire [31:0] i_data,		// Read data
 	output reg [31:0] o_data,		// Write data,
-	output wire [31:0] o_pc
+	output wire [2:0] o_state
 );
 	`define DECODE_DONE \
 		state <= STATE_RETIRE;
@@ -78,10 +78,12 @@ module CPU (
 
 	`include "Instructions_i.v"
 
-	wire need_rs1 = is_B | is_I | is_R | is_S;
-	wire need_rs2 = is_B | is_R | is_S;
-	wire need_rd = is_I | is_J | is_R | is_U;
-
+	// Latch this since we don't need it until
+	// decode has finished, increase slack.
+	reg need_rd;
+	always @(posedge i_clock)
+		need_rd <= is_I | is_J | is_R | is_U;
+	
 	wire [31:0] rs1;
 	wire [31:0] rs2;
 	reg [31:0] rd;
@@ -92,16 +94,13 @@ module CPU (
 		.i_rs1_idx(inst_rs1),
 		.i_rs2_idx(inst_rs2),
 		.i_rd_idx(inst_rd),
-		.i_need_rs1(need_rs1),
-		.i_need_rs2(need_rs2),
-		.i_need_rd(need_rd),
 		.o_rs1(rs1),
 		.o_rs2(rs2),
 		.i_rd(rd),
 		.i_wr_request(registers_wr_request)
 	);
 
-	assign o_pc = { 29'b0, state };
+	assign o_state = state;
 	
 	wire [1:0] address_byte = o_address[1:0];
 
@@ -163,7 +162,9 @@ module CPU (
 					$display("STATE_RETIRE, PC: %x, PC_NEXT: %x", pc, pc_next);
 					pc <= pc_next;
 					state <= STATE_FETCH_ISSUE;
-					registers_wr_request <= 1;
+					if (need_rd) begin
+						registers_wr_request <= 1;
+					end
 				end
 			endcase
 		end

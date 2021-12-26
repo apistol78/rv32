@@ -14,7 +14,7 @@ module LED(
 	
 	assign LEDR = leds;
 
-	always @ (posedge i_request, posedge i_reset) begin
+	always @ (posedge i_clock, posedge i_reset) begin
 		if (i_reset) begin
 			leds <= 10'b0101010101;
 		end

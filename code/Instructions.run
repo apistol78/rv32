@@ -1218,6 +1218,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
+		]],
+		verilog = [[
+			rd <= rs1 >>> rs2;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -1260,6 +1264,10 @@ local instructions = {
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
+		]],
+		verilog = [[
+			rd <= rs1 >> rs2;
+			`DECODE_DONE;
 		]]
 	},
 	{
@@ -1515,7 +1523,7 @@ function main(argv)
 				stdout:print("wire is_" .. prefix .. " =")
 				for i, inst in ipairs(t) do
 
-					if i > 1 then stdout:print(" ||") end
+					if i > 1 then stdout:print(" |") end
 					stdout:print(" is_" .. inst.name)
 
 				end
