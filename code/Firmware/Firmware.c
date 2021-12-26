@@ -49,10 +49,10 @@ void main()
 	{
 		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
 		
-		for (uint32_t i = 0; i < 256; ++i)
+		for (uint32_t i = 0; i < 4; ++i)
 			sram[i] = 0x1122ab00 + i;
 
-		for (uint32_t i = 0; i < 256; ++i)
+		for (uint32_t i = 0; i < 4; ++i)
 		{
 			if (sram[i] != 0x1122ab00 + i)
 				fatal_error(1);

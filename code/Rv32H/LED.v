@@ -8,28 +8,18 @@ module LED(
 );
 
 	reg [9:0] leds;
-	reg last_request;
+
+	initial o_ready = 0;
+	initial leds = 10'b1010101010;
 	
 	assign LEDR = leds;
 
-	initial o_ready = 0;
-
-	initial begin
-		leds <= 10'b1011111101;
-		last_request <= 0;
-	end
-	
-	always @ (posedge i_clock) begin
+	always @ (posedge i_request, posedge i_reset) begin
 		if (i_reset) begin
-			leds <= 10'b1010101010;
-			last_request <= 0;
+			leds <= 10'b0101010101;
 		end
-		else begin
-			if (i_request && !last_request) begin
-				leds[7:0] <= i_wdata[31:24] | i_wdata[23:16] | i_wdata[15:8] | i_wdata[7:0];
-				leds[9:8] <= ~leds[9:8];
-			end
-			last_request <= i_request;
+		else if (i_request) begin
+			leds <= i_wdata[9:0];
 		end
 	end
 

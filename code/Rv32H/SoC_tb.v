@@ -6,6 +6,7 @@
 `include "FIFO.v"
 `include "I2C.v"
 `include "Memory_16_to_32.v"
+`include "Registers.v"
 `include "SD.v"
 `include "SRAM_tb.v"
 `include "Video_tb.v"
@@ -48,7 +49,6 @@ module SoC_tb;
 	);
 
 	// SRAM
-	wire sram16_clock;
 	wire sram16_request;
 	wire sram16_rw;
 	wire [17:0] sram16_address;
@@ -56,7 +56,7 @@ module SoC_tb;
 	wire [15:0] sram16_rdata;
 	wire sram16_ready;
 	SRAM_tb sram16(
-		.i_clock(sram16_clock),
+		.i_clock(clock),
 		.i_request(sram16_request),
 		.i_rw(sram16_rw),
 		.i_address(sram16_address),
@@ -72,6 +72,7 @@ module SoC_tb;
 	wire [31:0] sram32_rdata;
 	wire sram32_ready;
 	Memory_16_to_32 sram32(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(sram32_select && cpu_request),
 		.i_rw(sram32_rw),
@@ -80,7 +81,6 @@ module SoC_tb;
 		.o_rdata(sram32_rdata),
 		.o_ready(sram32_ready),
 
-		.o_ram_clock(sram16_clock),
 		.o_ram_request(sram16_request),
 		.o_ram_rw(sram16_rw),
 		.o_ram_address(sram16_address),
@@ -110,7 +110,8 @@ module SoC_tb;
 	wire [31:0] gpio_rdata;
 	wire [35:0] GPIO;
 	GPIO gpio(
-		.i_enable(gpio_select && cpu_request),
+		.i_clock(clock),
+		.i_request(gpio_select && cpu_request),
 		.i_rw(gpio_rw),
 		.i_wdata(gpio_wdata),
 		.o_rdata(gpio_rdata),
@@ -243,10 +244,19 @@ module SoC_tb;
 		$dumpfile("SoC_tb.vcd");
 		$dumpvars(0, SoC_tb);
 
+		reset <= 1;
+
         #2
         reset <= 0;
 
-		repeat(100000) @(posedge clock);
+		repeat(50) @(posedge clock);
+		#1
+		reset <= 1;
+
+        #2
+        reset <= 0;
+
+		repeat(100) @(posedge clock);
 
 		$finish;
 	end

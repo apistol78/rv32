@@ -1,153 +1,20 @@
-#**************************************************************
-# This .sdc file is created by Terasic Tool.
-# Users are recommended to modify this file to match users logic.
-#**************************************************************
 
-#**************************************************************
-# Create Clock
-#**************************************************************
+# include other SDC.
+read_sdc SRAM.sdc
+
+# create clocks.
 create_clock -period 8.000ns [get_ports CLOCK_125_p]
 create_clock -period 20.000ns [get_ports CLOCK_50_B5B]
 create_clock -period 20.000ns [get_ports CLOCK_50_B6A]
 create_clock -period 20.000ns [get_ports CLOCK_50_B7A]
 create_clock -period 20.000ns [get_ports CLOCK_50_B8A]
 
-#**************************************************************
-# Create Generated Clock
-#**************************************************************
+# create derived clocks.
 derive_pll_clocks
+derive_clocks -period "1 MHz"
 
-
-
-#**************************************************************
-# Set Clock Latency
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Clock Uncertainty
-#**************************************************************
+# derive clock uncertainty.
 derive_clock_uncertainty
 
-
-
-#**************************************************************
-# Set Input Delay
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Output Delay
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Clock Groups
-#**************************************************************
-
-
-
-#**************************************************************
-# Set False Path
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Multicycle Path
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Maximum Delay
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Minimum Delay
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Input Transition
-#**************************************************************
-
-
-
-#**************************************************************
-# Set Load
-#**************************************************************
-
-
-
-proc timing_sram { clkSRAM } {
-    # Virtual clock for SRAM generated with clkSRAM
-    create_generated_clock -source ${clkSRAM} -name CLKSRAM_virt
-
-    # Tri-state bridge timing
-    set sram_tperWr     10
-    set sram_tperRd     20
-
-    # SRAM Address Access Time (tAA)
-    set sram_taa       10.0
-
-    # PCB delay
-    set sram_tpcb       0.1
-
-    # FPGA's IO timing
-    # -> tco depends on FPGA (refer to www.altera.com IO spreadsheet)
-    set fpga_tco        7.5
-    set fpga_tsu        [expr $sram_tperRd - $sram_taa - $fpga_tco - 2*$sram_tpcb]
-    set fpga_th         0.0
-    set fpga_tcomin     0.0
-
-    set delay_in_max    [expr $sram_tperRd - $fpga_tsu]
-    set delay_in_min    $fpga_th
-    set delay_out_max   [expr $sram_tperWr - $fpga_tco]
-    set delay_out_min   $fpga_tcomin
-
-    # -> TSU / TH
-    set_input_delay -clock CLKSRAM_virt -max $delay_in_max [get_ports SRAM_D[*]]
-    set_input_delay -clock CLKSRAM_virt -min $delay_in_min [get_ports SRAM_D[*]]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_D[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_D[*]]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_A[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_A[*]]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_LB_n[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_LB_n[*]]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_UB_n[*]]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_UB_n[*]]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_OE_n]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_OE_n]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_WE_n]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_WE_n]
-    # -> TCO
-    set_output_delay -clock CLKSRAM_virt -max $delay_out_max [get_ports SRAM_CE_n]
-    set_output_delay -clock CLKSRAM_virt -min $delay_out_min [get_ports SRAM_CE_n]
-
-    # Consider multicycle due to Tri-state bridge and SRAM virtual clock
-    # -> Read path
-    set_multicycle_path -from [get_clocks CLKSRAM_virt] -to [get_clocks ${clkSRAM}] -setup -end 2
-    set_multicycle_path -from [get_clocks CLKSRAM_virt] -to [get_clocks ${clkSRAM}] -hold -end 1
-
-    # Define clock group
-    set_clock_groups -asynchronous -group [format "%s %s" ${clkSRAM} CLKSRAM_virt]
-
-    return 0
-}
-
+# generate SRAM timing.
 timing_sram [get_ports CLOCK_50_B5B];
-
-

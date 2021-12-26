@@ -7,6 +7,8 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
+#include <Core/Thread/ThreadManager.h>
+#include <Core/Thread/Thread.h>
 #include "Launch/Serial.h"
 
 using namespace traktor;
@@ -15,6 +17,7 @@ template < typename T >
 void write(Serial& serial, T value)
 {
 	serial.write(&value, sizeof(T));
+	//ThreadManager::getInstance().getCurrentThread()->sleep(1);
 }
 
 template < typename T >
@@ -161,7 +164,7 @@ int main(int argc, const char** argv)
 	Serial serial;
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 115200; //  9600;
+	configuration.baudRate = 9600;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
@@ -182,7 +185,7 @@ int main(int argc, const char** argv)
 		for (;;)
 		{
 			uint8_t ch = read< uint8_t >(serial);
-			log::info << (wchar_t)ch << Endl;
+			log::info << (wchar_t)ch;
 		}
 	}
 

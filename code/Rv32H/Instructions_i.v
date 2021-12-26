@@ -42,8 +42,8 @@ wire is_XOR = ((instruction & 32'hfe00707f) == 32'h00004033);
 wire is_XORI = ((instruction & 32'h0000707f) == 32'h00004013);
 
 wire is_U = is_AUIPC || is_LUI;
-wire is_S = is_SB || is_SH || is_SW;
+wire is_R = is_ADD || is_ADDW || is_AND || is_MUL || is_OR || is_SLL || is_SLLI || is_SLT || is_SLTU || is_SRAI || is_SRLI || is_SUB || is_XOR;
+wire is_B = is_BEQ || is_BGE || is_BGEU || is_BLT || is_BLTU || is_BNE;
 wire is_I = is_ADDI || is_ADDIW || is_ANDI || is_JALR || is_LB || is_LBU || is_LH || is_LHU || is_LW || is_LWU || is_ORI || is_SLTI || is_SLTIU || is_XORI;
 wire is_J = is_JAL;
-wire is_B = is_BEQ || is_BGE || is_BGEU || is_BLT || is_BLTU || is_BNE;
-wire is_R = is_ADD || is_ADDW || is_AND || is_MUL || is_OR || is_SLL || is_SLLI || is_SLT || is_SLTU || is_SRAI || is_SRLI || is_SUB || is_XOR;
+wire is_S = is_SB || is_SH || is_SW;

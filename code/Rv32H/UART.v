@@ -3,7 +3,9 @@ module UART #(
     parameter CLOCK_RATE = 50000000,
     parameter BAUD_RATE = 9600
 )(
+	input wire i_reset,
 	input wire i_clock,
+
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_wdata,
@@ -23,6 +25,7 @@ module UART #(
 		.CLOCK_RATE(CLOCK_RATE),
 		.BAUD_RATE(BAUD_RATE)
 	) rx(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_request(rx_request),
 		.o_rdata(o_rdata),
@@ -38,6 +41,7 @@ module UART #(
 		.CLOCK_RATE(CLOCK_RATE),
 		.BAUD_RATE(BAUD_RATE)
 	) tx(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_request(tx_request),
 		.i_wdata(i_wdata),

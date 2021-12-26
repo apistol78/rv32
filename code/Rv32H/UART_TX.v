@@ -3,6 +3,7 @@ module UART_TX #(
     parameter CLOCK_RATE = 50000000,
     parameter BAUD_RATE = 9600
 )(
+	input wire i_reset,
 	input wire i_clock,
 	input wire i_request,
 	input wire [31:0] i_wdata,
@@ -26,6 +27,7 @@ module UART_TX #(
 		CLOCK_RATE,
 		BAUD_RATE
 	) tx_clock(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.o_clock(baud_tx_clock)
 	);

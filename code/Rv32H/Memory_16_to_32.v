@@ -1,7 +1,9 @@
 
 // 16-bit memory to 32-bit memory interface.
 module Memory_16_to_32(
+	input wire i_reset,
 	input wire i_clock,
+	
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,
@@ -10,7 +12,6 @@ module Memory_16_to_32(
 	output reg o_ready,
 
 	// 16-bit device.
-	output wire o_ram_clock,
 	output reg o_ram_request,
 	output wire o_ram_rw,
 	output reg [17:0] o_ram_address,
@@ -21,7 +22,6 @@ module Memory_16_to_32(
 
 	reg [2:0] state;
 	
-	assign o_ram_clock = i_clock;
 	assign o_ram_rw = i_rw;
 	
 	initial begin
@@ -30,8 +30,13 @@ module Memory_16_to_32(
 		o_ram_request <= 0;
 	end
 
-	always @ (posedge i_clock) begin
-		if (i_request) begin
+	always @ (posedge i_clock, posedge i_reset) begin
+		if (i_reset) begin
+			state = 0;
+			o_ready <= 0;
+			o_ram_request <= 0;
+		end
+		else if (i_request) begin
 			if (!i_rw) begin
 				case (state)
 					3'd0: begin
@@ -65,7 +70,7 @@ module Memory_16_to_32(
 				endcase
 			end
 			else begin
-				case (state)	// synopsys full_case
+				case (state)
 					3'd0: begin
 						o_ram_request <= 1;
 						o_ram_address <= (i_address >> 1) & 32'hfffffffe;
