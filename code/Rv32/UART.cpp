@@ -142,11 +142,13 @@ bool UART::writeU8(uint32_t address, uint8_t value)
 
 bool UART::writeU16(uint32_t address, uint16_t value)
 {
+	log::info << wchar_t(value);
 	return true;
 }
 
 bool UART::writeU32(uint32_t address, uint32_t value)
 {
+	log::info << wchar_t(value);
 	return true;
 }
 

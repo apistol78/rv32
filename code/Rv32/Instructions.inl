@@ -892,7 +892,6 @@ else if ((word & 0xfe00707f) == 0x00003033)
 else if ((word & 0xfe00707f) == 0x40005033)
 {
 	TRACE(L"	SRA");
-	log::info << L"No verilog implementation of SRA" << Endl;
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		
@@ -930,7 +929,6 @@ else if ((word & 0xffffffff) == 0x10200073)
 else if ((word & 0xfe00707f) == 0x00005033)
 {
 	TRACE(L"	SRL");
-	log::info << L"No verilog implementation of SRL" << Endl;
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		

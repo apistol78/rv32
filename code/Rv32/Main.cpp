@@ -116,6 +116,7 @@ int main(int argc, const char** argv)
 	UART uart(uartStream);
 	Unknown gpio(L"GPIO");
 	Unknown i2c(L"I2C");
+	Unknown sd(L"SD");
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
@@ -127,6 +128,7 @@ int main(int argc, const char** argv)
 	bus.map(0x50000010, 0x50000020, &uart);
 	bus.map(0x50000020, 0x50000030, &gpio);
 	bus.map(0x50000030, 0x50000040, &i2c);
+	bus.map(0x50000040, 0x50000050, &sd);
 
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{
@@ -256,7 +258,10 @@ int main(int argc, const char** argv)
 				if (!cpu.tick())
 					break;
 				if (bus.error())
+				{
+					g_going = false;
 					break;
+				}
 
 				if (video.shouldPresent())
 					break;
@@ -278,7 +283,10 @@ int main(int argc, const char** argv)
 			if (!cpu.tick())
 				break;
 			if (bus.error())
-				break;			
+			{
+				g_going = false;
+				break;
+			}		
 		}
 	}
 
