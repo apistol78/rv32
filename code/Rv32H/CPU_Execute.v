@@ -56,6 +56,7 @@ module CPU_Execute (
             o_ready <= 1;
         end
         else begin
+            o_inst_rd <= 0;
             o_ready <= 0;
         end
     end

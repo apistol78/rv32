@@ -92,8 +92,8 @@ module CPU_Registers (
 		end
 		else begin
 			if (i_read) begin
-                o_rs1 <= r[i_read_rs1_idx];
-                o_rs2 <= r[i_read_rs2_idx];
+                o_rs1 <= (i_read_rs1_idx != 0) ? r[i_read_rs1_idx] : 32'h0;
+                o_rs2 <= (i_read_rs1_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
 			end
 			if (i_write) begin
 				r[i_write_rd_idx] <= i_rd;

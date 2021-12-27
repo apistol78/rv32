@@ -9,6 +9,10 @@ module CPU_v2 (
 	output reg [31:0] o_data		// Write data,
 );
 
+    // Register files,
+    // RS1 and RS2 are read from file
+    // simultaneously as decode stage.
+
     wire [31:0] rs1;
     wire [31:0] rs2;
 
@@ -49,7 +53,7 @@ module CPU_v2 (
         .i_data(i_data),
 
         // Input
-        .i_branch(writeback_branch),
+         .i_branch(writeback_branch),
         .i_pc_next(writeback_pc_next),
 
         // Output
@@ -93,6 +97,10 @@ module CPU_v2 (
     //====================================================
     // EXECUTE
 
+    // Select register from file or pipeline due to register hazard.
+    wire [31:0] resolved_rs1 = (decode_inst_rs1 == memory_inst_rd) ? memory_rd : rs1;
+    wire [31:0] resolved_rs2 = (decode_inst_rs2 == memory_inst_rd) ? memory_rd : rs2;
+
     wire [4:0] execute_inst_rd;
     wire [31:0] execute_rd;
     wire execute_branch;
@@ -107,8 +115,8 @@ module CPU_v2 (
         // Input from decode.
         .i_pc(decode_pc),
         .i_instruction(decode_instruction),
-        .i_rs1(rs1),
-        .i_rs2(rs2),
+        .i_rs1(resolved_rs1),
+        .i_rs2(resolved_rs2),
         .i_inst_rd(decode_inst_rd),
         .i_imm(decode_imm),
         .i_branch(decode_branch),
@@ -120,6 +128,7 @@ module CPU_v2 (
         .o_pc_next(execute_pc_next),
         .o_ready(execute_ready)
     );
+
 
 
     //====================================================

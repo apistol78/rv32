@@ -34,7 +34,6 @@ module CPU_Fetch(
     end
 
     always @(posedge i_clock) begin
-
         if (i_branch) begin
             $display("fetch, accepting branch to %x", i_pc_next);
             pc <= i_pc_next;
@@ -82,7 +81,6 @@ module CPU_Fetch(
             endcase
 
         end
-
     end
 
 endmodule

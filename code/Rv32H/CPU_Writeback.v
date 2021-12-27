@@ -18,10 +18,6 @@ module CPU_Writeback(
     output reg o_ready
 );
 
-    // 
-    `define INSTRUCTION i_instruction
-    `include "Instructions_i.v"
-
     initial begin
         o_branch <= 0;
         o_pc_next <= 0;
@@ -39,6 +35,8 @@ module CPU_Writeback(
             o_ready <= 1;
         end
         else begin
+            o_inst_rd <= 0;
+            o_rd <= 0;
             o_branch <= 0;
             o_ready <= 0;
         end
