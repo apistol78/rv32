@@ -15,8 +15,14 @@ module CPU_Execute (
     // Output
     output reg [4:0] o_inst_rd,
     output reg [31:0] o_rd,
+
     output reg o_branch,
     output reg [31:0] o_pc_next,
+
+    output reg o_mem_read,
+    output reg o_mem_write,
+    output reg [31:0] o_mem_address,
+
     output reg o_ready
 );
     `define INSTRUCTION i_instruction
@@ -29,6 +35,8 @@ module CPU_Execute (
     `define IMM i_imm
 
     `define GOTO(ADDR) o_pc_next <= ADDR;
+    `define MEM_READ(ADDR) o_mem_address <= ADDR; o_mem_read <= 1;
+    `define MEM_WRITE(ADDR, DATA) o_mem_address <= ADDR; o_rd <= DATA; o_mem_write <= 1;
     `define EXECUTE_DONE
     `define ERROR
 
@@ -36,6 +44,9 @@ module CPU_Execute (
         o_inst_rd <= 0;
         o_branch <= 0;
         o_pc_next <= 0;
+        o_mem_read <= 0;
+        o_mem_write <= 0;
+        o_mem_address <= 0;
         o_ready <= 0;
     end
 
@@ -57,6 +68,8 @@ module CPU_Execute (
         end
         else begin
             o_inst_rd <= 0;
+            o_mem_read <= 0;
+            o_mem_write <= 0;
             o_ready <= 0;
         end
     end

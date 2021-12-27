@@ -102,6 +102,15 @@ else if (is_I) begin
 			
 	end
 
+	// LW
+	else if (is_LW) begin
+		$display("	LW");
+		
+				`MEM_READ(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
 	// ORI
 	else if (is_ORI) begin
 		$display("	ORI");
@@ -285,6 +294,18 @@ else if (is_R) begin
 		$display("	XOR");
 		
 				`RD <= `RS1 ^ `RS2;
+				`EXECUTE_DONE;
+			
+	end
+
+end
+else if (is_S) begin
+
+	// SW
+	if (is_SW) begin
+		$display("	SW");
+		
+				`MEM_WRITE(`RS1 + $signed(`IMM), `RS2);
 				`EXECUTE_DONE;
 			
 	end

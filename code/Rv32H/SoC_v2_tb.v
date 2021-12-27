@@ -1,4 +1,5 @@
 `include "CPU_v2.v"
+`include "CPU_BusAccess.v"
 `include "CPU_Decode.v"
 `include "CPU_Execute.v"
 `include "CPU_Fetch.v"
@@ -55,12 +56,14 @@ module SoC_v2_tb;
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
-		.o_rw(cpu_rw),
-		.o_request(cpu_request),
-		.i_ready(cpu_ready),
-		.o_address(cpu_address),
-		.i_data(cpu_rdata),
-		.o_data(cpu_wdata)
+
+		// Bus
+		.o_bus_rw(cpu_rw),
+		.o_bus_request(cpu_request),
+		.i_bus_ready(cpu_ready),
+		.o_bus_address(cpu_address),
+		.i_bus_rdata(cpu_rdata),
+		.o_bus_wdata(cpu_wdata)
 	);
 
 

@@ -802,23 +802,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				$display("\tLOAD WORD, address <= %x", rs1 + $signed(`IMM));
-				`MEM_READ_REQ(rs1 + $signed(`IMM));
-				decode_step <= 1;
-			end
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					$display("\tLOAD WORD, data => %x", i_data);
-					`RD <= i_data;
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]
+			`MEM_READ(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -1342,22 +1329,10 @@ local instructions = {
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				$display("\tSTORE WORD, address %x, value %x", rs1 + $signed(inst_S_imm), rs2);
-				`MEM_WRITE_REQ(rs1 + $signed(inst_S_imm), rs2);
-				decode_step <= 1;
-			end
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					`BUS_READ;
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end			
-		]
-]]
+			`MEM_WRITE(`RS1 + $signed(`IMM), `RS2);
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0xffffffff,

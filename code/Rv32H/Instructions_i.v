@@ -18,6 +18,7 @@ wire is_EBREAK = ((`INSTRUCTION & 32'hffffffff) == 32'h00100073);
 wire is_JAL    = ((`INSTRUCTION & 32'h0000007f) == 32'h0000006f);
 wire is_JALR   = ((`INSTRUCTION & 32'h0000707f) == 32'h00000067);
 wire is_LUI    = ((`INSTRUCTION & 32'h0000007f) == 32'h00000037);
+wire is_LW     = ((`INSTRUCTION & 32'h0000707f) == 32'h00002003);
 wire is_MUL    = ((`INSTRUCTION & 32'hfe00707f) == 32'h02000033);
 wire is_OR     = ((`INSTRUCTION & 32'hfe00707f) == 32'h00006033);
 wire is_ORI    = ((`INSTRUCTION & 32'h0000707f) == 32'h00006013);
@@ -32,14 +33,15 @@ wire is_SRAI   = ((`INSTRUCTION & 32'hfc00707f) == 32'h40005013);
 wire is_SRL    = ((`INSTRUCTION & 32'hfe00707f) == 32'h00005033);
 wire is_SRLI   = ((`INSTRUCTION & 32'hfc00707f) == 32'h00005013);
 wire is_SUB    = ((`INSTRUCTION & 32'hfe00707f) == 32'h40000033);
+wire is_SW     = ((`INSTRUCTION & 32'h0000707f) == 32'h00002023);
 wire is_XOR    = ((`INSTRUCTION & 32'hfe00707f) == 32'h00004033);
 wire is_XORI   = ((`INSTRUCTION & 32'h0000707f) == 32'h00004013);
 
 wire is_B = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
-wire is_I = is_ADDI | is_ADDIW | is_ANDI | is_JALR | is_ORI | is_SLTI | is_SLTIU | is_XORI;
+wire is_I = is_ADDI | is_ADDIW | is_ANDI | is_JALR | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
 wire is_J = is_JAL;
 wire is_R = is_ADD | is_ADDW | is_AND | is_MUL | is_OR | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
-wire is_S = 1'b0;
+wire is_S = is_SW;
 wire is_U = is_AUIPC | is_LUI;
 
 wire is_BRANCH = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE | is_JAL | is_JALR;

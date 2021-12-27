@@ -4,7 +4,6 @@ module CPU_Writeback(
     input wire i_execute,
 
     // Input
-    input wire [31:0] i_instruction,
     input wire [4:0] i_inst_rd,
     input wire [31:0] i_rd,
     input wire i_branch,
