@@ -5,17 +5,19 @@ module CPU_Registers (
 	input wire [4:0] i_read_rs1_idx,
 	input wire [4:0] i_read_rs2_idx,
 	input wire i_read,
-
 	output reg [31:0] o_rs1,
 	output reg [31:0] o_rs2,
 
 	input wire [31:0] i_rd,
-
-	input wire i_wr_request
+	input wire [4:0] i_write_rd_idx,
+	input wire i_write
 );
 	reg [31:0] r[31:0];
 
     initial begin
+		o_rs1 <= 0;
+		o_rs2 <= 0;
+
         r[ 0] <= 32'h0000_0000;
         r[ 1] <= 32'h0000_0000;
         r[ 2] <= 32'h0001_0400;	// sp	
@@ -92,6 +94,9 @@ module CPU_Registers (
 			if (i_read) begin
                 o_rs1 <= r[i_read_rs1_idx];
                 o_rs2 <= r[i_read_rs2_idx];
+			end
+			if (i_write) begin
+				r[i_write_rd_idx] <= i_rd;
 			end
 		end
 	end

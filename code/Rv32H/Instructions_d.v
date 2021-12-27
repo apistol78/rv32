@@ -5,60 +5,60 @@ if (is_B) begin
 	// BEQ
 	if (is_BEQ) begin
 		$display("	BEQ");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (rs1 == rs2)
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if (`RS1 == `RS2)
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// BGE
 	else if (is_BGE) begin
 		$display("	BGE");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if ($signed(rs1) >= $signed(rs2))
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if ($signed(`RS1) >= $signed(`RS2))
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// BGEU
 	else if (is_BGEU) begin
 		$display("	BGEU");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (rs1 >= rs2)
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if (`RS1 >= `RS2)
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// BLT
 	else if (is_BLT) begin
 		$display("	BLT");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if ($signed(rs1) < $signed(rs2))
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if ($signed(`RS1) < $signed(`RS2))
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// BLTU
 	else if (is_BLTU) begin
 		$display("	BLTU");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (rs1 < rs2)
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if (`RS1 < `RS2)
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// BNE
 	else if (is_BNE) begin
 		$display("	BNE");
-		$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
-				if (rs1 != rs2)
-					`GOTO($signed(pc) + $signed(inst_B_imm));
-				`DECODE_DONE;
+		
+				if (`RS1 != `RS2)
+					`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
@@ -68,226 +68,73 @@ else if (is_I) begin
 	// ADDI
 	if (is_ADDI) begin
 		$display("	ADDI");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= $signed(rs1) + $signed(inst_I_imm);
-				`DECODE_DONE;
+		
+				`RD <= $signed(`RS1) + $signed(`IMM);
+				`EXECUTE_DONE;
 			
 	end
 
 	// ADDIW
 	else if (is_ADDIW) begin
 		$display("	ADDIW");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= rs1 + inst_I_imm;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 + `IMM;
+				`EXECUTE_DONE;
 			
 	end
 
 	// ANDI
 	else if (is_ANDI) begin
 		$display("	ANDI");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= rs1 & inst_I_imm;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 & `IMM;
+				`EXECUTE_DONE;
 			
 	end
 
 	// JALR
 	else if (is_JALR) begin
 		$display("	JALR");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= pc + 4;
-				`GOTO($signed(rs1) + $signed(inst_I_imm));
-				`DECODE_DONE;
-			
-	end
-
-	// LB
-	else if (is_LB) begin
-		$display("	LB");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tLOAD BYTE, address <= %x", rs1 + $signed(inst_I_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
-					decode_step <= 1;
-				end
-				// 2: wait until load finish.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						$display("\tLOAD BYTE, address <= %x, data => %x (%d)", rs1 + $signed(inst_I_imm), i_data, address_byte);
-						case ( address_byte  )
-							2'b00: rd <= $signed({ { 24{ i_data[7]  } }, i_data[6:0] });
-							2'b01: rd <= $signed({ { 24{ i_data[15] } }, i_data[14:8] });
-							2'b10: rd <= $signed({ { 24{ i_data[23] } }, i_data[22:16] });
-							2'b11: rd <= $signed({ { 24{ i_data[31] } }, i_data[30:24] });
-						endcase
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// LBU
-	else if (is_LBU) begin
-		$display("	LBU");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tLOAD UBYTE, address %x", rs1 + $signed(inst_I_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
-					decode_step <= 1;
-				end
-				// 2: wait until load finish.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						// $display("\tLOAD UBYTE, data => %x (%d)", i_data, address_byte);
-						case ( address_byte  )
-							2'b00: rd <= { 24'b0, i_data[7:0] };
-							2'b01: rd <= { 24'b0, i_data[15:8] };
-							2'b10: rd <= { 24'b0, i_data[23:16] };
-							2'b11: rd <= { 24'b0, i_data[31:24] };
-						endcase
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// LH
-	else if (is_LH) begin
-		$display("	LH");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				if (decode_step == 0) begin
-					// $display("\tLOAD SHALF, address <= %x", rs1 + $signed(inst_I_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
-						case ( address_byte  )
-							2'b00: rd <= { { 16{ i_data[15] } }, i_data[14:0] };
-							2'b10: rd <= { { 16{ i_data[31] } }, i_data[30:16] };
-						endcase
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// LHU
-	else if (is_LHU) begin
-		$display("	LHU");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				if (decode_step == 0) begin
-					// $display("\tLOAD HALF, address <= %x", rs1 + $signed(inst_I_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
-						rd <= i_data[15:0];
-						case ( address_byte  )
-							2'b00: rd <= { 16'b0, i_data[15:0] };
-							2'b10: rd <= { 16'b0, i_data[31:16] };
-						endcase
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// LW
-	else if (is_LW) begin
-		$display("	LW");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				if (decode_step == 0) begin
-					$display("\tLOAD WORD, address <= %x", rs1 + $signed(inst_I_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						$display("\tLOAD WORD, data => %x", i_data);
-						rd <= i_data;
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// LWU
-	else if (is_LWU) begin
-		$display("	LWU");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				if (decode_step == 0) begin
-					`MEM_READ_REQ(rs1 + inst_I_imm);
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						rd <= i_data[31:0];
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
+		
+				`RD <= `PC + 4;
+				`GOTO($signed(`RS1) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
 	// ORI
 	else if (is_ORI) begin
 		$display("	ORI");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= rs1 | inst_I_imm;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 | `IMM;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLTI
 	else if (is_SLTI) begin
 		$display("	SLTI");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= ($signed(rs1) < $signed(inst_I_imm)) ? 1 : 0;
-				`DECODE_DONE;
+		
+				`RD <= ($signed(`RS1) < $signed(`IMM)) ? 1 : 0;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLTIU
 	else if (is_SLTIU) begin
 		$display("	SLTIU");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= (rs1 < inst_I_imm) ? 1 : 0;
-				`DECODE_DONE;
+		
+				`RD <= (`RS1 < `IMM) ? 1 : 0;
+				`EXECUTE_DONE;
 			
 	end
 
 	// XORI
 	else if (is_XORI) begin
 		$display("	XORI");
-		$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
-				rd <= rs1 ^ inst_I_imm;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 ^ `IMM;
+				`EXECUTE_DONE;
 			
 	end
 
@@ -297,10 +144,10 @@ else if (is_J) begin
 	// JAL
 	if (is_JAL) begin
 		$display("	JAL");
-		$display("\tJ: R(%d), imm %d (%d)", inst_rd, inst_J_imm, $signed(inst_J_imm));
-				rd <= pc + 4;
-				`GOTO($signed(pc) + $signed(inst_J_imm));
-				`DECODE_DONE;
+		
+				`RD <= `PC + 4;
+				`GOTO($signed(`PC) + $signed(`IMM));
+				`EXECUTE_DONE;
 			
 	end
 
@@ -310,237 +157,135 @@ else if (is_R) begin
 	// ADD
 	if (is_ADD) begin
 		$display("	ADD");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= $signed(rs1) + $signed(rs2);
-				`DECODE_DONE;
+		
+				`RD <= $signed(`RS1) + $signed(`RS2);
+				`EXECUTE_DONE;
 			
 	end
 
 	// ADDW
 	else if (is_ADDW) begin
 		$display("	ADDW");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 + rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 + `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// AND
 	else if (is_AND) begin
 		$display("	AND");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 & rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 & `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// MUL
 	else if (is_MUL) begin
 		$display("	MUL");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= $signed(rs1) * $signed(rs2);
-				`DECODE_DONE;
+		
+				`RD <= $signed(`RS1) * $signed(`RS2);
+				`EXECUTE_DONE;
 			
 	end
 
 	// OR
 	else if (is_OR) begin
 		$display("	OR");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 | rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 | `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLL
 	else if (is_SLL) begin
 		$display("	SLL");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 << rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 << `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLLI
 	else if (is_SLLI) begin
 		$display("	SLLI");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 << instruction[25:20];
-				`DECODE_DONE;
+		
+				`RD <= `RS1 << `INSTRUCTION[25:20];
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLT
 	else if (is_SLT) begin
 		$display("	SLT");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= ($signed(rs1) < $signed(rs2)) ? 1 : 0;
-				`DECODE_DONE;
+		
+				`RD <= ($signed(`RS1) < $signed(`RS2)) ? 1 : 0;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SLTU
 	else if (is_SLTU) begin
 		$display("	SLTU");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= (rs1 < rs2) ? 1 : 0;
-				`DECODE_DONE;
+		
+				`RD <= (`RS1 < `RS2) ? 1 : 0;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SRA
 	else if (is_SRA) begin
 		$display("	SRA");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 >>> rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 >>> `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SRAI
 	else if (is_SRAI) begin
 		$display("	SRAI");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 >>> instruction[25:20];
-				`DECODE_DONE;
+		
+				`RD <= `RS1 >>> `INSTRUCTION[25:20];
+				`EXECUTE_DONE;
 			
 	end
 
 	// SRL
 	else if (is_SRL) begin
 		$display("	SRL");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 >> rs2;
-				`DECODE_DONE;
+		
+				`RD <= `RS1 >> `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
 	// SRLI
 	else if (is_SRLI) begin
 		$display("	SRLI");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 >> instruction[25:20];
-				`DECODE_DONE;
+		
+				`RD <= `RS1 >> `INSTRUCTION[25:20];
+				`EXECUTE_DONE;
 			
 	end
 
 	// SUB
 	else if (is_SUB) begin
 		$display("	SUB");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= $signed(rs1) - $signed(rs2);
-				`DECODE_DONE;
+		
+				`RD <= $signed(`RS1) - $signed(`RS2);
+				`EXECUTE_DONE;
 			
 	end
 
 	// XOR
 	else if (is_XOR) begin
 		$display("	XOR");
-		$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
-				rd <= rs1 ^ rs2;
-				`DECODE_DONE;
-			
-	end
-
-end
-else if (is_S) begin
-
-	// SB
-	if (is_SB) begin
-		$display("	SB");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_S_imm, $signed(inst_S_imm));
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tSTORE BYTE, address %x", rs1 + $signed(inst_S_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_S_imm));
-					decode_step <= 1;
-				end
-				// 2: patch into word after load finished.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						$display("\tSTORE BYTE, address %x, patch %d, i_data %x, value %x", o_address, address_byte, i_data, rs2[7:0]);
-						case ( address_byte  )
-							2'b00: o_data <= { i_data[31:24], i_data[23:16], i_data[15:8],    rs2[7:0] };
-							2'b01: o_data <= { i_data[31:24], i_data[23:16],     rs2[7:0], i_data[7:0] };
-							2'b10: o_data <= { i_data[31:24],      rs2[7:0], i_data[15:8], i_data[7:0] };
-							2'b11: o_data <= {      rs2[7:0], i_data[23:16], i_data[15:8], i_data[7:0] };
-						endcase
-						`BUS_REQUEST_END;
-						decode_step <= 2;
-					end
-				end
-				// 3: store 32-bit word into memory.
-				else if (decode_step == 2) begin
-					`BUS_WRITE;
-					`BUS_REQUEST_START;
-					decode_step <= 3;
-				end
-				// 4: wait until store finished.
-				else if (decode_step == 3) begin
-					if (`BUS_READY) begin
-						// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
-						`BUS_READ;
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// SH
-	else if (is_SH) begin
-		$display("	SH");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_S_imm, $signed(inst_S_imm));
-				// 1: fetch 32-bit word from memory.
-				if (decode_step == 0) begin
-					// $display("\tSTORE HALF, address %x", rs1 + $signed(inst_S_imm));
-					`MEM_READ_REQ(rs1 + $signed(inst_S_imm));
-					decode_step <= 1;
-				end
-				// 2: patch into word after load finished.
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						case ( address_byte  )
-							2'b00: o_data <= {       i_data[31:16], rs2[15:0] };
-							2'b10: o_data <= { rs2[15:0],        i_data[15:0] };
-						endcase
-						`BUS_REQUEST_END;
-						decode_step <= 2;
-					end
-				end
-				// 3: store 32-bit word into memory.
-				else if (decode_step == 2) begin
-					`BUS_WRITE;
-					`BUS_REQUEST_START;
-					decode_step <= 3;
-				end
-				// 4: wait until store finished.
-				else if (decode_step == 3) begin
-					if (`BUS_READY) begin
-						`BUS_READ;
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end
-			
-	end
-
-	// SW
-	else if (is_SW) begin
-		$display("	SW");
-		$display("\tS: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_S_imm, $signed(inst_S_imm));
-				if (decode_step == 0) begin
-					$display("\tSTORE WORD, address %x, value %x", rs1 + $signed(inst_S_imm), rs2);
-					`MEM_WRITE_REQ(rs1 + $signed(inst_S_imm), rs2);
-					decode_step <= 1;
-				end
-				else if (decode_step == 1) begin
-					if (`BUS_READY) begin
-						`BUS_READ;
-						`BUS_REQUEST_END;
-						`DECODE_DONE;
-					end
-				end			
+		
+				`RD <= `RS1 ^ `RS2;
+				`EXECUTE_DONE;
 			
 	end
 
@@ -550,18 +295,18 @@ else if (is_U) begin
 	// AUIPC
 	if (is_AUIPC) begin
 		$display("	AUIPC");
-		$display("\tU: R(%d), imm %d (%d)", inst_rd, inst_U_imm, $signed(inst_U_imm));
-				rd <= $signed(pc) + $signed(inst_U_imm);
-				`DECODE_DONE;
+		
+				`RD <= $signed(`PC) + $signed(`IMM);
+				`EXECUTE_DONE;
 			
 	end
 
 	// LUI
 	else if (is_LUI) begin
 		$display("	LUI");
-		$display("\tU: R(%d), imm %d (%d)", inst_rd, inst_U_imm, $signed(inst_U_imm));
-				rd <= inst_U_imm;
-				`DECODE_DONE;
+		
+				`RD <= `IMM;
+				`EXECUTE_DONE;
 			
 	end
 

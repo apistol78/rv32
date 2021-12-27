@@ -9,9 +9,6 @@ module CPU_v2 (
 	output reg [31:0] o_data		// Write data,
 );
 
-    wire [31:0] pc;
-
-
     wire [31:0] rs1;
     wire [31:0] rs2;
 
@@ -24,65 +21,164 @@ module CPU_v2 (
 
         .i_read_rs1_idx(fetch_inst_rs1),
         .i_read_rs2_idx(fetch_inst_rs2),
-        .i_read(fetch_fetched),
-
+        .i_read(fetch_ready),
         .o_rs1(rs1),
-        .o_rs2(rs2)
+        .o_rs2(rs2),
+
+        .i_rd(writeback_rd),
+        .i_write_rd_idx(writeback_inst_rd),
+        .i_write(writeback_ready)
     );
 
+
+    //====================================================
     // FETCH
 
     wire [31:0] fetch_instruction;
-    wire fetch_fetched;
+    wire [31:0] fetch_pc;
+    wire fetch_ready;
 
     CPU_Fetch fetch(
         .i_reset(i_reset),
         .i_clock(i_clock),
 
-        .o_pc(pc),
-
+        // Memory
         .o_request(o_request),
         .i_ready(i_ready),
         .o_address(o_address),
         .i_data(i_data),
 
+        // Input
+        .i_branch(writeback_branch),
+        .i_pc_next(writeback_pc_next),
+
+        // Output
         .o_instruction(fetch_instruction),
-        .o_fetched(fetch_fetched)
+        .o_pc(fetch_pc),
+        .o_ready(fetch_ready)
     );
 
+
+    //====================================================
     // DECODE
 
     wire [31:0] decode_instruction;
+    wire [31:0] decode_pc;
     wire [4:0] decode_inst_rs1;
     wire [4:0] decode_inst_rs2;
     wire [4:0] decode_inst_rd;
-    wire decode_decoded;
+    wire [31:0] decode_imm;
+    wire decode_branch;
+    wire decode_ready;
 
     CPU_Decode decode(
         .i_reset(i_reset),
         .i_clock(i_clock),
+        .i_execute(fetch_ready),
 
-        .i_decode(fetch_fetched),
         .i_instruction(fetch_instruction),
+        .i_pc(fetch_pc),
 
         .o_instruction(decode_instruction),
+        .o_pc(decode_pc),
         .o_inst_rs1(decode_inst_rs1),
         .o_inst_rs2(decode_inst_rs2),
         .o_inst_rd(decode_inst_rd),
-        .o_decoded(decode_decoded)
+        .o_imm(decode_imm),
+        .o_branch(decode_branch),
+        .o_ready(decode_ready)
     );
 
+
+    //====================================================
     // EXECUTE
+
+    wire [4:0] execute_inst_rd;
+    wire [31:0] execute_rd;
+    wire execute_branch;
+    wire [31:0] execute_pc_next;
+    wire execute_ready;
 
     CPU_Execute execute(
         .i_reset(i_reset),
         .i_clock(i_clock),
+        .i_execute(decode_ready),
 
-        .i_execute(decode_decoded),
-
+        // Input from decode.
+        .i_pc(decode_pc),
         .i_instruction(decode_instruction),
         .i_rs1(rs1),
-        .i_rs2(rs2)
+        .i_rs2(rs2),
+        .i_inst_rd(decode_inst_rd),
+        .i_imm(decode_imm),
+        .i_branch(decode_branch),
+
+        // Output from execute.
+        .o_inst_rd(execute_inst_rd),
+        .o_rd(execute_rd),
+        .o_branch(execute_branch),
+        .o_pc_next(execute_pc_next),
+        .o_ready(execute_ready)
     );
+
+
+    //====================================================
+    // MEMORY
+
+    wire [4:0] memory_inst_rd;
+    wire [31:0] memory_rd;
+    wire memory_branch;
+    wire [31:0] memory_pc_next;
+    wire memory_ready;
+
+    CPU_Memory memory(
+        .i_reset(i_reset),
+        .i_clock(i_clock),
+        .i_execute(execute_ready),
+
+        // Input from execute.
+        .i_inst_rd(execute_inst_rd),
+        .i_rd(execute_rd),
+        .i_branch(execute_branch),
+        .i_pc_next(execute_pc_next),
+
+        // Output from memory.
+        .o_inst_rd(memory_inst_rd),
+        .o_rd(memory_rd),
+        .o_branch(memory_branch),
+        .o_pc_next(memory_pc_next),
+        .o_ready(memory_ready)
+    );
+
+
+    //====================================================
+    // WRITEBACK
+
+    wire [4:0] writeback_inst_rd;
+    wire [31:0] writeback_rd;
+    wire writeback_branch;
+    wire [31:0] writeback_pc_next;
+    wire writeback_ready;
+
+    CPU_Writeback writeback(
+        .i_reset(i_reset),
+        .i_clock(i_clock),
+        .i_execute(memory_ready),
+
+        // Input from memory.
+        .i_instruction(memory_instruction),
+        .i_inst_rd(memory_inst_rd),
+        .i_rd(memory_rd),
+        .i_branch(memory_branch),
+        .i_pc_next(memory_pc_next),
+
+        // Output from writeback.
+        .o_inst_rd(writeback_inst_rd),
+        .o_rd(writeback_rd),
+        .o_branch(writeback_branch),
+        .o_pc_next(writeback_pc_next),
+        .o_ready(writeback_ready)
+    );
+
 
 endmodule

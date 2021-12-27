@@ -16,12 +16,14 @@ module BROM(
 	initial $readmemh("../code/Firmware/Firmware.vmem", data);
 `endif
 
-	always @(posedge i_clock)
-		if (i_request) begin
+	//always @(posedge i_clock)
+	always @(posedge i_request)
+		//if (i_request) begin
 			o_rdata <= data[i_address >> 2];
-		end
+		//end
 
-	always @(posedge i_clock)
+	//always @(posedge i_clock)
+	always @(*)
 		o_ready <= i_request;
 
 endmodule

@@ -9,8 +9,6 @@ local prefixes = {
 			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
 		}]],
 		verilog = [[
-			$display("\tI: R(%d) = R(%d) op %d (%d)", inst_rd, inst_rs1, inst_I_imm, $signed(inst_I_imm));
-			$display("\t   R(%d) = %x", inst_rs1, rs1);
 		]]
 	},
 	J = {
@@ -19,22 +17,18 @@ local prefixes = {
 			TRACE(str(L"\tJ: R(%d), imm %d", f.rd, f.imm));
 		}]],
 		verilog = [[
-			$display("\tJ: R(%d), imm %d (%d)", inst_rd, inst_J_imm, $signed(inst_J_imm));
 		]]
 	},	
 	R = {
 		verilog = [[
-			$display("\tR: R(%d) = R(%d) op R(%d)", inst_rd, inst_rs1, inst_rs2);
 		]]
 	},
 	U = {
 		verilog = [[
-			$display("\tU: R(%d), imm %d (%d)", inst_rd, inst_U_imm, $signed(inst_U_imm));
 		]]
 	},
 	B = {
 		verilog = [[
-			$display("\tB: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_B_imm, $signed(inst_B_imm));
 		]]
 	},
 	S = {
@@ -43,7 +37,6 @@ local prefixes = {
 			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
 		}]],		
 		verilog = [[
-			$display("\tS: R(%d), R(%d), %d (%d)", inst_rs1, inst_rs2, inst_S_imm, $signed(inst_S_imm));
 		]]
 	}
 }
@@ -59,8 +52,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
 		]],
 		verilog = [[
-			rd <= $signed(rs1) + $signed(rs2);
-			`DECODE_DONE;
+			`RD <= $signed(`RS1) + $signed(`RS2);
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -73,8 +66,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         ]],
 		verilog = [[
-			rd <= $signed(rs1) + $signed(inst_I_imm);
-			`DECODE_DONE;
+			`RD <= $signed(`RS1) + $signed(`IMM);
+			`EXECUTE_DONE;
 		]]		
 	},
 	{
@@ -87,8 +80,8 @@ local instructions = {
 			R(f.rd) = R(f.rs1) + f.imm;
         ]],
 		verilog = [[
-			rd <= rs1 + inst_I_imm;
-			`DECODE_DONE;
+			`RD <= `RS1 + `IMM;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -101,8 +94,8 @@ local instructions = {
 			R(f.rd) = R(f.rs1) + R(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 + rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 + `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -175,8 +168,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 & rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 & `RS2;
+			`EXECUTE_DONE;
 		]]		
 	},
 	{
@@ -189,8 +182,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
         ]],
 		verilog = [[
-			rd <= rs1 & inst_I_imm;
-			`DECODE_DONE;
+			`RD <= `RS1 & `IMM;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -203,8 +196,8 @@ local instructions = {
 			R_u(f.rd) = PC + f.imm;
 		]],
 		verilog = [[
-			rd <= $signed(pc) + $signed(inst_U_imm);
-			`DECODE_DONE;
+			`RD <= $signed(`PC) + $signed(`IMM);
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -212,15 +205,16 @@ local instructions = {
 		data = 0x00000063,
 		name = "BEQ",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if (rs1 == rs2)
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if (`RS1 == `RS2)
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -228,15 +222,16 @@ local instructions = {
 		data = 0x00005063,
 		name = "BGE",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if ($signed(rs1) >= $signed(rs2))
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if ($signed(`RS1) >= $signed(`RS2))
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -244,15 +239,16 @@ local instructions = {
 		data = 0x00007063,
 		name = "BGEU",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if (rs1 >= rs2)
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if (`RS1 >= `RS2)
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -260,15 +256,16 @@ local instructions = {
 		data = 0x00004063,
 		name = "BLT",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if ($signed(rs1) < $signed(rs2))
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if ($signed(`RS1) < $signed(`RS2))
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -276,15 +273,16 @@ local instructions = {
 		data = 0x00006063,
 		name = "BLTU",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if (rs1 < rs2)
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if (`RS1 < `RS2)
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -292,15 +290,16 @@ local instructions = {
 		data = 0x00001063,
 		name = "BNE",
 		format = "B",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			if (rs1 != rs2)
-				`GOTO($signed(pc) + $signed(inst_B_imm));
-			`DECODE_DONE;
+			if (`RS1 != `RS2)
+				`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -357,8 +356,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= $signed(rs1) / $signed(rs2);
-			`DECODE_DONE;			
+			`RD <= $signed(rs1) / $signed(rs2);
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -378,8 +377,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= rs1 / rs2;
-			`DECODE_DONE;			
+			`RD <= rs1 / rs2;
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -399,8 +398,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= rs1 / rs2;
-			`DECODE_DONE;			
+			`RD <= rs1 / rs2;
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -415,8 +414,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= $signed(rs1) / $signed(rs2);
-			`DECODE_DONE;			
+			`RD <= $signed(rs1) / $signed(rs2);
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -604,15 +603,16 @@ local instructions = {
 		data = 0x0000006f,
 		name = "JAL",
 		format = "J",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatJ(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = PC + f.imm;
 		]],
 		verilog = [[
-			rd <= pc + 4;
-			`GOTO($signed(pc) + $signed(inst_J_imm));
-			`DECODE_DONE;
+			`RD <= `PC + 4;
+			`GOTO($signed(`PC) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -620,15 +620,16 @@ local instructions = {
 		data = 0x00000067,
 		name = "JALR",
 		format = "I",
+		branch = true,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = R(f.rs1) + f.imm;
 		]],
 		verilog = [[
-			rd <= pc + 4;
-			`GOTO($signed(rs1) + $signed(inst_I_imm));
-			`DECODE_DONE;
+			`RD <= `PC + 4;
+			`GOTO($signed(`RS1) + $signed(`IMM));
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -640,28 +641,30 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
+--[[
 		verilog = [[
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
-				// $display("\tLOAD BYTE, address <= %x", rs1 + $signed(inst_I_imm));
-				`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
+				// $display("\tLOAD BYTE, address <= %x", rs1 + $signed(`IMM));
+				`MEM_READ_REQ(rs1 + $signed(`IMM));
 				decode_step <= 1;
 			end
 			// 2: wait until load finish.
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
-					$display("\tLOAD BYTE, address <= %x, data => %x (%d)", rs1 + $signed(inst_I_imm), i_data, address_byte);
+					$display("\tLOAD BYTE, address <= %x, data => %x (%d)", rs1 + $signed(`IMM), i_data, address_byte);
 					case ( address_byte  )
-						2'b00: rd <= $signed({ { 24{ i_data[7]  } }, i_data[6:0] });
-						2'b01: rd <= $signed({ { 24{ i_data[15] } }, i_data[14:8] });
-						2'b10: rd <= $signed({ { 24{ i_data[23] } }, i_data[22:16] });
-						2'b11: rd <= $signed({ { 24{ i_data[31] } }, i_data[30:24] });
+						2'b00: `RD <= $signed({ { 24{ i_data[7]  } }, i_data[6:0] });
+						2'b01: `RD <= $signed({ { 24{ i_data[15] } }, i_data[14:8] });
+						2'b10: `RD <= $signed({ { 24{ i_data[23] } }, i_data[22:16] });
+						2'b11: `RD <= $signed({ { 24{ i_data[31] } }, i_data[30:24] });
 					endcase
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0x0000707f,
@@ -672,11 +675,12 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
+--[[
 		verilog = [[
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
-				// $display("\tLOAD UBYTE, address %x", rs1 + $signed(inst_I_imm));
-				`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
+				// $display("\tLOAD UBYTE, address %x", rs1 + $signed(`IMM));
+				`MEM_READ_REQ(rs1 + $signed(`IMM));
 				decode_step <= 1;
 			end
 			// 2: wait until load finish.
@@ -684,16 +688,17 @@ local instructions = {
 				if (`BUS_READY) begin
 					// $display("\tLOAD UBYTE, data => %x (%d)", i_data, address_byte);
 					case ( address_byte  )
-						2'b00: rd <= { 24'b0, i_data[7:0] };
-						2'b01: rd <= { 24'b0, i_data[15:8] };
-						2'b10: rd <= { 24'b0, i_data[23:16] };
-						2'b11: rd <= { 24'b0, i_data[31:24] };
+						2'b00: `RD <= { 24'b0, i_data[7:0] };
+						2'b01: `RD <= { 24'b0, i_data[15:8] };
+						2'b10: `RD <= { 24'b0, i_data[23:16] };
+						2'b11: `RD <= { 24'b0, i_data[31:24] };
 					endcase
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]		
+		]
+]]	
 	},
 	{
 		mask = 0x0000707f,
@@ -710,24 +715,26 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]],
+--[[
 		verilog = [[
 			if (decode_step == 0) begin
-				// $display("\tLOAD SHALF, address <= %x", rs1 + $signed(inst_I_imm));
-				`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
+				// $display("\tLOAD SHALF, address <= %x", rs1 + $signed(`IMM));
+				`MEM_READ_REQ(rs1 + $signed(`IMM));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
 					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
 					case ( address_byte  )
-						2'b00: rd <= { { 16{ i_data[15] } }, i_data[14:0] };
-						2'b10: rd <= { { 16{ i_data[31] } }, i_data[30:16] };
+						2'b00: `RD <= { { 16{ i_data[15] } }, i_data[14:0] };
+						2'b10: `RD <= { { 16{ i_data[31] } }, i_data[30:16] };
 					endcase
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]	
+		]
+]]
 	},
 	{
 		mask = 0x0000707f,
@@ -738,25 +745,27 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		]],
+--[[
 		verilog = [[
 			if (decode_step == 0) begin
-				// $display("\tLOAD HALF, address <= %x", rs1 + $signed(inst_I_imm));
-				`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
+				// $display("\tLOAD HALF, address <= %x", rs1 + $signed(`IMM));
+				`MEM_READ_REQ(rs1 + $signed(`IMM));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
 					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
-					rd <= i_data[15:0];
+					`RD <= i_data[15:0];
 					case ( address_byte  )
-						2'b00: rd <= { 16'b0, i_data[15:0] };
-						2'b10: rd <= { 16'b0, i_data[31:16] };
+						2'b00: `RD <= { 16'b0, i_data[15:0] };
+						2'b10: `RD <= { 16'b0, i_data[31:16] };
 					endcase
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0xf9f0707f,
@@ -780,8 +789,8 @@ local instructions = {
 			R_s(f.rd) = f.imm;
 		]],
 		verilog = [[
-			rd <= inst_U_imm;
-			`DECODE_DONE;
+			`RD <= `IMM;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -793,21 +802,23 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
+--[[
 		verilog = [[
 			if (decode_step == 0) begin
-				$display("\tLOAD WORD, address <= %x", rs1 + $signed(inst_I_imm));
-				`MEM_READ_REQ(rs1 + $signed(inst_I_imm));
+				$display("\tLOAD WORD, address <= %x", rs1 + $signed(`IMM));
+				`MEM_READ_REQ(rs1 + $signed(`IMM));
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
 					$display("\tLOAD WORD, data => %x", i_data);
-					rd <= i_data;
+					`RD <= i_data;
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0x0000707f,
@@ -818,19 +829,21 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
 		]],
+--[[
 		verilog = [[
 			if (decode_step == 0) begin
-				`MEM_READ_REQ(rs1 + inst_I_imm);
+				`MEM_READ_REQ(rs1 + `IMM);
 				decode_step <= 1;
 			end
 			else if (decode_step == 1) begin
 				if (`BUS_READY) begin
-					rd <= i_data[31:0];
+					`RD <= i_data[31:0];
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -842,8 +855,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog = [[
-			rd <= $signed(rs1) * $signed(rs2);
-			`DECODE_DONE;
+			`RD <= $signed(`RS1) * $signed(`RS2);
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -887,7 +900,7 @@ local instructions = {
 			end
 			else if (decode_step == 2) begin
 				// Sum partial products.
-				rd <= 
+				`RD <= 
 					m64_p3 +
 					(m64_p2 >> 16) +
 					(m64_p1 >> 16) +
@@ -895,7 +908,7 @@ local instructions = {
 						((m64_p0 >> 16) + m64_p1[15:0] + m64_p2[15:0]) >> 16
 					);
 
-				`DECODE_DONE;
+				`EXECUTE_DONE;
 			end
 		]
 ]]
@@ -928,8 +941,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 | rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 | `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -942,8 +955,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
 		]],
 		verilog = [[
-			rd <= rs1 | inst_I_imm;
-			`DECODE_DONE;
+			`RD <= `RS1 | `IMM;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -962,8 +975,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= $signed(rs1) % $signed(rs2);
-			`DECODE_DONE;			
+			`RD <= $signed(rs1) % $signed(rs2);
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -983,8 +996,8 @@ local instructions = {
 		]],
 --[[
 		verilog = [[
-			rd <= rs1 % rs2;
-			`DECODE_DONE;			
+			`RD <= rs1 % rs2;
+			`EXECUTE_DONE;			
 		]
 ]]
 	},
@@ -1009,6 +1022,7 @@ local instructions = {
 			auto f = parseFormatS(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		]],
+--[[
 		verilog = [[
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
@@ -1042,10 +1056,11 @@ local instructions = {
 					// $display("\tSTORE BYTE, address %x, patch %d, o_data %x", o_address, address_byte, o_data);
 					`BUS_READ;
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0xf800707f,
@@ -1080,6 +1095,7 @@ local instructions = {
 			auto f = parseFormatS(word);
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
+--[[
 		verilog = [[
 			// 1: fetch 32-bit word from memory.
 			if (decode_step == 0) begin
@@ -1109,10 +1125,11 @@ local instructions = {
 				if (`BUS_READY) begin
 					`BUS_READ;
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end
-		]]
+		]
+]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -1124,8 +1141,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 << rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 << `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1138,8 +1155,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 		]],
 		verilog = [[
-			rd <= rs1 << instruction[25:20];
-			`DECODE_DONE;
+			`RD <= `RS1 << `INSTRUCTION[25:20];
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1164,8 +1181,8 @@ local instructions = {
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 		]],
 		verilog = [[
-			rd <= ($signed(rs1) < $signed(rs2)) ? 1 : 0;
-			`DECODE_DONE;
+			`RD <= ($signed(`RS1) < $signed(`RS2)) ? 1 : 0;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1178,8 +1195,8 @@ local instructions = {
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		]],
 		verilog = [[
-			rd <= ($signed(rs1) < $signed(inst_I_imm)) ? 1 : 0;
-			`DECODE_DONE;
+			`RD <= ($signed(`RS1) < $signed(`IMM)) ? 1 : 0;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1192,8 +1209,8 @@ local instructions = {
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		]],
 		verilog = [[
-			rd <= (rs1 < inst_I_imm) ? 1 : 0;
-			`DECODE_DONE;
+			`RD <= (`RS1 < `IMM) ? 1 : 0;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1206,8 +1223,8 @@ local instructions = {
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 		]],
 		verilog = [[
-			rd <= (rs1 < rs2) ? 1 : 0;
-			`DECODE_DONE;
+			`RD <= (`RS1 < `RS2) ? 1 : 0;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1220,8 +1237,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 >>> rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 >>> `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1234,8 +1251,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
 		verilog = [[
-			rd <= rs1 >>> instruction[25:20];
-			`DECODE_DONE;
+			`RD <= `RS1 >>> `INSTRUCTION[25:20];
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1266,8 +1283,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 >> rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 >> `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1280,8 +1297,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
 		verilog = [[
-			rd <= rs1 >> instruction[25:20];
-			`DECODE_DONE;
+			`RD <= `RS1 >> `INSTRUCTION[25:20];
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1306,8 +1323,8 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 		]],
 		verilog = [[
-			rd <= $signed(rs1) - $signed(rs2);
-			`DECODE_DONE;
+			`RD <= $signed(`RS1) - $signed(`RS2);
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1325,6 +1342,7 @@ local instructions = {
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
+--[[
 		verilog = [[
 			if (decode_step == 0) begin
 				$display("\tSTORE WORD, address %x, value %x", rs1 + $signed(inst_S_imm), rs2);
@@ -1335,10 +1353,11 @@ local instructions = {
 				if (`BUS_READY) begin
 					`BUS_READ;
 					`BUS_REQUEST_END;
-					`DECODE_DONE;
+					`EXECUTE_DONE;
 				end
 			end			
-		]]
+		]
+]]
 	},
 	{
 		mask = 0xffffffff,
@@ -1362,8 +1381,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 		]],
 		verilog = [[
-			rd <= rs1 ^ rs2;
-			`DECODE_DONE;
+			`RD <= `RS1 ^ `RS2;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -1376,8 +1395,8 @@ local instructions = {
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		]],
 		verilog = [[
-			rd <= rs1 ^ inst_I_imm;
-			`DECODE_DONE;
+			`RD <= `RS1 ^ `IMM;
+			`EXECUTE_DONE;
 		]]	
 	},
 }
@@ -1509,9 +1528,11 @@ function main(argv)
 
 		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
 		stdout:printLn("// ==================================================")
+		stdout:printLn("")
+
 		for i, inst in ipairs(instructions) do
 			if inst.verilog ~= nil then
-				stdout:printLn("wire is_" .. inst.name .. " = ((instruction & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+				stdout:printLn("wire is_" .. string.format("%-6s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
 			end
 		end
 		stdout:printLn("")
@@ -1531,8 +1552,21 @@ function main(argv)
 
 				end
 				stdout:printLn(";")
+			else
+				stdout:printLn("wire is_" .. prefix .. " = 1'b0;")
 			end
 		end
+		stdout:printLn("")
+		stdout:print("wire is_BRANCH =")
+		local count = 0
+		for _, inst in ipairs(instructions) do
+			if inst.branch == true then
+				if count > 0 then stdout:print(" |") end
+				stdout:print(" is_" .. inst.name)
+				count = count + 1
+			end
+		end
+		stdout:printLn(";")
 
 	else
 		stderr:printLn("Unknown language \"" .. language .. "\".")

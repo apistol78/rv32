@@ -1,8 +1,10 @@
 `include "CPU_v2.v"
-`include "CPU_Registers.v"
 `include "CPU_Decode.v"
 `include "CPU_Execute.v"
 `include "CPU_Fetch.v"
+`include "CPU_Memory.v"
+`include "CPU_Registers.v"
+`include "CPU_Writeback.v"
 `include "BRAM.v"
 `include "BROM.v"
 
@@ -107,7 +109,7 @@ module SoC_v2_tb;
 */
         reset <= 0;
 
-		repeat(100) @(posedge clock);
+		repeat(50) @(posedge clock);
 
 		$finish;
 	end
