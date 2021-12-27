@@ -124,13 +124,16 @@ module SoC_tb;
 	wire i2c_rw;
 	wire [31:0] i2c_wdata;
 	wire [31:0] i2c_rdata;
+	wire i2c_ready;
 	wire I2C_SCL;
 	wire I2C_SDA;
 	I2C i2c(
-		.i_enable(i2c_select && cpu_request),
+		.i_clock(clock),
+		.i_request(i2c_select && cpu_request),
 		.i_rw(i2c_rw),
 		.i_wdata(i2c_wdata),
 		.o_rdata(i2c_rdata),
+		.o_ready(i2c_ready),
 		// ---
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA(I2C_SDA)
@@ -141,14 +144,18 @@ module SoC_tb;
 	wire sd_rw;
 	wire [31:0] sd_wdata;
 	wire [31:0] sd_rdata;
+	wire sd_ready;
 	wire SD_CLK;
 	wire SD_CMD;
 	wire [3:0] SD_DAT;
 	SD sd(
-		.i_enable(sd_select && cpu_request),
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(sd_select && cpu_request),
 		.i_rw(sd_rw),
 		.i_wdata(sd_wdata),
 		.o_rdata(sd_rdata),
+		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
 		.SD_CMD(SD_CMD),
@@ -228,8 +235,8 @@ module SoC_tb;
 		uart_select ? 1'b1 :
 		video_select ? 1'b1 :
 		gpio_select ? 1'b1 :
-		i2c_select ? 1'b1 :
-		sd_select ? 1'b1 :
+		i2c_select ? i2c_ready :
+		sd_select ? sd_ready :
 		1'b0;
 
 	// Generate clock.
