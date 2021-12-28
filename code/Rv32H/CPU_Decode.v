@@ -58,7 +58,7 @@ module CPU_Decode(
 
     always @(posedge i_clock) begin
         if (!i_stall && i_tag != o_tag) begin
-            $display("decode instruction %x", i_instruction);
+            //$display("decode instruction %x", i_instruction);
 
             instruction <= i_instruction;
             pc <= i_pc;

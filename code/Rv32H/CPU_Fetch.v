@@ -70,7 +70,7 @@ module CPU_Fetch(
 			1: begin
 				// Wait for branch result.
 				if (i_branch) begin
-					$display("fetch, accepting branch to %x", i_pc_next);
+					// $display("fetch, accepting branch to %x", i_pc_next);
 					pc <= i_pc_next;
 					state <= 0;
 				end

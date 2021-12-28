@@ -102,11 +102,13 @@ module CPU_Execute (
 
 	always @(posedge i_clock) begin
 		if (!i_stall && i_tag != o_tag) begin
+			/*
 			$display("execute %x", i_instruction);
 			$display("   PC %x", i_pc);
 			$display("  rs1 %x", i_rs1);
 			$display("  rs2 %x", i_rs2);
 			$display("  imm %d", i_imm);
+			*/
 
 			o_branch <= i_branch;
 			o_pc_next <= i_pc;
