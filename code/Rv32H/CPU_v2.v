@@ -173,6 +173,8 @@ module CPU_v2 (
 	wire [31:0] execute_pc_next;
 	wire execute_mem_read;
 	wire execute_mem_write;
+	wire [2:0] execute_mem_width;
+	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
 	
 	CPU_Execute execute(
@@ -198,6 +200,8 @@ module CPU_v2 (
 		.o_pc_next(execute_pc_next),
 		.o_mem_read(execute_mem_read),
 		.o_mem_write(execute_mem_write),
+		.o_mem_width(execute_mem_width),
+		.o_mem_signed(execute_mem_signed),
 		.o_mem_address(execute_mem_address)
 	);
 
@@ -232,6 +236,8 @@ module CPU_v2 (
 		.i_pc_next(execute_pc_next),
 		.i_mem_read(execute_mem_read),
 		.i_mem_write(execute_mem_write),
+		.i_mem_width(execute_mem_width),
+		.i_mem_signed(execute_mem_signed),
 		.i_mem_address(execute_mem_address),
 
 		// Output from memory.

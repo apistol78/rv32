@@ -24,6 +24,8 @@ module CPU_Execute (
 
 	output reg o_mem_read,
 	output reg o_mem_write,
+	output reg [2:0] o_mem_width,
+	output reg o_mem_signed,
 	output reg [31:0] o_mem_address
 );
 	`define INSTRUCTION i_instruction
@@ -43,15 +45,46 @@ module CPU_Execute (
 	 * Reset o_inst_rd so "register forwarding" doesn't use
 	 * our o_rd value.
 	 */
-	`define MEM_READ(ADDR) \
-		o_mem_address <= ADDR; \
-		o_mem_read <= 1; \
+	`define MEM_READ_W(ADDR)		\
+		o_mem_address <= ADDR;		\
+		o_mem_read <= 1;			\
+		o_mem_width <= 4;			\
+		o_mem_signed <= 0;			\
 		o_inst_rd <= 0;
-	
-	`define MEM_WRITE(ADDR, DATA) \
-		o_mem_address <= ADDR; \
-		o_rd <= DATA; \
-		o_mem_write <= 1;
+
+	`define MEM_READ_UH(ADDR)		\
+		o_mem_address <= ADDR;		\
+		o_mem_read <= 1;			\
+		o_mem_width <= 2;			\
+		o_mem_signed <= 0;			\
+		o_inst_rd <= 0;
+
+	`define MEM_READ_SH(ADDR)		\
+		o_mem_address <= ADDR;		\
+		o_mem_read <= 1;			\
+		o_mem_width <= 2;			\
+		o_mem_signed <= 1;			\
+		o_inst_rd <= 0;
+
+	`define MEM_READ_UB(ADDR)		\
+		o_mem_address <= ADDR;		\
+		o_mem_read <= 1;			\
+		o_mem_width <= 1;			\
+		o_mem_signed <= 0;			\
+		o_inst_rd <= 0;
+
+	`define MEM_READ_SB(ADDR)		\
+		o_mem_address <= ADDR;		\
+		o_mem_read <= 1;			\
+		o_mem_width <= 1;			\
+		o_mem_signed <= 1;			\
+		o_inst_rd <= 0;
+
+	`define MEM_WRITE(ADDR, DATA)	\
+		o_mem_address <= ADDR;		\
+		o_mem_write <= 1;			\
+		o_mem_width <= 4;			\
+		o_rd <= DATA;
 
 	`define EXECUTE_DONE
 	`define ERROR
@@ -62,6 +95,7 @@ module CPU_Execute (
 		o_pc_next <= 0;
 		o_mem_read <= 0;
 		o_mem_write <= 0;
+		o_mem_signed <= 0;
 		o_mem_address <= 0;
 		o_tag <= 0;
 	end
@@ -78,6 +112,7 @@ module CPU_Execute (
 			o_pc_next <= i_pc;
 			o_mem_read <= 0;
 			o_mem_write <= 0;
+			o_mem_width <= 0;
 			o_inst_rd <= i_inst_rd;
 
 			`include "Instructions_d.v"

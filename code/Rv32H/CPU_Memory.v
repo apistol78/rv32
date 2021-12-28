@@ -19,6 +19,8 @@ module CPU_Memory(
 	input wire [31:0] i_pc_next,
 	input wire i_mem_read,
 	input wire i_mem_write,
+	input wire [2:0] i_mem_width,
+	input wire i_mem_signed,
 	input wire [31:0] i_mem_address,
 
 	// Output
@@ -49,18 +51,22 @@ module CPU_Memory(
 		o_bus_rw <= i_mem_write;
 		o_bus_address <= i_mem_address;
 		o_bus_request <= i_mem_read || i_mem_write;
-		//o_bus_wdata <= i_rd;
 	end
 
 	assign o_stall = (i_mem_read || i_mem_write) ? !i_bus_ready : 0;
 
 	always @(posedge i_clock) begin
 		if (i_tag != o_tag) begin
-			// Pass through
 			o_inst_rd <= i_inst_rd;
 			
-			if (i_mem_read)
-				o_rd <= i_bus_rdata;
+			if (i_mem_read) begin
+				// Extend the data received from bus.
+				case (i_mem_width)
+					4: o_rd <= i_bus_rdata;
+					2: o_rd <= { { 16{ i_mem_signed & i_bus_rdata[15] } }, i_bus_rdata[15:0] };
+					1: o_rd <= { { 24{ i_mem_signed & i_bus_rdata[7] } }, i_bus_rdata[7:0] };
+				endcase
+			end
 			else
 				o_rd <= i_rd;
 

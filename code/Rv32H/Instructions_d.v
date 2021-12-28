@@ -102,11 +102,56 @@ else if (is_I) begin
 			
 	end
 
+	// LB
+	else if (is_LB) begin
+		$display("	LB");
+		
+				`MEM_READ_SB(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
+	// LBU
+	else if (is_LBU) begin
+		$display("	LBU");
+		
+				`MEM_READ_UB(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
+	// LH
+	else if (is_LH) begin
+		$display("	LH");
+		
+				`MEM_READ_SH(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
+	// LHU
+	else if (is_LHU) begin
+		$display("	LHU");
+		
+				`MEM_READ_UH(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
 	// LW
 	else if (is_LW) begin
 		$display("	LW");
 		
-				`MEM_READ(`RS1 + $signed(`IMM));
+				`MEM_READ_W(`RS1 + $signed(`IMM));
+				`EXECUTE_DONE;
+			
+	end
+
+	// LWU
+	else if (is_LWU) begin
+		$display("	LWU");
+		
+				`MEM_READ_W(`RS1 + $signed(`IMM));
 				`EXECUTE_DONE;
 			
 	end

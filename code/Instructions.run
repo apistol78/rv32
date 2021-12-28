@@ -641,30 +641,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
---[[
 		verilog = [[
-			// 1: fetch 32-bit word from memory.
-			if (decode_step == 0) begin
-				// $display("\tLOAD BYTE, address <= %x", rs1 + $signed(`IMM));
-				`MEM_READ_REQ(rs1 + $signed(`IMM));
-				decode_step <= 1;
-			end
-			// 2: wait until load finish.
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					$display("\tLOAD BYTE, address <= %x, data => %x (%d)", rs1 + $signed(`IMM), i_data, address_byte);
-					case ( address_byte  )
-						2'b00: `RD <= $signed({ { 24{ i_data[7]  } }, i_data[6:0] });
-						2'b01: `RD <= $signed({ { 24{ i_data[15] } }, i_data[14:8] });
-						2'b10: `RD <= $signed({ { 24{ i_data[23] } }, i_data[22:16] });
-						2'b11: `RD <= $signed({ { 24{ i_data[31] } }, i_data[30:24] });
-					endcase
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]
+			`MEM_READ_SB(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -675,30 +655,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
---[[
 		verilog = [[
-			// 1: fetch 32-bit word from memory.
-			if (decode_step == 0) begin
-				// $display("\tLOAD UBYTE, address %x", rs1 + $signed(`IMM));
-				`MEM_READ_REQ(rs1 + $signed(`IMM));
-				decode_step <= 1;
-			end
-			// 2: wait until load finish.
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					// $display("\tLOAD UBYTE, data => %x (%d)", i_data, address_byte);
-					case ( address_byte  )
-						2'b00: `RD <= { 24'b0, i_data[7:0] };
-						2'b01: `RD <= { 24'b0, i_data[15:8] };
-						2'b10: `RD <= { 24'b0, i_data[23:16] };
-						2'b11: `RD <= { 24'b0, i_data[31:24] };
-					endcase
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]	
+			`MEM_READ_UB(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -715,26 +675,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				// $display("\tLOAD SHALF, address <= %x", rs1 + $signed(`IMM));
-				`MEM_READ_REQ(rs1 + $signed(`IMM));
-				decode_step <= 1;
-			end
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
-					case ( address_byte  )
-						2'b00: `RD <= { { 16{ i_data[15] } }, i_data[14:0] };
-						2'b10: `RD <= { { 16{ i_data[31] } }, i_data[30:16] };
-					endcase
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]
+			`MEM_READ_SH(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000707f,
@@ -745,27 +689,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				// $display("\tLOAD HALF, address <= %x", rs1 + $signed(`IMM));
-				`MEM_READ_REQ(rs1 + $signed(`IMM));
-				decode_step <= 1;
-			end
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					// $display("\tLOAD HALF, data => %x (%d)", i_data, address_byte);
-					`RD <= i_data[15:0];
-					case ( address_byte  )
-						2'b00: `RD <= { 16'b0, i_data[15:0] };
-						2'b10: `RD <= { 16'b0, i_data[31:16] };
-					endcase
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]
+			`MEM_READ_UH(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0xf9f0707f,
@@ -803,7 +730,7 @@ local instructions = {
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ(`RS1 + $signed(`IMM));
+			`MEM_READ_W(`RS1 + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -816,21 +743,10 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				`MEM_READ_REQ(rs1 + `IMM);
-				decode_step <= 1;
-			end
-			else if (decode_step == 1) begin
-				if (`BUS_READY) begin
-					`RD <= i_data[31:0];
-					`BUS_REQUEST_END;
-					`EXECUTE_DONE;
-				end
-			end
-		]
-]]
+			`MEM_READ_W(`RS1 + $signed(`IMM));
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0xfe00707f,
