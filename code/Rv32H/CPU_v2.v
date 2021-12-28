@@ -11,6 +11,9 @@ module CPU_v2 (
 	output wire [31:0] o_bus_wdata		// Write data,
 );
 
+	//====================================================
+	// BUS ACCESS
+
 	wire bus_pa_request;
 	wire bus_pa_ready;
 	wire [31:0] bus_pa_address;
@@ -52,7 +55,9 @@ module CPU_v2 (
 		.i_pb_wdata(bus_pb_wdata)
 	);
 
-	// Register files,
+	//====================================================
+	// REGISTERS
+
 	// RS1 and RS2 are read from file
 	// simultaneously as decode stage.
 
@@ -66,28 +71,33 @@ module CPU_v2 (
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
+		.i_read_tag(fetch_tag),
 		.i_read_rs1_idx(fetch_inst_rs1),
 		.i_read_rs2_idx(fetch_inst_rs2),
-		.i_read(fetch_ready),
 		.o_rs1(rs1),
 		.o_rs2(rs2),
 
-		.i_rd(writeback_rd),
+		.i_write_tag(writeback_tag),
 		.i_write_rd_idx(writeback_inst_rd),
-		.i_write(writeback_ready)
+		.i_rd(writeback_rd)
 	);
 
+	//====================================================
+	// CONTROL
+
+	wire stall = memory_stall;
 
 	//====================================================
 	// FETCH
 
+	wire [7:0] fetch_tag;
 	wire [31:0] fetch_instruction;
 	wire [31:0] fetch_pc;
-	wire fetch_ready;
-
+	
 	CPU_Fetch fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
+		.i_stall(stall),
 
 		// Bus
 		.o_bus_request(bus_pa_request),
@@ -100,15 +110,15 @@ module CPU_v2 (
 		.i_pc_next(writeback_pc_next),
 
 		// Output
+		.o_tag(fetch_tag),
 		.o_instruction(fetch_instruction),
-		.o_pc(fetch_pc),
-		.o_ready(fetch_ready)
+		.o_pc(fetch_pc)
 	);
-
 
 	//====================================================
 	// DECODE
 
+	wire [7:0] decode_tag;
 	wire [31:0] decode_instruction;
 	wire [31:0] decode_pc;
 	wire [4:0] decode_inst_rs1;
@@ -116,34 +126,36 @@ module CPU_v2 (
 	wire [4:0] decode_inst_rd;
 	wire [31:0] decode_imm;
 	wire decode_branch;
-	wire decode_ready;
-
+	
 	CPU_Decode decode(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_execute(fetch_ready),
-
+		.i_stall(stall),
+	
+		// Input
+		.i_tag(fetch_tag),
 		.i_instruction(fetch_instruction),
 		.i_pc(fetch_pc),
 
+		// Output
+		.o_tag(decode_tag),
 		.o_instruction(decode_instruction),
 		.o_pc(decode_pc),
 		.o_inst_rs1(decode_inst_rs1),
 		.o_inst_rs2(decode_inst_rs2),
 		.o_inst_rd(decode_inst_rd),
 		.o_imm(decode_imm),
-		.o_branch(decode_branch),
-		.o_ready(decode_ready)
+		.o_branch(decode_branch)
 	);
-
 
 	//====================================================
 	// EXECUTE
 
-	// Select register from file or pipeline due to register hazard.
-	wire [31:0] resolved_rs1 = (decode_inst_rs1 == memory_inst_rd) ? memory_rd : rs1;
-	wire [31:0] resolved_rs2 = (decode_inst_rs2 == memory_inst_rd) ? memory_rd : rs2;
+	// Forward register values from pipeline if already in flight.
+	wire [31:0] fwd_rs1 = (decode_inst_rs1 == memory_inst_rd) ? memory_rd : rs1;
+	wire [31:0] fwd_rs2 = (decode_inst_rs2 == memory_inst_rd) ? memory_rd : rs2;
 
+	wire [7:0] execute_tag;
 	wire [4:0] execute_inst_rd;
 	wire [31:0] execute_rd;
 	wire execute_branch;
@@ -151,48 +163,47 @@ module CPU_v2 (
 	wire execute_mem_read;
 	wire execute_mem_write;
 	wire [31:0] execute_mem_address;
-	wire execute_ready;
-
+	
 	CPU_Execute execute(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_execute(decode_ready),
+		.i_stall(stall),
 
 		// Input from decode.
+		.i_tag(decode_tag),
 		.i_pc(decode_pc),
 		.i_instruction(decode_instruction),
-		.i_rs1(resolved_rs1),
-		.i_rs2(resolved_rs2),
+		.i_rs1(fwd_rs1),
+		.i_rs2(fwd_rs2),
 		.i_inst_rd(decode_inst_rd),
 		.i_imm(decode_imm),
 		.i_branch(decode_branch),
 
 		// Output from execute.
+		.o_tag(execute_tag),
 		.o_inst_rd(execute_inst_rd),
 		.o_rd(execute_rd),
 		.o_branch(execute_branch),
 		.o_pc_next(execute_pc_next),
 		.o_mem_read(execute_mem_read),
 		.o_mem_write(execute_mem_write),
-		.o_mem_address(execute_mem_address),
-		.o_ready(execute_ready)
+		.o_mem_address(execute_mem_address)
 	);
-
-
 
 	//====================================================
 	// MEMORY
 
+	wire [7:0] memory_tag;
 	wire [4:0] memory_inst_rd;
 	wire [31:0] memory_rd;
 	wire memory_branch;
 	wire [31:0] memory_pc_next;
-	wire memory_ready;
+	wire memory_stall;
 
 	CPU_Memory memory(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_execute(execute_ready),
+		.i_stall(stall),
 
 		// Bus
 		.o_bus_rw(bus_pb_rw),
@@ -203,6 +214,7 @@ module CPU_v2 (
 		.o_bus_wdata(bus_pb_wdata),
 
 		// Input from execute.
+		.i_tag(execute_tag),
 		.i_inst_rd(execute_inst_rd),
 		.i_rd(execute_rd),
 		.i_branch(execute_branch),
@@ -212,40 +224,42 @@ module CPU_v2 (
 		.i_mem_address(execute_mem_address),
 
 		// Output from memory.
+		.o_tag(memory_tag),
 		.o_inst_rd(memory_inst_rd),
 		.o_rd(memory_rd),
 		.o_branch(memory_branch),
 		.o_pc_next(memory_pc_next),
-		.o_ready(memory_ready)
+		.o_stall(memory_stall)
 	);
 
 
 	//====================================================
 	// WRITEBACK
 
+	wire [7:0] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
 	wire writeback_branch;
 	wire [31:0] writeback_pc_next;
-	wire writeback_ready;
-
+	
 	CPU_Writeback writeback(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_execute(memory_ready),
-
+		.i_stall(stall),
+	
 		// Input from memory.
+		.i_tag(memory_tag),
 		.i_inst_rd(memory_inst_rd),
 		.i_rd(memory_rd),
 		.i_branch(memory_branch),
 		.i_pc_next(memory_pc_next),
 
 		// Output from writeback.
+		.o_tag(writeback_tag),
 		.o_inst_rd(writeback_inst_rd),
 		.o_rd(writeback_rd),
 		.o_branch(writeback_branch),
-		.o_pc_next(writeback_pc_next),
-		.o_ready(writeback_ready)
+		.o_pc_next(writeback_pc_next)
 	);
 
 

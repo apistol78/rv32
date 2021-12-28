@@ -12,4 +12,6 @@ mkdir build\verilog
 :: vvp build/verilog/SoC_tb.out
 
 iverilog -I code/Rv32H -D__ICARUS__ -o build/verilog/SoC_v2_tb.out code/Rv32H/SoC_v2_tb.v
+if errorlevel 1 exit
+
 vvp build/verilog/SoC_v2_tb.out

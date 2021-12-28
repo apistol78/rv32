@@ -79,7 +79,7 @@ module CPU_BusAccess(
 					o_pa_ready <= 1;
 					o_pa_rdata <= i_bus_rdata;
 					o_bus_request <= 0;
-					state <= 0;
+					state <= 3;
 				end
 			end
 
@@ -90,7 +90,16 @@ module CPU_BusAccess(
 					o_pb_ready <= 1;
 					o_pb_rdata <= i_bus_rdata;
 					o_bus_request <= 0;
+					state <= 3;
+				end
+			end
+
+			// Wait until bus signal reset.
+			3: begin
+				if (!i_bus_ready) begin
 					state <= 0;
+					o_pa_ready <= 0;
+					o_pb_ready <= 0;
 				end
 			end
 		endcase

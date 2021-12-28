@@ -1,21 +1,22 @@
 module CPU_Decode(
     input wire i_reset,
     input wire i_clock,
-    input wire i_execute,
+    input wire i_stall,
 
     // Input
+    input wire [7:0] i_tag,
     input wire [31:0] i_instruction,
     input wire [31:0] i_pc,
 
     // Output
+    output reg [7:0] o_tag,
     output wire [31:0] o_instruction,
     output wire [31:0] o_pc,
     output wire [4:0] o_inst_rs1,
     output wire [4:0] o_inst_rs2,
     output wire [4:0] o_inst_rd,
     output wire [31:0] o_imm,
-    output wire o_branch,
-    output reg o_ready
+    output wire o_branch
 );
 
     reg [31:0] instruction = 0;
@@ -52,20 +53,17 @@ module CPU_Decode(
     assign o_branch = is_BRANCH;
 
     initial begin
-        o_ready <= 0;
+        o_tag <= 0;
     end
 
     always @(posedge i_clock) begin
-        if (i_execute) begin
+        if (!i_stall && i_tag != o_tag) begin
             $display("decode instruction %x", i_instruction);
 
             instruction <= i_instruction;
             pc <= i_pc;
 
-            o_ready <= 1;
-        end
-        else begin
-            o_ready <= 0;
+            o_tag <= i_tag;
         end
     end
 

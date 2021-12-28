@@ -112,7 +112,7 @@ module SoC_v2_tb;
 */
         reset <= 0;
 
-		repeat(50) @(posedge clock);
+		repeat(200) @(posedge clock);
 
 		$finish;
 	end

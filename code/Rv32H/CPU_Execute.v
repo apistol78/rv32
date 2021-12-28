@@ -1,9 +1,10 @@
 module CPU_Execute (
     input wire i_reset,
     input wire i_clock,
-    input wire i_execute,
+    input wire i_stall,
 
     // Input
+    input wire [7:0] i_tag,
     input wire [31:0] i_pc,
     input wire [31:0] i_instruction,
     input wire [31:0] i_rs1,
@@ -13,6 +14,8 @@ module CPU_Execute (
     input wire i_branch,
 
     // Output
+    output reg [7:0] o_tag,
+
     output reg [4:0] o_inst_rd,
     output reg [31:0] o_rd,
 
@@ -21,9 +24,7 @@ module CPU_Execute (
 
     output reg o_mem_read,
     output reg o_mem_write,
-    output reg [31:0] o_mem_address,
-
-    output reg o_ready
+    output reg [31:0] o_mem_address
 );
     `define INSTRUCTION i_instruction
     `include "Instructions_i.v"
@@ -47,11 +48,11 @@ module CPU_Execute (
         o_mem_read <= 0;
         o_mem_write <= 0;
         o_mem_address <= 0;
-        o_ready <= 0;
+        o_tag <= 0;
     end
 
     always @(posedge i_clock) begin
-        if (i_execute) begin
+        if (!i_stall && i_tag != o_tag) begin
             $display("execute %x", i_instruction);
             $display("   PC %x", i_pc);
             $display("  rs1 %x", i_rs1);
@@ -60,18 +61,19 @@ module CPU_Execute (
 
             o_branch <= i_branch;
             o_pc_next <= i_pc;
+            o_mem_read <= 0;
+            o_mem_write <= 0;
 
             `include "Instructions_d.v"
 
+            o_tag <= i_tag;
             o_inst_rd <= i_inst_rd;
-            o_ready <= 1;
         end
-        else begin
-            o_inst_rd <= 0;
-            o_mem_read <= 0;
-            o_mem_write <= 0;
-            o_ready <= 0;
-        end
+        // else begin
+        //     o_inst_rd <= 0;
+        //     o_mem_read <= 0;
+        //     o_mem_write <= 0;
+        // end
     end
 
 endmodule
