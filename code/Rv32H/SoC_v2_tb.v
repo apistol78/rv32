@@ -104,7 +104,8 @@ module SoC_v2_tb;
 	wire [31:0] video_wdata;
 	wire [31:0] video_rdata;
 	Video_tb video(
-		.i_enable(video_select && cpu_request),
+		.i_clock(clock),
+		.i_request(video_select && cpu_request),
 		.i_rw(video_rw),
 		.i_address(video_address),
 		.i_wdata(video_wdata),
@@ -273,7 +274,7 @@ module SoC_v2_tb;
 */
         reset <= 0;
 
-		repeat(400) @(posedge clock);
+		repeat(600) @(posedge clock);
 
 		$finish;
 	end

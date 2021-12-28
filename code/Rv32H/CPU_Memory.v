@@ -6,7 +6,7 @@ module CPU_Memory(
 	// Bus
 	output reg o_bus_rw,
 	output reg o_bus_request,
-	output wire i_bus_ready,
+	input wire i_bus_ready,
 	output reg [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata,
 	output reg [31:0] o_bus_wdata,

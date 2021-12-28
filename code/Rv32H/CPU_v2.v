@@ -151,12 +151,22 @@ module CPU_v2 (
 	//====================================================
 	// EXECUTE
 
+	// Need to keep output after writeback, probably due to
+	// register file update takes one cycle.
+	reg [4:0] last_inst_rd;
+	reg [31:0] last_rd;
+	always @(posedge i_clock) begin
+		last_inst_rd <= writeback_inst_rd;
+		last_rd <= writeback_rd;
+	end
+
 	// Forward register values from pipeline if already in flight.
 	wire [31:0] fwd_rs1 = 
 		(decode_inst_rs1 == 0) ? 32'h0 :
 		(decode_inst_rs1 == execute_inst_rd) ? execute_rd :
 		(decode_inst_rs1 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs1 == writeback_inst_rd) ? writeback_rd :
+		(decode_inst_rs1 == last_inst_rd) ? last_rd :
 		rs1;
 
 	wire [31:0] fwd_rs2 =
@@ -164,6 +174,7 @@ module CPU_v2 (
 		(decode_inst_rs2 == execute_inst_rd) ? execute_rd :
 		(decode_inst_rs2 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
+		(decode_inst_rs2 == last_inst_rd) ? last_rd :
 		rs2;
 
 	wire [7:0] execute_tag;
@@ -176,6 +187,7 @@ module CPU_v2 (
 	wire [2:0] execute_mem_width;
 	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
+	wire [31:0] execute_mem_wdata;
 	
 	CPU_Execute execute(
 		.i_reset(i_reset),
