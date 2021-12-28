@@ -17,10 +17,13 @@ module BROM(
 `endif
 
 	//always @(posedge i_clock)
-	always @(posedge i_request)
-		//if (i_request) begin
+	always @(*) //posedge i_request)
+		if (i_request) begin
 			o_rdata <= data[i_address >> 2];
-		//end
+		end
+		else begin
+			o_rdata <= 32'hx;
+		end
 
 	//always @(posedge i_clock)
 	always @(*)

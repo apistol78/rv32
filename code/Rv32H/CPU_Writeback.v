@@ -25,7 +25,7 @@ module CPU_Writeback(
     end
 
     always @(posedge i_clock) begin
-        if (!i_stall && i_tag != o_tag) begin
+        if (i_tag != o_tag) begin
             $display("writeback, store %x in R[%d]", i_rd, i_inst_rd);
             
             o_inst_rd <= i_inst_rd;
@@ -34,12 +34,6 @@ module CPU_Writeback(
             o_pc_next <= i_pc_next;
             o_tag <= i_tag;
         end
-        // else begin
-        //     o_inst_rd <= 0;
-        //     o_rd <= 0;
-        //     o_branch <= 0;
-        //     o_ready <= 0;
-        // end
     end
 
 endmodule

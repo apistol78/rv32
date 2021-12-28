@@ -35,18 +35,19 @@ module CPU_Fetch(
 		o_pc <= 0;
 	end
 
+	always @(*) begin
+		if (!i_stall && state == 0) begin
+			o_bus_address <= pc;
+			o_bus_request <= 1;
+		end
+		else begin
+			o_bus_request <= 0;
+		end
+	end
+
 	always @(posedge i_clock) begin
 		case (state)
 			0: begin
-				if (!i_stall) begin
-					$display("fetch %x", pc);
-					o_bus_address <= pc;
-					o_bus_request <= 1;
-					state <= 1;
-				end
-			end
-
-			1: begin
 				if (i_bus_ready) begin
 
 					o_tag <= tag + 1;
@@ -57,19 +58,16 @@ module CPU_Fetch(
 					tag <= tag + 1;
 					pc <= pc + 4;
 
-					if (!is_BRANCH) begin
-						state <= 0;
-					end
-					else begin
+					if (is_BRANCH) begin
 						// Branch instruction, need to wait
 						// for an explicit "goto" signal before
 						// we can continue feeding the pipeline.
-						state <= 2;
+						state <= 1;
 					end
 				end
 			end
 
-			2: begin
+			1: begin
 				// Wait for branch result.
 				if (i_branch) begin
 					$display("fetch, accepting branch to %x", i_pc_next);
@@ -77,7 +75,6 @@ module CPU_Fetch(
 					state <= 0;
 				end
 			end
-
 		endcase
 	end
 

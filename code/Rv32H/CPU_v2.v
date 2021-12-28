@@ -152,8 +152,17 @@ module CPU_v2 (
 	// EXECUTE
 
 	// Forward register values from pipeline if already in flight.
-	wire [31:0] fwd_rs1 = (decode_inst_rs1 == memory_inst_rd) ? memory_rd : rs1;
-	wire [31:0] fwd_rs2 = (decode_inst_rs2 == memory_inst_rd) ? memory_rd : rs2;
+	wire [31:0] fwd_rs1 = 
+		(decode_inst_rs1 == 0) ? 32'h0 :
+		(decode_inst_rs1 == memory_inst_rd) ? memory_rd :
+		(decode_inst_rs1 == writeback_inst_rd) ? writeback_rd :
+		rs1;
+
+	wire [31:0] fwd_rs2 =
+		(decode_inst_rs2 == 0) ? 32'h0 :
+		(decode_inst_rs2 == memory_inst_rd) ? memory_rd :
+		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
+		rs2;
 
 	wire [7:0] execute_tag;
 	wire [4:0] execute_inst_rd;

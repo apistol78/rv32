@@ -13,15 +13,15 @@ module BRAM(
 	initial o_ready = 0;
 
 	//always @(posedge i_clock) begin
-	always @(posedge i_request) begin
-		//if (i_request) begin
+	always @(*) begin
+		if (i_request) begin
 			if (!i_rw) begin
 				o_rdata <= data[i_address >> 2];
 			end
 			else begin
 				data[i_address >> 2] <= i_wdata;
 			end
-		//end
+		end
 	end
 
 	//always @(posedge i_clock)

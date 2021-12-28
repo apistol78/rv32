@@ -27,7 +27,7 @@ module CPU_Memory(
 	output reg [31:0] o_rd,
 	output reg o_branch,
 	output reg [31:0] o_pc_next,
-	output reg o_stall
+	output wire o_stall
 );
 
 	reg read_pending = 0;
@@ -43,62 +43,33 @@ module CPU_Memory(
 		o_rd <= 0;
 		o_branch <= 0;
 		o_pc_next <= 0;
-		o_stall <= 0;
 	end
 
-	always @(posedge i_clock) begin
+	always @(*) begin
+		o_bus_rw <= i_mem_write;
+		o_bus_address <= i_mem_address;
+		o_bus_request <= i_mem_read || i_mem_write;
+		//o_bus_wdata <= i_rd;
+	end
 
-		if (read_pending) begin
-			if (i_bus_ready) begin
-				o_bus_request <= 0;
-				o_rd <= i_bus_rdata;
-				o_tag <= i_tag;
-				o_stall <= 0;
-				read_pending <= 0;
-			end
-		end
-		else if (write_pending) begin
-			if (i_bus_ready) begin
-				o_bus_request <= 0;
-				o_tag <= i_tag;
-				o_stall <= 0;
-				write_pending <= 0;
-			end
-		end
-		else if (i_tag != o_tag) begin
+	assign o_stall = (i_mem_read || i_mem_write) ? !i_bus_ready : 0;
+
+	always @(posedge i_clock) begin
+		if (i_tag != o_tag) begin
 			// Pass through
 			o_inst_rd <= i_inst_rd;
-			o_rd <= i_rd;
+			
+			if (i_mem_read)
+				o_rd <= i_bus_rdata;
+			else
+				o_rd <= i_rd;
+
+			o_bus_wdata <= i_rd;
+
 			o_branch <= i_branch;
 			o_pc_next <= i_pc_next;    
-
-			if (i_mem_read) begin
-				$display("memory read %x begin", i_mem_address);
-				o_bus_rw <= 0;
-				o_bus_request <= 1;
-				o_bus_address <= i_mem_address;
-				read_pending <= 1;
-				o_stall <= 1;
-			end
-			else if (i_mem_write) begin
-				$display("memory write %x begin", i_mem_address);
-				o_bus_rw <= 1;
-				o_bus_request <= 1;
-				o_bus_address <= i_mem_address;
-				o_bus_wdata <= i_rd;
-				write_pending <= 1;
-				o_stall <= 1;
-			end
-			else begin
-				$display("no memory access");
-				o_tag <= i_tag;
-			end
+			o_tag <= i_tag;
 		end
-		// else begin
-		// 	o_inst_rd <= 0;
-		// 	o_ready <= 0;
-		// end
-
 	end
 
 endmodule

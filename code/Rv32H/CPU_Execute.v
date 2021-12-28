@@ -69,11 +69,6 @@ module CPU_Execute (
             o_tag <= i_tag;
             o_inst_rd <= i_inst_rd;
         end
-        // else begin
-        //     o_inst_rd <= 0;
-        //     o_mem_read <= 0;
-        //     o_mem_write <= 0;
-        // end
     end
 
 endmodule
