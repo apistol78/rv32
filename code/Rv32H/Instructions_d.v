@@ -346,11 +346,29 @@ else if (is_R) begin
 end
 else if (is_S) begin
 
+	// SB
+	if (is_SB) begin
+		$display("	SB");
+		
+				`MEM_WRITE_B(`RS1 + $signed(`IMM), `RS2);
+				`EXECUTE_DONE;
+			
+	end
+
+	// SH
+	else if (is_SH) begin
+		$display("	SH");
+		
+				`MEM_WRITE_H(`RS1 + $signed(`IMM), `RS2);
+				`EXECUTE_DONE;
+			
+	end
+
 	// SW
-	if (is_SW) begin
+	else if (is_SW) begin
 		$display("	SW");
 		
-				`MEM_WRITE(`RS1 + $signed(`IMM), `RS2);
+				`MEM_WRITE_W(`RS1 + $signed(`IMM), `RS2);
 				`EXECUTE_DONE;
 			
 	end

@@ -32,6 +32,12 @@ module CPU_Memory(
 	output wire o_stall
 );
 
+	localparam STATE_RMW_READ			= 1;
+	localparam STATE_RMW_RST_REQUEST	= 2;
+	localparam STATE_RMW_WAIT_WRITE		= 3;
+
+	reg [4:0] state = 0;
+
 	initial begin
 		o_bus_wdata <= 0;
 		o_tag <= 0;
@@ -41,39 +47,96 @@ module CPU_Memory(
 		o_pc_next <= 0;
 	end
 
-	assign o_bus_rw = i_mem_write;
-	assign o_bus_address = i_mem_address;
-	assign o_bus_request = (i_mem_read || i_mem_write) && (i_tag != o_tag);
+	// Stall pipeline if we perform a memory access.
 	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write);
 
+	assign o_bus_address = { i_mem_address[31:2], 2'b00 };
+	assign o_bus_rw =
+		i_mem_width == 4 ? i_mem_write :
+		i_mem_width == 2 ? (i_mem_write && (state == STATE_RMW_WAIT_WRITE)) :
+		i_mem_width == 1 ? (i_mem_write && (state == STATE_RMW_WAIT_WRITE)) :
+		1'b0;
+	assign o_bus_request = 
+		(i_mem_read || i_mem_write) && (i_tag != o_tag) && (state != STATE_RMW_RST_REQUEST);
+
+	wire [1:0] address_byte_index = i_mem_address[1:0];
+	wire [7:0] bus_rdata_byte = i_bus_rdata >> (address_byte_index * 8);
+	wire [15:0] bus_rdata_half = i_bus_rdata >> (address_byte_index * 8);
+
 	always @(posedge i_clock) begin
-		if (i_tag != o_tag) begin
-			o_inst_rd <= i_inst_rd;
-			
-			if (i_mem_read) begin
-				// Extend the data received from bus.
-				case (i_mem_width)
-					4: o_rd <= i_bus_rdata;
-					2: o_rd <= { { 16{ i_mem_signed & i_bus_rdata[15] } }, i_bus_rdata[15:0] };
-					1: o_rd <= { { 24{ i_mem_signed & i_bus_rdata[7] } }, i_bus_rdata[7:0] };
-				endcase
+		case(state)
+			0: begin
+				if (i_tag != o_tag) begin
+					// Patch through.
+					o_branch <= i_branch;
+					o_pc_next <= i_pc_next; 
+					o_inst_rd <= i_inst_rd;
+
+					if (i_mem_read) begin
+						// Single read cycle.
+						if (i_bus_ready) begin
+							case (i_mem_width)
+								4: o_rd <= i_bus_rdata;
+								2: o_rd <= { { 16{ i_mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
+								1: o_rd <= { { 24{ i_mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
+							endcase
+							o_tag <= i_tag;
+						end
+					end
+					else if (i_mem_write) begin
+						if (i_mem_width == 4) begin
+							// Single write cycle.
+							o_bus_wdata <= i_rd;
+							if (i_bus_ready)
+								o_tag <= i_tag;
+						end
+						else begin
+							// Read-modify-write cycle.
+							state <= STATE_RMW_READ;
+						end
+					end
+					else begin
+						// No memory access.
+						o_rd <= i_rd;
+						o_tag <= i_tag;
+					end
+				end
 			end
-			else
-				o_rd <= i_rd;
 
-			o_bus_wdata <= i_rd;
+			// =============
+			// Read-modify-write
+			STATE_RMW_READ: begin
+				if (i_bus_ready) begin
+					// Modify value.
+					if (i_mem_width == 1) begin
+						case ( address_byte_index  )
+							2'd0: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16], i_bus_rdata[15:8],        i_rd[7:0] };
+							2'd1: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16],         i_rd[7:0], i_bus_rdata[7:0] };
+							2'd2: o_bus_wdata <= { i_bus_rdata[31:24],          i_rd[7:0], i_bus_rdata[15:8], i_bus_rdata[7:0] };
+							2'd3: o_bus_wdata <= {          i_rd[7:0], i_bus_rdata[23:16], i_bus_rdata[15:8], i_bus_rdata[7:0] };
+						endcase
+					end
+					else begin	// width must be 2
+						case ( address_byte_index  )
+							2'd0: o_bus_wdata <= { i_bus_rdata[31:16],        i_rd[15:0] };
+							2'd2: o_bus_wdata <= {         i_rd[15:0], i_bus_rdata[15:0] };
+						endcase						
+					end
+					state <= STATE_RMW_RST_REQUEST;
+				end
+			end
 
-			o_branch <= i_branch;
-			o_pc_next <= i_pc_next;    
+			STATE_RMW_RST_REQUEST: begin
+				state <= STATE_RMW_WAIT_WRITE;
+			end
 
-			if (i_mem_read || i_mem_write) begin
-				if (i_bus_ready)
+			STATE_RMW_WAIT_WRITE: begin
+				if (i_bus_ready) begin
 					o_tag <= i_tag;
+					state <= 0;
+				end
 			end
-			else begin
-				o_tag <= i_tag;
-			end
-		end
+		endcase
 	end
 
 endmodule

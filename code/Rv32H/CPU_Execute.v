@@ -70,10 +70,22 @@ module CPU_Execute (
 		o_mem_width <= 1;			\
 		o_mem_signed <= 1;
 
-	`define MEM_WRITE(ADDR, DATA)	\
+	`define MEM_WRITE_W(ADDR, DATA)	\
 		o_mem_address <= ADDR;		\
 		o_mem_write <= 1;			\
 		o_mem_width <= 4;			\
+		o_rd <= DATA;
+
+	`define MEM_WRITE_H(ADDR, DATA)	\
+		o_mem_address <= ADDR;		\
+		o_mem_write <= 1;			\
+		o_mem_width <= 2;			\
+		o_rd <= DATA;
+
+	`define MEM_WRITE_B(ADDR, DATA)	\
+		o_mem_address <= ADDR;		\
+		o_mem_write <= 1;			\
+		o_mem_width <= 1;			\
 		o_rd <= DATA;
 
 	`define EXECUTE_DONE

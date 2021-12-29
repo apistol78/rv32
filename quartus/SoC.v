@@ -137,9 +137,11 @@ module SoC(
       output             UART_TX
 );
 
+`define SOC_ENABLE_UART
+
 	assign reset = !CPU_RESET_n;
-//	assign clock = CLOCK_50_B5B;
-	assign clock = CLOCK_125_p;
+	assign clock = CLOCK_50_B5B;
+//	assign clock = CLOCK_125_p;
 	
 	/*
 	reg [2:0] counter = 0;
