@@ -138,7 +138,8 @@ module SoC(
 );
 
 	assign reset = !CPU_RESET_n;
-	assign clock = CLOCK_50_B5B;
+//	assign clock = CLOCK_50_B5B;
+	assign clock = CLOCK_125_p;
 	
 	/*
 	reg [2:0] counter = 0;
@@ -148,6 +149,7 @@ module SoC(
 	assign clock = counter[0];
 	*/
   
+`ifdef SOC_ENABLE_VGA
 	wire vga_enable;
 	wire [15:0] vga_address;
   
@@ -180,7 +182,7 @@ module SoC(
 	);
 	
 	assign HDMI_TX_DE = vga_enable;
-	
+`endif
 	
 	// ROM
 	wire rom_select;
@@ -269,6 +271,7 @@ module SoC(
 		.LEDR(LEDR)
 	);
 	
+`ifdef SOC_ENABLE_UART
 	// UART
 	wire uart_select;
 	wire [31:0] uart_rdata;
@@ -292,8 +295,9 @@ module SoC(
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
 	);
+`endif
 	
-	/*
+`ifdef SOC_ENABLE_GPIO
 	// GPIO
 	wire gpio_select;
 	wire [31:0] gpio_address;
@@ -310,8 +314,9 @@ module SoC(
 		// ---
 		.GPIO(GPIO)
 	);
-	*/
+`endif
 
+`ifdef SOC_ENABLE_I2C
 	// I2C
 	wire i2c_select;
 	wire [31:0] i2c_rdata;
@@ -327,7 +332,9 @@ module SoC(
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA(I2C_SDA)
 	);
-	
+`endif
+
+`ifdef SOC_ENABLE_SD
 	// SD
 	wire sd_select;
 	wire [31:0] sd_rdata;
@@ -345,7 +352,8 @@ module SoC(
 		.SD_CMD(SD_CMD),
 		.SD_DAT(SD_DAT)
 	);
-
+`endif
+	
 	// CPU
 	wire cpu_rw;
 	wire cpu_request;
@@ -353,17 +361,17 @@ module SoC(
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
-	wire [2:0] cpu_state;
-	CPU cpu(
-		.i_reset(reset),
+	CPU_v2 cpu(
+        .i_reset(reset),
 		.i_clock(clock),
-		.o_rw(cpu_rw),
-		.o_request(cpu_request),
-		.i_ready(cpu_ready),
-		.o_address(cpu_address),
-		.i_data(cpu_rdata),
-		.o_data(cpu_wdata),
-		.o_state(cpu_state)
+
+		// Bus
+		.o_bus_rw(cpu_rw),
+		.o_bus_request(cpu_request),
+		.i_bus_ready(cpu_ready),
+		.o_bus_address(cpu_address),
+		.i_bus_rdata(cpu_rdata),
+		.o_bus_wdata(cpu_wdata)
 	);
 	
 	//=====================================
@@ -377,45 +385,71 @@ module SoC(
 	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram32_address = cpu_address - 32'h10000000;
 	
+`ifdef SOC_ENABLE_VGA
 	assign vram_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
 	assign vram_address = cpu_address - 32'h40000000;
-	
+`endif
+
 	assign led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 	
+`ifdef SOC_ENABLE_UART
 	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
+`endif
 
-	/*
+`ifdef SOC_ENABLE_GPIO
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
 	assign gpio_address = cpu_address - 32'h50000020;
-	*/
+`endif
 	
+`ifdef SOC_ENABLE_I2C
 	assign i2c_select = (cpu_address >= 32'h50000030 && cpu_address < 32'h50000040);
-	
+`endif
+
+`ifdef SOC_ENABLE_SD
 	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
+`endif
 
 	assign cpu_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 		sram32_select ? sram32_rdata :
+`ifdef SOC_ENABLE_UART
 		uart_select ? uart_rdata :
-		//gpio_select ? gpio_rdata :
+`endif
+`ifdef SOC_ENABLE_GPIO
+		gpio_select ? gpio_rdata :
+`endif
+`ifdef SOC_ENABLE_SD
 		sd_select ? sd_rdata :
+`endif
+`ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_rdata :
+`endif
 		32'h00000000;
 		
 	assign cpu_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		sram32_select ? sram32_ready :
+`ifdef SOC_ENABLE_VGA
 		vram_select ? vram_ready :
+`endif
 		led_select ? led_ready :
+`ifdef SOC_ENABLE_UART
 		uart_select ? uart_ready :
-		//gpio_select ? gpio_ready :
+`endif
+`ifdef SOC_ENABLE_GPIO
+		gpio_select ? gpio_ready :
+`endif
+`ifdef SOC_ENABLE_SD
 		sd_select ? sd_ready :
+`endif
+`ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_ready :
+`endif
 		1'b0;
 
 	// 7:0
-	assign LEDG = { SD_DAT, sd_select, cpu_state };
+	//assign LEDG = { SD_DAT, sd_select };
 
 endmodule

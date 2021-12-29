@@ -4,10 +4,10 @@ module CPU_Memory(
 	input wire i_stall,
 
 	// Bus
-	output reg o_bus_rw,
-	output reg o_bus_request,
+	output wire o_bus_rw,
+	output wire o_bus_request,
 	input wire i_bus_ready,
-	output reg [31:0] o_bus_address,
+	output wire [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata,
 	output reg [31:0] o_bus_wdata,
 
@@ -32,13 +32,7 @@ module CPU_Memory(
 	output wire o_stall
 );
 
-	reg read_pending = 0;
-	reg write_pending = 0;
-
 	initial begin
-		o_bus_rw <= 0;
-		o_bus_request <= 0;
-		o_bus_address <= 0;
 		o_bus_wdata <= 0;
 		o_tag <= 0;
 		o_inst_rd <= 0;
@@ -47,13 +41,10 @@ module CPU_Memory(
 		o_pc_next <= 0;
 	end
 
-	always @(*) begin
-		o_bus_rw <= i_mem_write;
-		o_bus_address <= i_mem_address;
-		o_bus_request <= i_mem_read || i_mem_write;
-	end
-
-	assign o_stall = (i_mem_read || i_mem_write) ? !i_bus_ready : 0;
+	assign o_bus_rw = i_mem_write;
+	assign o_bus_address = i_mem_address;
+	assign o_bus_request = (i_mem_read || i_mem_write) && (i_tag != o_tag);
+	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write);
 
 	always @(posedge i_clock) begin
 		if (i_tag != o_tag) begin
@@ -74,7 +65,14 @@ module CPU_Memory(
 
 			o_branch <= i_branch;
 			o_pc_next <= i_pc_next;    
-			o_tag <= i_tag;
+
+			if (i_mem_read || i_mem_write) begin
+				if (i_bus_ready)
+					o_tag <= i_tag;
+			end
+			else begin
+				o_tag <= i_tag;
+			end
 		end
 	end
 

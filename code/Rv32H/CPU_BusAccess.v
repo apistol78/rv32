@@ -4,7 +4,7 @@ module CPU_BusAccess(
 
 	// Bus
 	output reg o_bus_rw,				// Data read/write
-	output reg o_bus_request,			// IO request.
+	output wire o_bus_request,			// IO request.
 	input wire i_bus_ready,				// IO request ready.
 	output reg [31:0] o_bus_address,	// Address
 	input wire [31:0] i_bus_rdata,		// Read data
@@ -13,55 +13,59 @@ module CPU_BusAccess(
 	// Port A
 	input wire i_pa_rw,
 	input wire i_pa_request,
-	output reg o_pa_ready,
+	output wire o_pa_ready,
 	input wire [31:0] i_pa_address,
-	output reg [31:0] o_pa_rdata,
+	output wire [31:0] o_pa_rdata,
 	input wire [31:0] i_pa_wdata,
 
 	// Port B
 	input wire i_pb_rw,
 	input wire i_pb_request,
-	output reg o_pb_ready,
+	output wire o_pb_ready,
 	input wire [31:0] i_pb_address,
-	output reg [31:0] o_pb_rdata,
+	output wire [31:0] o_pb_rdata,
 	input wire [31:0] i_pb_wdata
 );
 
-	initial begin
-		o_bus_rw <= 0;
-		o_bus_request <= 0;
-		o_bus_address <= 0;
-		o_bus_wdata <= 0;
+	reg [1:0] state = 2'd0;
 
-		o_pa_ready <= 0;
-		o_pb_ready <= 0;
+	initial begin
+		o_bus_rw <= 1'b0;
 	end
 
-	always @(*) begin
+	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
+	assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
+	assign o_pa_rdata = i_pa_request && i_pa_rw == 1'b0 && (state == 2'd1) ? i_bus_rdata : 32'hz;
+	assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
+	assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
 
-		if (i_pb_request) begin
-			o_bus_rw <= i_pb_rw;
-			o_bus_request <= 1;
-			o_bus_address <= i_pb_address;
-			o_bus_wdata <= i_pb_wdata;
-			o_pb_ready <= i_bus_ready;
-			o_pb_rdata <= i_bus_rdata;
+	always @(posedge i_clock) begin
+		case (state)
 
-			o_pa_ready <= 0;			
-		end
-		else if (i_pa_request) begin
-			o_bus_rw <= i_pa_rw;
-			o_bus_request <= 1;
-			o_bus_address <= i_pa_address;
-			o_bus_wdata <= i_pa_wdata;
-			o_pa_ready <= i_bus_ready;
-			o_pa_rdata <= i_bus_rdata;
+			// Wait for any request.
+			2'd0: begin
+				if (i_pb_request) begin
+					o_bus_rw <= i_pb_rw;
+					o_bus_address <= i_pb_address;
+					o_bus_wdata <= i_pb_rw ? i_pb_wdata : 32'hz;
+					state <= 2'd2;
+				end
+				else if (i_pa_request) begin
+					o_bus_rw <= i_pa_rw;
+					o_bus_address <= i_pa_address;
+					o_bus_wdata <= i_pa_rw ? i_pa_wdata : 32'hz;
+					state <= 2'd1;		
+				end
+			end
 
-			o_pb_ready <= 0;
-		end
-		else begin
-			o_bus_request <= 0;
-		end
+			// Wait until request has been processed.
+			2'd1, 2'd2: begin
+				if (i_bus_ready) begin
+					state <= 2'd0;
+				end
+			end
+
+		endcase
 	end
 
 endmodule

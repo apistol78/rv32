@@ -40,45 +40,35 @@ module CPU_Execute (
 
 	`define GOTO(ADDR) o_pc_next <= ADDR;
 
-	/*
-	 * \note
-	 * Reset o_inst_rd so "register forwarding" doesn't use
-	 * our o_rd value.
-	 */
 	`define MEM_READ_W(ADDR)		\
 		o_mem_address <= ADDR;		\
 		o_mem_read <= 1;			\
 		o_mem_width <= 4;			\
-		o_mem_signed <= 0;			\
-		o_inst_rd <= 0;
+		o_mem_signed <= 0;
 
 	`define MEM_READ_UH(ADDR)		\
 		o_mem_address <= ADDR;		\
 		o_mem_read <= 1;			\
 		o_mem_width <= 2;			\
-		o_mem_signed <= 0;			\
-		o_inst_rd <= 0;
+		o_mem_signed <= 0;
 
 	`define MEM_READ_SH(ADDR)		\
 		o_mem_address <= ADDR;		\
 		o_mem_read <= 1;			\
 		o_mem_width <= 2;			\
-		o_mem_signed <= 1;			\
-		o_inst_rd <= 0;
+		o_mem_signed <= 1;
 
 	`define MEM_READ_UB(ADDR)		\
 		o_mem_address <= ADDR;		\
 		o_mem_read <= 1;			\
 		o_mem_width <= 1;			\
-		o_mem_signed <= 0;			\
-		o_inst_rd <= 0;
+		o_mem_signed <= 0;
 
 	`define MEM_READ_SB(ADDR)		\
 		o_mem_address <= ADDR;		\
 		o_mem_read <= 1;			\
 		o_mem_width <= 1;			\
-		o_mem_signed <= 1;			\
-		o_inst_rd <= 0;
+		o_mem_signed <= 1;
 
 	`define MEM_WRITE(ADDR, DATA)	\
 		o_mem_address <= ADDR;		\
@@ -102,16 +92,14 @@ module CPU_Execute (
 
 	always @(posedge i_clock) begin
 		if (!i_stall && i_tag != o_tag) begin
-			/*
-			$display("execute %x", i_instruction);
+			$display("Execute %x (%d)", i_instruction, i_tag);
 			$display("   PC %x", i_pc);
-			$display("  rs1 %x", i_rs1);
-			$display("  rs2 %x", i_rs2);
-			$display("  imm %d", i_imm);
-			*/
+			$display("  RS1 %x", i_rs1);
+			$display("  RS2 %x", i_rs2);
+			$display("  IMM %d", i_imm);
 
 			o_branch <= i_branch;
-			o_pc_next <= i_pc;
+			o_pc_next <= i_pc + 4;
 			o_mem_read <= 0;
 			o_mem_write <= 0;
 			o_mem_width <= 0;
