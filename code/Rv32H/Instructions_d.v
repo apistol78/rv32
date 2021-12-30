@@ -65,35 +65,8 @@ if (is_B) begin
 end
 else if (is_I) begin
 
-	// ADDI
-	if (is_ADDI) begin
-		$display("	ADDI");
-		
-				`RD <= $signed(`RS1) + $signed(`IMM);
-				`EXECUTE_DONE;
-			
-	end
-
-	// ADDIW
-	else if (is_ADDIW) begin
-		$display("	ADDIW");
-		
-				`RD <= `RS1 + `IMM;
-				`EXECUTE_DONE;
-			
-	end
-
-	// ANDI
-	else if (is_ANDI) begin
-		$display("	ANDI");
-		
-				`RD <= `RS1 & `IMM;
-				`EXECUTE_DONE;
-			
-	end
-
 	// JALR
-	else if (is_JALR) begin
+	if (is_JALR) begin
 		$display("	JALR");
 		
 				`RD <= `PC + 4;
@@ -156,15 +129,6 @@ else if (is_I) begin
 			
 	end
 
-	// ORI
-	else if (is_ORI) begin
-		$display("	ORI");
-		
-				`RD <= `RS1 | `IMM;
-				`EXECUTE_DONE;
-			
-	end
-
 	// SLTI
 	else if (is_SLTI) begin
 		$display("	SLTI");
@@ -208,47 +172,11 @@ else if (is_J) begin
 end
 else if (is_R) begin
 
-	// ADD
-	if (is_ADD) begin
-		$display("	ADD");
-		
-				`RD <= alu_rs1_add_rs2; // $signed(`RS1) + $signed(`RS2);
-				`EXECUTE_DONE;
-			
-	end
-
-	// ADDW
-	else if (is_ADDW) begin
-		$display("	ADDW");
-		
-				`RD <= `RS1 + `RS2;
-				`EXECUTE_DONE;
-			
-	end
-
-	// AND
-	else if (is_AND) begin
-		$display("	AND");
-		
-				`RD <= `RS1 & `RS2;
-				`EXECUTE_DONE;
-			
-	end
-
 	// MUL
-	else if (is_MUL) begin
+	if (is_MUL) begin
 		$display("	MUL");
 		
 				`RD <= $signed(`RS1) * $signed(`RS2);
-				`EXECUTE_DONE;
-			
-	end
-
-	// OR
-	else if (is_OR) begin
-		$display("	OR");
-		
-				`RD <= `RS1 | `RS2;
 				`EXECUTE_DONE;
 			
 	end

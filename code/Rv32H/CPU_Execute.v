@@ -1,3 +1,5 @@
+`include "CPU_Defines.v"
+
 module CPU_Execute (
 	input wire i_reset,
 	input wire i_clock,
@@ -91,11 +93,14 @@ module CPU_Execute (
 	`define EXECUTE_DONE
 	`define ERROR
 
-	wire [31:0] alu_rs1_add_rs2;
+	`include "Instructions_alu.v"
+
+	wire [31:0] alu_result;
 	CPU_ALU alu(
-		.i_rs1(i_rs1),
-		.i_rs2(i_rs2),
-		.o_rs1_add_rs2(alu_rs1_add_rs2)
+		.i_op(alu_operation),
+		.i_op1(alu_operand1),
+		.i_op2(alu_operand2),
+		.o_result(alu_result)
 	);
 
 	initial begin
@@ -124,7 +129,12 @@ module CPU_Execute (
 			o_mem_width <= 0;
 			o_inst_rd <= i_inst_rd;
 
-			`include "Instructions_d.v"
+			if (is_ALU) begin
+				o_rd <= alu_result;
+			end
+			else begin
+				`include "Instructions_d.v"
+			end
 
 			o_tag <= i_tag;
 		end

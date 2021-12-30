@@ -51,4 +51,6 @@ wire is_R = is_ADD | is_ADDW | is_AND | is_MUL | is_OR | is_SLL | is_SLLI | is_S
 wire is_S = is_SB | is_SH | is_SW;
 wire is_U = is_AUIPC | is_LUI;
 
+wire is_ALU = is_ADD | is_ADDI | is_ADDIW | is_ADDW | is_AND | is_ANDI | is_OR | is_ORI;
+
 wire is_BRANCH = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE | is_JAL | is_JALR;
