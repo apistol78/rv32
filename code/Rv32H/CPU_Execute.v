@@ -131,7 +131,16 @@ module CPU_Execute (
 			o_inst_rd <= i_inst_rd;
 
 			if (is_ALU) begin
-				o_rd <= alu_result;
+				if (!i_branch) begin
+					o_rd <= alu_result;
+				end
+				else begin
+					// If ALU result non-zero then branch is
+					// taken and PC is updated.
+					if (alu_result) begin
+						`GOTO($signed(`PC) + $signed(`IMM));
+					end
+				end
 			end
 			else begin
 				`include "Instructions_d.v"

@@ -13,6 +13,10 @@ local operations = {
 	ARITHMETIC_SHIFT_RIGHT = "`OP_ARITHMETIC_SHIFT_RIGHT",
 	SIGNED_LESS_THAN = "`OP_SIGNED_LESS_THAN",
 	UNSIGNED_LESS_THAN = "`OP_UNSIGNED_LESS_THAN",
+	EQUAL = "`OP_EQUAL",
+	NOT_EQUAL = "`OP_NOT_EQUAL",
+	SIGNED_GREATER_EQUAL = "`OP_SIGNED_GREATER_EQUAL",
+	UNSIGNED_GREATER_EQUAL = "`OP_UNSIGNED_GREATER_EQUAL",
 }
 
 local operands = {
@@ -240,11 +244,11 @@ local instructions = {
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if (`RS1 == `RS2)
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.EQUAL,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -257,11 +261,11 @@ local instructions = {
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if ($signed(`RS1) >= $signed(`RS2))
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_GREATER_EQUAL,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -274,11 +278,11 @@ local instructions = {
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if (`RS1 >= `RS2)
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.UNSIGNED_GREATER_EQUAL,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -291,11 +295,11 @@ local instructions = {
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if ($signed(`RS1) < $signed(`RS2))
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -308,11 +312,11 @@ local instructions = {
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if (`RS1 < `RS2)
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.UNSIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -325,11 +329,11 @@ local instructions = {
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
-			if (`RS1 != `RS2)
-				`GOTO($signed(`PC) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.NOT_EQUAL,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -1250,10 +1254,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 ^ `RS2;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0x0000707f,
@@ -1269,10 +1269,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 ^ `IMM;
-		-- 	`EXECUTE_DONE;
-		-- ]]	
 	},
 }
 

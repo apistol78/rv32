@@ -10,3 +10,7 @@
 `define OP_ARITHMETIC_SHIFT_RIGHT   9
 `define OP_SIGNED_LESS_THAN         10
 `define OP_UNSIGNED_LESS_THAN       11
+`define OP_EQUAL                    12
+`define OP_NOT_EQUAL                13
+`define OP_SIGNED_GREATER_EQUAL     14
+`define OP_UNSIGNED_GREATER_EQUAL   15

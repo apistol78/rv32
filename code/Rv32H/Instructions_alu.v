@@ -9,6 +9,12 @@ wire [3:0] alu_operation =
 	is_AND ? `OP_AND :
 	is_ANDI ? `OP_AND :
 	is_AUIPC ? `OP_SIGNED_ADD :
+	is_BEQ ? `OP_EQUAL :
+	is_BGE ? `OP_SIGNED_GREATER_EQUAL :
+	is_BGEU ? `OP_UNSIGNED_GREATER_EQUAL :
+	is_BLT ? `OP_SIGNED_LESS_THAN :
+	is_BLTU ? `OP_UNSIGNED_LESS_THAN :
+	is_BNE ? `OP_NOT_EQUAL :
 	is_LUI ? `OP_UNSIGNED_ADD :
 	is_OR ? `OP_OR :
 	is_ORI ? `OP_OR :
@@ -32,6 +38,12 @@ wire [31:0] alu_operand1 =
 	is_AND ? `RS1 :
 	is_ANDI ? `RS1 :
 	is_AUIPC ? `PC :
+	is_BEQ ? `RS1 :
+	is_BGE ? `RS1 :
+	is_BGEU ? `RS1 :
+	is_BLT ? `RS1 :
+	is_BLTU ? `RS1 :
+	is_BNE ? `RS1 :
 	is_LUI ? `IMM :
 	is_OR ? `RS1 :
 	is_ORI ? `RS1 :
@@ -55,6 +67,12 @@ wire [31:0] alu_operand2 =
 	is_AND ? `RS2 :
 	is_ANDI ? `IMM :
 	is_AUIPC ? `IMM :
+	is_BEQ ? `RS2 :
+	is_BGE ? `RS2 :
+	is_BGEU ? `RS2 :
+	is_BLT ? `RS2 :
+	is_BLTU ? `RS2 :
+	is_BNE ? `RS2 :
 	is_LUI ? `ZERO :
 	is_OR ? `RS2 :
 	is_ORI ? `IMM :
