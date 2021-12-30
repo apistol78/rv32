@@ -1,5 +1,6 @@
 
 typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef void (*call_fn_t)();
 
@@ -37,27 +38,12 @@ void fatal_error(uint8_t error)
 		for (uint32_t i = 0; i < 1000000; ++i)
 			__asm__ volatile ("nop");
 	}
-//	__asm__ volatile ("ebreak");
 }
 
 void main()
 {
 	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
 	*leds = 0x00000000;
-
-	// verify sram
-	{
-		volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
-		
-		for (uint32_t i = 0; i < 4; ++i)
-			sram[i] = 0x1122ab00 + i;
-
-		for (uint32_t i = 0; i < 4; ++i)
-		{
-			if (sram[i] != 0x1122ab00 + i)
-				fatal_error(1);
-		}
-	}
 
 	for (;;)
 	{
@@ -103,8 +89,26 @@ void main()
 				uart_tx_u8(0x82);	// Invalid checksum.
 		}
 
-		// jump to
+		// peek
 		else if (cmd == 0x02)
+		{
+			uint32_t addr = uart_rx_u32();
+			uint8_t nb = uart_rx_u8();
+
+			if (nb == 0 || nb > 16)
+			{
+				uart_tx_u8(0x81);	// Invalid data.
+				continue;
+			}
+
+			uart_tx_u8(0x80);	// Ok
+
+			for (uint8_t i = 0; i < nb; ++i)
+				uart_tx_u8(*(uint8_t*)addr++);
+		}
+
+		// jump to
+		else if (cmd == 0x03)
 		{
 			uint32_t addr = uart_rx_u32();
 			uint8_t cs = 0;
@@ -123,6 +127,19 @@ void main()
 			}
 			else
 				uart_tx_u8(0x82);	// Invalid checksum.
+		}
+
+		// enter "mem write read" loop.
+		else if (cmd == 0x04)
+		{
+			volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
+			uint32_t i = 0;
+			for (;;)
+			{
+				sram[4] = 0x1122ab00 + (i & 255);
+				uint32_t v= sram[4];
+				++i;
+			}			
 		}
 	}
 }

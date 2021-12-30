@@ -137,19 +137,20 @@ module SoC(
       output             UART_TX
 );
 
+`define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
+`define SOC_ENABLE_I2C
+`define SOC_ENABLE_SD
 
 	assign reset = !CPU_RESET_n;
 	assign clock = CLOCK_50_B5B;
 //	assign clock = CLOCK_125_p;
 	
-	/*
-	reg [2:0] counter = 0;
-	always @ (posedge CLOCK_50_B5B) begin
-		counter <= counter + 1;
-	end
-	assign clock = counter[0];
-	*/
+//	reg [2:0] counter = 0;
+//	always @ (posedge CLOCK_50_B5B) begin
+//		counter <= counter + 1;
+//	end
+//	assign clock = counter[0];
   
 `ifdef SOC_ENABLE_VGA
 	wire vga_enable;
@@ -215,20 +216,18 @@ module SoC(
 	);
 	
 	// SRAM
-	wire sram16_request;
-	wire sram16_rw;
-	wire [17:0] sram16_address;
-	wire [15:0] sram16_wdata;
-	wire [15:0] sram16_rdata;
-	wire sram16_ready;
+	wire sram32_select;
+	wire [31:0] sram32_address;
+	wire [31:0] sram32_rdata;
+	wire sram32_ready;
 	SRAM_interface sram(
 		.i_clock(clock),
-		.i_request(sram16_request),
-		.i_rw(sram16_rw),
-		.i_address(sram16_address),
-		.i_wdata(sram16_wdata),
-		.o_rdata(sram16_rdata),
-		.o_ready(sram16_ready),
+		.i_request(sram32_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_address(sram32_address),
+		.i_wdata(cpu_wdata),
+		.o_rdata(sram32_rdata),
+		.o_ready(sram32_ready),
 		// ---
 		.SRAM_A(SRAM_A),
 		.SRAM_D(SRAM_D),
@@ -237,28 +236,6 @@ module SoC(
 		.SRAM_WE_n(SRAM_WE_n),
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
-	);
-
-	wire sram32_select;
-	wire [31:0] sram32_address;
-	wire [31:0] sram32_rdata;
-	wire sram32_ready;
-	Memory_16_to_32 sram32(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(sram32_select && cpu_request),
-		.i_rw(cpu_rw),
-		.i_address(sram32_address),
-		.i_wdata(cpu_wdata),
-		.o_rdata(sram32_rdata),
-		.o_ready(sram32_ready),
-
-		.o_ram_request(sram16_request),
-		.o_ram_rw(sram16_rw),
-		.o_ram_address(sram16_address),
-		.o_ram_wdata(sram16_wdata),
-		.i_ram_rdata(sram16_rdata),
-		.i_ram_ready(sram16_ready)
 	);
 
 	// LEDS

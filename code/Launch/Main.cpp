@@ -139,7 +139,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 			cs ^= p[2];
 			cs ^= p[3];
 
-			write< uint8_t >(serial, 0x02);
+			write< uint8_t >(serial, 0x03);
 			write< uint32_t >(serial, linear);
 			write< uint8_t >(serial, cs);
 
@@ -156,6 +156,83 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 
 	log::info << L"HEX uploaded, adress range " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 	return true;
+}
+
+bool memcheck(Serial& serial)
+{
+	uint8_t utd[16];
+	uint8_t ind[16];
+
+	uint8_t cnt = 0;
+	uint32_t error = 0;
+
+	for (uint32_t addr = 0x10000000; addr <= 0x100000ff; addr += 16)
+	{
+		for (int32_t i = 0; i < 16; ++i)
+			utd[i] = cnt++;
+
+		log::info << L"S ";
+		for (int32_t i = 0; i < 16; ++i)
+			log::info << str(L"%02x", utd[i]) << L" ";
+		log::info << Endl;
+
+		// Write random data.
+		uint8_t cs = 0;
+
+		const uint8_t* p = (const uint8_t*)&addr;
+		cs ^= p[0];
+		cs ^= p[1];
+		cs ^= p[2];
+		cs ^= p[3];
+
+		write< uint8_t >(serial, 0x01);
+		write< uint32_t >(serial, addr);
+		write< uint8_t >(serial, 16);
+
+		for (int32_t i = 0; i < 16; ++i)
+		{
+			write< uint8_t >(serial, utd[i]);
+			cs ^= (uint8_t)utd[i];
+		}
+
+		write< uint8_t >(serial, cs);
+
+		uint8_t reply = read< uint8_t >(serial);
+		if (reply != 0x80)
+		{
+			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			return false;
+		}
+
+		// Read back data.
+		write< uint8_t >(serial, 0x02);
+		write< uint32_t >(serial, addr);
+		write< uint8_t >(serial, 16);
+
+		reply = read< uint8_t >(serial);
+		if (reply != 0x80)
+		{
+			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			return false;
+		}
+
+		for (int32_t i = 0; i < 16; ++i)
+			ind[i] = read< uint8_t >(serial);
+
+		log::info << L"R ";
+		for (int32_t i = 0; i < 16; ++i)
+			log::info << str(L"%02x", ind[i]) << L" ";
+
+		if (memcmp(ind, utd, 16) != 0)
+		{
+			log::info << L"MISMATCH!";
+			error++;
+		}
+
+		log::info << Endl;
+	}
+
+	return error == 0;
 }
 
 int main(int argc, const char** argv)
@@ -176,8 +253,17 @@ int main(int argc, const char** argv)
 		return 1;
 	}
 
-	if (!uploadHEX(serial, commandLine.getString(0)))
-		return 1;
+	if (commandLine.hasOption('m', L"memcheck"))
+	{
+		if (!memcheck(serial))
+			return 1;
+	}
+
+	if (commandLine.hasOption('u', L"upload"))
+	{
+		if (!uploadHEX(serial, commandLine.getOption('u', L"upload").getString()))
+			return 1;
+	}
 
 	if (commandLine.hasOption('t', L"terminal"))
 	{

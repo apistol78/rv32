@@ -4,79 +4,86 @@ module SRAM_interface(
 	input wire i_clock,
 	input wire i_request,
 	input wire i_rw,
-	input wire [17:0] i_address,
-	input wire [15:0] i_wdata,
-	output reg [15:0] o_rdata,
-	output reg o_ready,
+	input wire [31:0] i_address,
+	input wire [31:0] i_wdata,
+	output reg [31:0] o_rdata,
+	output wire o_ready,
 
 	output reg [17:0] SRAM_A,
 	inout wire [15:0] SRAM_D,
 	output reg SRAM_CE_n,
-	output reg SRAM_OE_n,
+	output wire SRAM_OE_n,
 	output reg SRAM_WE_n,
 	output reg SRAM_LB_n,
 	output reg SRAM_UB_n
 );
+	// Number of cycles for entire transaction, must to be multiple of 2.
+	// 50 MHz -> 6
+	localparam CYCLES = 6;
 
-	reg [6:0] state = 0;
+	reg [4:0] count = 0;
+	reg [15:0] wdata;
 	
 	initial begin
+		SRAM_A <= 18'h0;
 		SRAM_CE_n <= 0;
-		SRAM_OE_n <= 1;
 		SRAM_WE_n <= 1;
 		SRAM_LB_n <= 0;
 		SRAM_UB_n <= 0;
-		state <= 0;
-		o_ready = 0;
 	end
 	
-	assign SRAM_D = (i_request && i_rw) ? i_wdata : 16'hz;
+	// Output 
+	assign SRAM_D = (i_request && i_rw) ? wdata : 16'hz;
 
-	always @ (posedge i_clock) begin
+	// Input
+	wire [15:0] sram_d = (i_request && !i_rw) ? SRAM_D : 16'h0;
+
+	// Keep OE active for entire READ request.
+	assign SRAM_OE_n = (i_request && !i_rw) ? 1'b0 : 1'b1;
+
+	// Output ready signal.
+	assign o_ready = i_request && count >= (CYCLES - 1);
+
+	// Output 16-bit SRAM address, first low then high parts.
+	always @(*) begin
 		if (i_request) begin
-			if (!i_rw) begin	// read
-				case (state)
-					0: begin
-						SRAM_A <= i_address;
-						SRAM_OE_n <= 0;						
-						state <= 1;
-					end
-
-					1: begin
-						o_rdata <= SRAM_D;
-						state <= 2;
-					end
-			
-					2: begin
-						SRAM_OE_n <= 1;
-						o_ready <= 1;
-					end
-				endcase
-			end
-			else begin	// write
-				case (state)
-					0: begin
-						SRAM_A <= i_address;
-						SRAM_WE_n <= 0;
-						state <= 1;
-					end
-
-					1: begin
-						SRAM_WE_n <= 1;		// Memory is stored when WE_n goes high.
-						state <= 2;
-					end
-
-					2: begin
-						o_ready <= 1;
-					end
-				endcase
-			end
+			if (count < CYCLES / 2)
+				SRAM_A = ((i_address >> 1) & 32'hfffffffe);
+			else
+				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
 		end
-		else begin
-			state <= 0;
-			SRAM_OE_n <= 1;
-			SRAM_WE_n <= 1;
-			o_ready <= 0;
+	end
+
+	// Output SRAM write enable, memory is stored on positive edge.
+	always @(*) begin
+		if (i_request && i_rw) begin
+			if (count == 0 || count == CYCLES / 2)
+				SRAM_WE_n = 0;
+			else
+				SRAM_WE_n = 1;
 		end
+	end
+
+	// Output 16-bit SRAM data, first low the high part.
+	always @(*) begin
+		if (i_request && i_rw) begin
+			if (count < CYCLES / 2)
+				wdata = i_wdata[15:0];
+			else
+				wdata = i_wdata[31:16];
+		end
+	end
+
+	// Increement counter, store data read from SRAM.
+	always @(posedge i_clock) begin
+		if (i_request) begin
+			count <= count + 1;
+			if (count == 1)
+				o_rdata[15:0] <= sram_d;
+			else if (count == CYCLES / 2 + 1)
+				o_rdata[31:16] <= sram_d;
+		end
+		else
+			count <= 0;
 	end
 endmodule
