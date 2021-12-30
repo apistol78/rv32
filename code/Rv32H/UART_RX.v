@@ -36,7 +36,6 @@ module UART_RX #(
 	FIFO #(
 		.DEPTH(4)
 	) rx_fifo(
-		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
 		.i_write(rx_fifo_write),

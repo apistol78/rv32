@@ -1,7 +1,6 @@
 module FIFO #(
 	parameter DEPTH = 64
 )(
-	input wire i_reset,
 	input wire i_clock,
 
 	output wire o_empty,
@@ -30,27 +29,18 @@ module FIFO #(
 		o_rdata <= 0;
 	end
 
-	always @ (posedge i_clock, posedge i_reset) begin
-		if (i_reset) begin
-			in <= 0;
-			out <= 0;
-			last_write <= 0;
-			last_read <= 0;
-			o_rdata <= 0;
+	always @ (posedge i_clock) begin
+		if (i_write && !last_write) begin
+			data[in] <= i_wdata;
+			in <= (in + 1) & (DEPTH - 1);
 		end
-		else begin
-			if (i_write && !last_write) begin
-				data[in] <= i_wdata;
-				in <= (in + 1) & (DEPTH - 1);
-			end
-			last_write <= i_write;
+		last_write <= i_write;
 
-			if (i_read && !last_read) begin
-				o_rdata <= data[out];
-				out <= (out + 1) & (DEPTH - 1);
-			end
-			last_read <= i_read;
+		if (i_read && !last_read) begin
+			o_rdata <= data[out];
+			out <= (out + 1) & (DEPTH - 1);
 		end
+		last_read <= i_read;
 	end
 
 endmodule
