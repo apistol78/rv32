@@ -112,7 +112,7 @@ bool decodeHEX(IStream* stream, AlignedVector< uint8_t >& outStream)
 			cs ^= p[2];
 			cs ^= p[3];			
 
-			write< uint8_t >(outStream, 0x02);
+			write< uint8_t >(outStream, 0x03);
 			write< uint32_t >(outStream, linear);
 			write< uint8_t >(outStream, cs);
 		}
