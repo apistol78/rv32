@@ -23,6 +23,7 @@ local operands = {
 	RS1 = "`RS1",
 	RS2 = "`RS2",
 	IMM = "`IMM",
+	IMM_25_20 = "`IMM_25_20",
 	PC = "`PC",
 	ZERO = "`ZERO"
 }
@@ -1028,10 +1029,15 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 		]],
-		verilog = [[
-			`RD <= `RS1 << `INSTRUCTION[25:20];
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SHIFT_LEFT,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM_25_20
+		}
+		-- verilog = [[
+		-- 	`RD <= `RS1 << `INSTRUCTION[25:20];
+		-- 	`EXECUTE_DONE;
+		-- ]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -1129,10 +1135,15 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
-		verilog = [[
-			`RD <= `RS1 >>> `INSTRUCTION[25:20];
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.ARITHMETIC_SHIFT_RIGHT,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM_25_20
+		}
+		-- verilog = [[
+		-- 	`RD <= `RS1 >>> `INSTRUCTION[25:20];
+		-- 	`EXECUTE_DONE;
+		-- ]]
 	},
 	{
 		mask = 0xfc00707f,
@@ -1176,10 +1187,15 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
-		verilog = [[
-			`RD <= `RS1 >> `INSTRUCTION[25:20];
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SHIFT_RIGHT,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM_25_20
+		}
+		-- verilog = [[
+		-- 	`RD <= `RS1 >> `INSTRUCTION[25:20];
+		-- 	`EXECUTE_DONE;
+		-- ]]
 	},
 	{
 		mask = 0xfc00707f,

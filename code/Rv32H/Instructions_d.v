@@ -91,33 +91,6 @@ else if (is_R) begin
 			
 	end
 
-	// SLLI
-	else if (is_SLLI) begin
-		$display("	SLLI");
-		
-				`RD <= `RS1 << `INSTRUCTION[25:20];
-				`EXECUTE_DONE;
-			
-	end
-
-	// SRAI
-	else if (is_SRAI) begin
-		$display("	SRAI");
-		
-				`RD <= `RS1 >>> `INSTRUCTION[25:20];
-				`EXECUTE_DONE;
-			
-	end
-
-	// SRLI
-	else if (is_SRLI) begin
-		$display("	SRLI");
-		
-				`RD <= `RS1 >> `INSTRUCTION[25:20];
-				`EXECUTE_DONE;
-			
-	end
-
 end
 else if (is_S) begin
 
