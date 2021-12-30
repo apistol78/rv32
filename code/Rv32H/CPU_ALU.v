@@ -1,25 +1,42 @@
 `include "CPU_Defines.v"
 
 module CPU_ALU(
-    input wire [3:0] i_op,
+	input wire [3:0] i_op,
 
-    input wire [31:0] i_op1,
-    input wire [31:0] i_op2,
+	input wire [31:0] i_op1,
+	input wire [31:0] i_op2,
 
-    output wire [31:0] o_result
+	output wire [31:0] o_result
 );
 
-    wire [31:0] signed_sum = $signed(i_op1) + $signed(i_op2);
-    wire [31:0] unsigned_sum = i_op1 + i_op2;
+	wire [31:0] signed_sum = $signed(i_op1) + $signed(i_op2);
+	wire [31:0] unsigned_sum = i_op1 + i_op2;
 
-    wire [31:0] and_result = i_op1 & i_op2;
-    wire [31:0] or_result = i_op1 | i_op2;
+	wire [31:0] signed_diff = $signed(i_op1) - $signed(i_op2);
 
-    assign o_result =
-        i_op == `OP_SIGNED_ADD ? signed_sum :
-        i_op == `OP_UNSIGNED_ADD ? unsigned_sum :
-        i_op == `OP_AND ? and_result :
-        i_op == `OP_OR ? or_result :
-        32'h0;
+	wire [31:0] and_result = i_op1 & i_op2;
+	wire [31:0] or_result = i_op1 | i_op2;
+	wire [31:0] xor_result = i_op1 ^ i_op2;
+
+	wire [31:0] shl_result = i_op1 << i_op2;
+	wire [31:0] shr_result = i_op1 >> i_op2;
+	wire [31:0] ashr_result = i_op1 >>> i_op2;
+
+	wire [31:0] signed_lt_result = ($signed(i_op1) < $signed(i_op2)) ? 1 : 0;
+	wire [31:0] unsigned_lt_result = (i_op1 < i_op2) ? 1 : 0;
+
+	assign o_result =
+		i_op == `OP_SIGNED_ADD ? signed_sum :
+		i_op == `OP_UNSIGNED_ADD ? unsigned_sum :
+		i_op == `OP_SIGNED_SUB ? signed_diff :
+		i_op == `OP_AND ? and_result :
+		i_op == `OP_OR ? or_result :
+		i_op == `OP_XOR ? xor_result :
+		i_op == `OP_SHIFT_LEFT ? shl_result :
+		i_op == `OP_SHIFT_RIGHT ? shr_result :
+		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :
+		i_op == `OP_SIGNED_LESS_THAN ? signed_lt_result :
+		i_op == `OP_UNSIGNED_LESS_THAN ? unsigned_lt_result :
+		32'h0;
 
 endmodule

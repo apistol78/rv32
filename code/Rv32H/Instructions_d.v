@@ -129,33 +129,6 @@ else if (is_I) begin
 			
 	end
 
-	// SLTI
-	else if (is_SLTI) begin
-		$display("	SLTI");
-		
-				`RD <= ($signed(`RS1) < $signed(`IMM)) ? 1 : 0;
-				`EXECUTE_DONE;
-			
-	end
-
-	// SLTIU
-	else if (is_SLTIU) begin
-		$display("	SLTIU");
-		
-				`RD <= (`RS1 < `IMM) ? 1 : 0;
-				`EXECUTE_DONE;
-			
-	end
-
-	// XORI
-	else if (is_XORI) begin
-		$display("	XORI");
-		
-				`RD <= `RS1 ^ `IMM;
-				`EXECUTE_DONE;
-			
-	end
-
 end
 else if (is_J) begin
 
@@ -181,47 +154,11 @@ else if (is_R) begin
 			
 	end
 
-	// SLL
-	else if (is_SLL) begin
-		$display("	SLL");
-		
-				`RD <= `RS1 << `RS2;
-				`EXECUTE_DONE;
-			
-	end
-
 	// SLLI
 	else if (is_SLLI) begin
 		$display("	SLLI");
 		
 				`RD <= `RS1 << `INSTRUCTION[25:20];
-				`EXECUTE_DONE;
-			
-	end
-
-	// SLT
-	else if (is_SLT) begin
-		$display("	SLT");
-		
-				`RD <= ($signed(`RS1) < $signed(`RS2)) ? 1 : 0;
-				`EXECUTE_DONE;
-			
-	end
-
-	// SLTU
-	else if (is_SLTU) begin
-		$display("	SLTU");
-		
-				`RD <= (`RS1 < `RS2) ? 1 : 0;
-				`EXECUTE_DONE;
-			
-	end
-
-	// SRA
-	else if (is_SRA) begin
-		$display("	SRA");
-		
-				`RD <= `RS1 >>> `RS2;
 				`EXECUTE_DONE;
 			
 	end
@@ -235,38 +172,11 @@ else if (is_R) begin
 			
 	end
 
-	// SRL
-	else if (is_SRL) begin
-		$display("	SRL");
-		
-				`RD <= `RS1 >> `RS2;
-				`EXECUTE_DONE;
-			
-	end
-
 	// SRLI
 	else if (is_SRLI) begin
 		$display("	SRLI");
 		
 				`RD <= `RS1 >> `INSTRUCTION[25:20];
-				`EXECUTE_DONE;
-			
-	end
-
-	// SUB
-	else if (is_SUB) begin
-		$display("	SUB");
-		
-				`RD <= $signed(`RS1) - $signed(`RS2);
-				`EXECUTE_DONE;
-			
-	end
-
-	// XOR
-	else if (is_XOR) begin
-		$display("	XOR");
-		
-				`RD <= `RS1 ^ `RS2;
 				`EXECUTE_DONE;
 			
 	end
@@ -297,27 +207,6 @@ else if (is_S) begin
 		$display("	SW");
 		
 				`MEM_WRITE_W(`RS1 + $signed(`IMM), `RS2);
-				`EXECUTE_DONE;
-			
-	end
-
-end
-else if (is_U) begin
-
-	// AUIPC
-	if (is_AUIPC) begin
-		$display("	AUIPC");
-		
-				`RD <= $signed(`PC) + $signed(`IMM);
-				`EXECUTE_DONE;
-			
-	end
-
-	// LUI
-	else if (is_LUI) begin
-		$display("	LUI");
-		
-				`RD <= `IMM;
 				`EXECUTE_DONE;
 			
 	end

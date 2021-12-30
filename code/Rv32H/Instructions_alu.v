@@ -8,29 +8,65 @@ wire [3:0] alu_operation =
 	is_ADDW ? `OP_UNSIGNED_ADD :
 	is_AND ? `OP_AND :
 	is_ANDI ? `OP_AND :
+	is_AUIPC ? `OP_SIGNED_ADD :
+	is_LUI ? `OP_UNSIGNED_ADD :
 	is_OR ? `OP_OR :
 	is_ORI ? `OP_OR :
+	is_SLL ? `OP_SHIFT_LEFT :
+	is_SLT ? `OP_SIGNED_LESS_THAN :
+	is_SLTI ? `OP_SIGNED_LESS_THAN :
+	is_SLTIU ? `OP_UNSIGNED_LESS_THAN :
+	is_SLTU ? `OP_UNSIGNED_LESS_THAN :
+	is_SRA ? `OP_ARITHMETIC_SHIFT_RIGHT :
+	is_SRL ? `OP_SHIFT_RIGHT :
+	is_SUB ? `OP_SIGNED_SUB :
+	is_XOR ? `OP_XOR :
+	is_XORI ? `OP_XOR :
 	0;
 
 wire [31:0] alu_operand1 = 
-	is_ADD ? i_rs1 :
-	is_ADDI ? i_rs1 :
-	is_ADDIW ? i_rs1 :
-	is_ADDW ? i_rs1 :
-	is_AND ? i_rs1 :
-	is_ANDI ? i_rs1 :
-	is_OR ? i_rs1 :
-	is_ORI ? i_rs1 :
+	is_ADD ? `RS1 :
+	is_ADDI ? `RS1 :
+	is_ADDIW ? `RS1 :
+	is_ADDW ? `RS1 :
+	is_AND ? `RS1 :
+	is_ANDI ? `RS1 :
+	is_AUIPC ? `PC :
+	is_LUI ? `IMM :
+	is_OR ? `RS1 :
+	is_ORI ? `RS1 :
+	is_SLL ? `RS1 :
+	is_SLT ? `RS1 :
+	is_SLTI ? `RS1 :
+	is_SLTIU ? `RS1 :
+	is_SLTU ? `RS1 :
+	is_SRA ? `RS1 :
+	is_SRL ? `RS1 :
+	is_SUB ? `RS1 :
+	is_XOR ? `RS1 :
+	is_XORI ? `RS1 :
 	0;
 
 wire [31:0] alu_operand2 = 
-	is_ADD ? i_rs2 :
-	is_ADDI ? i_rs2 :
-	is_ADDIW ? i_imm :
-	is_ADDW ? i_rs2 :
-	is_AND ? i_rs2 :
-	is_ANDI ? i_imm :
-	is_OR ? i_rs2 :
-	is_ORI ? i_imm :
+	is_ADD ? `RS2 :
+	is_ADDI ? `IMM :
+	is_ADDIW ? `IMM :
+	is_ADDW ? `RS2 :
+	is_AND ? `RS2 :
+	is_ANDI ? `IMM :
+	is_AUIPC ? `IMM :
+	is_LUI ? `ZERO :
+	is_OR ? `RS2 :
+	is_ORI ? `IMM :
+	is_SLL ? `RS2 :
+	is_SLT ? `RS2 :
+	is_SLTI ? `IMM :
+	is_SLTIU ? `IMM :
+	is_SLTU ? `RS2 :
+	is_SRA ? `RS2 :
+	is_SRL ? `RS2 :
+	is_SUB ? `RS2 :
+	is_XOR ? `RS2 :
+	is_XORI ? `IMM :
 	0;
 

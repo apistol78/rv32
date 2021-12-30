@@ -4,14 +4,23 @@
 local operations = {
 	SIGNED_ADD = "`OP_SIGNED_ADD",
 	UNSIGNED_ADD = "`OP_UNSIGNED_ADD",
+	SIGNED_SUB = "`OP_SIGNED_SUB",
 	AND = "`OP_AND",
-	OR = "`OP_OR"
+	OR = "`OP_OR",
+	XOR = "`OP_XOR",
+	SHIFT_LEFT = "`OP_SHIFT_LEFT",
+	SHIFT_RIGHT = "`OP_SHIFT_RIGHT",
+	ARITHMETIC_SHIFT_RIGHT = "`OP_ARITHMETIC_SHIFT_RIGHT",
+	SIGNED_LESS_THAN = "`OP_SIGNED_LESS_THAN",
+	UNSIGNED_LESS_THAN = "`OP_UNSIGNED_LESS_THAN",
 }
 
 local operands = {
-	RS1 = "i_rs1",
-	RS2 = "i_rs2",
-	IMM = "i_imm"
+	RS1 = "`RS1",
+	RS2 = "`RS2",
+	IMM = "`IMM",
+	PC = "`PC",
+	ZERO = "`ZERO"
 }
 
 local prefixes = {
@@ -69,10 +78,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
 		}
-		-- verilog = [[
-		-- 	`RD <= $signed(`RS1) + $signed(`RS2);
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0x0000707f,
@@ -86,12 +91,8 @@ local instructions = {
 		verilog = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.RS1,
-			operand2 = operands.RS2
+			operand2 = operands.IMM
 		}
-		-- verilog = [[
-		-- 	`RD <= $signed(`RS1) + $signed(`IMM);
-		-- 	`EXECUTE_DONE;
-		-- ]]		
 	},
 	{
 		mask = 0x0000707f,
@@ -107,10 +108,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
 		}		
-		-- verilog = [[
-		-- 	`RD <= `RS1 + `IMM;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -126,10 +123,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 + `RS2;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xf800707f,
@@ -205,10 +198,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 & `RS2;
-		-- 	`EXECUTE_DONE;
-		-- ]]		
 	},
 	{
 		mask = 0x0000707f,
@@ -224,10 +213,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 & `IMM;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0x0000007f,
@@ -238,10 +223,11 @@ local instructions = {
 			auto f = parseFormatU(word);
 			R_u(f.rd) = PC + f.imm;
 		]],
-		verilog = [[
-			`RD <= $signed(`PC) + $signed(`IMM);
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.PC,
+			operand2 = operands.IMM
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -758,10 +744,11 @@ local instructions = {
 			auto f = parseFormatU(word);
 			R_s(f.rd) = f.imm;
 		]],
-		verilog = [[
-			`RD <= `IMM;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.UNSIGNED_ADD,
+			operand1 = operands.IMM,
+			operand2 = operands.ZERO
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -891,10 +878,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 | `RS2;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0x0000707f,
@@ -910,10 +893,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 | `IMM;
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -1030,10 +1009,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 		]],
-		verilog = [[
-			`RD <= `RS1 << `RS2;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SHIFT_LEFT,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0xfc00707f,
@@ -1070,10 +1050,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 		]],
-		verilog = [[
-			`RD <= ($signed(`RS1) < $signed(`RS2)) ? 1 : 0;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -1084,10 +1065,11 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		]],
-		verilog = [[
-			`RD <= ($signed(`RS1) < $signed(`IMM)) ? 1 : 0;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		}
 	},
 	{
 		mask = 0x0000707f,
@@ -1098,10 +1080,11 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		]],
-		verilog = [[
-			`RD <= (`RS1 < `IMM) ? 1 : 0;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.UNSIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		}
 	},
 	{
 		mask = 0xfe00707f,
@@ -1112,10 +1095,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 		]],
-		verilog = [[
-			`RD <= (`RS1 < `RS2) ? 1 : 0;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.UNSIGNED_LESS_THAN,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0xfe00707f,
@@ -1126,10 +1110,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		]],
-		verilog = [[
-			`RD <= `RS1 >>> `RS2;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.ARITHMETIC_SHIFT_RIGHT,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0xfc00707f,
@@ -1172,10 +1157,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		]],
-		verilog = [[
-			`RD <= `RS1 >> `RS2;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SHIFT_RIGHT,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0xfc00707f,
@@ -1212,10 +1198,11 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 		]],
-		verilog = [[
-			`RD <= $signed(`RS1) - $signed(`RS2);
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.SIGNED_SUB,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
 	},
 	{
 		mask = 0xfe00707f,
@@ -1258,10 +1245,15 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 		]],
-		verilog = [[
-			`RD <= `RS1 ^ `RS2;
-			`EXECUTE_DONE;
-		]]
+		verilog = {
+			operation = operations.XOR,
+			operand1 = operands.RS1,
+			operand2 = operands.RS2
+		}
+		-- verilog = [[
+		-- 	`RD <= `RS1 ^ `RS2;
+		-- 	`EXECUTE_DONE;
+		-- ]]
 	},
 	{
 		mask = 0x0000707f,
@@ -1272,10 +1264,15 @@ local instructions = {
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		]],
-		verilog = [[
-			`RD <= `RS1 ^ `IMM;
-			`EXECUTE_DONE;
-		]]	
+		verilog = {
+			operation = operations.XOR,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		}
+		-- verilog = [[
+		-- 	`RD <= `RS1 ^ `IMM;
+		-- 	`EXECUTE_DONE;
+		-- ]]	
 	},
 }
 

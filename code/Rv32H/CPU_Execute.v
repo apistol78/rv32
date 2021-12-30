@@ -39,6 +39,7 @@ module CPU_Execute (
 	`define RS2 i_rs2
 	`define RD o_rd
 	`define IMM i_imm
+	`define ZERO 0
 
 	`define GOTO(ADDR) o_pc_next <= ADDR;
 
