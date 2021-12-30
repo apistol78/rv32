@@ -212,7 +212,7 @@ else if (is_R) begin
 	if (is_ADD) begin
 		$display("	ADD");
 		
-				`RD <= $signed(`RS1) + $signed(`RS2);
+				`RD <= alu_rs1_add_rs2; // $signed(`RS1) + $signed(`RS2);
 				`EXECUTE_DONE;
 			
 	end

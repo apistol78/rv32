@@ -91,6 +91,13 @@ module CPU_Execute (
 	`define EXECUTE_DONE
 	`define ERROR
 
+	wire [31:0] alu_rs1_add_rs2;
+	CPU_ALU alu(
+		.i_rs1(i_rs1),
+		.i_rs2(i_rs2),
+		.o_rs1_add_rs2(alu_rs1_add_rs2)
+	);
+
 	initial begin
 		o_inst_rd <= 0;
 		o_branch <= 0;

@@ -1,4 +1,5 @@
 `include "CPU_v2.v"
+`include "CPU_ALU.v"
 `include "CPU_BusAccess.v"
 `include "CPU_Decode.v"
 `include "CPU_Execute.v"
