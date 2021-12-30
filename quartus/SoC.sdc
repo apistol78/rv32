@@ -1,6 +1,6 @@
 
 # include other SDC.
-read_sdc SRAM.sdc
+#read_sdc SRAM.sdc
 
 # create clocks.
 create_clock -period 8.000ns [get_ports CLOCK_125_p]
@@ -17,4 +17,4 @@ derive_clocks -period "1 MHz"
 derive_clock_uncertainty
 
 # generate SRAM timing.
-timing_sram CLOCK_50_B5B
+#timing_sram CLOCK_50_B5B

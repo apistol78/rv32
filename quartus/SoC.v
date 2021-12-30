@@ -170,7 +170,7 @@ module SoC(
 		.i_request(vram_select && cpu_request),
 		.i_rw(cpu_rw),
 		.i_address(vram_address),
-		.i_wdata(cpu_wdata),
+		.i_wdata(cpu_wdata[23:0]),
 		.o_ready(vram_ready)
 	);
   

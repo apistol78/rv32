@@ -35,13 +35,38 @@ void draw_line(int x0, int y0, int x1, int y1)
 void main()
 {
 	printLn("Initialize Video...");
-	//video_init();
+	video_init();
 
 	printLn("Initialize SD card...");
 	sd_init();
 
 	printLn("Ready");
 
+
+	uint8_t r = 0;
+	uint8_t g = 0;
+	uint8_t b = 0;
+
+
+	volatile uint32_t* video = VIDEO_BASE;
+	for (;;)
+	{
+		for (int y = 0; y < 240; ++y)
+		{
+			for (int x = 0; x < 320; ++x)
+			{
+				video[x + y * 320] = (r << 16) | (g << 8) | b;
+				r++;
+			}
+			g++;
+		}
+
+		b++;
+
+		*VIDEO_CTRL = 1;
+	}
+
+/*
 	int x1 = 50;
 	for (;;)
 	{
@@ -59,4 +84,5 @@ void main()
 		if (++x1 > 300)
 			x1 = 50;
 	}
+*/
 }
