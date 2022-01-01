@@ -16,8 +16,8 @@
 
 void i2c_dly()
 {
-	for (volatile uint32_t i = 0; i < 10; ++i)
-		;
+	for (uint32_t i = 0; i < 1000; ++i)
+		__asm__ volatile ("nop");
 }
 
 void i2c_start()
