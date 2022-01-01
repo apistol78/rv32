@@ -1,4 +1,4 @@
-//`define ENABLE_DDR2LP
+`define ENABLE_DDR2LP
 //`define ENABLE_HSMC_XCVR
 //`define ENABLE_SMA
 //`define ENABLE_REFCLK
@@ -137,6 +137,7 @@ module SoC(
       output             UART_TX
 );
 
+`define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
 `define SOC_ENABLE_I2C
@@ -237,6 +238,36 @@ module SoC(
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
 	);
+
+`ifdef SOC_ENABLE_SDRAM
+	// SDRAM
+	wire sdram_select;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+	SDRAM_interface sdram(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_clock125(CLOCK_125_p),
+		.i_request(sdram_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_address(sdram_address),
+		.i_wdata(cpu_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready),
+		// ---
+		.DDR2LP_CA(DDR2LP_CA),
+		.DDR2LP_CKE(DDR2LP_CKE),
+		.DDR2LP_CK_n(DDR2LP_CK_n),
+		.DDR2LP_CK_p(DDR2LP_CK_p),
+		.DDR2LP_CS_n(DDR2LP_CS_n),
+		.DDR2LP_DM(DDR2LP_DM),
+		.DDR2LP_DQ(DDR2LP_DQ),
+		.DDR2LP_DQS_n(DDR2LP_DQS_n),
+		.DDR2LP_DQS_p(DDR2LP_DQS_p),
+		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
+	);
+`endif
 
 	// LEDS
 	wire led_select;
@@ -364,6 +395,11 @@ module SoC(
 	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram32_address = cpu_address - 32'h10000000;
 	
+`ifdef SOC_ENABLE_SDRAM
+	assign sdram_select = (cpu_address >= 32'h20000000 && cpu_address < 32'h40000000);
+	assign sdram_address = cpu_address - 32'h20000000;
+`endif
+
 `ifdef SOC_ENABLE_VGA
 	assign vram_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
 	assign vram_address = cpu_address - 32'h40000000;
@@ -392,6 +428,9 @@ module SoC(
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 		sram32_select ? sram32_rdata :
+`ifdef SOC_ENABLE_SDRAM
+		sdram_select ? sdram_rdata :
+`endif
 `ifdef SOC_ENABLE_UART
 		uart_select ? uart_rdata :
 `endif
@@ -410,6 +449,9 @@ module SoC(
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		sram32_select ? sram32_ready :
+`ifdef SOC_ENABLE_SDRAM
+		sdram_select ? sdram_ready :
+`endif
 `ifdef SOC_ENABLE_VGA
 		vram_select ? vram_ready :
 `endif
