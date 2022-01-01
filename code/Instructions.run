@@ -388,12 +388,12 @@ local instructions = {
 			else
 				R_s(f.rd) = dividend / divisor;
 		]],
---[[
 		verilog = [[
-			`RD <= $signed(rs1) / $signed(rs2);
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -409,12 +409,12 @@ local instructions = {
 			else		
 				R_u(f.rd) = dividend / divisor;
 		]],
---[[
 		verilog = [[
-			`RD <= rs1 / rs2;
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -430,12 +430,12 @@ local instructions = {
 			else		
 				R_u(f.rd) = dividend / divisor;
 		]],
---[[
 		verilog = [[
-			`RD <= rs1 / rs2;
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -446,12 +446,12 @@ local instructions = {
 			auto f = parseFormatR(word);
 			R(f.rd) = R(f.rs1) / R(f.rs2);
 		]],
---[[
 		verilog = [[
-			`RD <= $signed(rs1) / $signed(rs2);
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xffffffff,
@@ -793,8 +793,10 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog = [[
-			`RD <= $signed(`RS1) * $signed(`RS2);
-			`EXECUTE_DONE;
+			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+				`RD <= mul_result[31:0];
+				`EXECUTE_DONE;
+			end
 		]]
 	},
 	{
@@ -807,6 +809,12 @@ local instructions = {
 			int64_t lh = (int64_t)R_s(f.rs1);
 			int64_t rh = (int64_t)R_s(f.rs2);
 			R_s(f.rd) = (lh * rh) >> 32;
+		]],
+		verilog = [[
+			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+				`RD <= mul_result[63:32];
+				`EXECUTE_DONE;
+			end
 		]]
 	},
 	{
@@ -820,36 +828,12 @@ local instructions = {
 			uint64_t rh = (uint64_t)R(f.rs2);
 			R(f.rd) = (lh * rh) >> 32;
 		]],
---[[
 		verilog = [[
-			if (decode_step == 0) begin
-				// Split operands into halves.
-				m64_al = rs1[15:0];
-				m64_ah = rs1[31:16];
-				m64_bl = rs2[15:0];
-				m64_bh = rs2[31:16];
-			end
-			else if (decode_step == 1) begin
-				// Compute partial products.
-				m64_p0 = m64_al * m64_bl;
-				m64_p1 = m64_al * m64_bh;
-				m64_p2 = m64_ah * m64_bl;
-				m64_p3 = m64_ah * m64_bh;
-			end
-			else if (decode_step == 2) begin
-				// Sum partial products.
-				`RD <= 
-					m64_p3 +
-					(m64_p2 >> 16) +
-					(m64_p1 >> 16) +
-					(
-						((m64_p0 >> 16) + m64_p1[15:0] + m64_p2[15:0]) >> 16
-					);
-
+			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
-		]
-]]
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -913,12 +897,12 @@ local instructions = {
 			else
 				R_s(f.rd) = dividend % divisor;
 		]],
---[[
 		verilog = [[
-			`RD <= $signed(rs1) % $signed(rs2);
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_remainder[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -934,12 +918,12 @@ local instructions = {
 			else
 				R_u(f.rd) = dividend % divisor;
 		]],
---[[
 		verilog = [[
-			`RD <= rs1 % rs2;
-			`EXECUTE_DONE;			
-		]
-]]
+			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_remainder[31:0];
+				`EXECUTE_DONE;
+			end
+		]]
 	},
 	{
 		mask = 0xfe00707f,

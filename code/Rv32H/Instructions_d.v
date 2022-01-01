@@ -82,12 +82,102 @@ else if (is_J) begin
 end
 else if (is_R) begin
 
+	// DIV
+	if (is_DIV) begin
+		$display("	DIV");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// DIVU
+	else if (is_DIVU) begin
+		$display("	DIVU");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// DIVUW
+	else if (is_DIVUW) begin
+		$display("	DIVUW");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// DIVW
+	else if (is_DIVW) begin
+		$display("	DIVW");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
 	// MUL
-	if (is_MUL) begin
+	else if (is_MUL) begin
 		$display("	MUL");
 		
-				`RD <= $signed(`RS1) * $signed(`RS2);
-				`EXECUTE_DONE;
+				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+					`RD <= mul_result[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// MULH
+	else if (is_MULH) begin
+		$display("	MULH");
+		
+				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+					`RD <= mul_result[63:32];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// MULHU
+	else if (is_MULHU) begin
+		$display("	MULHU");
+		
+				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
+					`RD <= mul_result[63:32];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// REM
+	else if (is_REM) begin
+		$display("	REM");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_remainder[31:0];
+					`EXECUTE_DONE;
+				end
+			
+	end
+
+	// REMU
+	else if (is_REMU) begin
+		$display("	REMU");
+		
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_remainder[31:0];
+					`EXECUTE_DONE;
+				end
 			
 	end
 

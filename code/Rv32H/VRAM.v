@@ -20,7 +20,7 @@ module VRAM(
 	reg active = 1'b0;
 
 	// Check if input address from CPU is a control register.
-	wire is_ctrl = (i_address == 32'h0ffffff0);
+	wire is_ctrl = (i_address == 32'h0fff_fff0);
 
 	// ===================
 	// PAGE 1
@@ -72,9 +72,9 @@ module VRAM(
 	assign o_video_rdata = (active == 0) ? page1_video_rdata : page2_video_rdata;
 
 	// Swap active page when control register is written to.
-	always @ (posedge i_request) begin
-		if (is_ctrl) begin
-			active <= ~active;
+	always @ (posedge i_clock) begin
+		if (i_request && is_ctrl) begin
+			active <= i_wdata[0];
 		end
 	end
 

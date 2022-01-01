@@ -1,4 +1,9 @@
 
+// Multiply and divide
+`define MUL_CYCLE_LATENCY           5
+`define DIV_CYCLE_LATENCY           13
+
+// ALU operations
 `define OP_SIGNED_ADD               1
 `define OP_UNSIGNED_ADD             2
 `define OP_SIGNED_SUB               3
