@@ -27,6 +27,11 @@ module SDRAM_interface(
 		.pll_ref_clk(i_clock),
 		.global_reset_n(~i_reset),
 		.soft_reset_n(~i_reset),
+		
+		.afi_clk(),                    //            afi_clk.clk
+		.afi_half_clk(),               //       afi_half_clk.clk
+		.afi_reset_n(),                //          afi_reset.reset_n
+		.afi_reset_export_n(),
 
 		.mem_ca(DD2LP_CA),
 		.mem_cke(DDR2LP_CKE[0]),
@@ -49,11 +54,11 @@ module SDRAM_interface(
 		.avl_size_0(3'b1),
 		.avl_be_0(4'hf),
 
-		.mp_cmd_clk_0_clk(i_clock125),
+		.mp_cmd_clk_0_clk(i_clock),
 		.mp_cmd_reset_n_0_reset_n(~i_reset),
-		.mp_rfifo_clk_0_clk(i_clock125),
+		.mp_rfifo_clk_0_clk(i_clock),
 		.mp_rfifo_reset_n_0_reset_n(~i_reset),
-		.mp_wfifo_clk_0_clk(i_clock125),
+		.mp_wfifo_clk_0_clk(i_clock),
 		.mp_wfifo_reset_n_0_reset_n(~i_reset),
 	);
 

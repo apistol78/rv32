@@ -194,7 +194,7 @@ parameter CALIB_REG_WIDTH = 8;
 
 
 parameter TB_PROTOCOL       = "LPDDR2";
-parameter TB_MEM_CLK_FREQ   = "300.0";
+parameter TB_MEM_CLK_FREQ   = "167.0";
 parameter TB_RATE           = "FULL";
 parameter TB_MEM_DQ_WIDTH   = "32";
 parameter TB_MEM_DQS_WIDTH  = "4";

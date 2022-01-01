@@ -1,4 +1,4 @@
-# system info IP_SDRAM_example on 2022.01.01.15:42:35
+# system info IP_SDRAM_example on 2022.01.01.20:22:28
 system_info:
 name,value
 DEVICE,
@@ -6,7 +6,7 @@ DEVICE_FAMILY,Cyclone V
 GENERATION_ID,
 #
 #
-# Files generated for IP_SDRAM_example on 2022.01.01.15:42:35
+# Files generated for IP_SDRAM_example on 2022.01.01.20:22:28
 files:
 filepath,kind,attributes,module,is_top
 IP_SDRAM_example/IP_SDRAM_example.v,VERILOG,,IP_SDRAM_example,true

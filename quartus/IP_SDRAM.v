@@ -201,7 +201,7 @@ endmodule
 // Retrieval info: 	<generic name="MEM_TRRD_NS" value="10.0" />
 // Retrieval info: 	<generic name="MEM_TRTP_NS" value="10.0" />
 // Retrieval info: 	<generic name="RATE" value="Full" />
-// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="300.0" />
+// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="167.0" />
 // Retrieval info: 	<generic name="USE_MEM_CLK_FREQ" value="false" />
 // Retrieval info: 	<generic name="FORCE_DQS_TRACKING" value="AUTO" />
 // Retrieval info: 	<generic name="FORCE_SHADOW_REGS" value="AUTO" />
@@ -268,7 +268,7 @@ endmodule
 // Retrieval info: 	<generic name="ENABLE_EMIT_BFM_MASTER" value="false" />
 // Retrieval info: 	<generic name="FORCE_SEQUENCER_TCL_DEBUG_MODE" value="false" />
 // Retrieval info: 	<generic name="ENABLE_SEQUENCER_MARGINING_ON_BY_DEFAULT" value="false" />
-// Retrieval info: 	<generic name="REF_CLK_FREQ" value="125.0" />
+// Retrieval info: 	<generic name="REF_CLK_FREQ" value="50.0" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_PARAM_VALID" value="false" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_MIN_PARAM" value="0.0" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_MAX_PARAM" value="0.0" />

@@ -106,9 +106,9 @@ module IP_SDRAM_example (
 
 	altera_mem_if_single_clock_pll #(
 		.DEVICE_FAMILY    ("Cyclone V"),
-		.REF_CLK_FREQ_STR ("125.0 MHz"),
-		.REF_CLK_PS       ("8000.0"),
-		.PLL_CLK_FREQ_STR ("125.0 MHz"),
+		.REF_CLK_FREQ_STR ("50.0 MHz"),
+		.REF_CLK_PS       ("20000.0"),
+		.PLL_CLK_FREQ_STR ("50.0 MHz"),
 		.PLL_CLK_PHASE_PS (0),
 		.PLL_CLK_MULT     (0),
 		.PLL_CLK_DIV      (0),
