@@ -29,6 +29,61 @@ T read(Serial& serial)
 	return value;
 }
 
+bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
+{
+	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+	if (!f)
+	{
+		log::error << L"Unable to open image \"" << fileName << L"\"." << Endl;
+		return false;
+	}
+
+	uint32_t linear = offset;
+	uint8_t data[16];
+	for (;;)
+	{
+		int64_t r = f->read(data, sizeof(data));
+		if (r <= 0)
+			break;
+
+		log::info << L"DATA " << str(L"%08x", linear) << L"..." << Endl;
+
+		uint8_t cs = 0;
+
+		// Add address to checksum.
+		const uint8_t* p = (const uint8_t*)&linear;
+		cs ^= p[0];
+		cs ^= p[1];
+		cs ^= p[2];
+		cs ^= p[3];
+
+		// Add data to calculate checksum.
+		for (int32_t i = 0; i < 16; ++i)
+			cs ^= data[i];
+
+		write< uint8_t >(serial, 0x01);
+		write< uint32_t >(serial, linear);
+		write< uint8_t >(serial, 16);
+
+		for (int32_t i = 0; i < 16; ++i)
+			write< uint8_t >(serial, data[i]);
+
+		write< uint8_t >(serial, cs);
+
+		uint8_t reply = read< uint8_t >(serial);
+		if (reply != 0x80)
+		{
+			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			return false;
+		}
+
+		linear += 16;
+	}
+
+	log::info << L"Image uploaded" << Endl;
+	return true;
+}
+
 bool uploadHEX(Serial& serial, const std::wstring& fileName)
 {
 	StaticVector< uint8_t, 16 > record;
@@ -257,6 +312,14 @@ int main(int argc, const char** argv)
 	if (commandLine.hasOption('m', L"memcheck"))
 	{
 		if (!memcheck(serial))
+			return 1;
+	}
+
+	if (commandLine.hasOption(L"image-file") && commandLine.hasOption(L"image-base"))
+	{
+		std::wstring fileName = commandLine.getOption(L"image-file").getString();
+		int32_t offset = commandLine.getOption(L"image-base").getInteger();
+		if (!uploadImage(serial, fileName, offset))
 			return 1;
 	}
 
