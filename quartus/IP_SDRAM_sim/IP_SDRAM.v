@@ -26,10 +26,10 @@ module IP_SDRAM (
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
+		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        avl_read_req_0,             //                   .read
 		input  wire        avl_write_req_0,            //                   .write
 		input  wire [2:0]  avl_size_0,                 //                   .burstcount
-		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        mp_cmd_clk_0_clk,           //       mp_cmd_clk_0.clk
 		input  wire        mp_cmd_reset_n_0_reset_n,   //   mp_cmd_reset_n_0.reset_n
 		input  wire        mp_rfifo_clk_0_clk,         //     mp_rfifo_clk_0.clk
@@ -75,10 +75,10 @@ module IP_SDRAM (
 		.avl_rdata_valid_0          (avl_rdata_valid_0),          //                   .readdatavalid
 		.avl_rdata_0                (avl_rdata_0),                //                   .readdata
 		.avl_wdata_0                (avl_wdata_0),                //                   .writedata
+		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.avl_read_req_0             (avl_read_req_0),             //                   .read
 		.avl_write_req_0            (avl_write_req_0),            //                   .write
 		.avl_size_0                 (avl_size_0),                 //                   .burstcount
-		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.mp_cmd_clk_0_clk           (mp_cmd_clk_0_clk),           //       mp_cmd_clk_0.clk
 		.mp_cmd_reset_n_0_reset_n   (mp_cmd_reset_n_0_reset_n),   //   mp_cmd_reset_n_0.reset_n
 		.mp_rfifo_clk_0_clk         (mp_rfifo_clk_0_clk),         //     mp_rfifo_clk_0.clk

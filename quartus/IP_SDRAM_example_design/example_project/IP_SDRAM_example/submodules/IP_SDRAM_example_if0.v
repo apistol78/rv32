@@ -29,10 +29,10 @@ module IP_SDRAM_example_if0 (
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
+		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        avl_read_req_0,             //                   .read
 		input  wire        avl_write_req_0,            //                   .write
 		input  wire [2:0]  avl_size_0,                 //                   .burstcount
-		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        mp_cmd_clk_0_clk,           //       mp_cmd_clk_0.clk
 		input  wire        mp_cmd_reset_n_0_reset_n,   //   mp_cmd_reset_n_0.reset_n
 		input  wire        mp_rfifo_clk_0_clk,         //     mp_rfifo_clk_0.clk
@@ -435,14 +435,14 @@ module IP_SDRAM_example_if0 (
 		.ENUM_MEM_IF_TCCD                        ("TCCD_2"),
 		.ENUM_MEM_IF_TCL                         ("TCL_7"),
 		.ENUM_MEM_IF_TCWL                        ("TCWL_4"),
-		.ENUM_MEM_IF_TFAW                        ("TFAW_11"),
-		.ENUM_MEM_IF_TRAS                        ("TRAS_8"),
-		.ENUM_MEM_IF_TRC                         ("TRC_11"),
-		.ENUM_MEM_IF_TRCD                        ("TRCD_3"),
-		.ENUM_MEM_IF_TRP                         ("TRP_4"),
-		.ENUM_MEM_IF_TRRD                        ("TRRD_2"),
-		.ENUM_MEM_IF_TRTP                        ("TRTP_2"),
-		.ENUM_MEM_IF_TWR                         ("TWR_3"),
+		.ENUM_MEM_IF_TFAW                        ("TFAW_17"),
+		.ENUM_MEM_IF_TRAS                        ("TRAS_24"),
+		.ENUM_MEM_IF_TRC                         ("TRC_30"),
+		.ENUM_MEM_IF_TRCD                        ("TRCD_6"),
+		.ENUM_MEM_IF_TRP                         ("TRP_6"),
+		.ENUM_MEM_IF_TRRD                        ("TRRD_4"),
+		.ENUM_MEM_IF_TRTP                        ("TRTP_3"),
+		.ENUM_MEM_IF_TWR                         ("TWR_5"),
 		.ENUM_MEM_IF_TWTR                        ("TWTR_2"),
 		.ENUM_MMR_CFG_MEM_BL                     ("MP_BL_8"),
 		.ENUM_OUTPUT_REGD                        ("DISABLED"),
@@ -622,9 +622,9 @@ module IP_SDRAM_example_if0 (
 		.INTG_EXTRA_CTL_CLK_RD_TO_PCH            (0),
 		.INTG_EXTRA_CTL_CLK_RD_TO_RD             (0),
 		.INTG_EXTRA_CTL_CLK_RD_TO_RD_DIFF_CHIP   (0),
-		.INTG_EXTRA_CTL_CLK_RD_TO_WR             (3),
-		.INTG_EXTRA_CTL_CLK_RD_TO_WR_BC          (3),
-		.INTG_EXTRA_CTL_CLK_RD_TO_WR_DIFF_CHIP   (3),
+		.INTG_EXTRA_CTL_CLK_RD_TO_WR             (4),
+		.INTG_EXTRA_CTL_CLK_RD_TO_WR_BC          (4),
+		.INTG_EXTRA_CTL_CLK_RD_TO_WR_DIFF_CHIP   (4),
 		.INTG_EXTRA_CTL_CLK_SRF_TO_VALID         (0),
 		.INTG_EXTRA_CTL_CLK_SRF_TO_ZQ_CAL        (0),
 		.INTG_EXTRA_CTL_CLK_WR_AP_TO_VALID       (0),
@@ -634,8 +634,8 @@ module IP_SDRAM_example_if0 (
 		.INTG_EXTRA_CTL_CLK_WR_TO_RD_DIFF_CHIP   (3),
 		.INTG_EXTRA_CTL_CLK_WR_TO_WR             (0),
 		.INTG_EXTRA_CTL_CLK_WR_TO_WR_DIFF_CHIP   (0),
-		.INTG_MEM_IF_TREFI                       (2606),
-		.INTG_MEM_IF_TRFC                        (13),
+		.INTG_MEM_IF_TREFI                       (1288),
+		.INTG_MEM_IF_TRFC                        (20),
 		.INTG_RCFG_SUM_WT_PRIORITY_0             (0),
 		.INTG_RCFG_SUM_WT_PRIORITY_1             (0),
 		.INTG_RCFG_SUM_WT_PRIORITY_2             (0),
@@ -652,7 +652,7 @@ module IP_SDRAM_example_if0 (
 		.INTG_SUM_WT_PRIORITY_5                  (0),
 		.INTG_SUM_WT_PRIORITY_6                  (0),
 		.INTG_SUM_WT_PRIORITY_7                  (0),
-		.INTG_POWER_SAVING_EXIT_CYCLES           (3),
+		.INTG_POWER_SAVING_EXIT_CYCLES           (5),
 		.INTG_MEM_CLK_ENTRY_CYCLES               (10),
 		.ENUM_ENABLE_BURST_INTERRUPT             ("DISABLED"),
 		.ENUM_ENABLE_BURST_TERMINATE             ("DISABLED"),
@@ -686,10 +686,10 @@ module IP_SDRAM_example_if0 (
 		.avl_rdata_valid_0       (avl_rdata_valid_0),                  //                   .readdatavalid
 		.avl_rdata_0             (avl_rdata_0),                        //                   .readdata
 		.avl_wdata_0             (avl_wdata_0),                        //                   .writedata
+		.avl_be_0                (avl_be_0),                           //                   .byteenable
 		.avl_read_req_0          (avl_read_req_0),                     //                   .read
 		.avl_write_req_0         (avl_write_req_0),                    //                   .write
 		.avl_size_0              (avl_size_0),                         //                   .burstcount
-		.avl_be_0                (avl_be_0),                           //                   .byteenable
 		.local_init_done         (local_init_done),                    //             status.local_init_done
 		.local_cal_success       (local_cal_success),                  //                   .local_cal_success
 		.local_cal_fail          (local_cal_fail),                     //                   .local_cal_fail
@@ -851,7 +851,7 @@ module IP_SDRAM_example_if0 (
 		.DLL_OFFSET_CTRL_WIDTH      (6),
 		.DELAY_BUFFER_MODE          ("HIGH"),
 		.DELAY_CHAIN_LENGTH         (8),
-		.DLL_INPUT_FREQUENCY_PS_STR ("5988 ps")
+		.DLL_INPUT_FREQUENCY_PS_STR ("3030 ps")
 	) dll0 (
 		.clk            (p0_dll_clk_clk),                 //         clk.clk
 		.dll_pll_locked (p0_dll_sharing_dll_pll_locked),  // dll_sharing.dll_pll_locked

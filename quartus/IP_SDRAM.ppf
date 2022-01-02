@@ -27,10 +27,10 @@
   <pin name="avl_rdata_valid_0" direction="output" scope="external" />
   <pin name="avl_rdata_0[31..0]" direction="output" scope="external" />
   <pin name="avl_wdata_0[31..0]" direction="input" scope="external" />
+  <pin name="avl_be_0[3..0]" direction="input" scope="external" />
   <pin name="avl_read_req_0" direction="input" scope="external" />
   <pin name="avl_write_req_0" direction="input" scope="external" />
   <pin name="avl_size_0[2..0]" direction="input" scope="external" />
-  <pin name="avl_be_0[3..0]" direction="input" scope="external" />
   <pin name="mp_cmd_clk_0_clk" direction="input" scope="external" />
   <pin name="mp_cmd_reset_n_0_reset_n" direction="input" scope="external" />
   <pin name="mp_rfifo_clk_0_clk" direction="input" scope="external" />

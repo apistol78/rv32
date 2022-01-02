@@ -13,6 +13,7 @@ module IP_SDRAM_example_mm_interconnect_0 (
 		input  wire [28:0] d0_avl_address,                                      //                                        d0_avl.address
 		output wire        d0_avl_waitrequest,                                  //                                              .waitrequest
 		input  wire [2:0]  d0_avl_burstcount,                                   //                                              .burstcount
+		input  wire [3:0]  d0_avl_byteenable,                                   //                                              .byteenable
 		input  wire        d0_avl_beginbursttransfer,                           //                                              .beginbursttransfer
 		input  wire        d0_avl_read,                                         //                                              .read
 		output wire [31:0] d0_avl_readdata,                                     //                                              .readdata
@@ -84,13 +85,13 @@ module IP_SDRAM_example_mm_interconnect_0 (
 		.av_address             (d0_avl_address),                                            //      avalon_anti_master_0.address
 		.av_waitrequest         (d0_avl_waitrequest),                                        //                          .waitrequest
 		.av_burstcount          (d0_avl_burstcount),                                         //                          .burstcount
+		.av_byteenable          (d0_avl_byteenable),                                         //                          .byteenable
 		.av_beginbursttransfer  (d0_avl_beginbursttransfer),                                 //                          .beginbursttransfer
 		.av_read                (d0_avl_read),                                               //                          .read
 		.av_readdata            (d0_avl_readdata),                                           //                          .readdata
 		.av_readdatavalid       (d0_avl_readdatavalid),                                      //                          .readdatavalid
 		.av_write               (d0_avl_write),                                              //                          .write
 		.av_writedata           (d0_avl_writedata),                                          //                          .writedata
-		.av_byteenable          (4'b1111),                                                   //               (terminated)
 		.av_begintransfer       (1'b0),                                                      //               (terminated)
 		.av_chipselect          (1'b0),                                                      //               (terminated)
 		.av_lock                (1'b0),                                                      //               (terminated)

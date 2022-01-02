@@ -34,6 +34,7 @@ module IP_SDRAM_example (
 	wire  [31:0] d0_avl_readdata;                                // mm_interconnect_0:d0_avl_readdata -> d0:avl_rdata
 	wire  [28:0] d0_avl_address;                                 // d0:avl_addr -> mm_interconnect_0:d0_avl_address
 	wire         d0_avl_read;                                    // d0:avl_read_req -> mm_interconnect_0:d0_avl_read
+	wire   [3:0] d0_avl_byteenable;                              // d0:avl_be -> mm_interconnect_0:d0_avl_byteenable
 	wire         d0_avl_readdatavalid;                           // mm_interconnect_0:d0_avl_readdatavalid -> d0:avl_rdata_valid
 	wire  [31:0] d0_avl_writedata;                               // d0:avl_wdata -> mm_interconnect_0:d0_avl_writedata
 	wire         d0_avl_write;                                   // d0:avl_write_req -> mm_interconnect_0:d0_avl_write
@@ -78,10 +79,10 @@ module IP_SDRAM_example (
 		.avl_rdata_valid_0          (mm_interconnect_0_if0_avl_0_readdatavalid),      //                   .readdatavalid
 		.avl_rdata_0                (mm_interconnect_0_if0_avl_0_readdata),           //                   .readdata
 		.avl_wdata_0                (mm_interconnect_0_if0_avl_0_writedata),          //                   .writedata
+		.avl_be_0                   (mm_interconnect_0_if0_avl_0_byteenable),         //                   .byteenable
 		.avl_read_req_0             (mm_interconnect_0_if0_avl_0_read),               //                   .read
 		.avl_write_req_0            (mm_interconnect_0_if0_avl_0_write),              //                   .write
 		.avl_size_0                 (mm_interconnect_0_if0_avl_0_burstcount),         //                   .burstcount
-		.avl_be_0                   (mm_interconnect_0_if0_avl_0_byteenable),         //                   .byteenable
 		.mp_cmd_clk_0_clk           (pll0_pll_clk_clk),                               //       mp_cmd_clk_0.clk
 		.mp_cmd_reset_n_0_reset_n   (~rst_controller_reset_out_reset),                //   mp_cmd_reset_n_0.reset_n
 		.mp_rfifo_clk_0_clk         (pll0_pll_clk_clk),                               //     mp_rfifo_clk_0.clk
@@ -133,7 +134,7 @@ module IP_SDRAM_example (
 		.TG_NUM_DRIVER_LOOP                     (1),
 		.TG_ENABLE_UNIX_ID                      (0),
 		.TG_USE_UNIX_ID                         (0),
-		.TG_RANDOM_BYTE_ENABLE                  (0),
+		.TG_RANDOM_BYTE_ENABLE                  (1),
 		.TG_ENABLE_READ_COMPARE                 (1),
 		.TG_POWER_OF_TWO_BURSTS_ONLY            (0),
 		.TG_BURST_ON_BURST_BOUNDARY             (0),
@@ -169,6 +170,7 @@ module IP_SDRAM_example (
 		.avl_write_req   (d0_avl_write),                        //          .write
 		.avl_read_req    (d0_avl_read),                         //          .read
 		.avl_rdata_valid (d0_avl_readdatavalid),                //          .readdatavalid
+		.avl_be          (d0_avl_byteenable),                   //          .byteenable
 		.avl_burstbegin  (d0_avl_beginbursttransfer)            //          .beginbursttransfer
 	);
 
@@ -179,6 +181,7 @@ module IP_SDRAM_example (
 		.d0_avl_address                                      (d0_avl_address),                                 //                                        d0_avl.address
 		.d0_avl_waitrequest                                  (d0_avl_waitrequest),                             //                                              .waitrequest
 		.d0_avl_burstcount                                   (d0_avl_burstcount),                              //                                              .burstcount
+		.d0_avl_byteenable                                   (d0_avl_byteenable),                              //                                              .byteenable
 		.d0_avl_beginbursttransfer                           (d0_avl_beginbursttransfer),                      //                                              .beginbursttransfer
 		.d0_avl_read                                         (d0_avl_read),                                    //                                              .read
 		.d0_avl_readdata                                     (d0_avl_readdata),                                //                                              .readdata

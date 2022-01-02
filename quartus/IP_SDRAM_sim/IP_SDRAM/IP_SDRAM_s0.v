@@ -307,7 +307,7 @@ module IP_SDRAM_s0 (
 		.AVL_ADDR_WIDTH   (12),
 		.AVL_NUM_SYMBOLS  (4),
 		.AVL_SYMBOL_WIDTH (8),
-		.MEM_SIZE         (11264),
+		.MEM_SIZE         (12288),
 		.INIT_FILE        ("IP_SDRAM_s0_sequencer_mem.hex"),
 		.RAM_BLOCK_TYPE   ("AUTO")
 	) sequencer_mem (

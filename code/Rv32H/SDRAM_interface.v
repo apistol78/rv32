@@ -1,7 +1,9 @@
 
 // SDRAM interface
 module SDRAM_interface(
-	input wire i_reset,
+	input wire i_global_reset_n,
+	input wire i_soft_reset_n,
+	
 	input wire i_clock,
 	input wire i_request,
 	input wire i_rw,
@@ -22,12 +24,6 @@ module SDRAM_interface(
 	input wire DDR2LP_OCT_RZQ
 );
 
-
-	wire global_reset = i_reset;
-	wire soft_reset = i_reset; // global_reset | !pll_locked;
-	wire mp_reset = i_reset; // soft_reset | !local_cal_success;
-
-	wire afi_clk;
 	wire avl_ready;
 	wire avl_rdata_valid;
 	reg avl_read_req = 0;
@@ -39,15 +35,15 @@ module SDRAM_interface(
 
 	IP_SDRAM sdram(
 		.pll_ref_clk(i_clock),
-		.global_reset_n(~global_reset),
-		.soft_reset_n(~soft_reset),
+		.global_reset_n(i_global_reset_n),
+		.soft_reset_n(i_soft_reset_n),
 		
-		.afi_clk(afi_clk),
+		.afi_clk(),
 		.afi_half_clk(),
 		.afi_reset_n(),
 		.afi_reset_export_n(),
 
-		.mem_ca(DD2LP_CA),
+		.mem_ca(DDR2LP_CA),
 		.mem_cke(DDR2LP_CKE[0]),
 		.mem_ck(DDR2LP_CK_p),
 		.mem_ck_n(DDR2LP_CK_n),
@@ -70,11 +66,11 @@ module SDRAM_interface(
 		.avl_be_0(4'hf),
 
 		.mp_cmd_clk_0_clk(i_clock),
-		.mp_cmd_reset_n_0_reset_n(~mp_reset),
+		.mp_cmd_reset_n_0_reset_n(i_soft_reset_n),
 		.mp_rfifo_clk_0_clk(i_clock),
-		.mp_rfifo_reset_n_0_reset_n(~mp_reset),
+		.mp_rfifo_reset_n_0_reset_n(i_soft_reset_n),
 		.mp_wfifo_clk_0_clk(i_clock),
-		.mp_wfifo_reset_n_0_reset_n(~mp_reset),
+		.mp_wfifo_reset_n_0_reset_n(i_soft_reset_n),
 		
 		.local_init_done(local_init_done),
 		.local_cal_success(local_cal_success),

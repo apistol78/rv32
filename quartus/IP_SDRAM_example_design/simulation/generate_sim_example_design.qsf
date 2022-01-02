@@ -19,7 +19,7 @@
 #
 # Quartus Prime
 # Version 21.1.0 Build 842 10/21/2021 SJ Lite Edition
-# Date created = 20:21:51  January 01, 2022
+# Date created = 21:30:18  January 02, 2022
 #
 # -------------------------------------------------------------------------- #
 #
@@ -41,7 +41,7 @@ set_global_assignment -name FAMILY CYCLONEV
 set_global_assignment -name DEVICE AUTO
 set_global_assignment -name TOP_LEVEL_ENTITY generate_sim_example_design
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 21.1.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "20:21:51  JANUARY 01, 2022"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:30:18  JANUARY 02, 2022"
 set_global_assignment -name LAST_QUARTUS_VERSION "21.1.0 Lite Edition"
 set_global_assignment -name TCL_SCRIPT_FILE generate_sim_verilog_example_design.tcl
 set_global_assignment -name TCL_SCRIPT_FILE generate_sim_vhdl_example_design.tcl

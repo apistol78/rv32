@@ -137,23 +137,34 @@ module SoC(
       output             UART_TX
 );
 
+`define SOC_ENABLE_SRAM
 `define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-	wire clock;
+	wire clock = CLOCK_50_B5B;
 
-	assign reset = !CPU_RESET_n;
-	assign clock = CLOCK_50_B5B;
-//	assign clock = CLOCK_125_p;
+	reg [31:0] cont = 0;
+	always@(posedge clock)
+		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
+
+	reg[4:0] sample = 0;
+	always @(posedge clock)
+	begin
+		if (cont == 32'd4_000_000)
+			sample[4:0] = { sample[3:0], KEY[0] };
+		else 
+			sample[4:0] = sample[4:0];
+	end
+
+	assign soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
+	assign global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
+	assign start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	
-//	reg [2:0] counter = 0;
-//	always @ (posedge CLOCK_50_B5B) begin
-//		counter <= counter + 1;
-//	end
-//	assign clock = counter[0];
+	assign reset = !CPU_RESET_n;
+
   
 `ifdef SOC_ENABLE_VGA
 	wire vga_enable;
@@ -218,6 +229,7 @@ module SoC(
 		.o_ready(ram_ready)
 	);
 	
+`ifdef SOC_ENABLE_SRAM
 	// SRAM
 	wire sram32_select;
 	wire [31:0] sram32_address;
@@ -240,6 +252,7 @@ module SoC(
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
 	);
+`endif
 
 `ifdef SOC_ENABLE_SDRAM
 	// SDRAM
@@ -248,7 +261,8 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 	SDRAM_interface sdram(
-		.i_reset(reset),
+		.i_global_reset_n(global_reset_n),
+		.i_soft_reset_n(soft_reset_n),
 		.i_clock(clock),
 		.i_request(sdram_select && cpu_request),
 		.i_rw(cpu_rw),
@@ -393,9 +407,11 @@ module SoC(
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
 	assign ram_address = cpu_address - 32'h00010000;
 
+`ifdef SOC_ENABLE_SRAM
 	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram32_address = cpu_address - 32'h10000000;
-	
+`endif
+
 `ifdef SOC_ENABLE_SDRAM
 	assign sdram_select = (cpu_address >= 32'h20000000 && cpu_address < 32'h40000000);
 	assign sdram_address = cpu_address - 32'h20000000;
@@ -428,7 +444,9 @@ module SoC(
 	assign cpu_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
+`ifdef SOC_ENABLE_SRAM
 		sram32_select ? sram32_rdata :
+`endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_rdata :
 `endif
@@ -449,7 +467,9 @@ module SoC(
 	assign cpu_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
+`ifdef SOC_ENABLE_SRAM
 		sram32_select ? sram32_ready :
+`endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_ready :
 `endif
@@ -472,6 +492,6 @@ module SoC(
 		1'b0;
 
 	// 7:0
-	//assign LEDG = { SD_DAT, sd_select };
+	assign LEDG = { soft_reset_n, global_reset_n, start_n };
 
 endmodule

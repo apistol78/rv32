@@ -2075,6 +2075,7 @@ proc IP_SDRAM_example_if0_p0_get_ddr_pins { instname allpins } {
 	set pins(ac_pins) [ concat $pins(add_pins) $pins(cmd_pins) ]
 
 	set pins(afi_ck_pins) ${instname}|p0|umemphy|afi_clk_reg
+	set pins(afi_half_ck_pins) ${instname}|p0|umemphy|afi_half_clk_reg
 	set pins(avl_ck_pins) ${instname}|p0|umemphy|avl_clk_reg
 	set pins(avl_phy_ck_pins) ${instname}|p0|umemphy|uio_pads|dq_ddio[0].ubidir_dq_dqs|altdq_dqs2_inst|input_path_gen[0].read_fifo~READ_ADDRESS_DFF
 	set pins(config_ck_pins) ${instname}|p0|umemphy|config_clk_reg
@@ -2096,6 +2097,7 @@ proc IP_SDRAM_example_if0_p0_get_ddr_pins { instname allpins } {
 	set pll_ck_clock "_UNDEFINED_PIN_"
 	set pll_dq_write_clock "_UNDEFINED_PIN_"
 	set pll_write_clock "_UNDEFINED_PIN_"
+	set pll_afi_half_clock "_UNDEFINED_PIN_"
 	set pll_avl_clock "_UNDEFINED_PIN_"
 	set pll_avl_phy_clock "_UNDEFINED_PIN_"
 	set pll_config_clock "_UNDEFINED_PIN_"
@@ -2169,6 +2171,17 @@ proc IP_SDRAM_example_if0_p0_get_ddr_pins { instname allpins } {
 	}
 	set pins(pll_write_clock) $pll_write_clock	
 
+	# AFI half clock
+	set pll_afi_half_clock_id [IP_SDRAM_example_if0_p0_get_output_clock_id $pins(afi_half_ck_pins) "AFI HALF CK" msg_list]
+	if {$pll_afi_half_clock_id == -1} {
+		foreach {msg_type msg} $msg_list {
+			post_message -type $msg_type "IP_SDRAM_example_if0_p0_pin_map.tcl: $msg"
+		}
+		post_message -type critical_warning "IP_SDRAM_example_if0_p0_pin_map.tcl: Failed to find PLL clock for pins [join $pins(afi_half_ck_pins)]"
+	} else {
+		set pll_afi_half_clock [IP_SDRAM_example_if0_p0_get_pll_clock_name $pll_afi_half_clock_id]
+	}
+	set pins(pll_afi_half_clock) $pll_afi_half_clock
 
 	set pll_avl_clock_id [IP_SDRAM_example_if0_p0_get_output_clock_id $pins(avl_ck_pins) "Avalon Bus CK" msg_list]
 	if {$pll_avl_clock_id == -1} {
@@ -2447,6 +2460,7 @@ proc IP_SDRAM_example_if0_p0_dump_all_pins { ddr_db_par } {
 		puts $FH "PLL CK: $pins(pll_ck_clock)"
 		puts $FH "PLL DQ WRITE: $pins(pll_dq_write_clock)"
 		puts $FH "PLL WRITE: $pins(pll_write_clock)"
+		puts $FH "PLL AFI HALF: $pins(pll_afi_half_clock)"
 		puts $FH "PLL AVL: $pins(pll_avl_clock)"
 		puts $FH "PLL AVL PHY: $pins(pll_avl_phy_clock)"
 		puts $FH "PLL CONFIG: $pins(pll_config_clock)"
@@ -2545,6 +2559,7 @@ proc IP_SDRAM_example_if0_p0_dump_static_pin_map { ddr_db_par filename } {
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_ck_clock
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_dq_write_clock
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_write_clock
+		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_afi_half_clock
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_avl_clock
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_avl_phy_clock
 		IP_SDRAM_example_if0_p0_static_map_expand_string $FH pins pll_config_clock

@@ -18,7 +18,7 @@ module IP_SDRAM_example_d0 #(
 		parameter TG_NUM_DRIVER_LOOP                     = 1,
 		parameter TG_ENABLE_UNIX_ID                      = 0,
 		parameter TG_USE_UNIX_ID                         = 0,
-		parameter TG_RANDOM_BYTE_ENABLE                  = 0,
+		parameter TG_RANDOM_BYTE_ENABLE                  = 1,
 		parameter TG_ENABLE_READ_COMPARE                 = 1,
 		parameter TG_POWER_OF_TWO_BURSTS_ONLY            = 0,
 		parameter TG_BURST_ON_BURST_BOUNDARY             = 0,
@@ -54,6 +54,7 @@ module IP_SDRAM_example_d0 #(
 		output wire        avl_write_req,   //          .write
 		output wire        avl_read_req,    //          .read
 		input  wire        avl_rdata_valid, //          .readdatavalid
+		output wire [3:0]  avl_be,          //          .byteenable
 		output wire        avl_burstbegin   //          .beginbursttransfer
 	);
 
@@ -162,7 +163,7 @@ module IP_SDRAM_example_d0 #(
 			instantiated_with_wrong_parameters_error_see_comment_above
 					tg_use_unix_id_check ( .error(1'b1) );
 		end
-		if (TG_RANDOM_BYTE_ENABLE != 0)
+		if (TG_RANDOM_BYTE_ENABLE != 1)
 		begin
 			initial begin
 				$display("Generated module instantiated with wrong parameters");
@@ -362,7 +363,7 @@ module IP_SDRAM_example_d0 #(
 		end
 	endgenerate
 
-	driver_avl_use_burstbegin #(
+	driver_avl_use_be_avl_use_burstbegin #(
 		.DEVICE_FAMILY                          ("Cyclone V"),
 		.TG_AVL_DATA_WIDTH                      (32),
 		.TG_AVL_ADDR_WIDTH                      (29),
@@ -374,7 +375,7 @@ module IP_SDRAM_example_d0 #(
 		.TG_NUM_DRIVER_LOOP                     (1),
 		.TG_ENABLE_UNIX_ID                      (0),
 		.TG_USE_UNIX_ID                         (0),
-		.TG_RANDOM_BYTE_ENABLE                  (0),
+		.TG_RANDOM_BYTE_ENABLE                  (1),
 		.TG_ENABLE_READ_COMPARE                 (1),
 		.TG_POWER_OF_TWO_BURSTS_ONLY            (0),
 		.TG_BURST_ON_BURST_BOUNDARY             (0),
@@ -410,6 +411,7 @@ module IP_SDRAM_example_d0 #(
 		.avl_write_req       (avl_write_req),                        //          .write
 		.avl_read_req        (avl_read_req),                         //          .read
 		.avl_rdata_valid     (avl_rdata_valid),                      //          .readdatavalid
+		.avl_be              (avl_be),                               //          .byteenable
 		.avl_burstbegin      (avl_burstbegin),                       //          .beginbursttransfer
 		.pnf_per_bit         (),                                     // (terminated)
 		.pnf_per_bit_persist (),                                     // (terminated)

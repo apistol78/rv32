@@ -145,7 +145,7 @@ parameter IS_HHP_HPS = "false";
 
 // choose between abstract (fast) and regular model
 `ifndef ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL
-  `define ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL 1
+  `define ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL 0
 `endif
 
 parameter ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL = `ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL;
@@ -194,7 +194,7 @@ parameter CALIB_REG_WIDTH = 8;
 
 
 parameter TB_PROTOCOL       = "LPDDR2";
-parameter TB_MEM_CLK_FREQ   = "167.0";
+parameter TB_MEM_CLK_FREQ   = "330.0";
 parameter TB_RATE           = "FULL";
 parameter TB_MEM_DQ_WIDTH   = "32";
 parameter TB_MEM_DQS_WIDTH  = "4";

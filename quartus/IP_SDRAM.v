@@ -28,10 +28,10 @@ module IP_SDRAM (
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
+		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        avl_read_req_0,             //                   .read
 		input  wire        avl_write_req_0,            //                   .write
 		input  wire [2:0]  avl_size_0,                 //                   .burstcount
-		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        mp_cmd_clk_0_clk,           //       mp_cmd_clk_0.clk
 		input  wire        mp_cmd_reset_n_0_reset_n,   //   mp_cmd_reset_n_0.reset_n
 		input  wire        mp_rfifo_clk_0_clk,         //     mp_rfifo_clk_0.clk
@@ -77,10 +77,10 @@ module IP_SDRAM (
 		.avl_rdata_valid_0          (avl_rdata_valid_0),          //                   .readdatavalid
 		.avl_rdata_0                (avl_rdata_0),                //                   .readdata
 		.avl_wdata_0                (avl_wdata_0),                //                   .writedata
+		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.avl_read_req_0             (avl_read_req_0),             //                   .read
 		.avl_write_req_0            (avl_write_req_0),            //                   .write
 		.avl_size_0                 (avl_size_0),                 //                   .burstcount
-		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.mp_cmd_clk_0_clk           (mp_cmd_clk_0_clk),           //       mp_cmd_clk_0.clk
 		.mp_cmd_reset_n_0_reset_n   (mp_cmd_reset_n_0_reset_n),   //   mp_cmd_reset_n_0.reset_n
 		.mp_rfifo_clk_0_clk         (mp_rfifo_clk_0_clk),         //     mp_rfifo_clk_0.clk
@@ -131,7 +131,7 @@ endmodule
 //	needed under any third party's intellectual property, are provided herein.
 //-->
 // Retrieval info: <instance entity-name="altera_mem_if_lpddr2_emif" version="21.1" >
-// Retrieval info: 	<generic name="MEM_VENDOR" value="Micron" />
+// Retrieval info: 	<generic name="MEM_VENDOR" value="JEDEC" />
 // Retrieval info: 	<generic name="MEM_FORMAT" value="DISCRETE" />
 // Retrieval info: 	<generic name="DISCRETE_FLY_BY" value="true" />
 // Retrieval info: 	<generic name="DEVICE_DEPTH" value="1" />
@@ -173,35 +173,35 @@ endmodule
 // Retrieval info: 	<generic name="MEM_INIT_EN" value="false" />
 // Retrieval info: 	<generic name="MEM_INIT_FILE" value="" />
 // Retrieval info: 	<generic name="DAT_DATA_WIDTH" value="32" />
-// Retrieval info: 	<generic name="TIMING_TIS" value="175" />
-// Retrieval info: 	<generic name="TIMING_TIH" value="250" />
-// Retrieval info: 	<generic name="TIMING_TDS" value="50" />
-// Retrieval info: 	<generic name="TIMING_TDH" value="125" />
-// Retrieval info: 	<generic name="TIMING_TDQSQ" value="120" />
-// Retrieval info: 	<generic name="TIMING_TQHS" value="300" />
-// Retrieval info: 	<generic name="TIMING_TDQSCK" value="2500" />
+// Retrieval info: 	<generic name="TIMING_TIS" value="290" />
+// Retrieval info: 	<generic name="TIMING_TIH" value="290" />
+// Retrieval info: 	<generic name="TIMING_TDS" value="270" />
+// Retrieval info: 	<generic name="TIMING_TDH" value="270" />
+// Retrieval info: 	<generic name="TIMING_TDQSQ" value="240" />
+// Retrieval info: 	<generic name="TIMING_TQHS" value="280" />
+// Retrieval info: 	<generic name="TIMING_TDQSCK" value="5500" />
 // Retrieval info: 	<generic name="TIMING_TDQSCKDS" value="450" />
 // Retrieval info: 	<generic name="TIMING_TDQSCKDM" value="900" />
 // Retrieval info: 	<generic name="TIMING_TDQSCKDL" value="1200" />
-// Retrieval info: 	<generic name="TIMING_TDQSS" value="1.25" />
-// Retrieval info: 	<generic name="TIMING_TDQSH" value="0.35" />
+// Retrieval info: 	<generic name="TIMING_TDQSS" value="1.0" />
+// Retrieval info: 	<generic name="TIMING_TDQSH" value="0.4" />
 // Retrieval info: 	<generic name="TIMING_TDSH" value="0.2" />
 // Retrieval info: 	<generic name="TIMING_TDSS" value="0.2" />
-// Retrieval info: 	<generic name="MEM_TINIT_US" value="500" />
-// Retrieval info: 	<generic name="MEM_TMRD_CK" value="3" />
-// Retrieval info: 	<generic name="MEM_TRAS_NS" value="42.0" />
-// Retrieval info: 	<generic name="MEM_TRCD_NS" value="15.0" />
+// Retrieval info: 	<generic name="MEM_TINIT_US" value="200" />
+// Retrieval info: 	<generic name="MEM_TMRD_CK" value="2" />
+// Retrieval info: 	<generic name="MEM_TRAS_NS" value="70.0" />
+// Retrieval info: 	<generic name="MEM_TRCD_NS" value="18.0" />
 // Retrieval info: 	<generic name="MEM_TRP_NS" value="18.0" />
-// Retrieval info: 	<generic name="MEM_TREFI_US" value="15.6" />
-// Retrieval info: 	<generic name="MEM_TRFC_NS" value="75.0" />
+// Retrieval info: 	<generic name="MEM_TREFI_US" value="3.9" />
+// Retrieval info: 	<generic name="MEM_TRFC_NS" value="60.0" />
 // Retrieval info: 	<generic name="CFG_TCCD_NS" value="2.5" />
 // Retrieval info: 	<generic name="MEM_TWR_NS" value="15.0" />
 // Retrieval info: 	<generic name="MEM_TWTR" value="2" />
-// Retrieval info: 	<generic name="MEM_TFAW_NS" value="60.0" />
+// Retrieval info: 	<generic name="MEM_TFAW_NS" value="50.0" />
 // Retrieval info: 	<generic name="MEM_TRRD_NS" value="10.0" />
-// Retrieval info: 	<generic name="MEM_TRTP_NS" value="10.0" />
+// Retrieval info: 	<generic name="MEM_TRTP_NS" value="7.5" />
 // Retrieval info: 	<generic name="RATE" value="Full" />
-// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="167.0" />
+// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="330.0" />
 // Retrieval info: 	<generic name="USE_MEM_CLK_FREQ" value="false" />
 // Retrieval info: 	<generic name="FORCE_DQS_TRACKING" value="AUTO" />
 // Retrieval info: 	<generic name="FORCE_SHADOW_REGS" value="AUTO" />
@@ -222,7 +222,7 @@ endmodule
 // Retrieval info: 	<generic name="POWER_OF_TWO_BUS" value="false" />
 // Retrieval info: 	<generic name="SOPC_COMPAT_RESET" value="false" />
 // Retrieval info: 	<generic name="AVL_MAX_SIZE" value="4" />
-// Retrieval info: 	<generic name="BYTE_ENABLE" value="false" />
+// Retrieval info: 	<generic name="BYTE_ENABLE" value="true" />
 // Retrieval info: 	<generic name="ENABLE_CTRL_AVALON_INTERFACE" value="true" />
 // Retrieval info: 	<generic name="CTL_DEEP_POWERDN_EN" value="false" />
 // Retrieval info: 	<generic name="CTL_SELF_REFRESH_EN" value="false" />
@@ -352,7 +352,7 @@ endmodule
 // Retrieval info: 	<generic name="USE_SEQUENCER_BFM" value="false" />
 // Retrieval info: 	<generic name="PLL_SHARING_MODE" value="None" />
 // Retrieval info: 	<generic name="NUM_PLL_SHARING_INTERFACES" value="1" />
-// Retrieval info: 	<generic name="EXPORT_AFI_HALF_CLK" value="false" />
+// Retrieval info: 	<generic name="EXPORT_AFI_HALF_CLK" value="true" />
 // Retrieval info: 	<generic name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
 // Retrieval info: 	<generic name="INCLUDE_BOARD_DELAY_MODEL" value="false" />
 // Retrieval info: 	<generic name="INCLUDE_MULTIRANK_BOARD_DELAY_MODEL" value="false" />
@@ -392,7 +392,7 @@ endmodule
 // Retrieval info: 	<generic name="DQ_INPUT_REG_USE_CLKN" value="false" />
 // Retrieval info: 	<generic name="DQS_DQSN_MODE" value="DIFFERENTIAL" />
 // Retrieval info: 	<generic name="AFI_DEBUG_INFO_WIDTH" value="32" />
-// Retrieval info: 	<generic name="CALIBRATION_MODE" value="Skip" />
+// Retrieval info: 	<generic name="CALIBRATION_MODE" value="Full" />
 // Retrieval info: 	<generic name="NIOS_ROM_DATA_WIDTH" value="32" />
 // Retrieval info: 	<generic name="READ_FIFO_SIZE" value="8" />
 // Retrieval info: 	<generic name="PHY_CSR_ENABLED" value="false" />
@@ -416,8 +416,8 @@ endmodule
 // Retrieval info: 	<generic name="TIMING_BOARD_DELTA_READ_DQS_ARRIVAL_TIME" value="0.0" />
 // Retrieval info: 	<generic name="PACKAGE_DESKEW" value="false" />
 // Retrieval info: 	<generic name="AC_PACKAGE_DESKEW" value="false" />
-// Retrieval info: 	<generic name="TIMING_BOARD_MAX_CK_DELAY" value="0.6" />
-// Retrieval info: 	<generic name="TIMING_BOARD_MAX_DQS_DELAY" value="0.6" />
+// Retrieval info: 	<generic name="TIMING_BOARD_MAX_CK_DELAY" value="0.33" />
+// Retrieval info: 	<generic name="TIMING_BOARD_MAX_DQS_DELAY" value="0.34" />
 // Retrieval info: 	<generic name="TIMING_BOARD_SKEW_CKDQS_DIMM_MIN" value="-0.01" />
 // Retrieval info: 	<generic name="TIMING_BOARD_SKEW_CKDQS_DIMM_MAX" value="0.01" />
 // Retrieval info: 	<generic name="TIMING_BOARD_SKEW_BETWEEN_DIMMS" value="0.05" />

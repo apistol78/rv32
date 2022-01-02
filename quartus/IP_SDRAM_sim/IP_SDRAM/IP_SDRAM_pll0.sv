@@ -45,7 +45,7 @@ parameter DEVICE_FAMILY = "Cyclone V";
 
 // choose between abstract (fast) and regular model
 `ifndef ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL
-  `define ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL 1
+  `define ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL 0
 `endif
 
 parameter ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL = `ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL;
@@ -57,25 +57,25 @@ localparam FAST_SIM_MODEL = ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL;
 parameter REF_CLK_FREQ = "50.0 MHz";
 parameter REF_CLK_PERIOD_PS = 20000;
 
-parameter PLL_AFI_CLK_FREQ_STR = "167.0 MHz";
-parameter PLL_MEM_CLK_FREQ_STR = "167.0 MHz";
-parameter PLL_WRITE_CLK_FREQ_STR = "167.0 MHz";
-parameter PLL_ADDR_CMD_CLK_FREQ_STR = "167.0 MHz";
-parameter PLL_AFI_HALF_CLK_FREQ_STR = "83.5 MHz";
-parameter PLL_NIOS_CLK_FREQ_STR = "55.666666 MHz";
-parameter PLL_CONFIG_CLK_FREQ_STR = "18.555555 MHz";
+parameter PLL_AFI_CLK_FREQ_STR = "330.0 MHz";
+parameter PLL_MEM_CLK_FREQ_STR = "330.0 MHz";
+parameter PLL_WRITE_CLK_FREQ_STR = "330.0 MHz";
+parameter PLL_ADDR_CMD_CLK_FREQ_STR = "330.0 MHz";
+parameter PLL_AFI_HALF_CLK_FREQ_STR = "165.0 MHz";
+parameter PLL_NIOS_CLK_FREQ_STR = "66.0 MHz";
+parameter PLL_CONFIG_CLK_FREQ_STR = "22.0 MHz";
 parameter PLL_P2C_READ_CLK_FREQ_STR = "";
 parameter PLL_C2P_WRITE_CLK_FREQ_STR = "";
 parameter PLL_HR_CLK_FREQ_STR = "";
 parameter PLL_DR_CLK_FREQ_STR = "";
 
-parameter PLL_AFI_CLK_FREQ_SIM_STR = "5988 ps";
-parameter PLL_MEM_CLK_FREQ_SIM_STR = "5988 ps";
-parameter PLL_WRITE_CLK_FREQ_SIM_STR = "5988 ps";
-parameter PLL_ADDR_CMD_CLK_FREQ_SIM_STR = "5988 ps";
-parameter PLL_AFI_HALF_CLK_FREQ_SIM_STR = "11976 ps";
-parameter PLL_NIOS_CLK_FREQ_SIM_STR = "17964 ps";
-parameter PLL_CONFIG_CLK_FREQ_SIM_STR = "53892 ps";
+parameter PLL_AFI_CLK_FREQ_SIM_STR = "3030 ps";
+parameter PLL_MEM_CLK_FREQ_SIM_STR = "3030 ps";
+parameter PLL_WRITE_CLK_FREQ_SIM_STR = "3030 ps";
+parameter PLL_ADDR_CMD_CLK_FREQ_SIM_STR = "3030 ps";
+parameter PLL_AFI_HALF_CLK_FREQ_SIM_STR = "6060 ps";
+parameter PLL_NIOS_CLK_FREQ_SIM_STR = "15150 ps";
+parameter PLL_CONFIG_CLK_FREQ_SIM_STR = "45450 ps";
 parameter PLL_P2C_READ_CLK_FREQ_SIM_STR = "0 ps";
 parameter PLL_C2P_WRITE_CLK_FREQ_SIM_STR = "0 ps";
 parameter PLL_HR_CLK_FREQ_SIM_STR = "0 ps";
@@ -84,15 +84,15 @@ parameter PLL_DR_CLK_FREQ_SIM_STR = "0 ps";
 parameter AFI_CLK_PHASE      = "0 ps";
 parameter AFI_PHY_CLK_PHASE  = "0 ps";
 parameter MEM_CLK_PHASE      = "0 ps";
-parameter WRITE_CLK_PHASE    = "4491 ps";
-parameter ADDR_CMD_CLK_PHASE = "4491 ps";
+parameter WRITE_CLK_PHASE    = "2272 ps";
+parameter ADDR_CMD_CLK_PHASE = "2272 ps";
 parameter AFI_HALF_CLK_PHASE = "0 ps";
-parameter AVL_CLK_PHASE      = "17664 ps";
+parameter AVL_CLK_PHASE      = "14962 ps";
 parameter CONFIG_CLK_PHASE   = "0 ps";
 
 parameter MEM_CLK_PHASE_SIM       = "0 ps";
-parameter WRITE_CLK_PHASE_SIM     = "4491 ps";
-parameter ADDR_CMD_CLK_PHASE_SIM  = "4491 ps";
+parameter WRITE_CLK_PHASE_SIM     = "2273 ps";
+parameter ADDR_CMD_CLK_PHASE_SIM  = "2273 ps";
 
 
 parameter ABSTRACT_REAL_COMPARE_TEST = "false";
@@ -144,6 +144,8 @@ input   global_reset_n;		// Resets (active-low) the whole system (all PHY logic 
 // PLL Interface
 output	afi_clk;
 output	afi_half_clk;
+
+wire	pll_afi_half_clk;
 
 output	pll_mem_phy_clk;
 output	afi_phy_clk;
@@ -343,6 +345,26 @@ initial $display("Using %0s pll emif simulation models", FAST_SIM_MODEL ? "Fast"
 	// synthesis read_comments_as_HDL off
 	defparam pll4.duty_cycle = 50;
 
+	generic_pll pll5 (
+		.refclk({pll_ref_clk}),
+		.rst(~global_reset_n),
+		.fbclk(fbout),
+		.outclk(pll_afi_half_clk),
+		.fboutclk(),
+		.locked(),
+		.writerefclkdata(),
+    .writeoutclkdata(),
+    .writephaseshiftdata(), 
+		.writedutycycledata(),
+		.readrefclkdata(),
+    .readoutclkdata(),
+    .readphaseshiftdata(),
+    .readdutycycledata()								
+	);	
+	defparam pll5.reference_clock_frequency = REF_CLK_FREQ,
+		pll5.output_clock_frequency = AFI_HALF_CLK_FREQ,
+		pll5.phase_shift = AFI_HALF_CLK_PHASE,
+		pll5.duty_cycle = 50;
 	 
 	generic_pll pll6 (
 		.refclk({pll_ref_clk}),
@@ -431,7 +453,7 @@ initial $display("Using %0s pll emif simulation models", FAST_SIM_MODEL ? "Fast"
 
 	assign afi_clk = pll_afi_clk;
 
-  assign afi_half_clk = 1'b0;
+	assign afi_half_clk = pll_afi_half_clk;
 
 
 endmodule
