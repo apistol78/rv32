@@ -1,3 +1,4 @@
+#include <string.h>
 #include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/FileSystem.h>
@@ -166,7 +167,7 @@ bool memcheck(Serial& serial)
 	uint8_t cnt = 0;
 	uint32_t error = 0;
 
-	for (uint32_t addr = 0x10000000; addr <= 0x100000ff; addr += 16)
+	for (uint32_t addr = 0x20000000; addr <= 0x200000ff; addr += 16)
 	{
 		for (int32_t i = 0; i < 16; ++i)
 			utd[i] = cnt++;

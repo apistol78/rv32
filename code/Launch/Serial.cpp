@@ -1,3 +1,4 @@
+#include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Serial.h"
 
@@ -151,11 +152,54 @@ void Serial::flush()
 
 bool Serial::open(int32_t port, const Configuration& configuration)
 {
+	m_fd = ::open("/dev/ttyUSB0", O_RDWR);
+	if (m_fd < 0)
+	{
+		log::error << L"open failed" << Endl;
+		return false;
+	}
+
+	struct termios tty;
+	if (tcgetattr(m_fd, &tty) != 0)
+	{
+		log::error << L"tcgetattr failed" << Endl;
+		return false;
+	}
+
+	tty.c_cflag &= ~PARENB;	// no parity
+	tty.c_cflag &= ~CSTOPB;	// one stop bit
+	tty.c_cflag &= ~CSIZE;
+	tty.c_cflag |= CS5 | CS6 | CS7 | CS8;	// 8 bits per byte
+	tty.c_cflag &= ~CRTSCTS;	// no rts/cts control
+	tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
+	tty.c_lflag &= ~ICANON;
+	tty.c_lflag &= ~ECHO; // Disable echo
+	tty.c_lflag &= ~ECHOE; // Disable erasure
+	tty.c_lflag &= ~ECHONL; // Disable new-line echo
+	tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
+	tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
+	tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes (e.g. newline chars)
+	tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
+	// tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT IN LINUX)
+	// tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT IN LINUX)
+	tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+	tty.c_cc[VMIN] = 0;
+	cfsetispeed(&tty, B9600);
+	cfsetospeed(&tty, B9600);
+
+	if (tcsetattr(m_fd, TCSANOW, &tty) != 0)
+	{
+		log::error << L"tcsetattr failed" << Endl;
+		return false;
+	}
+
 	return true;
 }
 
 void Serial::close()
 {
+	::close(m_fd);
 }
 
 bool Serial::canRead() const
@@ -190,12 +234,12 @@ int64_t Serial::seek(SeekOriginType origin, int64_t offset)
 
 int64_t Serial::read(void* block, int64_t nbytes)
 {
-	return -1;
+	return ::read(m_fd, block, nbytes);
 }
 
 int64_t Serial::write(const void* block, int64_t nbytes)
 {
-	return -1;
+	return ::write(m_fd, block, nbytes);
 }
 
 void Serial::flush()

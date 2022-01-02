@@ -3,6 +3,10 @@
 #if defined(_WIN32)
 #	include <windows.h>
 #elif defined(__LINUX__)
+#	include <fcntl.h> // Contains file controls like O_RDWR
+#	include <errno.h> // Error integer and strerror() function
+#	include <termios.h> // Contains POSIX terminal control definitions
+#	include <unistd.h> // write(), read(), close()
 #endif
 #include <Core/Io/IStream.h>
 
@@ -61,5 +65,7 @@ public:
 private:
 #if defined(_WIN32)
 	HANDLE m_hcomm = INVALID_HANDLE_VALUE;
+#elif defined(__LINUX__)
+	int m_fd;
 #endif
 };
