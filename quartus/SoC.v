@@ -143,6 +143,8 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
+	wire clock;
+
 	assign reset = !CPU_RESET_n;
 	assign clock = CLOCK_50_B5B;
 //	assign clock = CLOCK_125_p;
@@ -162,7 +164,7 @@ module SoC(
 	wire [31:0] vram_address;
 	wire vram_ready;
 	VRAM vram(
-		.i_clock(CLOCK_50_B5B),
+		.i_clock(clock),
 	
 		.i_video_address(vga_address),
 		.i_video_enable(vga_enable),
@@ -248,7 +250,6 @@ module SoC(
 	SDRAM_interface sdram(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_clock125(CLOCK_125_p),
 		.i_request(sdram_select && cpu_request),
 		.i_rw(cpu_rw),
 		.i_address(sdram_address),
@@ -293,7 +294,7 @@ module SoC(
 		9600
 	) uart(
 		.i_reset(reset),
-		.i_clock(CLOCK_50_B5B),
+		.i_clock(clock),
 		.i_request(uart_select && cpu_request),
 		.i_rw(cpu_rw),
 		.i_wdata(cpu_wdata),

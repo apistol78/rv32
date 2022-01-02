@@ -3,13 +3,12 @@
 module SDRAM_interface(
 	input wire i_reset,
 	input wire i_clock,
-	input wire i_clock125,
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,
 	input wire [31:0] i_wdata,
 	output reg [31:0] o_rdata,
-	output wire o_ready,
+	output reg o_ready,
 
 	output wire [9:0] DDR2LP_CA,
 	output wire [1:0] DDR2LP_CKE,
@@ -23,14 +22,29 @@ module SDRAM_interface(
 	input wire DDR2LP_OCT_RZQ
 );
 
+
+	wire global_reset = i_reset;
+	wire soft_reset = i_reset; // global_reset | !pll_locked;
+	wire mp_reset = i_reset; // soft_reset | !local_cal_success;
+
+	wire afi_clk;
+	wire avl_ready;
+	wire avl_rdata_valid;
+	reg avl_read_req = 0;
+	reg avl_write_req = 0;
+	wire avl_burstbegin;
+	wire local_init_done;
+	wire local_cal_success;
+	wire pll_locked;
+
 	IP_SDRAM sdram(
 		.pll_ref_clk(i_clock),
-		.global_reset_n(~i_reset),
-		.soft_reset_n(~i_reset),
+		.global_reset_n(~global_reset),
+		.soft_reset_n(~soft_reset),
 		
-		.afi_clk(),                    //            afi_clk.clk
-		.afi_half_clk(),               //       afi_half_clk.clk
-		.afi_reset_n(),                //          afi_reset.reset_n
+		.afi_clk(afi_clk),
+		.afi_half_clk(),
+		.afi_reset_n(),
 		.afi_reset_export_n(),
 
 		.mem_ca(DD2LP_CA),
@@ -44,22 +58,74 @@ module SDRAM_interface(
 		.mem_dqs(DDR2LP_DQS_p),
 		.oct_rzqin(DDR2LP_OCT_RZQ),
 
-		.avl_ready_0(o_ready),
-		.avl_burstbegin_0(1'b0),
+		.avl_ready_0(avl_ready),
+		.avl_burstbegin_0(avl_burstbegin),
 		.avl_addr_0(i_address[26:0]),
+		.avl_rdata_valid_0(avl_rdata_valid),
 		.avl_rdata_0(o_rdata),
 		.avl_wdata_0(i_wdata),
-		.avl_read_req_0(i_request && !i_rw),
-		.avl_write_req_0(i_request && i_rw),
-		.avl_size_0(3'b1),
+		.avl_read_req_0(avl_read_req),
+		.avl_write_req_0(avl_write_req),
+		.avl_size_0(3'b001),
 		.avl_be_0(4'hf),
 
 		.mp_cmd_clk_0_clk(i_clock),
-		.mp_cmd_reset_n_0_reset_n(~i_reset),
+		.mp_cmd_reset_n_0_reset_n(~mp_reset),
 		.mp_rfifo_clk_0_clk(i_clock),
-		.mp_rfifo_reset_n_0_reset_n(~i_reset),
+		.mp_rfifo_reset_n_0_reset_n(~mp_reset),
 		.mp_wfifo_clk_0_clk(i_clock),
-		.mp_wfifo_reset_n_0_reset_n(~i_reset),
+		.mp_wfifo_reset_n_0_reset_n(~mp_reset),
+		
+		.local_init_done(local_init_done),
+		.local_cal_success(local_cal_success),
+		.pll_locked(pll_locked)
 	);
+	
+	reg [3:0] state = 0;
+	reg [7:0] count = 0;
+	
+	initial o_ready = 0;
+	
+	assign avl_burstbegin = avl_read_req || avl_write_req;
+	
+	always @(posedge i_clock) begin
+		if (i_request) begin
+			case (state)
+				0: begin
+					if (local_init_done) begin
+						if (!i_rw) begin
+							avl_read_req <= 1;
+						end
+						else begin
+							avl_write_req <= 1;
+						end
+						state <= 1;
+					end
+				end
+				
+				1: begin
+					if (avl_ready) begin
+						avl_read_req <= 0;
+						avl_write_req <= 0;
+						
+						if (i_rw || avl_rdata_valid)
+							o_ready <= 1;
+						
+						state <= 2;
+						count <= count + 1;
+					end
+				end
+				
+				2: begin
+					if (i_rw || avl_rdata_valid)
+						o_ready <= 1;
+				end
+			endcase
+		end
+		else begin
+			o_ready <= 0;
+			state <= 0;
+		end
+	end
 
 endmodule
