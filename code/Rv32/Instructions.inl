@@ -225,8 +225,11 @@ else if ((word & 0x0000707f) == 0x00001073)
 {
 	TRACE(L"	CSRRW");
 	log::info << L"No verilog implementation of CSRRW" << Endl;
-	log::error << L"Not implemented." << Endl;
-	return false;
+			auto f = parseFormatCSR(word);
+			R_s(f.rd) = readCSR(f.csr);
+			writeCSR(f.csr, R_s(f.rs1));
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00005073)
 {
@@ -238,7 +241,6 @@ else if ((word & 0x0000707f) == 0x00005073)
 else if ((word & 0xfe00707f) == 0x02004033)
 {
 	TRACE(L"	DIV");
-	log::info << L"No verilog implementation of DIV" << Endl;
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
 			int32_t divisor = R_s(f.rs2);
@@ -254,7 +256,6 @@ else if ((word & 0xfe00707f) == 0x02004033)
 else if ((word & 0xfe00707f) == 0x02005033)
 {
 	TRACE(L"	DIVU");
-	log::info << L"No verilog implementation of DIVU" << Endl;
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
 			uint32_t divisor = R_u(f.rs2);
@@ -268,7 +269,6 @@ else if ((word & 0xfe00707f) == 0x02005033)
 else if ((word & 0xfe00707f) == 0x0200503b)
 {
 	TRACE(L"	DIVUW");
-	log::info << L"No verilog implementation of DIVUW" << Endl;
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
 			uint32_t divisor = R_u(f.rs2);
@@ -282,7 +282,6 @@ else if ((word & 0xfe00707f) == 0x0200503b)
 else if ((word & 0xfe00707f) == 0x0200403b)
 {
 	TRACE(L"	DIVW");
-	log::info << L"No verilog implementation of DIVW" << Endl;
 			auto f = parseFormatR(word);
 			R(f.rd) = R(f.rs1) / R(f.rs2);
 		
@@ -658,7 +657,6 @@ else if ((word & 0xfe00707f) == 0x02000033)
 else if ((word & 0xfe00707f) == 0x02001033)
 {
 	TRACE(L"	MULH");
-	log::info << L"No verilog implementation of MULH" << Endl;
 			auto f = parseFormatR(word);
 			int64_t lh = (int64_t)R_s(f.rs1);
 			int64_t rh = (int64_t)R_s(f.rs2);
@@ -669,7 +667,6 @@ else if ((word & 0xfe00707f) == 0x02001033)
 else if ((word & 0xfe00707f) == 0x02003033)
 {
 	TRACE(L"	MULHU");
-	log::info << L"No verilog implementation of MULHU" << Endl;
 			auto f = parseFormatR(word);
 			uint64_t lh = (uint64_t)R(f.rs1);
 			uint64_t rh = (uint64_t)R(f.rs2);
@@ -722,7 +719,6 @@ else if ((word & 0x0000707f) == 0x00006013)
 else if ((word & 0xfe00707f) == 0x02006033)
 {
 	TRACE(L"	REM");
-	log::info << L"No verilog implementation of REM" << Endl;
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
 			int32_t divisor = R_s(f.rs2);
@@ -736,7 +732,6 @@ else if ((word & 0xfe00707f) == 0x02006033)
 else if ((word & 0xfe00707f) == 0x02007033)
 {
 	TRACE(L"	REMU");
-	log::info << L"No verilog implementation of REMU" << Endl;
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
 			uint32_t divisor = R_u(f.rs2);

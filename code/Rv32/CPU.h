@@ -37,4 +37,8 @@ private:
     uint32_t m_registers[32];
 
     bool decode(uint32_t word);
+
+    uint32_t readCSR(uint16_t csr) const;
+
+    void writeCSR(uint16_t csr, uint32_t value);
 };

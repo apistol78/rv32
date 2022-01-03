@@ -11,6 +11,22 @@ using namespace traktor;
 namespace
 {
 
+struct FormatCSR
+{
+	uint32_t rd;
+	uint32_t rs1;
+	uint16_t csr;
+};
+
+FormatCSR parseFormatCSR(uint32_t word)
+{
+	return FormatCSR {
+		(word >> 7) & 0x1f,
+		(word >> 15) & 0x1f,
+		(word >> 20) & 0xfff
+	};
+}
+
 struct FormatI
 {
 	uint32_t rd;
@@ -190,12 +206,12 @@ bool CPU::tick()
 {
 	uint32_t word;
 	
-	word = getFromICache(m_pc);
-	if (word == 0)
-	{
+	//word = getFromICache(m_pc);
+	//if (word == 0)
+	//{
 		word = m_bus->readU32(m_pc);
-		putIntoICache(m_pc, word);
-	}
+	//	putIntoICache(m_pc, word);
+	//}
 
 	if (m_trace)
 		*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;
@@ -224,4 +240,13 @@ bool CPU::tick()
 bool CPU::decode(uint32_t word)
 {
 	#include "Instructions.inl"
+}
+
+uint32_t CPU::readCSR(uint16_t csr) const
+{
+	return 0;
+}
+
+void CPU::writeCSR(uint16_t csr, uint32_t value)
+{
 }

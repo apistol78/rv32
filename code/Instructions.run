@@ -364,7 +364,12 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00001073,
 		name = "CSRRW",
-		format = "CSR"
+		format = "CSR",
+		cpp = [[
+			auto f = parseFormatCSR(word);
+			R_s(f.rd) = readCSR(f.csr);
+			writeCSR(f.csr, R_s(f.rs1));
+		]]
 	},
 	{
 		mask = 0x0000707f,
