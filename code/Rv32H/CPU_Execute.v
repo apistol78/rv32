@@ -145,38 +145,51 @@ module CPU_Execute (
 	assign o_stall = (i_tag != o_tag) && (decode_cycle != 0);
 
 	always @(posedge i_clock) begin
-		if (!i_stall && i_tag != o_tag) begin
-			$display("Execute %x (%d)", i_instruction, i_tag);
-			$display("  cycle %d", decode_cycle);
-			$display("     PC %x", i_pc);
-			$display("    RS1 %x", i_rs1);
-			$display("    RS2 %x", i_rs2);
-			$display("    IMM %d", i_imm);
-
-			o_branch <= i_branch;
-			o_pc_next <= i_pc + 4;
+		if (i_reset) begin
+			o_inst_rd <= 0;
+			o_branch <= 0;
+			o_pc_next <= 0;
 			o_mem_read <= 0;
 			o_mem_write <= 0;
-			o_mem_width <= 0;
-			o_inst_rd <= i_inst_rd;
+			o_mem_signed <= 0;
+			o_mem_address <= 0;
+			o_tag <= 0;
+			decode_cycle <= 0;
+		end
+		else begin
+			if (!i_stall && i_tag != o_tag) begin
+				$display("Execute %x (%d)", i_instruction, i_tag);
+				$display("  cycle %d", decode_cycle);
+				$display("     PC %x", i_pc);
+				$display("    RS1 %x", i_rs1);
+				$display("    RS2 %x", i_rs2);
+				$display("    IMM %d", i_imm);
 
-			decode_cycle <= decode_cycle + 1;
+				o_branch <= i_branch;
+				o_pc_next <= i_pc + 4;
+				o_mem_read <= 0;
+				o_mem_write <= 0;
+				o_mem_width <= 0;
+				o_inst_rd <= i_inst_rd;
 
-			if (is_ALU) begin
-				if (!i_branch) begin
-					o_rd <= alu_result;
+				decode_cycle <= decode_cycle + 1;
+
+				if (is_ALU) begin
+					if (!i_branch) begin
+						o_rd <= alu_result;
+					end
+					else begin
+						// If ALU result non-zero then branch is
+						// taken and PC is updated.
+						if (alu_result) begin
+							`GOTO($signed(`PC) + $signed(`IMM));
+						end
+					end
+					`EXECUTE_DONE;
 				end
 				else begin
-					// If ALU result non-zero then branch is
-					// taken and PC is updated.
-					if (alu_result) begin
-						`GOTO($signed(`PC) + $signed(`IMM));
-					end
+					`include "Instructions_d.v"
 				end
-				`EXECUTE_DONE;
-			end
-			else begin
-				`include "Instructions_d.v"
 			end
 		end
 	end

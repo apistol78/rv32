@@ -163,7 +163,7 @@ module SoC(
 	assign global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
 	assign start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	
-	assign reset = !CPU_RESET_n;
+	assign reset = !start_n; // CPU_RESET_n;
 
   
 `ifdef SOC_ENABLE_VGA
@@ -236,6 +236,7 @@ module SoC(
 	wire [31:0] sram32_rdata;
 	wire sram32_ready;
 	SRAM_interface sram(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(sram32_select && cpu_request),
 		.i_rw(cpu_rw),
@@ -305,7 +306,7 @@ module SoC(
 	wire [1:0] uart_state;
 	UART #(
 		50000000,
-		9600
+		115200
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),

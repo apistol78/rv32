@@ -1,6 +1,7 @@
 
 // SRAM interface
 module SRAM_interface(
+	input wire i_reset,
 	input wire i_clock,
 	input wire i_clock125,
 	input wire i_request,
@@ -20,12 +21,13 @@ module SRAM_interface(
 );
 	// Number of cycles for entire transaction, must to be multiple of 2.
 	// 50 MHz -> 6
-	localparam CYCLES = 6;
+	localparam CYCLES = 8;
 
-	reg [4:0] count = 0;
+	reg [4:0] count;
 	reg [15:0] wdata;
 	
 	initial begin
+		count <= 0;
 		SRAM_A <= 18'h0;
 		SRAM_CE_n <= 0;
 		SRAM_WE_n <= 1;
@@ -75,16 +77,21 @@ module SRAM_interface(
 		end
 	end
 
-	// Increement counter, store data read from SRAM.
+	// Increment counter, store data read from SRAM.
 	always @(posedge i_clock) begin
-		if (i_request) begin
-			count <= count + 1;
-			if (count == 1)
-				o_rdata[15:0] <= sram_d;
-			else if (count == CYCLES / 2 + 1)
-				o_rdata[31:16] <= sram_d;
-		end
-		else
+		if (i_reset) begin
 			count <= 0;
+		end
+		else begin
+			if (i_request) begin
+				count <= count + 1;
+				if (count == 1)
+					o_rdata[15:0] <= sram_d;
+				else if (count == CYCLES / 2 + 1)
+					o_rdata[31:16] <= sram_d;
+			end
+			else
+				count <= 0;
+		end
 	end
 endmodule

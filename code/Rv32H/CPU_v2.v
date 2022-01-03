@@ -77,9 +77,9 @@ module CPU_v2 (
 		.o_rs1(rs1),
 		.o_rs2(rs2),
 
-		.i_write_tag(writeback_tag),
-		.i_write_rd_idx(writeback_inst_rd),
-		.i_rd(writeback_rd)
+		.i_write_tag(memory_tag),
+		.i_write_rd_idx(memory_inst_rd),
+		.i_rd(memory_rd)
 	);
 
 	//====================================================
@@ -148,12 +148,14 @@ module CPU_v2 (
 
 	// Need to keep output after writeback, probably due to
 	// register file update takes one cycle.
+	/*
 	reg [4:0] last_inst_rd;
 	reg [31:0] last_rd;
 	always @(posedge i_clock) begin
 		last_inst_rd <= writeback_inst_rd;
 		last_rd <= writeback_rd;
 	end
+	*/
 
 	// Forward register values from pipeline if already in flight.
 	wire [31:0] fwd_rs1 = 
@@ -161,7 +163,7 @@ module CPU_v2 (
 		(decode_inst_rs1 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs1 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs1 == writeback_inst_rd) ? writeback_rd :
-		(decode_inst_rs1 == last_inst_rd) ? last_rd :
+		//(decode_inst_rs1 == last_inst_rd) ? last_rd :
 		rs1;
 
 	wire [31:0] fwd_rs2 =
@@ -169,7 +171,7 @@ module CPU_v2 (
 		(decode_inst_rs2 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs2 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
-		(decode_inst_rs2 == last_inst_rd) ? last_rd :
+		//(decode_inst_rs2 == last_inst_rd) ? last_rd :
 		rs2;
 
 	wire [7:0] execute_tag;
@@ -261,7 +263,6 @@ module CPU_v2 (
 	//====================================================
 	// WRITEBACK
 
-	wire [7:0] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
 	wire writeback_branch;
@@ -279,12 +280,10 @@ module CPU_v2 (
 		.i_pc_next(memory_pc_next),
 
 		// Output from writeback.
-		.o_tag(writeback_tag),
 		.o_inst_rd(writeback_inst_rd),
 		.o_rd(writeback_rd),
 		.o_branch(writeback_branch),
 		.o_pc_next(writeback_pc_next)
 	);
-
 
 endmodule

@@ -61,7 +61,12 @@ module CPU_Registers (
 	always @(posedge i_clock, posedge i_reset)
 	begin
 		if (i_reset) begin
-			
+			o_rs1 <= 0;
+			o_rs2 <= 0;
+
+			read_tag <= 0;
+			write_tag <= 0;
+
 			r[ 0] <= 32'h0000_0000;
 			r[ 1] <= 32'h0000_0000;
 			r[ 2] <= 32'h0001_0400;	// sp	

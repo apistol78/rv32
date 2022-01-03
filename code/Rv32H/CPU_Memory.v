@@ -35,9 +35,10 @@ module CPU_Memory(
 	localparam STATE_RMW_RST_REQUEST	= 2;
 	localparam STATE_RMW_WAIT_WRITE		= 3;
 
-	reg [4:0] state = 0;
+	reg [4:0] state;
 
 	initial begin
+		state <= 0;
 		o_bus_wdata <= 0;
 		o_tag <= 0;
 		o_inst_rd <= 0;
@@ -63,79 +64,103 @@ module CPU_Memory(
 	wire [15:0] bus_rdata_half = i_bus_rdata >> (address_byte_index * 8);
 
 	always @(posedge i_clock) begin
-		case(state)
-			0: begin
-				if (i_tag != o_tag) begin
-					// Patch through.
-					o_branch <= i_branch;
-					o_pc_next <= i_pc_next; 
-					o_inst_rd <= i_inst_rd;
-
-					if (i_mem_read) begin
-						// Single read cycle.
-						if (i_bus_ready) begin
-							case (i_mem_width)
-								4: o_rd <= i_bus_rdata;
-								2: o_rd <= { { 16{ i_mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
-								1: o_rd <= { { 24{ i_mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
-							endcase
+		if (i_reset) begin
+			state <= 0;
+			o_bus_wdata <= 0;
+			o_tag <= 0;
+			o_inst_rd <= 0;
+			o_rd <= 0;
+			o_branch <= 0;
+			o_pc_next <= 0;
+		end
+		else begin
+			case(state)
+				0: begin
+					if (i_tag != o_tag) begin
+						if (i_mem_read) begin
+							// Single read cycle.
+							if (i_bus_ready) begin
+								case (i_mem_width)
+									4: o_rd <= i_bus_rdata;
+									2: o_rd <= { { 16{ i_mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
+									1: o_rd <= { { 24{ i_mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
+								endcase
+								
+								// Finish
+								o_branch <= i_branch;
+								o_pc_next <= i_pc_next; 
+								o_inst_rd <= i_inst_rd;
+								o_tag <= i_tag;
+							end
+						end
+						else if (i_mem_write) begin
+							if (i_mem_width == 4) begin
+								// Single write cycle.
+								o_bus_wdata <= i_rd;
+								if (i_bus_ready) begin
+								
+									// Finish
+									o_branch <= i_branch;
+									o_pc_next <= i_pc_next; 
+									o_inst_rd <= i_inst_rd;
+									o_tag <= i_tag;
+								end
+							end
+							else begin
+								// Read-modify-write cycle.
+								state <= STATE_RMW_READ;
+							end
+						end
+						else begin
+							// Finish, no memory access.
+							o_branch <= i_branch;
+							o_pc_next <= i_pc_next; 
+							o_inst_rd <= i_inst_rd;
+							o_rd <= i_rd;
 							o_tag <= i_tag;
 						end
 					end
-					else if (i_mem_write) begin
-						if (i_mem_width == 4) begin
-							// Single write cycle.
-							o_bus_wdata <= i_rd;
-							if (i_bus_ready)
-								o_tag <= i_tag;
+				end
+
+				// =============
+				// Read-modify-write
+				STATE_RMW_READ: begin
+					if (i_bus_ready) begin
+						// Modify value.
+						if (i_mem_width == 1) begin
+							case ( address_byte_index  )
+								2'd0: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16], i_bus_rdata[15:8],        i_rd[7:0] };
+								2'd1: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16],         i_rd[7:0], i_bus_rdata[7:0] };
+								2'd2: o_bus_wdata <= { i_bus_rdata[31:24],          i_rd[7:0], i_bus_rdata[15:8], i_bus_rdata[7:0] };
+								2'd3: o_bus_wdata <= {          i_rd[7:0], i_bus_rdata[23:16], i_bus_rdata[15:8], i_bus_rdata[7:0] };
+							endcase
 						end
-						else begin
-							// Read-modify-write cycle.
-							state <= STATE_RMW_READ;
+						else begin	// width must be 2
+							case ( address_byte_index  )
+								2'd0: o_bus_wdata <= { i_bus_rdata[31:16],        i_rd[15:0] };
+								2'd2: o_bus_wdata <= {         i_rd[15:0], i_bus_rdata[15:0] };
+							endcase						
 						end
+						state <= STATE_RMW_RST_REQUEST;
 					end
-					else begin
-						// No memory access.
-						o_rd <= i_rd;
+				end
+
+				STATE_RMW_RST_REQUEST: begin
+					state <= STATE_RMW_WAIT_WRITE;
+				end
+
+				STATE_RMW_WAIT_WRITE: begin
+					if (i_bus_ready) begin
+						// Finish
+						o_branch <= i_branch;
+						o_pc_next <= i_pc_next; 
+						o_inst_rd <= i_inst_rd;
 						o_tag <= i_tag;
+						state <= 0;
 					end
 				end
-			end
-
-			// =============
-			// Read-modify-write
-			STATE_RMW_READ: begin
-				if (i_bus_ready) begin
-					// Modify value.
-					if (i_mem_width == 1) begin
-						case ( address_byte_index  )
-							2'd0: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16], i_bus_rdata[15:8],        i_rd[7:0] };
-							2'd1: o_bus_wdata <= { i_bus_rdata[31:24], i_bus_rdata[23:16],         i_rd[7:0], i_bus_rdata[7:0] };
-							2'd2: o_bus_wdata <= { i_bus_rdata[31:24],          i_rd[7:0], i_bus_rdata[15:8], i_bus_rdata[7:0] };
-							2'd3: o_bus_wdata <= {          i_rd[7:0], i_bus_rdata[23:16], i_bus_rdata[15:8], i_bus_rdata[7:0] };
-						endcase
-					end
-					else begin	// width must be 2
-						case ( address_byte_index  )
-							2'd0: o_bus_wdata <= { i_bus_rdata[31:16],        i_rd[15:0] };
-							2'd2: o_bus_wdata <= {         i_rd[15:0], i_bus_rdata[15:0] };
-						endcase						
-					end
-					state <= STATE_RMW_RST_REQUEST;
-				end
-			end
-
-			STATE_RMW_RST_REQUEST: begin
-				state <= STATE_RMW_WAIT_WRITE;
-			end
-
-			STATE_RMW_WAIT_WRITE: begin
-				if (i_bus_ready) begin
-					o_tag <= i_tag;
-					state <= 0;
-				end
-			end
-		endcase
+			endcase
+		end
 	end
 
 endmodule

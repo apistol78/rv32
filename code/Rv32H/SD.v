@@ -28,8 +28,11 @@ module SD (
 	initial o_rdata <= 32'h0000_0000;
 
 	assign SD_CLK = clk;
-    assign SD_CMD = (cdir == DIR_OUT) ? cmd : 1'bz;
-	assign SD_DAT = (ddir == DIR_OUT) ? dat : 1'bz;
+    assign SD_CMD = (cdir == DIR_OUT) ? cmd : 1'bZ;
+	assign SD_DAT = (ddir == DIR_OUT) ? dat : 1'bZ;
+	
+	wire cmd_in = SD_CMD;
+	wire [3:0] dat_in = SD_DAT;
 
 	always @ (posedge i_clock, posedge i_reset) begin
 		if (i_reset) begin
@@ -43,8 +46,8 @@ module SD (
 				if (!i_rw) begin
 					o_rdata <= {
 						24'b0,
-						(ddir == DIR_IN) ? SD_DAT : dat,
-						(cdir == DIR_IN) ? SD_CMD : cmd,
+						(ddir == DIR_IN) ? dat_in : dat,
+						(cdir == DIR_IN) ? cmd_in : cmd,
 						ddir,
 						cdir,
 						clk
