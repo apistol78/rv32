@@ -214,7 +214,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 	return true;
 }
 
-bool memcheck(Serial& serial)
+bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 {
 	uint8_t utd[16];
 	uint8_t ind[16];
@@ -222,13 +222,15 @@ bool memcheck(Serial& serial)
 	uint8_t cnt = 0;
 	uint32_t error = 0;
 
-	for (uint32_t addr = 0x20000000; addr <= 0x200000ff; addr += 16)
+	const uint32_t nb = 1;
+
+	for (uint32_t addr = from; addr < to; addr += nb)
 	{
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 			utd[i] = cnt++;
 
-		log::info << L"S ";
-		for (int32_t i = 0; i < 16; ++i)
+		log::info << L"S " << str(L"%08x", addr) << L": ";
+		for (int32_t i = 0; i < nb; ++i)
 			log::info << str(L"%02x", utd[i]) << L" ";
 		log::info << Endl;
 
@@ -243,9 +245,9 @@ bool memcheck(Serial& serial)
 
 		write< uint8_t >(serial, 0x01);
 		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, 16);
+		write< uint8_t >(serial, nb);
 
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 		{
 			write< uint8_t >(serial, utd[i]);
 			cs ^= (uint8_t)utd[i];
@@ -263,7 +265,7 @@ bool memcheck(Serial& serial)
 		// Read back data.
 		write< uint8_t >(serial, 0x02);
 		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, 16);
+		write< uint8_t >(serial, nb);
 
 		reply = read< uint8_t >(serial);
 		if (reply != 0x80)
@@ -272,14 +274,14 @@ bool memcheck(Serial& serial)
 			return false;
 		}
 
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 			ind[i] = read< uint8_t >(serial);
 
-		log::info << L"R ";
-		for (int32_t i = 0; i < 16; ++i)
+		log::info << L"R " << str(L"%08x", addr) << L": ";
+		for (int32_t i = 0; i < nb; ++i)
 			log::info << str(L"%02x", ind[i]) << L" ";
 
-		if (memcmp(ind, utd, 16) != 0)
+		if (memcmp(ind, utd, nb) != 0)
 		{
 			log::info << L"MISMATCH!";
 			error++;
@@ -311,7 +313,12 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('m', L"memcheck"))
 	{
-		if (!memcheck(serial))
+		// SRAM
+		if (!memcheck(serial, 0x10000000, 0x10000100))
+			return 1;
+
+		// SDRAM
+		if (!memcheck(serial, 0x20000000, 0x20001000))
 			return 1;
 	}
 
