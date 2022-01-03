@@ -222,7 +222,7 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 	uint8_t cnt = 0;
 	uint32_t error = 0;
 
-	const uint32_t nb = 1;
+	const uint32_t nb = 16;
 
 	for (uint32_t addr = from; addr < to; addr += nb)
 	{
@@ -299,7 +299,7 @@ int main(int argc, const char** argv)
 	Serial serial;
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 9600;
+	configuration.baudRate = 115200;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
@@ -313,12 +313,15 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('m', L"memcheck"))
 	{
+		bool result = true;
+
 		// SRAM
-		if (!memcheck(serial, 0x10000000, 0x10000100))
-			return 1;
+		result &= memcheck(serial, 0x10000000, 0x10000100);
 
 		// SDRAM
-		if (!memcheck(serial, 0x20000000, 0x20001000))
+		result &= memcheck(serial, 0x20000000, 0x20001000);
+
+		if (!result)
 			return 1;
 	}
 
