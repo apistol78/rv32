@@ -3,6 +3,7 @@
 #include <Core/Misc/String.h>
 #include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
+#include "Rv32/DCache.h"
 #include "Rv32/Helpers.h"
 
 using namespace traktor;
@@ -132,14 +133,14 @@ FormatU parseFormatU(uint32_t word)
 #define R_s(x) (int32_t&)m_registers[x]
 #define R_u(x) (uint32_t&)m_registers[x]
 
-#define MEM_RD(addr) m_bus->readU32(addr)
-#define MEM_WR(addr, value) m_bus->writeU32(addr, value)
+#define MEM_RD(addr) m_dcache->readU32(addr)
+#define MEM_WR(addr, value) m_dcache->writeU32(addr, value)
 
-#define MEM_RD_U16(addr) m_bus->readU16(addr)
-#define MEM_WR_U16(addr, value) m_bus->writeU16(addr, value)
+#define MEM_RD_U16(addr) m_dcache->readU16(addr)
+#define MEM_WR_U16(addr, value) m_dcache->writeU16(addr, value)
 
-#define MEM_RD_U8(addr) m_bus->readU8(addr);
-#define MEM_WR_U8(addr, value) m_bus->writeU8(addr, value)
+#define MEM_RD_U8(addr) m_dcache->readU8(addr);
+#define MEM_WR_U8(addr, value) m_dcache->writeU8(addr, value)
 
 #define TRACE(s) if (m_trace) { *m_trace << s << Endl; }
 
@@ -170,6 +171,7 @@ T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
 
 CPU::CPU(Bus* bus, OutputStream* trace)
 :   m_bus(bus)
+,	m_dcache(new DCache(bus))
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
 {
