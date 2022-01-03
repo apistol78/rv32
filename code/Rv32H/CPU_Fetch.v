@@ -4,9 +4,9 @@ module CPU_Fetch(
 	input wire i_stall,
 
 	// Bus
-	output reg o_bus_request,
+	output wire o_bus_request,
 	input wire i_bus_ready,
-	output reg [31:0] o_bus_address,
+	output wire [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata,
 
 	// Input
@@ -23,6 +23,25 @@ module CPU_Fetch(
 	reg [31:0] pc;
 	reg [7:0] tag;
 
+
+	reg icache_request = 0;
+	reg [31:0] icache_address;
+	wire [31:0] icache_rdata;
+	wire icache_ready;
+
+	CPU_ICache icache(
+		.i_clock(i_clock),
+		.i_request(icache_request),
+		.i_address(icache_address),
+		.o_rdata(icache_rdata),
+		.o_ready(icache_ready),
+
+		.o_bus_request(o_bus_request),
+		.o_bus_address(o_bus_address),
+		.i_bus_rdata(i_bus_rdata),
+		.i_bus_ready(i_bus_ready)
+	);
+
 	// 
 	`define INSTRUCTION i_bus_rdata
 	`include "Instructions_i.v"
@@ -31,8 +50,7 @@ module CPU_Fetch(
 		state <= 0;
 		pc <= 0;
 		tag <= 0;	
-		o_bus_address <= 0;
-		o_bus_request <= 0;
+		icache_request <= 0;
 		o_tag <= 0;
 		o_instruction <= 0;
 		o_pc <= 0;
@@ -43,8 +61,7 @@ module CPU_Fetch(
 			state <= 0;
 			pc <= 0;
 			tag <= 0;
-			o_bus_address <= 0;
-			o_bus_request <= 0;
+			icache_request <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
 			o_pc <= 0;
@@ -53,16 +70,16 @@ module CPU_Fetch(
 			case (state)
 				0: begin
 					if (!i_stall) begin
-						o_bus_address <= pc;
-						o_bus_request <= 1;
+						icache_address <= pc;
+						icache_request <= 1;
 						state <= 1;
 					end
 				end
 
 				1: begin
-					if (i_bus_ready) begin
+					if (icache_ready) begin
 						o_tag <= tag + 8'd1;
-						o_instruction <= i_bus_rdata;
+						o_instruction <= icache_rdata;
 						o_pc <= pc;
 
 						tag <= tag + 8'd1;
@@ -77,7 +94,7 @@ module CPU_Fetch(
 						else
 							state <= 0;
 
-						o_bus_request <= 0;
+						icache_request <= 0;
 					end
 				end
 
