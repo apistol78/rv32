@@ -101,7 +101,7 @@ module CPU_v2 (
 		.i_bus_rdata(bus_pa_rdata),
 
 		// Input
-		.i_branch(writeback_branch),
+		.i_tag(writeback_tag),
 		.i_pc_next(writeback_pc_next),
 
 		// Output
@@ -120,7 +120,6 @@ module CPU_v2 (
 	wire [4:0] decode_inst_rs2;
 	wire [4:0] decode_inst_rd;
 	wire [31:0] decode_imm;
-	wire decode_branch;
 	
 	CPU_Decode decode(
 		.i_reset(i_reset),
@@ -139,23 +138,11 @@ module CPU_v2 (
 		.o_inst_rs1(decode_inst_rs1),
 		.o_inst_rs2(decode_inst_rs2),
 		.o_inst_rd(decode_inst_rd),
-		.o_imm(decode_imm),
-		.o_branch(decode_branch)
+		.o_imm(decode_imm)
 	);
 
 	//====================================================
 	// EXECUTE
-
-	// Need to keep output after writeback, probably due to
-	// register file update takes one cycle.
-	/*
-	reg [4:0] last_inst_rd;
-	reg [31:0] last_rd;
-	always @(posedge i_clock) begin
-		last_inst_rd <= writeback_inst_rd;
-		last_rd <= writeback_rd;
-	end
-	*/
 
 	// Forward register values from pipeline if already in flight.
 	wire [31:0] fwd_rs1 = 
@@ -163,7 +150,6 @@ module CPU_v2 (
 		(decode_inst_rs1 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs1 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs1 == writeback_inst_rd) ? writeback_rd :
-		//(decode_inst_rs1 == last_inst_rd) ? last_rd :
 		rs1;
 
 	wire [31:0] fwd_rs2 =
@@ -171,13 +157,11 @@ module CPU_v2 (
 		(decode_inst_rs2 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs2 == memory_inst_rd) ? memory_rd :
 		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
-		//(decode_inst_rs2 == last_inst_rd) ? last_rd :
 		rs2;
 
 	wire [7:0] execute_tag;
 	wire [4:0] execute_inst_rd;
 	wire [31:0] execute_rd;
-	wire execute_branch;
 	wire [31:0] execute_pc_next;
 	wire execute_mem_read;
 	wire execute_mem_write;
@@ -200,13 +184,11 @@ module CPU_v2 (
 		.i_rs2(fwd_rs2),
 		.i_inst_rd(decode_inst_rd),
 		.i_imm(decode_imm),
-		.i_branch(decode_branch),
 
 		// Output from execute.
 		.o_tag(execute_tag),
 		.o_inst_rd(execute_inst_rd),
 		.o_rd(execute_rd),
-		.o_branch(execute_branch),
 		.o_pc_next(execute_pc_next),
 		.o_mem_read(execute_mem_read),
 		.o_mem_write(execute_mem_write),
@@ -222,7 +204,6 @@ module CPU_v2 (
 	wire [7:0] memory_tag;
 	wire [4:0] memory_inst_rd;
 	wire [31:0] memory_rd;
-	wire memory_branch;
 	wire [31:0] memory_pc_next;
 	wire memory_stall;
 
@@ -242,7 +223,6 @@ module CPU_v2 (
 		.i_tag(execute_tag),
 		.i_inst_rd(execute_inst_rd),
 		.i_rd(execute_rd),
-		.i_branch(execute_branch),
 		.i_pc_next(execute_pc_next),
 		.i_mem_read(execute_mem_read),
 		.i_mem_write(execute_mem_write),
@@ -254,7 +234,6 @@ module CPU_v2 (
 		.o_tag(memory_tag),
 		.o_inst_rd(memory_inst_rd),
 		.o_rd(memory_rd),
-		.o_branch(memory_branch),
 		.o_pc_next(memory_pc_next),
 		.o_stall(memory_stall)
 	);
@@ -263,9 +242,9 @@ module CPU_v2 (
 	//====================================================
 	// WRITEBACK
 
+	wire [7:0] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
-	wire writeback_branch;
 	wire [31:0] writeback_pc_next;
 	
 	CPU_Writeback writeback(
@@ -276,13 +255,12 @@ module CPU_v2 (
 		.i_tag(memory_tag),
 		.i_inst_rd(memory_inst_rd),
 		.i_rd(memory_rd),
-		.i_branch(memory_branch),
 		.i_pc_next(memory_pc_next),
 
 		// Output from writeback.
+		.o_tag(writeback_tag),
 		.o_inst_rd(writeback_inst_rd),
 		.o_rd(writeback_rd),
-		.o_branch(writeback_branch),
 		.o_pc_next(writeback_pc_next)
 	);
 

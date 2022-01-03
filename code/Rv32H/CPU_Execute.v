@@ -13,17 +13,12 @@ module CPU_Execute (
 	input wire [31:0] i_rs2,
 	input wire [4:0] i_inst_rd,
 	input wire [31:0] i_imm,
-	input wire i_branch,
 
 	// Output
 	output reg [7:0] o_tag,
-
 	output reg [4:0] o_inst_rd,
 	output reg [31:0] o_rd,
-
-	output reg o_branch,
 	output reg [31:0] o_pc_next,
-
 	output reg o_mem_read,
 	output reg o_mem_write,
 	output reg [2:0] o_mem_width,
@@ -132,7 +127,6 @@ module CPU_Execute (
 
 	initial begin
 		o_inst_rd <= 0;
-		o_branch <= 0;
 		o_pc_next <= 0;
 		o_mem_read <= 0;
 		o_mem_write <= 0;
@@ -147,7 +141,6 @@ module CPU_Execute (
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			o_inst_rd <= 0;
-			o_branch <= 0;
 			o_pc_next <= 0;
 			o_mem_read <= 0;
 			o_mem_write <= 0;
@@ -165,7 +158,6 @@ module CPU_Execute (
 				$display("    RS2 %x", i_rs2);
 				$display("    IMM %d", i_imm);
 
-				o_branch <= i_branch;
 				o_pc_next <= i_pc + 4;
 				o_mem_read <= 0;
 				o_mem_write <= 0;
@@ -175,7 +167,7 @@ module CPU_Execute (
 				decode_cycle <= decode_cycle + 1;
 
 				if (is_ALU) begin
-					if (!i_branch) begin
+					if (!is_BRANCH) begin
 						o_rd <= alu_result;
 					end
 					else begin

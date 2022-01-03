@@ -10,7 +10,7 @@ module CPU_Fetch(
 	input wire [31:0] i_bus_rdata,
 
 	// Input
-	input wire i_branch,
+	input wire [7:0] i_tag,
 	input wire [31:0] i_pc_next,
 
 	// Output
@@ -83,7 +83,7 @@ module CPU_Fetch(
 
 				2: begin
 					// Wait for branch result.
-					if (i_branch) begin
+					if (i_tag == tag) begin
 						// $display("fetch, accepting branch to %x", i_pc_next);
 						pc <= i_pc_next;
 						state <= 0;

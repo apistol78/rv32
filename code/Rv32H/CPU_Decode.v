@@ -15,8 +15,7 @@ module CPU_Decode(
 	output reg [4:0] o_inst_rs1,
 	output reg [4:0] o_inst_rs2,
 	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_imm,
-	output reg o_branch
+	output reg [31:0] o_imm
 );
 
 	`define INSTRUCTION i_instruction
@@ -58,8 +57,6 @@ module CPU_Decode(
 					is_S ? inst_S_imm :
 					is_U ? inst_U_imm :
 					32'h0;
-
-				o_branch <= is_BRANCH;
 
 				o_tag <= i_tag;
 			end

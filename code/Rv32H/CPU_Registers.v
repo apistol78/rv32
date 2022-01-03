@@ -104,7 +104,7 @@ module CPU_Registers (
 		else begin
 			if (i_read_tag != read_tag) begin
                 o_rs1 <= (i_read_rs1_idx != 0) ? r[i_read_rs1_idx] : 32'h0;
-                o_rs2 <= (i_read_rs1_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
+                o_rs2 <= (i_read_rs2_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
 				read_tag <= i_read_tag;
 			end
 			if (i_write_tag != write_tag) begin
