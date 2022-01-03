@@ -1,8 +1,10 @@
 #pragma once
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
+#include <stdint.h>
+// typedef unsigned char uint8_t;
+// typedef unsigned short uint16_t;
+// typedef signed int int32_t;
+// typedef unsigned int uint32_t;
 
 #define LED_BASE    (volatile uint32_t*)0x50000000
 #define UART_BASE   (volatile uint32_t*)0x50000010
@@ -12,3 +14,5 @@ typedef unsigned int uint32_t;
 #define SD_BASE     (volatile uint32_t*)0x50000040
 #define VIDEO_BASE  (volatile uint32_t*)0x40000000
 #define VIDEO_CTRL  (volatile uint32_t*)0x4ffffff0
+
+#define NO_OPTIMIZE __attribute__((optimize("O0")))

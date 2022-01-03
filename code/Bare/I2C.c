@@ -16,7 +16,7 @@
 
 void i2c_dly()
 {
-	for (uint32_t i = 0; i < 1000; ++i)
+	for (uint32_t i = 0; i < 10; ++i)
 		__asm__ volatile ("nop");
 }
 
@@ -73,29 +73,32 @@ uint8_t i2c_rx(uint8_t ack)
 	return d;
 }
 
-uint8_t i2c_tx(uint8_t d)
+uint8_t NO_OPTIMIZE i2c_tx(uint8_t d)
 {
-	uint8_t x;
-	uint8_t b;
-
-	for (x = 8; x; x--)
+	for (uint32_t i = 0; i < 8; ++i)
 	{
 		if (d & 0x80)
 			{ I2C_WR_SDA_HIGH(); }
 		else
 			{ I2C_WR_SDA_LOW(); }
 
+		i2c_dly();
+
 		I2C_WR_SCL_HIGH();
-		d <<= 1;
 		i2c_dly();
 		I2C_WR_SCL_LOW();
+		i2c_dly();
+
+		d <<= 1;
 	}
 
 	I2C_WR_SDA_HIGH();
+	i2c_dly();
 	I2C_WR_SCL_HIGH();
 	i2c_dly();
-	b = I2C_RD_SDA();	// possible ACK bit
+	uint8_t b = I2C_RD_SDA();	// possible ACK bit
 	I2C_WR_SCL_LOW();
+	i2c_dly();
 
 	return b;
 }

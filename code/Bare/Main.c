@@ -1,19 +1,22 @@
 #include <stdlib.h>
+#include "File.h"
 #include "Print.h"
 #include "SD.h"
-#include "Video.h"
+// #include "Video.h"
 
 void main()
 {
-	printLn("Initialize Video...");
-	//video_init();
+//	printLn("** Initialize Video...");
+//	video_init();
 
-	printLn("Initialize SD card...");
-	//sd_init();
+	printLn("** Initialize SD card...");
+	sd_init();
 
-	printLn("Ready");
+	printLn("** Initialize FS...");
+	file_init();
 
-
+	printLn("** Ready");
+/*
 	static int star[100][3];
 	for (int i = 0; i < 100; ++i)
 	{
@@ -47,24 +50,6 @@ void main()
 		page = 1 - page;
 		*VIDEO_CTRL = (uint32_t)page;
 	}
-
-/*
-	int x1 = 50;
-	for (;;)
-	{
-		int y1 = 50;
-		int x2 = 200;
-		int y2 = 150;
-
-		draw_line(
-			x1, y1,
-			x2, y2
-		);
-
-		*VIDEO_CTRL = 1;
-
-		if (++x1 > 300)
-			x1 = 50;
-	}
 */
+	for(;;);
 }
