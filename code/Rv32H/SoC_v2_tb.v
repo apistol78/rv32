@@ -1,9 +1,12 @@
 `include "CPU_v2.v"
+`include "CPU_ALU.v"
 `include "CPU_BusAccess.v"
 `include "CPU_Decode.v"
+`include "CPU_Divide.v"
 `include "CPU_Execute.v"
 `include "CPU_Fetch.v"
 `include "CPU_Memory.v"
+`include "CPU_Multiply.v"
 `include "CPU_Registers.v"
 `include "CPU_Writeback.v"
 

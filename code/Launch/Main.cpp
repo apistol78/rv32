@@ -1,3 +1,4 @@
+#include <string.h>
 #include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/FileSystem.h>
@@ -26,6 +27,61 @@ T read(Serial& serial)
 	T value = 0;
 	serial.read(&value, sizeof(T));
 	return value;
+}
+
+bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
+{
+	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+	if (!f)
+	{
+		log::error << L"Unable to open image \"" << fileName << L"\"." << Endl;
+		return false;
+	}
+
+	uint32_t linear = offset;
+	uint8_t data[16];
+	for (;;)
+	{
+		int64_t r = f->read(data, sizeof(data));
+		if (r <= 0)
+			break;
+
+		log::info << L"DATA " << str(L"%08x", linear) << L"..." << Endl;
+
+		uint8_t cs = 0;
+
+		// Add address to checksum.
+		const uint8_t* p = (const uint8_t*)&linear;
+		cs ^= p[0];
+		cs ^= p[1];
+		cs ^= p[2];
+		cs ^= p[3];
+
+		// Add data to calculate checksum.
+		for (int32_t i = 0; i < 16; ++i)
+			cs ^= data[i];
+
+		write< uint8_t >(serial, 0x01);
+		write< uint32_t >(serial, linear);
+		write< uint8_t >(serial, 16);
+
+		for (int32_t i = 0; i < 16; ++i)
+			write< uint8_t >(serial, data[i]);
+
+		write< uint8_t >(serial, cs);
+
+		uint8_t reply = read< uint8_t >(serial);
+		if (reply != 0x80)
+		{
+			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			return false;
+		}
+
+		linear += 16;
+	}
+
+	log::info << L"Image uploaded" << Endl;
+	return true;
 }
 
 bool uploadHEX(Serial& serial, const std::wstring& fileName)
@@ -158,7 +214,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName)
 	return true;
 }
 
-bool memcheck(Serial& serial)
+bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 {
 	uint8_t utd[16];
 	uint8_t ind[16];
@@ -166,13 +222,15 @@ bool memcheck(Serial& serial)
 	uint8_t cnt = 0;
 	uint32_t error = 0;
 
-	for (uint32_t addr = 0x10000000; addr <= 0x100000ff; addr += 16)
+	const uint32_t nb = 1;
+
+	for (uint32_t addr = from; addr < to; addr += nb)
 	{
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 			utd[i] = cnt++;
 
-		log::info << L"S ";
-		for (int32_t i = 0; i < 16; ++i)
+		log::info << L"S " << str(L"%08x", addr) << L": ";
+		for (int32_t i = 0; i < nb; ++i)
 			log::info << str(L"%02x", utd[i]) << L" ";
 		log::info << Endl;
 
@@ -187,9 +245,9 @@ bool memcheck(Serial& serial)
 
 		write< uint8_t >(serial, 0x01);
 		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, 16);
+		write< uint8_t >(serial, nb);
 
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 		{
 			write< uint8_t >(serial, utd[i]);
 			cs ^= (uint8_t)utd[i];
@@ -207,7 +265,7 @@ bool memcheck(Serial& serial)
 		// Read back data.
 		write< uint8_t >(serial, 0x02);
 		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, 16);
+		write< uint8_t >(serial, nb);
 
 		reply = read< uint8_t >(serial);
 		if (reply != 0x80)
@@ -216,14 +274,14 @@ bool memcheck(Serial& serial)
 			return false;
 		}
 
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < nb; ++i)
 			ind[i] = read< uint8_t >(serial);
 
-		log::info << L"R ";
-		for (int32_t i = 0; i < 16; ++i)
+		log::info << L"R " << str(L"%08x", addr) << L": ";
+		for (int32_t i = 0; i < nb; ++i)
 			log::info << str(L"%02x", ind[i]) << L" ";
 
-		if (memcmp(ind, utd, 16) != 0)
+		if (memcmp(ind, utd, nb) != 0)
 		{
 			log::info << L"MISMATCH!";
 			error++;
@@ -255,7 +313,20 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('m', L"memcheck"))
 	{
-		if (!memcheck(serial))
+		// SRAM
+		if (!memcheck(serial, 0x10000000, 0x10000100))
+			return 1;
+
+		// SDRAM
+		if (!memcheck(serial, 0x20000000, 0x20001000))
+			return 1;
+	}
+
+	if (commandLine.hasOption(L"image-file") && commandLine.hasOption(L"image-base"))
+	{
+		std::wstring fileName = commandLine.getOption(L"image-file").getString();
+		int32_t offset = commandLine.getOption(L"image-base").getInteger();
+		if (!uploadImage(serial, fileName, offset))
 			return 1;
 	}
 

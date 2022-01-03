@@ -1,7 +1,6 @@
 module CPU_Memory(
 	input wire i_reset,
 	input wire i_clock,
-	input wire i_stall,
 
 	// Bus
 	output wire o_bus_rw,

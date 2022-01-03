@@ -2,6 +2,7 @@
 // SRAM interface
 module SRAM_interface(
 	input wire i_clock,
+	input wire i_clock125,
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,

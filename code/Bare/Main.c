@@ -1,69 +1,51 @@
+#include <stdlib.h>
 #include "Print.h"
 #include "SD.h"
 #include "Video.h"
 
-void draw_line(int x0, int y0, int x1, int y1)
-{
-	volatile uint32_t* video = VIDEO_BASE;
-	int dx, dy, p, x, y;
- 
-	dx = x1 - x0;
-	dy = y1 - y0;
-	 
-	x = x0;
-	y = y0;
-	 
-	p = 2 * dy - dx;
-	 
-	while (x < x1)
-	{
-		if (p >= 0)
-		{
-			video[x + y * 320] = 0x00ffffff;
-			y = y + 1;
-			p = p + 2 * dy - 2 * dx;
-		}
-		else
-		{
-			video[x + y * 320] = 0x00ffffff;
-			p = p + 2 * dy;
-		}
-		x = x + 1;
-	}
-}
-
 void main()
 {
 	printLn("Initialize Video...");
-	video_init();
+	//video_init();
 
 	printLn("Initialize SD card...");
-	sd_init();
+	//sd_init();
 
 	printLn("Ready");
 
 
-	uint8_t r = 0;
-	uint8_t g = 0;
-	uint8_t b = 0;
+	static int star[100][3];
+	for (int i = 0; i < 100; ++i)
+	{
+		star[i][0] = rand() % 320;
+		star[i][1] = rand() % 240;
+		star[i][2] = (rand() % 4) + 1;
+	}
 
+	uint8_t page = 0;
 
 	volatile uint32_t* video = VIDEO_BASE;
 	for (;;)
 	{
-		for (int y = 0; y < 240; ++y)
+		// clear
+		for (uint32_t i = 0; i < 320 * 240; ++i)
+			video[i] = 0;
+
+		// draw stars.
+		for (int i = 0; i < 100; ++i)
 		{
-			for (int x = 0; x < 320; ++x)
-			{
-				video[x + y * 320] = (r << 16) | (g << 8) | b;
-				r++;
-			}
-			g++;
+			int p = star[i][0] + star[i][1] * 320;
+
+			video[p] = 0xfffffff;
+
+			star[i][0] += star[i][2];
+
+			if (star[i][0] >= 320)
+				star[i][0] = 0;
 		}
 
-		b++;
-
-		*VIDEO_CTRL = 1;
+		page = 1 - page;
+		*VIDEO_CTRL = (uint32_t)page;
 	}
 
 /*

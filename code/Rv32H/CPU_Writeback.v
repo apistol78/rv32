@@ -1,7 +1,6 @@
 module CPU_Writeback(
     input wire i_reset,
     input wire i_clock,
-    input wire i_stall,
 
     // Input
     input wire [7:0] i_tag,

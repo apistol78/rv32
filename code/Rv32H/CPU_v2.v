@@ -83,11 +83,6 @@ module CPU_v2 (
 	);
 
 	//====================================================
-	// CONTROL
-
-	wire stall = memory_stall;
-
-	//====================================================
 	// FETCH
 
 	wire [7:0] fetch_tag;
@@ -97,7 +92,7 @@ module CPU_v2 (
 	CPU_Fetch fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(stall),
+		.i_stall(memory_stall || execute_stall),
 
 		// Bus
 		.o_bus_request(bus_pa_request),
@@ -130,7 +125,7 @@ module CPU_v2 (
 	CPU_Decode decode(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(stall),
+		.i_stall(memory_stall || execute_stall),
 	
 		// Input
 		.i_tag(fetch_tag),
@@ -188,11 +183,12 @@ module CPU_v2 (
 	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
 	wire [31:0] execute_mem_wdata;
+	wire execute_stall;
 	
 	CPU_Execute execute(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(stall),
+		.i_stall(memory_stall),
 
 		// Input from decode.
 		.i_tag(decode_tag),
@@ -214,7 +210,8 @@ module CPU_v2 (
 		.o_mem_write(execute_mem_write),
 		.o_mem_width(execute_mem_width),
 		.o_mem_signed(execute_mem_signed),
-		.o_mem_address(execute_mem_address)
+		.o_mem_address(execute_mem_address),
+		.o_stall(execute_stall)
 	);
 
 	//====================================================
@@ -230,8 +227,7 @@ module CPU_v2 (
 	CPU_Memory memory(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(stall),
-
+	
 		// Bus
 		.o_bus_rw(bus_pb_rw),
 		.o_bus_request(bus_pb_request),
@@ -274,7 +270,6 @@ module CPU_v2 (
 	CPU_Writeback writeback(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(stall),
 	
 		// Input from memory.
 		.i_tag(memory_tag),
