@@ -21,19 +21,20 @@ module CPU_Fetch(
 
 	reg [2:0] state;
 	reg [31:0] pc;
-
-	reg icache_request = 0;
+	
+	reg [7:0] icache_input_tag;
+	wire [7:0] icache_output_tag;
 	reg [31:0] icache_address;
 	wire [31:0] icache_rdata;
-	wire icache_ready;
 
 	CPU_ICache icache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_request(icache_request),
+
+		.i_input_tag(icache_input_tag),
+		.o_output_tag(icache_output_tag),
 		.i_address(icache_address),
 		.o_rdata(icache_rdata),
-		.o_ready(icache_ready),
 
 		.o_bus_request(o_bus_request),
 		.o_bus_address(o_bus_address),
@@ -48,14 +49,10 @@ module CPU_Fetch(
 	initial begin
 		state <= 0;
 		pc <= 0;
+		icache_input_tag <= 0;
 		o_tag <= 0;
 		o_instruction <= 0;
 		o_pc <= 0;
-	end
-
-	always @(*) begin
-		icache_address <= pc;
-		icache_request <= !i_stall && (state == 0);
 	end
 
 	always @(posedge i_clock) begin
@@ -69,8 +66,17 @@ module CPU_Fetch(
 		else begin
 			case (state)
 				0: begin
-					if (!i_stall && icache_ready) begin
-						o_tag <= o_tag + 8'd1;
+					if (!i_stall) begin
+						icache_input_tag <= icache_input_tag + 1;
+						icache_address <= pc;
+						state <= 1;
+					end
+				end
+
+				1: begin
+					if (icache_output_tag == icache_input_tag) begin
+
+						o_tag <= icache_output_tag;
 						o_instruction <= icache_rdata;
 						o_pc <= pc;
 
@@ -80,12 +86,18 @@ module CPU_Fetch(
 							// Branch instruction, need to wait
 							// for an explicit "goto" signal before
 							// we can continue feeding the pipeline.
-							state <= 1;
+							state <= 2;
+						end
+						else begin
+							// \todo We can probably issue another
+							// icache request directly without going back
+							// to state 0.
+							state <= 0;
 						end
 					end
 				end
 
-				1: begin
+				2: begin
 					// Wait for branch result.
 					if (i_tag == o_tag) begin
 						pc <= i_pc_next;
