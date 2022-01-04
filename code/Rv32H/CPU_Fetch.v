@@ -21,8 +21,6 @@ module CPU_Fetch(
 
 	reg [2:0] state;
 	reg [31:0] pc;
-	reg [7:0] tag;
-
 
 	reg icache_request = 0;
 	reg [31:0] icache_address;
@@ -30,6 +28,7 @@ module CPU_Fetch(
 	wire icache_ready;
 
 	CPU_ICache icache(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_request(icache_request),
 		.i_address(icache_address),
@@ -43,25 +42,26 @@ module CPU_Fetch(
 	);
 
 	// 
-	`define INSTRUCTION i_bus_rdata
+	`define INSTRUCTION icache_rdata
 	`include "Instructions_i.v"
 
 	initial begin
 		state <= 0;
 		pc <= 0;
-		tag <= 0;	
-		icache_request <= 0;
 		o_tag <= 0;
 		o_instruction <= 0;
 		o_pc <= 0;
+	end
+
+	always @(*) begin
+		icache_address <= pc;
+		icache_request <= !i_stall && (state == 0);
 	end
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= 0;
 			pc <= 0;
-			tag <= 0;
-			icache_request <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
 			o_pc <= 0;
@@ -69,39 +69,25 @@ module CPU_Fetch(
 		else begin
 			case (state)
 				0: begin
-					if (!i_stall) begin
-						icache_address <= pc;
-						icache_request <= 1;
-						state <= 1;
-					end
-				end
-
-				1: begin
-					if (icache_ready) begin
-						o_tag <= tag + 8'd1;
+					if (!i_stall && icache_ready) begin
+						o_tag <= o_tag + 8'd1;
 						o_instruction <= icache_rdata;
 						o_pc <= pc;
 
-						tag <= tag + 8'd1;
 						pc <= pc + 4;
 
 						if (is_BRANCH) begin
 							// Branch instruction, need to wait
 							// for an explicit "goto" signal before
 							// we can continue feeding the pipeline.
-							state <= 2;
+							state <= 1;
 						end
-						else
-							state <= 0;
-
-						icache_request <= 0;
 					end
 				end
 
-				2: begin
+				1: begin
 					// Wait for branch result.
-					if (i_tag == tag) begin
-						// $display("fetch, accepting branch to %x", i_pc_next);
+					if (i_tag == o_tag) begin
 						pc <= i_pc_next;
 						state <= 0;
 					end
