@@ -1,15 +1,17 @@
+`include "CPU_Defines.v"
+
 module CPU_Decode(
 	input wire i_reset,
 	input wire i_clock,
 	input wire i_stall,
 
 	// Input
-	input wire [7:0] i_tag,
+	input wire [`TAG_SIZE] i_tag,
 	input wire [31:0] i_instruction,
 	input wire [31:0] i_pc,
 
 	// Output
-	output reg [7:0] o_tag,
+	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
 	output reg [31:0] o_pc,
 	output reg [4:0] o_inst_rs1,
@@ -41,8 +43,6 @@ module CPU_Decode(
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
-				//$display("decode instruction %x", i_instruction);
-
 				o_instruction <= i_instruction;
 				o_pc <= i_pc;
 

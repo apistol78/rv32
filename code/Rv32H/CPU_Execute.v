@@ -6,7 +6,7 @@ module CPU_Execute (
 	input wire i_stall,
 
 	// Input
-	input wire [7:0] i_tag,
+	input wire [`TAG_SIZE] i_tag,
 	input wire [31:0] i_pc,
 	input wire [31:0] i_instruction,
 	input wire [31:0] i_rs1,
@@ -15,7 +15,7 @@ module CPU_Execute (
 	input wire [31:0] i_imm,
 
 	// Output
-	output reg [7:0] o_tag,
+	output reg [`TAG_SIZE] o_tag,
 	output reg [4:0] o_inst_rd,
 	output reg [31:0] o_rd,
 	output reg [31:0] o_pc_next,

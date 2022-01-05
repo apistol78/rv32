@@ -1,20 +1,21 @@
+`include "CPU_Defines.v"
+
 module CPU_Registers (
 	input wire i_reset,
 	input wire i_clock,
 
-	input wire [7:0] i_read_tag,
+	input wire [`TAG_SIZE] i_read_tag,
 	input wire [4:0] i_read_rs1_idx,
 	input wire [4:0] i_read_rs2_idx,
 	output reg [31:0] o_rs1,
 	output reg [31:0] o_rs2,
 
-	input wire [7:0] i_write_tag,
+	input wire [`TAG_SIZE] i_write_tag,
 	input wire [4:0] i_write_rd_idx,
 	input wire [31:0] i_rd
 );
-	reg [7:0] read_tag;
-	reg [7:0] write_tag;
-
+	reg [`TAG_SIZE] read_tag;
+	reg [`TAG_SIZE] write_tag;
 	reg [31:0] r[31:0];
 
     initial begin

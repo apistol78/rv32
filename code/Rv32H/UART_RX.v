@@ -8,10 +8,10 @@ module UART_RX #(
 
 	input wire i_request,
 	output reg [31:0] o_rdata,
-    output reg o_ready,
-	output reg o_waiting,
+    output wire o_ready,
 	
 	output wire [1:0] o_state,
+	output wire [7:0] o_sample,
 	
     input wire UART_RX
 );
@@ -25,9 +25,10 @@ module UART_RX #(
 	reg [7:0] data;
 	reg [7:0] sample;
 	reg [7:0] count;
-	reg [1:0] rds;
+	reg [3:0] rds;
 	
 	assign o_state = state;
+	assign o_sample = sample;
 
 	wire rx_fifo_empty;
 	reg rx_fifo_write = 0;
@@ -36,7 +37,8 @@ module UART_RX #(
 	FIFO #(
 		.DEPTH(4)
 	) rx_fifo(
-		.i_clock(i_clock),
+		.i_clock_rd(i_clock),
+		.i_clock_wr(baud_rx_clock),
 		.o_empty(rx_fifo_empty),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
@@ -55,55 +57,50 @@ module UART_RX #(
 	);
 	
 	initial begin
-		state <= STATE_IDLE;
-		data <= 0;
-		sample <= 0;
-		count <= 0;
-		rds <= 0;
+		state = STATE_IDLE;
+		data = 0;
+		sample = 0;
+		count = 0;
+		rds = 0;
 
-		o_rdata <= 32'h0;
-		o_ready <= 0;
-		o_waiting <= 0;
+		o_rdata = 32'h0;
 	end
 	
-	always @ (posedge i_clock, posedge i_reset) begin
+	assign o_ready = (rds == 5) && i_request;
+	
+	always @ (posedge i_clock) begin
 		if (i_reset) begin
 			rds <= 0;
 			o_rdata <= 32'h0;
-			o_ready <= 0;
-			o_waiting <= 0;
 		end
 		else begin
 			if (i_request) begin
 				case (rds)
-					2'b00: begin
+					0: begin
 						if (!rx_fifo_empty) begin
-							o_waiting <= 0;
 							rx_fifo_read <= 1;
-							rds <= 2'b01;
-						end
-						else begin
-							o_waiting <= 1;
+							rds <= 1;
 						end
 					end
-					2'b01: begin
-						rds <= 2'b10;
-					end
-					2'b10: begin
+					1, 2, 3: begin
+						// Need to wait a couple of cycles to ensure valid data out from fifo
+						// because empty is signaled before values has been latched into queue.
 						o_rdata <= { 24'b0, rx_fifo_rdata };
-						o_ready <= 1;
+						rds <= rds + 1;
+					end
+					4: begin
+						rds <= 5;
 					end
 				endcase
 			end
 			else begin
 				rx_fifo_read <= 0;
-				o_ready <= 0;
-				rds <= 2'b00;
+				rds <= 0;
 			end
 		end
 	end
 
-	always @ (posedge baud_rx_clock, posedge i_reset) begin
+	always @ (posedge baud_rx_clock) begin
 		if (i_reset) begin
 			state <= STATE_IDLE;
 			data <= 0;

@@ -1,3 +1,5 @@
+`include "CPU_Defines.v"
+
 module CPU_Fetch(
 	input wire i_reset,
 	input wire i_clock,
@@ -10,11 +12,11 @@ module CPU_Fetch(
 	input wire [31:0] i_bus_rdata,
 
 	// Input
-	input wire [7:0] i_tag,
+	input wire [`TAG_SIZE] i_tag,
 	input wire [31:0] i_pc_next,
 
 	// Output
-	output reg [7:0] o_tag,
+	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
 	output reg [31:0] o_pc
 );
@@ -22,9 +24,8 @@ module CPU_Fetch(
 	reg [2:0] state;
 	reg [31:0] pc;
 	
-	reg [7:0] icache_input_tag;
-	wire [7:0] icache_output_tag;
-	reg [31:0] icache_address;
+	reg [`TAG_SIZE] icache_input_tag;
+	wire [`TAG_SIZE] icache_output_tag;
 	wire [31:0] icache_rdata;
 
 	CPU_ICache icache(
@@ -33,13 +34,13 @@ module CPU_Fetch(
 
 		.i_input_tag(icache_input_tag),
 		.o_output_tag(icache_output_tag),
-		.i_address(icache_address),
+		.i_address(pc),
 		.o_rdata(icache_rdata),
 
 		.o_bus_request(o_bus_request),
+		.i_bus_ready(i_bus_ready),
 		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata),
-		.i_bus_ready(i_bus_ready)
+		.i_bus_rdata(i_bus_rdata)
 	);
 
 	// 
@@ -59,6 +60,7 @@ module CPU_Fetch(
 		if (i_reset) begin
 			state <= 0;
 			pc <= 0;
+			icache_input_tag <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
 			o_pc <= 0;
@@ -68,7 +70,6 @@ module CPU_Fetch(
 				0: begin
 					if (!i_stall) begin
 						icache_input_tag <= icache_input_tag + 1;
-						icache_address <= pc;
 						state <= 1;
 					end
 				end

@@ -1,3 +1,5 @@
+`include "CPU_Defines.v"
+
 module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,				// CPU clock
@@ -85,7 +87,7 @@ module CPU_v2 (
 	//====================================================
 	// FETCH
 
-	wire [7:0] fetch_tag;
+	wire [`TAG_SIZE] fetch_tag;
 	wire [31:0] fetch_instruction;
 	wire [31:0] fetch_pc;
 	
@@ -113,7 +115,7 @@ module CPU_v2 (
 	//====================================================
 	// DECODE
 
-	wire [7:0] decode_tag;
+	wire [`TAG_SIZE] decode_tag;
 	wire [31:0] decode_instruction;
 	wire [31:0] decode_pc;
 	wire [4:0] decode_inst_rs1;
@@ -159,7 +161,7 @@ module CPU_v2 (
 		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
 		rs2;
 
-	wire [7:0] execute_tag;
+	wire [`TAG_SIZE] execute_tag;
 	wire [4:0] execute_inst_rd;
 	wire [31:0] execute_rd;
 	wire [31:0] execute_pc_next;
@@ -201,7 +203,7 @@ module CPU_v2 (
 	//====================================================
 	// MEMORY
 
-	wire [7:0] memory_tag;
+	wire [`TAG_SIZE] memory_tag;
 	wire [4:0] memory_inst_rd;
 	wire [31:0] memory_rd;
 	wire [31:0] memory_pc_next;
@@ -238,11 +240,10 @@ module CPU_v2 (
 		.o_stall(memory_stall)
 	);
 
-
 	//====================================================
 	// WRITEBACK
 
-	wire [7:0] writeback_tag;
+	wire [`TAG_SIZE] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
 	wire [31:0] writeback_pc_next;

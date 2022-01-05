@@ -1,15 +1,17 @@
+`include "CPU_Defines.v"
+
 module CPU_Writeback(
 	input wire i_reset,
 	input wire i_clock,
 
 	// Input
-	input wire [7:0] i_tag,
+	input wire [`TAG_SIZE] i_tag,
 	input wire [4:0] i_inst_rd,
 	input wire [31:0] i_rd,
 	input wire [31:0] i_pc_next,
 
 	// Output
-	output reg [7:0] o_tag,
+	output reg [`TAG_SIZE] o_tag,
 	output reg [4:0] o_inst_rd,
 	output reg [31:0] o_rd,
 	output reg [31:0] o_pc_next

@@ -1,21 +1,23 @@
+`include "CPU_Defines.v"
 
 module CPU_ICache(
 	input wire i_reset,
 	input wire i_clock,
 	
-	input wire [7:0] i_input_tag,
-	output reg [7:0] o_output_tag,
+	input wire [`TAG_SIZE] i_input_tag,
+	output reg [`TAG_SIZE] o_output_tag,
 	input wire [31:0] i_address,
 	output reg [31:0] o_rdata,
 
 	output reg o_bus_request,
-	output reg [31:0] o_bus_address,
-	input wire [31:0] i_bus_rdata,
-	input wire i_bus_ready
+	input wire i_bus_ready,
+	output wire [31:0] o_bus_address,
+	input wire [31:0] i_bus_rdata
 );
 
-	reg [3:0] state;
+	reg state;
 
+/*
 	reg cache_rw;
 	reg [6:0] cache_label;
 	reg [63:0] cache_wdata;
@@ -37,40 +39,50 @@ module CPU_ICache(
 		.o_rdata(cache_rdata),
 		.o_ready(cache_ready)
 	);
+*/
+
+	assign o_bus_address = i_address;
 
 	initial begin
-		o_output_tag = 0;
-		o_bus_request = 0;
-		o_bus_address = 0;
-
-		state = 0;
-
-		cache_rw = 0;
-		cache_label = 0;
-		cache_wdata = 0;
+		o_output_tag <= 0;
+		o_bus_request <= 0;
+		//o_bus_address <= 0;
+		state <= 0;
+		// cache_rw <= 0;
+		// cache_label <= 0;
+		// cache_wdata <= 0;
 	end
 
 	always @(posedge i_clock) begin
-
-		case (state)
-			0: begin
-				if (i_input_tag != o_output_tag && !i_bus_ready) begin
-					o_bus_request <= 1;
-					o_bus_address <= i_address;
-					state <= 1;
+		if (i_reset) begin
+			o_output_tag <= 0;
+			o_bus_request <= 0;
+			//o_bus_address <= 0;
+			state <= 0;
+			// cache_rw <= 0;
+			// cache_label <= 0;
+			// cache_wdata <= 0;
+		end
+		else begin
+			case (state)
+				0: begin
+					if (i_input_tag != o_output_tag) begin
+						o_bus_request <= 1;
+						//o_bus_address <= i_address;
+						state <= 1;
+					end
 				end
-			end
 
-			1: begin
-				if (i_bus_ready) begin
-					o_bus_request <= 0;
-					o_rdata <= i_bus_rdata;
-					o_output_tag <= i_input_tag;
-					state <= 0;
+				1: begin
+					if (i_bus_ready) begin
+						o_bus_request <= 0;
+						o_rdata <= i_bus_rdata;
+						o_output_tag <= i_input_tag;
+						state <= 0;
+					end
 				end
-			end
-		endcase
-
+			endcase
+		end
 	end
 
 

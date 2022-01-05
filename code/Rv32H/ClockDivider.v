@@ -14,7 +14,7 @@ module ClockDivider #(
 
 	initial o_clock = 0;
 
-	always @(posedge i_clock, posedge i_reset) begin
+	always @(posedge i_clock) begin
 		if (i_reset) begin
 			counter <= 0;
 			o_clock <= 0;
