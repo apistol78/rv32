@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="utf-8"?>
+<object type="Solution" version="5">
+	<name>Rv32</name>
+	<rootPath>build/rv32</rootPath>
+	<aggregateOutputPath/>
+	<projects>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>Runtime</name>
+			<sourcePath>code/Runtime</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfStaticLibrary</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/Runtime/FatFs/source</item>
+						<item>code</item>
+					</includePaths>
+					<definitions>
+						<item>_DEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfStaticLibrary</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/Runtime/FatFs/source</item>
+						<item>code</item>
+					</includePaths>
+					<definitions>
+						<item>NDEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="File">
+					<fileName>*.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>*.h</fileName>
+					<items/>
+				</item>
+				<item type="Filter">
+					<name>FatFs</name>
+					<items>
+						<item type="Filter">
+							<name>source</name>
+							<items>
+								<item type="File">
+									<fileName>FatFs/source/ff.c</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>FatFs/source/ff.h</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>FatFs/source/ffconf.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+					</items>
+				</item>
+			</items>
+			<dependencies/>
+		</item>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>Doom</name>
+			<sourcePath>code/Doom/doomgeneric</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>_DEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>NDEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="File">
+					<fileName>*.h</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>am_map.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_event.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_items.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_iwad.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_loop.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_main.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_mode.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>d_net.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>doomdef.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>doomgeneric.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>doomgeneric_rv32.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>doomstat.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>dstrings.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>dummy.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>f_finale.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>f_wipe.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>g_game.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>gusconf.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>hu_lib.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>hu_stuff.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_cdmus.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_endoom.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_input.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_joystick.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_main.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_scale.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_sound.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_system.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_timer.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>i_video.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>icon.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>info.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_argv.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_bbox.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_cheat.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_config.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_controls.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_fixed.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_menu.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_misc.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>m_random.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>memio.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_ceilng.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_doors.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_enemy.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_floor.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_inter.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_lights.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_map.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_maputl.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_mobj.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_plats.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_pspr.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_saveg.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_setup.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_sight.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_spec.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_switch.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_telept.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_tick.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>p_user.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_bsp.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_data.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_draw.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_main.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_plane.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_segs.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_sky.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>r_things.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>s_sound.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>sha1.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>sounds.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>st_lib.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>st_stuff.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>statdump.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>tables.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>v_video.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>w_checksum.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>w_file.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>w_file_stdc.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>w_main.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>w_wad.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>wi_stuff.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>z_zone.c</fileName>
+					<items/>
+				</item>
+			</items>
+			<dependencies>
+				<item type="ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>Bare</name>
+			<sourcePath>code/Bare</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>_DEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>NDEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="File">
+					<fileName>*.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>*.h</fileName>
+					<items/>
+				</item>
+			</items>
+			<dependencies>
+				<item type="ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>Firmware</name>
+			<sourcePath>code/Firmware</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>_DEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths/>
+					<definitions>
+						<item>NDEBUG</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="File">
+					<fileName>*.c</fileName>
+					<items/>
+				</item>
+				<item type="File">
+					<fileName>*.h</fileName>
+					<items/>
+				</item>
+			</items>
+			<dependencies/>
+		</item>
+	</projects>
+</object>

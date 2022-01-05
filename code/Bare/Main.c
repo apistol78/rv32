@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include "File.h"
-#include "Print.h"
-#include "SD.h"
-#include "Video.h"
+#include "Runtime/File.h"
+#include "Runtime/Print.h"
+#include "Runtime/SD.h"
+#include "Runtime/Video.h"
 
 void main()
 {
