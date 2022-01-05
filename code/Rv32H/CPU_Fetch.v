@@ -90,10 +90,12 @@ module CPU_Fetch(
 							state <= 2;
 						end
 						else begin
-							// \todo We can probably issue another
-							// icache request directly without going back
+							// Issue another request directly without going back
 							// to state 0.
-							state <= 0;
+							if (!i_stall)
+								icache_input_tag <= icache_input_tag + 1;
+							else
+								state <= 0;
 						end
 					end
 				end
