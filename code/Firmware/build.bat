@@ -4,7 +4,19 @@
 :: . ../../config.sh
 
 echo Compiling...
-riscv64-unknown-elf-gcc -march=rv32im -mabi=ilp32 -nostdlib -ffreestanding -TLink.ld -o Firmware Startup.s Firmware.c
+riscv64-unknown-elf-gcc ^
+    -Os ^
+    -march=rv32im ^
+    -mabi=ilp32 ^
+    -fdata-sections ^
+    -ffunction-sections ^
+    -Wl,--gc-sections ^
+    -nostdlib ^
+    -ffreestanding ^
+    -TLink.ld ^
+    -o Firmware ^
+    Startup.s ^
+    Firmware.c
 
 echo Dumping...
 riscv64-unknown-elf-objdump -D Firmware > Firmware.dump

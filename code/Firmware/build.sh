@@ -3,7 +3,7 @@
 . ../../config.sh
 
 echo "Compiling..."
-riscv32-unknown-elf-gcc -O3 -nostdlib -ffreestanding -TLink.ld -o Firmware Startup.s Firmware.c
+riscv32-unknown-elf-gcc -Os -nostdlib -ffreestanding -TLink.ld -o Firmware Startup.s Firmware.c
 
 echo "Dumping..."
 riscv32-unknown-elf-objdump -D Firmware > Firmware.dump

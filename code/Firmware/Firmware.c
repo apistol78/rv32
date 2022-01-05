@@ -45,6 +45,16 @@ void main()
 	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
 	*leds = 0x00000000;
 
+	// welcome
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		*leds = (uint32_t)(1 << i);
+		for (uint32_t j = 0; j < 100000; ++j)
+			__asm__ volatile ("nop");
+	}
+
+	*leds = 0x00000000;
+
 	for (;;)
 	{
 		uint8_t cmd = uart_rx_u8();
@@ -129,17 +139,9 @@ void main()
 				uart_tx_u8(0x82);	// Invalid checksum.
 		}
 
-		// enter "mem write read" loop.
-		else if (cmd == 0x04)
-		{
-			volatile uint32_t* sram = (volatile uint32_t*)0x10000000;
-			uint32_t i = 0;
-			for (;;)
-			{
-				sram[4] = 0x1122ab00 + (i & 255);
-				uint32_t v= sram[4];
-				++i;
-			}			
-		}
+		// echo
+		else
+			uart_tx_u8(cmd);
+
 	}
 }
