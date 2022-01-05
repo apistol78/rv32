@@ -110,9 +110,6 @@ void i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
 	i2c_tx(controlAddr);
 	i2c_tx(controlData);
 	i2c_stop();
-
-//	for (uint32_t i = 0; i < 1000000; ++i)
-//		__asm__ volatile ("nop");
 }
 
 void i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)

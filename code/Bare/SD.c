@@ -62,95 +62,66 @@ void sd_dummy_clock(uint32_t clockCnt)
     }
 }
 
-void sd_send_cmd(uint8_t cmd[6], int cmdLen)
+void sd_send_cmd(uint8_t cmd[6], int32_t cmdLen)
 {
 	uint8_t mask, data;
-	
 	SD_WR_CMD_DIR_OUT();
-	for (int i = 0; i < cmdLen; i++)
+	for (int32_t i = 0; i < cmdLen; i++)
 	{
 		mask = 0x80;
 		data = cmd[i];
-
-		for (int k = 0; k < 8; k++)
+		for (int32_t k = 0; k < 8; k++)
 		{
 			SD_WR_CLK_LOW();
-			
 			if (data & mask)
 				{ SD_WR_CMD_HIGH(); }
 			else
 				{ SD_WR_CMD_LOW(); }
-
 			sd_half_cycle();
-
 			SD_WR_CLK_HIGH();  
-
 			mask >>= 1;
-
 			sd_half_cycle();
 		}
 	}
 }
 
-int sd_get_response(uint8_t* outResponse, int responseLen)
+int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 {
-	const int maxCnt = 40; // !!!! Note. the value should be large than 8
+	const int32_t maxCnt = 40;
 
 	SD_WR_CMD_LOW();
 	SD_WR_CMD_DIR_IN();
 	
-	//===== check start bit == 0
-	for (int cnt = 0;;)
+	for (int32_t cnt = 0;;)
 	{
 		SD_WR_CLK_LOW();
 		sd_half_cycle();
-
 		SD_WR_CLK_HIGH();
 		sd_half_cycle();
-
 		if (!SD_RD_CMD())
 			break;
 		else if (cnt++ > maxCnt)
-		{
-			printLn("SD response timeout");
 			return 0;
-		}
 	}
   
-	//===== check transmitter bit == 0
 	SD_WR_CLK_LOW();
 	sd_half_cycle();
-
 	SD_WR_CLK_HIGH();
 	sd_half_cycle();
 
 	if (SD_RD_CMD())
-	{
-		printLn("SD invalid transmitter bit");
 		return 0;
-	}
 
-	//===== read content + CRC + end-bits ======
-	//printLn("Reading content...");
-
-	int value = 0;
-	int bit = 2;
-	for (int index = 0; index < responseLen; )
+	int32_t value = 0;
+	int32_t bit = 2;
+	for (int32_t index = 0; index < responseLen; )
 	{
 		SD_WR_CLK_LOW();
 		sd_half_cycle();
-
 		SD_WR_CLK_HIGH();
 		sd_half_cycle();
-
 		if (SD_RD_CMD())
-		{
 			value |= 0x80 >> bit;
-			//print("H");
-		}
-		//else
-			//print("L");
-
 		if (bit >= 7)
 		{
 			outResponse[index] = value;
@@ -161,19 +132,15 @@ int sd_get_response(uint8_t* outResponse, int responseLen)
 		else
 			bit++;
 	} 
-	//printLn("");
 
-	// A command with response. 8 clocks after the card response end bit.
 	sd_dummy_clock(8);
-
-	//printLn("END OF GET RESP");
 	return 1;	
 }
 
-int sd_cmd0()
+int32_t sd_cmd0()
 {
-	static uint8_t cmd[] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	static uint8_t response[1];
+	uint8_t cmd[] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t response[1];
 	uint8_t crc;
 
 	crc = crc7(0, cmd, 5);
@@ -184,15 +151,14 @@ int sd_cmd0()
 	return 1;
 }
 
-int sd_cmd8(uint8_t voltId, uint8_t testPattern)
+int32_t sd_cmd8(uint8_t voltId, uint8_t testPattern)
 {
 	const uint8_t c_cmd = 8;
 
-	static uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	static uint8_t response[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t response[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[3] |= (voltId & 0x0f);
 	cmd[4] = testPattern;
@@ -201,50 +167,30 @@ int sd_cmd8(uint8_t voltId, uint8_t testPattern)
 	sd_send_cmd(cmd, sizeof(cmd));
 	
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD8: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("CMD8: Invalid command");
-		//return 0;
-	}
+		return 0;
 	if (response[3] != voltId)
-	{
-		printLn("CMD8: Invalid voltage id");
-		//return 0;
-	}        
+		return 0;
 	if (response[4] != testPattern)
-	{
-		printLn("CMD8: Invalid test pattern");
-		//return 0;
-	}
+		return 0;
 	if (crc7(0, response, 5) != (response[5] >> 1))
-	{
-		printLn("CMD8: Invalid checksum");
-		//return 0;
-	}
+		return 0;
 	if ((response[5] & 0x01) != 0x01)
-	{
-		printLn("CMD8: Invalid end bits");
-		//return 0;
-	}
+		return 0;
 
-	printLn("sd_cmd8 OK");
 	return 1;
 }
 
-int sd_cmd55(uint16_t rca16)
+int32_t sd_cmd55(uint16_t rca16)
 {
 	const uint8_t c_cmd = 55;
 
-	static uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	static uint8_t response[6];
+	uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] = rca16 >> 8;
 	cmd[2] = rca16 & 0xff;
@@ -253,41 +199,29 @@ int sd_cmd55(uint16_t rca16)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD55: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("CMD55: Invalid command");
 		return 0;
-	}
-	// \todo check card status
-	if (crc7(0, response, 5) != (response[5] >> 1))
-	{
-		printLn("CMD55: Invalid checksum");
-		return 0;
-	}
-	if ((response[5] & 0x01) != 0x01)
-	{
-		printLn("CMD55: Invalid end bits");
-		return 0;
-	}
 
-	printLn("sd_cmd55 OK");
+	// \todo check card status
+
+	if (crc7(0, response, 5) != (response[5] >> 1))
+		return 0;
+	if ((response[5] & 0x01) != 0x01)
+		return 0;
+
 	return 1;
 }
 
-int sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
+int32_t sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
 {
 	const uint8_t c_cmd = 41;
 
-	static uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	static uint8_t response[6];
+	uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] |= (hostOCR32 >> 24) & 0x40;
 	cmd[2] = (hostOCR32 >> 16) & 0xff;
@@ -298,16 +232,10 @@ int sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("ACMD41: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != 0x3f)
-	{
-		printLn("ACMD41: Invalid response from SD card");
 		return 0;		
-	}
 
 	uint32_t OCR = 0;
 	for(int i = 0; i < 4; i++)
@@ -316,58 +244,46 @@ int sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
 		OCR |= response[i + 1];
 	}
 
+	// Check if card is busy.
 	if ((OCR & 0x80000000) != 0x80000000)
-	{
-		printLn("ACMD41: SD card is busy");
 		return 0;
-	}
 
 	if (response[5] != 0xff)
-	{
-		printLn("ACMD41: Invalid reserved & end-bits");
 		return 0;		
-	}
 
 	*outOCR = OCR;
-
-	printLn("sd_acmd41 OK");
 	return 1;
 }
 
-int sd_cmd2(uint8_t* cid, int cidLen)
+int32_t sd_cmd2(uint8_t* cid, int32_t cidLen)
 {
 	const uint8_t c_cmd = 2;
 
-	static uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	static uint8_t response[17];
+	uint8_t cmd[6] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	uint8_t response[17];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	crc = crc7(0, cmd, 5);
 	cmd[5] = (crc << 1) | 0x01;
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD2: No response from SD card");
 		return 0;
-	}
 
 	// \todo verify response
 
-	int copyLen = cidLen;
+	int32_t copyLen = cidLen;
 	if (copyLen > 16)
 		copyLen = 16;
 
-	for (int i = 0; i < copyLen; ++i)
+	for (int32_t i = 0; i < copyLen; ++i)
 		cid[i] = response[i + 1];
 
-	printLn("sd_cmd2 OK");
 	return 1;
 }
 
-int sd_cmd3(uint16_t* outRCA16)
+int32_t sd_cmd3(uint16_t* outRCA16)
 {
 	const uint8_t c_cmd = 3;
 
@@ -375,25 +291,19 @@ int sd_cmd3(uint16_t* outRCA16)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	crc = crc7(0, cmd, 5);
 	cmd[5] = (crc << 1) | 0x01;
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD3: No response from SD card");
 		return 0;
-	}
 
 	*outRCA16 = (response[1] << 8) | response[2];
-
-	printLn("sd_cmd3 OK");
 	return 1;
 }
 
-int sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int CSDLen)
+int32_t sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int32_t CSDLen)
 {
 	const uint8_t c_cmd = 9;
 
@@ -401,7 +311,6 @@ int sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int CSDLen)
 	uint8_t response[17];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] |= RCA16 >> 8;
 	cmd[2] |= RCA16 & 0xff;
@@ -410,31 +319,24 @@ int sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int CSDLen)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD9: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != 0x3f)
-	{
-		printLn("CMD9: Invalid response from SD card");
 		return 0;		
-	}
 
 	// \todo verify response
 
-	int copyLen = CSDLen;
+	int32_t copyLen = CSDLen;
 	if (copyLen > 16)
 		copyLen = 16;
 
-	for (int i = 0; i < copyLen; ++i)
+	for (int32_t i = 0; i < copyLen; ++i)
 		outCSD[i] = response[i + 1];
 
-	printLn("sd_cmd9 OK");
 	return 1;
 }
 
-int sd_cmd7(uint16_t RCA16)
+int32_t sd_cmd7(uint16_t RCA16)
 {
 	const uint8_t c_cmd = 7;
 
@@ -442,7 +344,6 @@ int sd_cmd7(uint16_t RCA16)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] |= RCA16 >> 8;
 	cmd[2] |= RCA16 & 0xff;
@@ -451,22 +352,15 @@ int sd_cmd7(uint16_t RCA16)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD7: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("CMD9: Invalid response from SD card");
 		return 0;		
-	}
 
-	printLn("sd_cmd7 OK");
 	return 1;
 }
 
-int sd_cmd16(uint32_t blockLength)
+int32_t sd_cmd16(uint32_t blockLength)
 {
 	const uint8_t c_cmd = 16;
 
@@ -474,7 +368,6 @@ int sd_cmd16(uint32_t blockLength)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] |= blockLength >> 24;
 	cmd[2] |= blockLength >> 16;
@@ -485,22 +378,15 @@ int sd_cmd16(uint32_t blockLength)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD16: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("CMD16: Invalid response from SD card");
 		return 0;		
-	}
 
-	printLn("sd_cmd16 OK");
 	return 1;
 }
 
-int sd_cmd17(uint32_t addr)
+int32_t sd_cmd17(uint32_t addr)
 {
 	const uint8_t c_cmd = 17;
 
@@ -508,7 +394,6 @@ int sd_cmd17(uint32_t addr)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[1] |= addr >> 24;
 	cmd[2] |= addr >> 16;
@@ -519,16 +404,12 @@ int sd_cmd17(uint32_t addr)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("CMD17: No response from SD card");
 		return 0;
-	}
 
-	printLn("sd_cmd17 OK");
 	return 1;
 }
 
-int sd_acmd6(int bus4)
+int32_t sd_acmd6(int32_t bus4)
 {
 	const uint8_t c_cmd = 6;
 
@@ -536,7 +417,6 @@ int sd_acmd6(int bus4)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[4] |= bus4 ? 2 : 0;
 	crc = crc7(0, cmd, 5);
@@ -544,22 +424,15 @@ int sd_acmd6(int bus4)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("ACMD6: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("ACMD6: Invalid response from SD card");
 		return 0;		
-	}
 
-	printLn("sd_acmd6 OK");
 	return 1;
 }
 
-int sd_acmd42(int bus4)
+int32_t sd_acmd42(int32_t bus4)
 {
 	const uint8_t c_cmd = 42;
 
@@ -567,7 +440,6 @@ int sd_acmd42(int bus4)
 	uint8_t response[6];
 	uint8_t crc;
 
-	// build packet    
 	cmd[0] |= c_cmd;
 	cmd[4] |= bus4 ? 2 : 0;
 	crc = crc7(0, cmd, 5);
@@ -575,22 +447,15 @@ int sd_acmd42(int bus4)
 	sd_send_cmd(cmd, sizeof(cmd));
 
 	if (!sd_get_response(response, sizeof(response)))
-	{
-		printLn("ACMD42: No response from SD card");
 		return 0;
-	}
 
 	if (response[0] != c_cmd)
-	{
-		printLn("ACMD42: Invalid response from SD card");
 		return 0;		
-	}
 
-	printLn("sd_acmd42 OK");
 	return 1;
 }
 
-int sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
+int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 {
 	uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
@@ -601,7 +466,7 @@ int sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	SD_WR_DAT_DIR_IN();
 
 	// Wait on start bits.
-	int try = 0;
+	int32_t try = 0;
 	while(1)
 	{
         SD_WR_CLK_LOW();
@@ -623,7 +488,7 @@ int sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	{
 		uint8_t Data8 = 0;
 #ifdef SD_4BIT_MODE
-		for(int j = 0; j < 2; j++)
+		for(int32_t j = 0; j < 2; j++)
 		{
 			SD_WR_CLK_LOW();
 			sd_half_cycle();
@@ -633,7 +498,7 @@ int sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 			Data8 |= (SD_RD_DAT() & 0x0F);
 		}
 #else      
-		for(int j = 0; j < 8; j++)
+		for(int32_t j = 0; j < 8; j++)
 		{
 			SD_WR_CLK_LOW();
 			sd_half_cycle();
@@ -676,7 +541,7 @@ void sd_init()
 	uint32_t OCR = 0;
 	uint16_t RCA16 = 0;
 
-	for (int count = 0;; ++count)
+	for (int32_t count = 0;; ++count)
 	{
 		if (!sd_cmd55(0x0000))
 			return;
@@ -697,26 +562,12 @@ void sd_init()
 	uint8_t cid[16];
 	sd_cmd2(cid, sizeof(cid));
 
-	print("SD CID: ");
-	for (int i = 0; i < 16; ++i)
-		printHex(cid[i]);
-	printLn("");
-
 	// Get card RCA identifier.
 	sd_cmd3(&RCA16);
-	print("RCA ");
-	printHex(RCA16 >> 16);
-	printHex(RCA16);
-	printLn("");
 
 	// Enter data transfer mode, standby state.
 	uint8_t csd[17];
 	sd_cmd9(RCA16, csd, sizeof(csd));
-
-	print("SD CSD: ");
-	for (int i = 0; i < 16; ++i)
-		printHex(csd[i]);
-	printLn("");
 
 	// cmd10?
 
@@ -732,24 +583,4 @@ void sd_init()
 	sd_acmd6(1);
 	sd_cmd55(RCA16);
 	sd_acmd42(1);
-
-	// Test read first block.
-	static uint8_t block[512];
-	if (sd_read_block512(0, block, 512))
-	{
-		printLn("Got block!");
-		for (uint32_t i = 0; i < 512; )
-		{
-			printHex(i >> 8);
-			printHex(i);
-			print(": ");
-
-			for (uint32_t j = 0; j < 16; ++j)
-				printHex(block[i++]);
-
-			printLn("");
-		}
-	}
-	else
-		printLn("Unable to read block!");
 }

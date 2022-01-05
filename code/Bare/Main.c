@@ -2,12 +2,12 @@
 #include "File.h"
 #include "Print.h"
 #include "SD.h"
-// #include "Video.h"
+#include "Video.h"
 
 void main()
 {
-//	printLn("** Initialize Video...");
-//	video_init();
+	printLn("** Initialize Video...");
+	video_init();
 
 	printLn("** Initialize SD card...");
 	sd_init();
@@ -16,7 +16,7 @@ void main()
 	file_init();
 
 	printLn("** Ready");
-/*
+
 	static int star[100][3];
 	for (int i = 0; i < 100; ++i)
 	{
@@ -26,13 +26,15 @@ void main()
 	}
 
 	uint8_t page = 0;
+	uint32_t cc = 0;
 
 	volatile uint32_t* video = VIDEO_BASE;
 	for (;;)
 	{
 		// clear
 		for (uint32_t i = 0; i < 320 * 240; ++i)
-			video[i] = 0;
+			video[i] = cc;
+		++cc;
 
 		// draw stars.
 		for (int i = 0; i < 100; ++i)
@@ -50,6 +52,4 @@ void main()
 		page = 1 - page;
 		*VIDEO_CTRL = (uint32_t)page;
 	}
-*/
-	for(;;);
 }
