@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "Runtime/HAL/Common.h"
 
 void print(const char* str);
 

@@ -89,6 +89,19 @@
 						</item>
 					</items>
 				</item>
+				<item type="Filter">
+					<name>HAL</name>
+					<items>
+						<item type="File">
+							<fileName>HAL/*.c</fileName>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>HAL/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
 			</items>
 			<dependencies/>
 		</item>
@@ -110,7 +123,7 @@
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -131,7 +144,7 @@
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -508,7 +521,7 @@
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -529,7 +542,7 @@
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>

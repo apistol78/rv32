@@ -1,10 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-// typedef unsigned char uint8_t;
-// typedef unsigned short uint16_t;
-// typedef signed int int32_t;
-// typedef unsigned int uint32_t;
 
 #define LED_BASE    (volatile uint32_t*)0x50000000
 #define UART_BASE   (volatile uint32_t*)0x50000010

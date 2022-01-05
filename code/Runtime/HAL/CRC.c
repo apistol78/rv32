@@ -1,4 +1,4 @@
-#include "CRC.h"
+#include "Runtime/HAL/CRC.h"
 
 /* Table for CRC-7 (polynomial x^7 + x^3 + 1) */
 static const uint8_t crc7_syndrome_table[256] = {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "Runtime/HAL/Common.h"
 
 // Directions
 #define GPIO_INPUT	0

@@ -1,21 +1,12 @@
+#include <stdio.h>
 #include <stdlib.h>
-#include "Runtime/File.h"
-#include "Runtime/Print.h"
-#include "Runtime/SD.h"
-#include "Runtime/Video.h"
+#include "Runtime/HAL.h"
 
 void main()
 {
-	printLn("** Initialize Video...");
-	video_init();
+	hal_init();
 
-	printLn("** Initialize SD card...");
-	sd_init();
-
-	printLn("** Initialize FS...");
-	file_init();
-
-	printLn("** Ready");
+	printf("STARFIELD\n");
 
 	static int star[100][3];
 	for (int i = 0; i < 100; ++i)

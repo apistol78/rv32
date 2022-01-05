@@ -1,6 +1,6 @@
-#include "I2C.h"
-#include "Print.h"
-#include "Video.h"
+#include "Runtime/HAL/I2C.h"
+#include "Runtime/HAL/Print.h"
+#include "Runtime/HAL/Video.h"
 
 #define SLAVE_ADDR 0x72
 

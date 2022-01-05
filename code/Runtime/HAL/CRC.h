@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "Runtime/HAL/Common.h"
 
 uint8_t crc7_byte(uint8_t crc, uint8_t data);
 
