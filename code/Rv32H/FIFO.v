@@ -1,8 +1,7 @@
 module FIFO #(
 	parameter DEPTH = 64
 )(
-	input wire i_clock_rd,
-	input wire i_clock_wr,
+	input wire i_clock,
 
 	output wire o_empty,
 	output wire o_full,
@@ -14,7 +13,7 @@ module FIFO #(
 	output wire [7:0] o_rdata
 );
 
-//`ifdef __ICARUS__
+`ifdef __ICARUS__
 
 	reg [7:0] rdata;
 	reg [7:0] data [0:DEPTH - 1];
@@ -35,8 +34,7 @@ module FIFO #(
 		last_read <= 0;
 	end
 
-	// \fixme We're using RD clock for both read and write.
-	always @ (posedge i_clock_rd) begin
+	always @ (posedge i_clock) begin
 		if (i_write && !last_write) begin
 			data[in] <= i_wdata;
 			in <= (in + 1) & (DEPTH - 1);
@@ -50,20 +48,18 @@ module FIFO #(
 		last_read <= i_read;
 	end
 
-//`else
-/*
-	assign o_full = 1'b0;
+`else
 
 	IP_FIFO fifo(
+		.clock(i_clock),
 		.data(i_wdata),
-		.rdclk(i_clock_rd),
 		.rdreq(i_read),
-		.wrclk(i_clock_wr),
 		.wrreq(i_write),
-		.q(o_rdata),
-		.rdempty(o_empty)
+		.empty(o_empty),
+		.full(o_full),
+		.q(o_rdata)
 	);
-*/
-//`endif
+
+`endif
 
 endmodule

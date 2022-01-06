@@ -1,7 +1,6 @@
 
 module UART #(
-    parameter CLOCK_RATE = 50000000,
-    parameter BAUD_RATE = 9600
+    parameter PRESCALE = 50000000 / (9600 * 8)
 )(
 	input wire i_reset,
 	input wire i_clock,
@@ -12,9 +11,6 @@ module UART #(
 	output wire [31:0] o_rdata,
     output wire o_ready,
 	
-	output wire [1:0] o_state,
-	output wire [7:0] o_sample,
-
     input wire UART_RX,
     output wire UART_TX
 );
@@ -22,26 +18,20 @@ module UART #(
 	wire rx_request;
 	wire rx_ready;
 	UART_RX #(
-		.CLOCK_RATE(CLOCK_RATE),
-		.BAUD_RATE(BAUD_RATE)
+		.PRESCALE(PRESCALE)
 	) rx(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_request(rx_request),
 		.o_rdata(o_rdata),
 		.o_ready(rx_ready),
-		
-		.o_state(o_state),
-		.o_sample(o_sample),
-		
 		.UART_RX(UART_RX)
 	);
 
 	wire tx_request;
 	wire tx_ready;
 	UART_TX #(
-		.CLOCK_RATE(CLOCK_RATE),
-		.BAUD_RATE(BAUD_RATE)
+		.PRESCALE(PRESCALE)
 	) tx(
 		.i_reset(i_reset),
 		.i_clock(i_clock),

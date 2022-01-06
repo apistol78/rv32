@@ -302,10 +302,8 @@ module SoC(
 	wire uart_select;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
-	wire [1:0] uart_state;
 	UART #(
-		50000000,
-		115200
+		.PRESCALE(50000000 / (9600 * 8))
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -314,7 +312,6 @@ module SoC(
 		.i_wdata(cpu_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
-		.o_state(uart_state),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)

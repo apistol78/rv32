@@ -1,75 +1,55 @@
 
 module UART_TX #(
-    parameter CLOCK_RATE = 50000000,
-    parameter BAUD_RATE = 9600
+    parameter PRESCALE = 50000000 / (9600 * 8)
 )(
 	input wire i_reset,
 	input wire i_clock,
 	input wire i_request,
 	input wire [31:0] i_wdata,
-	output wire o_ready,
+	output reg o_ready,
 
 	output reg UART_TX
 );
 
-	localparam STATE_IDLE		= 3'b000;
-	localparam STATE_START_BIT	= 3'b001;
-	localparam STATE_DATA_BITS	= 3'b010;
-	localparam STATE_STOP_BIT	= 3'b011;
+	reg [18:0] prescale;
+	reg [8:0] data;
+	reg [3:0] bit;
 
-	reg [2:0] state = STATE_IDLE;
-	reg [7:0] data = 0;
-	reg [4:0] count = 0;
-	reg ready = 0;
+	initial begin
+		o_ready = 0;
+		prescale = 0;
+		data = 0;
+		bit = 0;
+		UART_TX = 1;
+	end
 
-	wire baud_tx_clock;
-	ClockDivider #(
-		CLOCK_RATE,
-		BAUD_RATE
-	) tx_clock(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.o_clock(baud_tx_clock)
-	);
-	
-	assign o_ready = i_request && ready;
-
-	always @ (posedge baud_tx_clock or negedge i_request) begin
-
-		if (~i_request) begin
-			state <= STATE_IDLE;
-			ready <= 0;
+	always @ (posedge i_clock) begin
+		if (prescale > 0) begin
+			prescale <= prescale - 1;
 		end
-		else begin
-
-			case (state)
-				STATE_IDLE: begin
-					UART_TX <= 1;
-					data <= i_wdata[7:0];
-					count <= 0;
-					state <= STATE_START_BIT;
-				end
-
-				STATE_START_BIT: begin
-					UART_TX <= 0;
-					state <= STATE_DATA_BITS;
-				end
-
-				STATE_DATA_BITS: begin
-					UART_TX <= data[count];
-					if (count >= 7) begin
-						state <= STATE_STOP_BIT;
-					end else begin
-						count <= count + 5'd1;
-					end
-				end
-
-				STATE_STOP_BIT: begin
-					UART_TX <= 1;
-					ready <= 1;
-				end
-			endcase
-
+		else if (i_request) begin
+			if (bit == 0) begin
+				prescale <= (PRESCALE << 3) - 1;
+				bit <= 8 + 1;
+				data <= { 1'b1, i_wdata };
+				UART_TX <= 0;
+			end
+			else if (bit > 1) begin
+				bit <= bit - 1;
+				prescale <= (PRESCALE << 3) - 1;
+				{ data, UART_TX } <= { 1'b0, data };
+			end
+			else if (bit == 1) begin
+				bit <= bit - 1;
+				prescale <= (PRESCALE << 3);
+				UART_TX <= 1;
+				o_ready <= 1;
+			end
+		end
+		
+		if (!i_request) begin
+			bit <= 0;
+			o_ready <= 0;
 		end
 	end
 

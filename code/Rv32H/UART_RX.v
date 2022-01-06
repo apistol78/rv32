@@ -1,7 +1,6 @@
 
 module UART_RX #(
-    parameter CLOCK_RATE = 50000000,
-    parameter BAUD_RATE = 9600
+    parameter PRESCALE = 50000000 / (9600 * 8)
 )(
 	input wire i_reset,
 	input wire i_clock,
@@ -10,26 +9,16 @@ module UART_RX #(
 	output reg [31:0] o_rdata,
     output wire o_ready,
 	
-	output wire [1:0] o_state,
-	output wire [7:0] o_sample,
-	
     input wire UART_RX
 );
-
-	localparam STATE_IDLE		= 0;
-	localparam STATE_START_BIT	= 1;
-	localparam STATE_DATA_BITS	= 2;
-	localparam STATE_STOP_BIT	= 3;
-
-	reg [2:0] state;
+	reg frame_error;
+	reg [18:0] prescale;
 	reg [7:0] data;
-	reg [7:0] sample;
-	reg [7:0] count;
+	reg [3:0] bit;
 	reg [3:0] rds;
+	reg rx;
 	
-	assign o_state = state;
-	assign o_sample = sample;
-
+	// FIFO
 	wire rx_fifo_empty;
 	reg rx_fifo_write = 0;
 	reg rx_fifo_read = 0;
@@ -37,8 +26,7 @@ module UART_RX #(
 	FIFO #(
 		.DEPTH(4)
 	) rx_fifo(
-		.i_clock_rd(i_clock),
-		.i_clock_wr(baud_rx_clock),
+		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
@@ -46,28 +34,19 @@ module UART_RX #(
 		.o_rdata(rx_fifo_rdata)
 	);
 	
-	wire baud_rx_clock;
-	ClockDivider #(
-		CLOCK_RATE,
-		BAUD_RATE * 16
-	) rx_clock(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.o_clock(baud_rx_clock)
-	);
-	
 	initial begin
-		state = STATE_IDLE;
+		frame_error = 0;
+		prescale = 0;
 		data = 0;
-		sample = 0;
-		count = 0;
+		bit = 0;
 		rds = 0;
-
+		rx = 0;
 		o_rdata = 32'h0;
 	end
 	
 	assign o_ready = (rds == 5) && i_request;
 	
+	// Read from FIFO.
 	always @ (posedge i_clock) begin
 		if (i_reset) begin
 			rds <= 0;
@@ -98,63 +77,59 @@ module UART_RX #(
 				rds <= 0;
 			end
 		end
-	end
+	end	
+	
+	// Receive and put into FIFO.
+	always @ (posedge i_clock) begin
+		frame_error <= 0;
 
-	always @ (posedge baud_rx_clock) begin
-		if (i_reset) begin
-			state <= STATE_IDLE;
-			data <= 0;
-			sample <= 0;
-			count <= 0;
+		rx_fifo_write <= 0;
+		rx <= UART_RX;
+	
+		if (prescale > 0) begin
+			prescale <= prescale - 1;
 		end
-		else begin	
-			case (state)
-				STATE_IDLE: begin
-					rx_fifo_write <= 0;
-					if (UART_RX == 1'b0) begin
-						state <= STATE_START_BIT;
-						sample <= 0;
-						count <= 0;
-					end
+		else if (bit > 0) begin
+			if (bit > 8 + 1) begin
+				if (!rx) begin
+					// Assume mid point of start bit,
+					// continue with data bits.
+					bit <= bit - 1;
+					prescale <= (PRESCALE << 3) - 1;
 				end
-				
-				STATE_START_BIT: begin
-					if (sample >= 7) begin
-						state <= STATE_DATA_BITS;
-						sample <= 0;
-						count <= 0;
-					end
-					else begin
-						sample <= sample + 8'd1;
-					end
+				else begin
+					// Unexpected end of start bit.
+					bit <= 0;
+					prescale <= 0;
 				end
-				
-				STATE_DATA_BITS: begin
-					if (sample >= 16 - 1) begin
-						data[count] <= UART_RX;
-						if (count >= 7) begin
-							state <= STATE_STOP_BIT;
-						end else begin
-							count <= count + 8'd1;
-						end
-						sample <= 0;
-					end
-					else begin
-						sample <= sample + 8'd1;
-					end
+			end
+			else if (bit > 1) begin
+				// Shift in data bits.
+				bit <= bit - 1;
+				prescale <= (PRESCALE << 3) - 1;
+				data <= { rx, data[8 - 1:1] };
+			end
+			else if (bit == 1) begin
+				bit <= bit - 1;
+				if (rx) begin
+					// Stop bit found, save data into fifo.
+					rx_fifo_write <= 1;
 				end
-				
-				STATE_STOP_BIT: begin
-					if (sample >= 16 - 1) begin
-						state <= STATE_IDLE;
-						rx_fifo_write <= 1;
-					end
-					else begin
-						sample <= sample + 8'd1;
-					end
+				else begin
+					// Stop bit expected.
+					frame_error <= 1;
 				end
-			endcase
+			end
 		end
+		else begin
+			// Wait for start bit.
+			if (!rx) begin
+				prescale <= (PRESCALE << 2) - 2;
+				bit <= 8 + 2;
+				data <= 0;
+			end
+		end
+		
 	end
 
 endmodule
