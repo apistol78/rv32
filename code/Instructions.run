@@ -394,9 +394,20 @@ local instructions = {
 				R_s(f.rd) = dividend / divisor;
 		]],
 		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_result[31:0];
+			if (`RS2 == 0) begin
+				`RD <= -1;
 				`EXECUTE_DONE;
+			end
+			else if (&`RS1 && $signed(`RS2) == -1) begin
+				`RD <= `RS1;
+				`EXECUTE_DONE;
+			end
+			else begin
+				div_signed <= 1;
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
 			end
 		]]
 	},
@@ -415,9 +426,16 @@ local instructions = {
 				R_u(f.rd) = dividend / divisor;
 		]],
 		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_result[31:0];
+			if (`RS2 == 0) begin
+				`RD <= -1;
 				`EXECUTE_DONE;
+			end
+			else begin
+				div_signed <= 0;
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_result[31:0];
+					`EXECUTE_DONE;
+				end
 			end
 		]]
 	},
@@ -425,44 +443,22 @@ local instructions = {
 		mask = 0xfe00707f,
 		data = 0x0200503b,
 		name = "DIVUW",
-		format = "R",
-		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
-			if (divisor ==  0)
-				R_s(f.rd) = -1;
-			else		
-				R_u(f.rd) = dividend / divisor;
-		]],
-		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_result[31:0];
-				`EXECUTE_DONE;
-			end
-		]]
+		format = "R"
 	},
 	{
 		mask = 0xfe00707f,
 		data = 0x0200403b,
 		name = "DIVW",
-		format = "R",
-		cpp = [[
-			auto f = parseFormatR(word);
-			R(f.rd) = R(f.rs1) / R(f.rs2);
-		]],
-		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_result[31:0];
-				`EXECUTE_DONE;
-			end
-		]]
+		format = "R"
 	},
 	{
 		mask = 0xffffffff,
 		data = 0x00100073,
 		name = "EBREAK",
 		format = "",
+		cpp = [[
+			return false;
+		]],
 		verilog = [[
 			$finish;
 		]]
@@ -473,6 +469,9 @@ local instructions = {
 		name = "ECALL",
 		format = "",
 		cpp = [[
+		]],
+		verilog = [[
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -798,6 +797,7 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog = [[
+			mul_signed <= 1;
 			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[31:0];
 				`EXECUTE_DONE;
@@ -816,6 +816,7 @@ local instructions = {
 			R_s(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog = [[
+			mul_signed <= 1;
 			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
@@ -834,6 +835,7 @@ local instructions = {
 			R(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog = [[
+			mul_signed <= 0;
 			if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
@@ -903,9 +905,16 @@ local instructions = {
 				R_s(f.rd) = dividend % divisor;
 		]],
 		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_remainder[31:0];
+			if (`RS2 == 0) begin
+				`RD <= `RS1;
 				`EXECUTE_DONE;
+			end
+			else begin
+				div_signed <= 1;
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_remainder[31:0];
+					`EXECUTE_DONE;
+				end
 			end
 		]]
 	},
@@ -924,9 +933,16 @@ local instructions = {
 				R_u(f.rd) = dividend % divisor;
 		]],
 		verilog = [[
-			if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-				`RD <= div_remainder[31:0];
+			if (`RS2 == 0) begin
+				`RD <= `RS1;
 				`EXECUTE_DONE;
+			end
+			else begin
+				div_signed <= 0;
+				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+					`RD <= div_remainder[31:0];
+					`EXECUTE_DONE;
+				end
 			end
 		]]
 	},
@@ -1023,10 +1039,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM_25_20
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 << `INSTRUCTION[25:20];
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xfe00707f,
@@ -1129,10 +1141,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM_25_20
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 >>> `INSTRUCTION[25:20];
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xfc00707f,
@@ -1181,10 +1189,6 @@ local instructions = {
 			operand1 = operands.RS1,
 			operand2 = operands.IMM_25_20
 		}
-		-- verilog = [[
-		-- 	`RD <= `RS1 >> `INSTRUCTION[25:20];
-		-- 	`EXECUTE_DONE;
-		-- ]]
 	},
 	{
 		mask = 0xfc00707f,
