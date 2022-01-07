@@ -1,5 +1,6 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
+#include <Core/Misc/TString.h>
 #include "Serial.h"
 
 using namespace traktor;
@@ -152,7 +153,7 @@ void Serial::flush()
 
 bool Serial::open(int32_t port, const Configuration& configuration)
 {
-	m_fd = ::open("/dev/ttyUSB0", O_RDWR);
+	m_fd = ::open(wstombs(str(L"/dev/ttyUSB%d", port)).c_str(), O_RDWR);
 	if (m_fd < 0)
 	{
 		log::error << L"open failed" << Endl;
@@ -185,8 +186,22 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 	// tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT IN LINUX)
 	tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
 	tty.c_cc[VMIN] = 0;
-	cfsetispeed(&tty, B9600);
-	cfsetospeed(&tty, B9600);
+
+	if (configuration.baudRate == 9600)
+	{
+		cfsetispeed(&tty, B9600);
+		cfsetospeed(&tty, B9600);
+	}
+	else if (configuration.baudRate == 115200)
+	{
+		cfsetispeed(&tty, B115200);
+		cfsetospeed(&tty, B115200);
+	}
+	else
+	{
+		log::error << L"Unsupported baud rate." << Endl;
+		return false;
+	}
 
 	if (tcsetattr(m_fd, TCSANOW, &tty) != 0)
 	{
@@ -194,6 +209,7 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 		return false;
 	}
 
+	log::info << L"Serial opened succcessfully." << Endl;
 	return true;
 }
 

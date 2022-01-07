@@ -121,18 +121,40 @@ void main()
 		else if (cmd == 0x03)
 		{
 			uint32_t addr = uart_rx_u32();
+			uint32_t sp = uart_rx_u32();
 			uint8_t cs = 0;
 
 			// Add address to checksum.
-			const uint8_t* p = (const uint8_t*)&addr;
-			cs ^= p[0];
-			cs ^= p[1];
-			cs ^= p[2];
-			cs ^= p[3];
+			{
+				const uint8_t* p = (const uint8_t*)&addr;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
+
+			// Add stack to checksum.
+			{
+				const uint8_t* p = (const uint8_t*)&sp;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
 
 			if (cs == uart_rx_u8())
 			{
 				uart_tx_u8(0x80);	// Ok
+				
+				if (sp != 0)
+				{
+					__asm__ volatile (
+						"mv	sp, %0\n"
+						:
+						: "r" (sp)
+					);
+				}
+				
 				((call_fn_t)addr)();
 			}
 			else
