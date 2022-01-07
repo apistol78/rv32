@@ -4,6 +4,7 @@
 
 module CPU_Multiply(
 	input wire i_clock,
+	input wire i_signed,
 	input wire [31:0] i_op1,
 	input wire [31:0] i_op2,
 	output wire [63:0] o_result
@@ -11,12 +12,23 @@ module CPU_Multiply(
 
 `ifndef __ICARUS__
 
-    IP_Multiply ip_multiply(
+	wire [31:0] smul_result;
+    IP_Multiply ip_signed_multiply(
         .clock(i_clock),
         .dataa(i_op1),
         .datab(i_op2),
-        .result(o_result)
+        .result(smul_result)
     );
+	
+	wire [31:0] umul_result;
+    IP_UnsignedMultiply ip_unsigned_multiply(
+        .clock(i_clock),
+        .dataa(i_op1),
+        .datab(i_op2),
+        .result(umul_result)
+    );
+	
+	assign o_result = i_signed ? smul_result : umul_result;
 
 `else
 

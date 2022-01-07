@@ -32,6 +32,8 @@ module CPU_BusAccess(
 	initial begin
 		state = 2'd0;
 		o_bus_rw <= 1'b0;
+		o_bus_address <= 0;
+		o_bus_wdata <= 0;
 	end
 
 	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
@@ -44,6 +46,8 @@ module CPU_BusAccess(
 		if (i_reset) begin
 			state = 2'd0;
 			o_bus_rw <= 1'b0;
+			o_bus_address <= 0;
+			o_bus_wdata <= 0;
 		end
 		else begin
 			case (state)

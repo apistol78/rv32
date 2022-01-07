@@ -4,6 +4,7 @@
 
 module CPU_Divide(
 	input wire i_clock,
+	input wire i_signed,
 	input wire [31:0] i_numerator,
 	input wire [31:0] i_denominator,
 	output wire [31:0] o_result,
@@ -12,14 +13,29 @@ module CPU_Divide(
 
 `ifndef __ICARUS__
 
-    IP_Divide ip_divide(
+	wire [31:0] sdiv_result;
+	wire [31:0] sdiv_remainder;
+    IP_Divide ip_signed_divide(
         .clock(i_clock),
         .denom(i_denominator),
         .numer(i_numerator),
-        .quotient(o_result),
-        .remain(o_remainder)
+        .quotient(sdiv_result),
+        .remain(sdiv_remainder)
     );
 
+	wire [31:0] udiv_result;
+	wire [31:0] udiv_remainder;
+	IP_UnsignedDivide ip_unsigned_divide(
+        .clock(i_clock),
+        .denom(i_denominator),
+        .numer(i_numerator),
+        .quotient(udiv_result),
+        .remain(udiv_remainder)
+    );
+	
+	assign o_result = i_signed ? sdiv_result : udiv_result;
+	assign o_remainder = i_signed ? sdiv_remainder : udiv_remainder;
+	
 `else
 
     reg [31:0] p1_result;
@@ -32,8 +48,8 @@ module CPU_Divide(
 
     always @(posedge i_clock)
     begin
-        p1_result <= i_numerator / i_denominator;
-        p1_remainder <= i_numerator % i_denominator;
+		p1_result <= i_numerator / i_denominator;
+		p1_remainder <= i_numerator % i_denominator;
         p2_result <= p1_result;
         p2_remainder <= p1_remainder;
     end

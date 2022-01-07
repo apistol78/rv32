@@ -52,15 +52,7 @@ module CPU_Memory(
 	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write);
 
 	assign o_bus_address = { i_mem_address[31:2], 2'b00 };
-	// assign o_bus_rw =
-	// 	i_mem_width == 4 ? i_mem_write :
-	// 	i_mem_width == 2 ? (i_mem_write && (state == STATE_RMW_WAIT_WRITE)) :
-	// 	i_mem_width == 1 ? (i_mem_write && (state == STATE_RMW_WAIT_WRITE)) :
-	// 	1'b0;
-/*
-	assign o_bus_request = 
-		(i_mem_read || i_mem_write) && (i_tag != o_tag) && (state != STATE_RMW_RST_REQUEST);
-*/
+
 	wire [1:0] address_byte_index = i_mem_address[1:0];
 	wire [7:0] bus_rdata_byte = i_bus_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = i_bus_rdata >> (address_byte_index * 8);

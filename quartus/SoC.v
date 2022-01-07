@@ -264,6 +264,8 @@ module SoC(
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
+		// ---
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(sdram_select && cpu_request),
 		.i_rw(cpu_rw),
@@ -303,7 +305,7 @@ module SoC(
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
-		.PRESCALE(50000000 / (9600 * 8))
+		.PRESCALE(50000000 / (115200 * 8))
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -392,7 +394,7 @@ module SoC(
 		.i_bus_ready(cpu_ready),
 		.o_bus_address(cpu_address),
 		.i_bus_rdata(cpu_rdata),
-		.o_bus_wdata(cpu_wdata)
+		.o_bus_wdata(cpu_wdata),
 	);
 	
 	//=====================================

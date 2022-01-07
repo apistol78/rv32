@@ -4,6 +4,7 @@ module SDRAM_interface(
 	input wire i_global_reset_n,
 	input wire i_soft_reset_n,
 	
+	input wire i_reset,
 	input wire i_clock,
 	input wire i_request,
 	input wire i_rw,
@@ -32,7 +33,7 @@ module SDRAM_interface(
 	wire local_init_done;
 	wire local_cal_success;
 	wire pll_locked;
-
+	
 	IP_SDRAM sdram(
 		.pll_ref_clk(i_clock),
 		.global_reset_n(i_global_reset_n),
@@ -56,7 +57,7 @@ module SDRAM_interface(
 
 		.avl_ready_0(avl_ready),
 		.avl_burstbegin_0(avl_burstbegin),
-		.avl_addr_0(i_address[26:0]),
+		.avl_addr_0(i_address[28:2]),
 		.avl_rdata_valid_0(avl_rdata_valid),
 		.avl_rdata_0(o_rdata),
 		.avl_wdata_0(i_wdata),
@@ -85,42 +86,49 @@ module SDRAM_interface(
 	assign avl_burstbegin = avl_read_req || avl_write_req;
 	
 	always @(posedge i_clock) begin
-		if (i_request) begin
-			case (state)
-				0: begin
-					if (local_init_done) begin
-						if (!i_rw) begin
-							avl_read_req <= 1;
-						end
-						else begin
-							avl_write_req <= 1;
-						end
-						state <= 1;
-					end
-				end
-				
-				1: begin
-					if (avl_ready) begin
-						avl_read_req <= 0;
-						avl_write_req <= 0;
-						
-						if (i_rw || avl_rdata_valid)
-							o_ready <= 1;
-						
-						state <= 2;
-						count <= count + 1;
-					end
-				end
-				
-				2: begin
-					if (i_rw || avl_rdata_valid)
-						o_ready <= 1;
-				end
-			endcase
+		if (i_reset) begin
+			state <= 0;
+			count <= 0;
+			o_ready <= 0;
 		end
 		else begin
-			o_ready <= 0;
-			state <= 0;
+			if (i_request) begin
+				case (state)
+					0: begin
+						if (local_init_done) begin
+							if (!i_rw) begin
+								avl_read_req <= 1;
+							end
+							else begin
+								avl_write_req <= 1;
+							end
+							state <= 1;
+						end
+					end
+					
+					1: begin
+						if (avl_ready) begin
+							avl_read_req <= 0;
+							avl_write_req <= 0;
+							
+							if (i_rw || avl_rdata_valid)
+								o_ready <= 1;
+							
+							state <= 2;
+							count <= count + 1;
+						end
+					end
+					
+					2: begin
+						if (i_rw || avl_rdata_valid)
+							o_ready <= 1;
+					end
+				endcase
+			end
+			else begin
+				o_ready <= 0;
+				state <= 0;
+			end
 		end
 	end
 

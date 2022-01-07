@@ -10,7 +10,7 @@ module CPU_v2 (
 	input wire i_bus_ready,				// IO request ready.
 	output wire [31:0] o_bus_address,	// Address
 	input wire [31:0] i_bus_rdata,		// Read data
-	output wire [31:0] o_bus_wdata		// Write data,
+	output wire [31:0] o_bus_wdata		// Write data
 );
 
 	//====================================================
@@ -46,7 +46,6 @@ module CPU_v2 (
 		.o_pa_ready(bus_pa_ready),
 		.i_pa_address(bus_pa_address),
 		.o_pa_rdata(bus_pa_rdata),
-		//.i_pa_wdata(bus_pa_wdata),
 
 		// Port B (MEMORY)
 		.i_pb_rw(bus_pb_rw),

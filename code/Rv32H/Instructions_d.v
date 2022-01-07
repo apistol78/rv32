@@ -86,9 +86,20 @@ else if (is_R) begin
 	if (is_DIV) begin
 		$display("	DIV");
 		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
+				if (`RS2 == 0) begin
+					`RD <= -1;
 					`EXECUTE_DONE;
+				end
+				else if (&`RS1 && $signed(`RS2) == -1) begin
+					`RD <= `RS1;
+					`EXECUTE_DONE;
+				end
+				else begin
+					div_signed <= 1;
+					if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+						`RD <= div_result[31:0];
+						`EXECUTE_DONE;
+					end
 				end
 			
 	end
@@ -97,31 +108,16 @@ else if (is_R) begin
 	else if (is_DIVU) begin
 		$display("	DIVU");
 		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
+				if (`RS2 == 0) begin
+					`RD <= -1;
 					`EXECUTE_DONE;
 				end
-			
-	end
-
-	// DIVUW
-	else if (is_DIVUW) begin
-		$display("	DIVUW");
-		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
-					`EXECUTE_DONE;
-				end
-			
-	end
-
-	// DIVW
-	else if (is_DIVW) begin
-		$display("	DIVW");
-		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
-					`EXECUTE_DONE;
+				else begin
+					div_signed <= 0;
+					if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+						`RD <= div_result[31:0];
+						`EXECUTE_DONE;
+					end
 				end
 			
 	end
@@ -130,6 +126,7 @@ else if (is_R) begin
 	else if (is_MUL) begin
 		$display("	MUL");
 		
+				mul_signed <= 1;
 				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 					`RD <= mul_result[31:0];
 					`EXECUTE_DONE;
@@ -141,6 +138,7 @@ else if (is_R) begin
 	else if (is_MULH) begin
 		$display("	MULH");
 		
+				mul_signed <= 1;
 				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 					`RD <= mul_result[63:32];
 					`EXECUTE_DONE;
@@ -152,6 +150,7 @@ else if (is_R) begin
 	else if (is_MULHU) begin
 		$display("	MULHU");
 		
+				mul_signed <= 0;
 				if (decode_cycle == `MUL_CYCLE_LATENCY) begin
 					`RD <= mul_result[63:32];
 					`EXECUTE_DONE;
@@ -163,9 +162,16 @@ else if (is_R) begin
 	else if (is_REM) begin
 		$display("	REM");
 		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_remainder[31:0];
+				if (`RS2 == 0) begin
+					`RD <= `RS1;
 					`EXECUTE_DONE;
+				end
+				else begin
+					div_signed <= 1;
+					if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+						`RD <= div_remainder[31:0];
+						`EXECUTE_DONE;
+					end
 				end
 			
 	end
@@ -174,9 +180,16 @@ else if (is_R) begin
 	else if (is_REMU) begin
 		$display("	REMU");
 		
-				if (decode_cycle == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_remainder[31:0];
+				if (`RS2 == 0) begin
+					`RD <= `RS1;
 					`EXECUTE_DONE;
+				end
+				else begin
+					div_signed <= 0;
+					if (decode_cycle == `DIV_CYCLE_LATENCY) begin
+						`RD <= div_remainder[31:0];
+						`EXECUTE_DONE;
+					end
 				end
 			
 	end
@@ -217,6 +230,13 @@ end
 else if (is_EBREAK) begin
 	$display("	EBREAK");
 			$finish;
+		
+end
+
+// ECALL
+else if (is_ECALL) begin
+	$display("	ECALL");
+			`EXECUTE_DONE;
 		
 end
 

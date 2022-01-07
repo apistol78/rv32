@@ -107,18 +107,22 @@ module CPU_Execute (
 		.o_result(alu_result)
 	);
 
+	reg mul_signed;
 	wire [63:0] mul_result;
 	CPU_Multiply multiply(
 		.i_clock(i_clock),
+		.i_signed(mul_signed),
 		.i_op1(i_rs1),
 		.i_op2(i_rs2),
 		.o_result(mul_result)
 	);
 
+	reg div_signed;
 	wire [31:0] div_result;
 	wire [31:0] div_remainder;
 	CPU_Divide divide(
 		.i_clock(i_clock),
+		.i_signed(i_signed),
 		.i_numerator(i_rs1),
 		.i_denominator(i_rs2),
 		.o_result(div_result),
@@ -130,6 +134,7 @@ module CPU_Execute (
 		o_pc_next <= 0;
 		o_mem_read <= 0;
 		o_mem_write <= 0;
+		o_mem_width <= 0;
 		o_mem_signed <= 0;
 		o_mem_address <= 0;
 		o_tag <= 0;
@@ -144,6 +149,7 @@ module CPU_Execute (
 			o_pc_next <= 0;
 			o_mem_read <= 0;
 			o_mem_write <= 0;
+			o_mem_width <= 0;
 			o_mem_signed <= 0;
 			o_mem_address <= 0;
 			o_tag <= 0;
@@ -162,6 +168,7 @@ module CPU_Execute (
 				o_mem_read <= 0;
 				o_mem_write <= 0;
 				o_mem_width <= 0;
+				o_mem_signed <= 0;
 				o_inst_rd <= i_inst_rd;
 
 				decode_cycle <= decode_cycle + 1;
