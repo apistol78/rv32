@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Runtime/HAL.h"
+#include "Runtime/HAL/Print.h"
 
 void main()
 {
@@ -14,7 +15,11 @@ void main()
 		star[i][0] = rand() % 320;
 		star[i][1] = rand() % 240;
 		star[i][2] = (rand() % 4) + 1;
+
+		printf("%d, %d, %d\n", star[i][0], star[i][1], star[i][2]);
 	}
+
+	printf("RANDOMIZED...\n");
 
 	uint8_t page = 0;
 	uint32_t cc = 0;
@@ -25,7 +30,7 @@ void main()
 		// clear
 		for (uint32_t i = 0; i < 320 * 240; ++i)
 			video[i] = cc;
-		++cc;
+		cc += 0x01010101;
 
 		// draw stars.
 		for (int i = 0; i < 100; ++i)

@@ -20,7 +20,7 @@ int32_t NO_OPTIMIZE hal_init()
 
 	printf("SP: 0x%x\n", sp);
 	printf("GP: 0x%x\n", gp);
-
+/*
 	printf("** Initialize Video **\n");
 	video_init();
 
@@ -29,7 +29,7 @@ int32_t NO_OPTIMIZE hal_init()
 
 	printf("** Initialize FS **\n");
 	file_init();
-
+*/
 	printf("** Ready **\n");
     return 0;
 }
