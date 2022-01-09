@@ -9,7 +9,7 @@ https://itectec.com/electrical/electronic-alteras-dram-controller-with-uniphy/
 ROM     h00000000   h00010000   // 64 KiB
 BRAM    h00010000   h00010400   // 1 KiB
 SRAM    h10000000   h10400000   // 512 KiB
-SDRAM   h20000000   h40000000   // 512 MB
+SDRAM   h20000000   h27FFFFFF   // 512 MB
 VIDEO   h40000000   h50000000   // 256 MB
 LED     h50000000   h50000010   // 16 B
 UART    h50000010   h50000020   // 16 B
@@ -21,4 +21,5 @@ Startup
     PC = h00000000
     SP = h00010400
 
-
+Launch SP
+0x40000000
