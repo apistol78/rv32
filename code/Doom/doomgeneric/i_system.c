@@ -460,13 +460,8 @@ void I_Error (char *error, ...)
 
     exit(-1);
 #else
-
-    // anders.pistol - cause bus error to terminate emulator.
-    *(uint32_t*)0xffffffff = 0xcafebabe;
-
-    while (true)
-    {
-    }
+    // anders.pistol
+    for (;;);
 #endif
 }
 
