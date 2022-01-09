@@ -12,7 +12,7 @@ module CPU_Multiply(
 
 `ifndef __ICARUS__
 
-	wire [31:0] smul_result;
+	wire [63:0] smul_result;
     IP_Multiply ip_signed_multiply(
         .clock(i_clock),
         .dataa(i_op1),
@@ -20,7 +20,7 @@ module CPU_Multiply(
         .result(smul_result)
     );
 	
-	wire [31:0] umul_result;
+	wire [63:0] umul_result;
     IP_UnsignedMultiply ip_unsigned_multiply(
         .clock(i_clock),
         .dataa(i_op1),
