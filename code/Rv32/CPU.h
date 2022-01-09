@@ -22,6 +22,8 @@ public:
 
     void jump(uint32_t address);
 
+    void setSP(uint32_t sp);
+
     bool tick();
 
     uint32_t pc() const { return m_pc; }

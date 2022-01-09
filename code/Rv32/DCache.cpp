@@ -12,6 +12,7 @@ DCache::DCache(Bus* bus)
 
 void DCache::writeU8(uint32_t address, uint8_t value)
 {
+	/*
 	const uint32_t wa = address & ~3;
 	const uint32_t wb = address & 3;
 	uint32_t w = m_bus->readU32(wa);
@@ -31,10 +32,13 @@ void DCache::writeU8(uint32_t address, uint8_t value)
 		break;
 	}
 	m_bus->writeU32(address, w);
+	*/
+	m_bus->writeU8(address, value);
 }
 
 void DCache::writeU16(uint32_t address, uint16_t value)
 {
+	/*
 	const uint32_t wa = address & ~3;
 	const uint32_t wb = address & 3;
 	uint32_t w = m_bus->readU32(wa);
@@ -48,6 +52,8 @@ void DCache::writeU16(uint32_t address, uint16_t value)
 		break;
 	}
 	m_bus->writeU32(address, w);
+	*/
+	m_bus->writeU16(address, value);
 }
 
 void DCache::writeU32(uint32_t address, uint32_t value)
@@ -57,6 +63,7 @@ void DCache::writeU32(uint32_t address, uint32_t value)
 
 uint8_t DCache::readU8(uint32_t address) const
 {
+	/*
 	const uint32_t ra = address & ~3;
 	const uint32_t rb = address & 3;
 	uint32_t r = m_bus->readU32(ra);
@@ -72,10 +79,13 @@ uint8_t DCache::readU8(uint32_t address) const
 		return (r >> 24) & 0xff;
 	}
 	return 0;
+	*/
+	return m_bus->readU8(address);
 }
 
 uint16_t DCache::readU16(uint32_t address) const
 {
+	/*
 	const uint32_t ra = address & ~3;
 	const uint32_t rb = address & 3;
 	uint32_t r = m_bus->readU32(ra);
@@ -87,6 +97,8 @@ uint16_t DCache::readU16(uint32_t address) const
 		return (r >> 16) & 0xffff;
 	}
 	return 0;	
+	*/
+	return m_bus->readU16(address);
 }
 
 uint32_t DCache::readU32(uint32_t address) const

@@ -109,8 +109,8 @@ int main(int argc, const char** argv)
 
 	Memory rom(0x00010000);
 	Memory ram(0x00010000);
-	Memory sram(0x00010000);
-	Memory sdram(0x00010000);
+	Memory sram(0x00400000);
+	Memory sdram(0x20000000);
 	Video video;
 	Unknown led(L"LED");
 	UART uart(uartStream);
@@ -120,8 +120,8 @@ int main(int argc, const char** argv)
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
-	bus.map(0x00010000, 0x00012000, &ram);
-	bus.map(0x10000000, 0x20000000, &sram);
+	bus.map(0x00010000, 0x00010400, &ram);
+	bus.map(0x10000000, 0x10400000, &sram);
 	bus.map(0x20000000, 0x40000000, &sdram);
 	bus.map(0x40000000, 0x50000000, &video);
 	bus.map(0x50000000, 0x50000010, &led);
@@ -129,6 +129,16 @@ int main(int argc, const char** argv)
 	bus.map(0x50000020, 0x50000030, &gpio);
 	bus.map(0x50000030, 0x50000040, &i2c);
 	bus.map(0x50000040, 0x50000050, &sd);
+
+	Ref< OutputStream > os = nullptr;	
+	if (cmdLine.hasOption(L't', L"trace"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(L"Trace.log", File::FmWrite);
+		if (f)
+			os = new FileOutputStream(f, new Utf8Encoding());
+	}
+
+	CPU cpu(&bus, os);
 
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{
@@ -189,6 +199,17 @@ int main(int argc, const char** argv)
 				upper = parseString< int32_t >(L"0x" + tmp.substr(8, 4));
 				upper <<= 16;
 			}
+			else if (type == 0x05)
+			{
+				const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
+				if (!cmdLine.hasOption(L's', L"start"))
+				{
+					log::info << L"Starting at " << str(L"0x%08x", linear) << L"." << Endl;
+					cpu.jump(linear);
+				}
+				else
+					log::info << L"Start address " << str(L"0x%08x", linear) << L" from HEX ignored; explicitly specified at command line." << Endl;
+			}
 			else
 				log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
 		}
@@ -199,16 +220,6 @@ int main(int argc, const char** argv)
 
 	// Lock ROM from being mutable.
 	rom.setReadOnly(true);
-
-	Ref< OutputStream > os = nullptr;	
-	if (cmdLine.hasOption(L't', L"trace"))
-	{
-		Ref< IStream > f = FileSystem::getInstance().open(L"Trace.log", File::FmWrite);
-		if (f)
-			os = new FileOutputStream(f, new Utf8Encoding());
-	}
-
-	CPU cpu(&bus, os);
 
 	if (cmdLine.hasOption(L's', L"start"))
 	{
@@ -221,7 +232,18 @@ int main(int argc, const char** argv)
 		cpu.jump((uint32_t)start);
 	}
 
-	CircularVector< std::pair< uint32_t, uint32_t >, 16 > dbg_pc;
+	if (cmdLine.hasOption(L"stack"))
+	{
+		int32_t sp = cmdLine.getOption(L"stack").getInteger();
+		if (sp < 0)
+		{
+			log::error << L"Invalid start address." << Endl;
+			return 1;
+		}
+		cpu.setSP((uint32_t)sp);
+	}
+
+	CircularVector< std::pair< uint32_t, uint32_t >, 32 > dbg_pc;
 	uint32_t dbg_sp = cpu.sp();
 
 	Ref< ui::Form > form;
@@ -256,7 +278,10 @@ int main(int argc, const char** argv)
 				dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
 				if (!cpu.tick())
+				{
+					g_going = false;
 					break;
+				}
 				if (bus.error())
 				{
 					g_going = false;
@@ -281,7 +306,10 @@ int main(int argc, const char** argv)
 			dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
 			if (!cpu.tick())
+			{
+				g_going = false;
 				break;
+			}
 			if (bus.error())
 			{
 				g_going = false;

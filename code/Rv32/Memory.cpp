@@ -8,9 +8,13 @@ using namespace traktor;
 T_IMPLEMENT_RTTI_CLASS(L"Memory", Memory, Device)
 
 Memory::Memory(uint32_t capacity)
+:	m_capacity(capacity)
 {
 	m_data.reset(new uint8_t [capacity]);
-	std::memset(m_data.ptr(), 0, capacity);
+	//std::memset(m_data.ptr(), 0, capacity);
+
+	// for (uint32_t i = 0; i < capacity; ++i)
+	// 	m_data[i] = (uint8_t)rand();
 }
 
 void Memory::setReadOnly(bool readOnly)

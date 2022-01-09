@@ -194,7 +194,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
 		m_registers[i] = 0x00000000;
 
-	m_registers[2] = 0x00010400;
+	m_registers[2] = 0x00010400 - 4;
 }
 
 void CPU::jump(uint32_t address)
@@ -202,9 +202,17 @@ void CPU::jump(uint32_t address)
 	m_pc = address;
 }
 
+void CPU::setSP(uint32_t sp)
+{
+	m_registers[2] = sp;
+}
+
 bool CPU::tick()
 {
 	uint32_t word;
+
+	// if (m_pc == 0x20003038)
+	// 	log::info << L"memset called" << Endl;
 	
 	//word = getFromICache(m_pc);
 	//if (word == 0)

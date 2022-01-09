@@ -269,34 +269,27 @@ else if ((word & 0xfe00707f) == 0x02005033)
 else if ((word & 0xfe00707f) == 0x0200503b)
 {
 	TRACE(L"	DIVUW");
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
-			if (divisor ==  0)
-				R_s(f.rd) = -1;
-			else		
-				R_u(f.rd) = dividend / divisor;
-		
-	return true;
+	log::info << L"No verilog implementation of DIVUW" << Endl;
+	log::error << L"Not implemented." << Endl;
+	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200403b)
 {
 	TRACE(L"	DIVW");
-			auto f = parseFormatR(word);
-			R(f.rd) = R(f.rs1) / R(f.rs2);
-		
-	return true;
+	log::info << L"No verilog implementation of DIVW" << Endl;
+	log::error << L"Not implemented." << Endl;
+	return false;
 }
 else if ((word & 0xffffffff) == 0x00100073)
 {
 	TRACE(L"	EBREAK");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			return false;
+		
+	return true;
 }
 else if ((word & 0xffffffff) == 0x00000073)
 {
 	TRACE(L"	ECALL");
-	log::info << L"No verilog implementation of ECALL" << Endl;
 		
 	return true;
 }
