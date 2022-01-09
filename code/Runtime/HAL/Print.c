@@ -15,7 +15,16 @@ void printLn(const char* str)
 
 void printHex(uint8_t v)
 {
-	const char hex[] = { "0123456789abcdef" };
+	const static char hex[] = { "0123456789abcdef" };
 	uart_tx_u8(hex[v >> 4]);
 	uart_tx_u8(hex[v & 15]);
+}
+
+void printHexU32(uint32_t v)
+{
+	const uint8_t* p = (const uint8_t*)&v;
+	printHex(p[3]);
+	printHex(p[2]);
+	printHex(p[1]);
+	printHex(p[0]);
 }

@@ -45,20 +45,20 @@ typedef enum
     SD_STATE_TRAN    
 } SD_CURRENT_STATE;
 
-void __attribute__ ((noinline)) sd_half_cycle()
-{
-//	for (int i = 0; i < 5; ++i)
-//		__asm__ volatile ("nop");
-}
+// void __attribute__ ((noinline)) sd_half_cycle()
+// {
+// }
+
+#define SD_HALF_CYCLE()
 
 void sd_dummy_clock(uint32_t clockCnt)
 {
 	for (uint32_t i = 0; i < clockCnt; ++i)
 	{
         SD_WR_CLK_LOW();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
         SD_WR_CLK_HIGH();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
     }
 }
 
@@ -77,10 +77,10 @@ void sd_send_cmd(uint8_t cmd[6], int32_t cmdLen)
 				{ SD_WR_CMD_HIGH(); }
 			else
 				{ SD_WR_CMD_LOW(); }
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 			SD_WR_CLK_HIGH();  
 			mask >>= 1;
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 		}
 	}
 }
@@ -95,9 +95,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	for (int32_t cnt = 0;;)
 	{
 		SD_WR_CLK_LOW();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
 		SD_WR_CLK_HIGH();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
 		if (!SD_RD_CMD())
 			break;
 		else if (cnt++ > maxCnt)
@@ -105,9 +105,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	}
   
 	SD_WR_CLK_LOW();
-	sd_half_cycle();
+	SD_HALF_CYCLE();
 	SD_WR_CLK_HIGH();
-	sd_half_cycle();
+	SD_HALF_CYCLE();
 
 	if (SD_RD_CMD())
 		return 0;
@@ -117,9 +117,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	for (int32_t index = 0; index < responseLen; )
 	{
 		SD_WR_CLK_LOW();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
 		SD_WR_CLK_HIGH();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
 		if (SD_RD_CMD())
 			value |= 0x80 >> bit;
 		if (bit >= 7)
@@ -470,9 +470,9 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	while(1)
 	{
         SD_WR_CLK_LOW();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
         SD_WR_CLK_HIGH();
-		sd_half_cycle();
+		SD_HALF_CYCLE();
 #ifdef SD_4BIT_MODE
 		if((SD_RD_DAT() & 0x0F) == 0x00) // check start bits (zero is expected)
 #else      
@@ -491,9 +491,9 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		for(int32_t j = 0; j < 2; j++)
 		{
 			SD_WR_CLK_LOW();
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 			SD_WR_CLK_HIGH();
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 			Data8 <<= 4; 
 			Data8 |= (SD_RD_DAT() & 0x0F);
 		}
@@ -501,9 +501,9 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		for(int32_t j = 0; j < 8; j++)
 		{
 			SD_WR_CLK_LOW();
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 			SD_WR_CLK_HIGH();
-			sd_half_cycle();
+			SD_HALF_CYCLE();
 			Data8 <<= 1; 
 			if (SD_RD_DAT() & 0x01)  // check bit0
 				Data8 |= 0x01;
@@ -523,9 +523,9 @@ void sd_init()
 	SD_WR_CMD_DIR_OUT();
 	SD_WR_DAT_DIR_IN();
 	SD_WR_CLK_HIGH();
-	sd_half_cycle();
+	SD_HALF_CYCLE();
 	SD_WR_CMD_HIGH();
-	sd_half_cycle();
+	SD_HALF_CYCLE();
 	SD_WR_DAT(0x0);
 
 	sd_dummy_clock(100);

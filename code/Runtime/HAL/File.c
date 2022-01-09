@@ -9,32 +9,27 @@
 
 DSTATUS disk_initialize (BYTE pdrv)
 {
-    printLn("disk_initialize");
     return 0;
 }
 
 DSTATUS disk_status (BYTE pdrv)
 {
-    printLn("disk_status");
     return 0;
 }
 
 DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-    printLn("disk_read");
     sd_read_block512(sector, buff, 512);
     return RES_OK;
 }
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
-    printLn("disk_write");
-    return RES_OK;
+    return RES_NOTRDY;
 }
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
-    printLn("disk_ioctl");
     return RES_OK;
 }
 
@@ -62,6 +57,11 @@ void file_close(int32_t fd)
     f_close(&fp);
 }
 
+int32_t file_size(int32_t fd)
+{
+    return f_size(&fp);
+}
+
 int32_t file_seek(int32_t file, int32_t offset, int32_t from)
 {
     FRESULT result = FR_INVALID_PARAMETER;
@@ -77,18 +77,6 @@ int32_t file_seek(int32_t file, int32_t offset, int32_t from)
         return -1;
 
     return f_tell(&fp);
-
-	// if (__file_ptr == 0)
-	// 	return -1;
-
-	// if (dir == 0)
-	// 	__file_ptr = (char*)0x00700000 + ptr;
-	// else if (dir == 1)
-	// 	__file_ptr += ptr;
-	// else if (dir == 2)
-	// 	__file_ptr = (char*)0x00700000 + __file_size + ptr;
-
-	// return (int)(__file_ptr - (char*)0x00700000);
 }
 
 int32_t file_write(int32_t file, const uint8_t* ptr, int32_t len)

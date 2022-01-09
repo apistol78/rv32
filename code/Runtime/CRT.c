@@ -1,18 +1,18 @@
+#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/File.h"
+#include "Runtime/HAL/Print.h"
 #include "Runtime/HAL/UART.h"
 
 extern int _end;
 
+static uint8_t* heap = (uint8_t*)&_end;
+
 void *_sbrk(int incr)
 {
-	static uint8_t* heap = 0;
-	uint8_t* prev_heap;
-	if (heap == 0)
-		heap = (uint8_t*)&_end;
-	prev_heap = heap;
+	uint8_t* prev_heap = heap;
 	heap += incr;
 	return prev_heap;
 }
@@ -32,9 +32,18 @@ int _close(int file)
 
 int _fstat(int file, struct stat* st)
 {
-	// st->st_mode = S_IFCHR;
-	// if (__file_ptr != 0)
-	// 	st->st_size = __file_size;
+	if (file <= 100)
+	{
+		st->st_dev = 0;
+		st->st_mode = S_IFCHR;
+		st->st_rdev = 0;
+	}
+	else
+	{
+		int32_t fd = file - 100;
+		st->st_size = file_size(fd);
+		printf("_fstat, file size %d byte(s)\n", st->st_size);
+	}
 	return 0;
 }
 
@@ -45,7 +54,10 @@ int _isatty(int file)
 
 int _lseek(int file, int ptr, int dir)
 {
-	return file_seek(file, ptr, dir);
+	if (file >= 100)
+		return file_seek(file, ptr, dir);
+	else
+		return 0;
 }
 
 void _exit(int status)
@@ -65,6 +77,10 @@ int _getpid(void)
 
 int _write(int file, char* ptr, int len)
 {
+	for (int i = 0; i < len; ++i)
+		uart_tx_u8(ptr[i]);
+	return len;
+/*
 	if (file >= 100)
 	{
 		int32_t fd = file - 100;
@@ -76,6 +92,7 @@ int _write(int file, char* ptr, int len)
 			uart_tx_u8(*ptr++);
 		return len;
 	}
+*/
 }
 
 int _read(int file, char* ptr, int len)
@@ -96,4 +113,9 @@ int _read(int file, char* ptr, int len)
 int mkdir(const char* path, mode_t mode)
 {
 	return -1;
+}
+
+void __attribute__((__used__)) crt_init()
+{
+	_sbrk(0);
 }
