@@ -13,7 +13,13 @@ module CPU_Execute (
 	input wire [31:0] i_rs2,
 	input wire [4:0] i_inst_rd,
 	input wire [31:0] i_imm,
-
+	input wire i_alu,
+	input wire [3:0] i_alu_operation,
+	input wire [2:0] i_alu_operand1,
+	input wire [2:0] i_alu_operand2,
+	input wire i_branch,
+	input wire [4:0] i_op,
+	
 	// Output
 	output reg [`TAG_SIZE] o_tag,
 	output reg [4:0] o_inst_rd,
@@ -27,19 +33,19 @@ module CPU_Execute (
 
 	output wire o_stall
 );
-	`define INSTRUCTION i_instruction
-	`include "Instructions_i.v"
+
+	`include "Instructions_ops.v"
 
 	// Alias symbols for generated code.
-	`define PC i_pc
-	`define RS1 i_rs1
-	`define RS2 i_rs2
-	`define RD o_rd
-	`define IMM i_imm
-	`define IMM_25_20 i_instruction[25:20]
-	`define ZERO 0
+	`define PC		i_pc
+	`define RS1		i_rs1
+	`define RS2		i_rs2
+	`define RD		o_rd
+	`define IMM		i_imm
+	`define ZERO	0
 
-	`define GOTO(ADDR) o_pc_next <= ADDR;
+	`define GOTO(ADDR) 				\
+		o_pc_next <= ADDR;
 
 	`define MEM_READ_W(ADDR)		\
 		o_mem_address <= ADDR;		\
@@ -88,23 +94,43 @@ module CPU_Execute (
 		o_mem_write <= 1;			\
 		o_mem_width <= 1;			\
 		o_rd <= DATA;
+	
+	`define CYCLE					\
+		cycle
+
+	`define EXECUTE_OP				\
+		i_op
 
 	`define EXECUTE_DONE			\
 		o_tag <= i_tag;				\
-		decode_cycle <= 0;
+		cycle <= 0;
+
+	reg [7:0] cycle;
 	
-	`define ERROR
+	wire [31:0] alu_operand1 =
+		(i_alu_operand1 == 3'd0) ? `ZERO :
+		(i_alu_operand1 == 3'd1) ? `RS1 :
+		(i_alu_operand1 == 3'd2) ? `RS2 :
+		(i_alu_operand1 == 3'd3) ? `PC  :
+		(i_alu_operand1 == 3'd4) ? `IMM :
+		32'd0;
 
-	`include "Instructions_alu.v"
-
-	reg [7:0] decode_cycle;
+	wire [31:0] alu_operand2 =
+		(i_alu_operand2 == 3'd0) ? `ZERO :
+		(i_alu_operand2 == 3'd1) ? `RS1 :
+		(i_alu_operand2 == 3'd2) ? `RS2 :
+		(i_alu_operand2 == 3'd3) ? `PC  :
+		(i_alu_operand2 == 3'd4) ? `IMM :
+		32'd0;
 
 	wire [31:0] alu_result;
+	wire alu_compare_result;
 	CPU_ALU alu(
-		.i_op(alu_operation),
+		.i_op(i_alu_operation),
 		.i_op1(alu_operand1),
 		.i_op2(alu_operand2),
-		.o_result(alu_result)
+		.o_result(alu_result),
+		.o_compare_result(alu_compare_result)
 	);
 
 	reg mul_signed;
@@ -122,7 +148,7 @@ module CPU_Execute (
 	wire [31:0] div_remainder;
 	CPU_Divide divide(
 		.i_clock(i_clock),
-		.i_signed(i_signed),
+		.i_signed(div_signed),
 		.i_numerator(i_rs1),
 		.i_denominator(i_rs2),
 		.o_result(div_result),
@@ -138,10 +164,10 @@ module CPU_Execute (
 		o_mem_signed <= 0;
 		o_mem_address <= 0;
 		o_tag <= 0;
-		decode_cycle <= 0;
+		cycle <= 0;
 	end
 
-	assign o_stall = (i_tag != o_tag) && (decode_cycle != 0);
+	assign o_stall = (i_tag != o_tag) && (cycle != 0);
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
@@ -153,12 +179,12 @@ module CPU_Execute (
 			o_mem_signed <= 0;
 			o_mem_address <= 0;
 			o_tag <= 0;
-			decode_cycle <= 0;
+			cycle <= 0;
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
 				$display("Execute %x (%d)", i_instruction, i_tag);
-				$display("  cycle %d", decode_cycle);
+				$display("  cycle %d", cycle);
 				$display("     PC %x", i_pc);
 				$display("    RS1 %x", i_rs1);
 				$display("    RS2 %x", i_rs2);
@@ -171,23 +197,23 @@ module CPU_Execute (
 				o_mem_signed <= 0;
 				o_inst_rd <= i_inst_rd;
 
-				decode_cycle <= decode_cycle + 1;
+				cycle <= cycle + 1;
 
-				if (is_ALU) begin
-					if (!is_BRANCH) begin
+				if (i_alu) begin
+					if (!i_branch) begin
 						o_rd <= alu_result;
 					end
 					else begin
 						// If ALU result non-zero then branch is
 						// taken and PC is updated.
-						if (alu_result) begin
+						if (alu_compare_result) begin
 							`GOTO($signed(`PC) + $signed(`IMM));
 						end
 					end
 					`EXECUTE_DONE;
 				end
 				else begin
-					`include "Instructions_d.v"
+					`include "Instructions_execute_ops.v"
 				end
 			end
 		end

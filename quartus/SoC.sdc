@@ -35,9 +35,17 @@ derive_clock_uncertainty
 #set_false_path -from [get_clocks CLOCK_50_B5B] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll_afi_clk}]
 #set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {CLOCK_50_B5B}]
 
-set_false_path -from [get_clocks {CLOCK_50_B5B}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll7~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll1~FRACTIONAL_PLL|vcoph[0] sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll3~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll5~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
-set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {CLOCK_50_B5B}]
+#set_false_path -from [get_clocks {CLOCK_50_B5B}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll7~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll1~FRACTIONAL_PLL|vcoph[0] sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll3~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll5~PLL_OUTPUT_COUNTER|divclk sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
+#set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {CLOCK_50_B5B}]
+#set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {CLOCK_125_p}]
+
+set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}]
 set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
+
+set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}]
+set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
+set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll7~PLL_OUTPUT_COUNTER|divclk}]
+
 #**************************************************************
 # Set Multicycle Path
 #**************************************************************

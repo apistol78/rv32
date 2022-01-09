@@ -268,7 +268,7 @@ endmodule
 // Retrieval info: 	<generic name="ENABLE_EMIT_BFM_MASTER" value="false" />
 // Retrieval info: 	<generic name="FORCE_SEQUENCER_TCL_DEBUG_MODE" value="false" />
 // Retrieval info: 	<generic name="ENABLE_SEQUENCER_MARGINING_ON_BY_DEFAULT" value="false" />
-// Retrieval info: 	<generic name="REF_CLK_FREQ" value="50.0" />
+// Retrieval info: 	<generic name="REF_CLK_FREQ" value="100.0" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_PARAM_VALID" value="false" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_MIN_PARAM" value="0.0" />
 // Retrieval info: 	<generic name="REF_CLK_FREQ_MAX_PARAM" value="0.0" />

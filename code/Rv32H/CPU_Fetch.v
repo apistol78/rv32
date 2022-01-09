@@ -45,7 +45,7 @@ module CPU_Fetch(
 
 	// 
 	`define INSTRUCTION icache_rdata
-	`include "Instructions_i.v"
+	`include "Instructions_decode.v"
 
 	initial begin
 		state <= 0;

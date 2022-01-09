@@ -17,18 +17,41 @@ module CPU_Decode(
 	output reg [4:0] o_inst_rs1,
 	output reg [4:0] o_inst_rs2,
 	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_imm
+	output reg [31:0] o_imm,
+	output reg o_alu,
+	output reg [3:0] o_alu_operation,
+	output reg [2:0] o_alu_operand1,
+	output reg [2:0] o_alu_operand2,
+	output reg o_branch,
+	output reg [4:0] o_op
 );
 
+	`include "Instructions_ops.v"
+
+	`undef INSTRUCTION
 	`define INSTRUCTION i_instruction
-	`include "Instructions_i.v"
+	`include "Instructions_decode.v"
+	
+	`undef ZERO
+	`undef RS1
+	`undef RS2
+	`undef PC
+	`undef IMM
+	`undef IMM_25_20
+	`define ZERO 3'd0
+	`define RS1 3'd1
+	`define RS2 3'd2
+	`define PC	3'd3
+	`define IMM 3'd4
+	`include "Instructions_alu.v"
 
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
 	wire [31:0] inst_I_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:20] };
 	wire [31:0] inst_J_imm = { { 12{ `INSTRUCTION[31] } }, `INSTRUCTION[19:12], `INSTRUCTION[20], `INSTRUCTION[30:21], 1'b0 };
 	wire [31:0] inst_S_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:25], `INSTRUCTION[11:7] };
 	wire [31:0] inst_U_imm = { `INSTRUCTION[31:12], 12'b0 };
-
+	wire [31:0] inst_R_imm = { 26'b0, `INSTRUCTION[25:20] };
+	
 	wire have_RS1 = is_B | is_I | is_R | is_S;
 	wire have_RS2 = is_B | is_R | is_S;
 	wire have_RD  = is_I | is_J | is_R | is_U;
@@ -56,7 +79,18 @@ module CPU_Decode(
 					is_J ? inst_J_imm :
 					is_S ? inst_S_imm :
 					is_U ? inst_U_imm :
+					is_R ? inst_R_imm :
 					32'h0;
+				
+				o_alu <= is_ALU;
+				o_alu_operation <= alu_operation;
+				o_alu_operand1 <= alu_operand1;
+				o_alu_operand2 <= alu_operand2;
+
+				o_branch <= is_BRANCH;
+				
+				`define OP o_op
+				`include "Instructions_decode_ops.v"
 
 				o_tag <= i_tag;
 			end

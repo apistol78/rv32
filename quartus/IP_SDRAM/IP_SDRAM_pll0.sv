@@ -54,8 +54,8 @@ localparam FAST_SIM_MODEL = ALTERA_ALT_MEM_IF_PHY_FAST_SIM_MODEL;
 
 
 // Clock settings
-parameter REF_CLK_FREQ = "50.0 MHz";
-parameter REF_CLK_PERIOD_PS = 20000;
+parameter REF_CLK_FREQ = "100.0 MHz";
+parameter REF_CLK_PERIOD_PS = 10000;
 
 parameter PLL_AFI_CLK_FREQ_STR = "330.0 MHz";
 parameter PLL_MEM_CLK_FREQ_STR = "330.0 MHz";

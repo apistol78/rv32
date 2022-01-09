@@ -33,7 +33,6 @@ module VRAM(
 
 	wire page1_request = page1_active == 0 ? i_video_enable : i_request;
 	wire page1_rw = page1_active == 0 ? 0 : 1;
-	wire page1_video_enable = (page1_active == 0) && i_video_enable;
 	wire [23:0] page1_video_rdata;
 
 	VRAM_page page1(
@@ -46,7 +45,7 @@ module VRAM(
 	);
 
 	// ===================
-	// PAGE 1
+	// PAGE 2
 	wire page2_active = ~active;
 
 	wire [15:0] page2_address = 
@@ -56,7 +55,6 @@ module VRAM(
 
 	wire page2_request = page2_active == 0 ? i_video_enable : i_request;
 	wire page2_rw = page2_active == 0 ? 0 : 1;
-	wire page2_video_enable = (page2_active == 0) && i_video_enable;
 	wire [23:0] page2_video_rdata;
 
 	VRAM_page page2(

@@ -1,5 +1,7 @@
 
-module VGA(
+module VGA #(
+    parameter PRESCALE = 50000000 / 25000000
+)(
 	input i_clock,
 
 	output reg o_hsync,
@@ -10,7 +12,8 @@ module VGA(
 );
 
 	initial o_vga_clock = 0;
-	reg counter = 0;
+	
+	reg [3:0] prescale = 0;
 	reg [9:0] vga_h = 0;
 	reg [9:0] vga_v = 0;
 
@@ -23,7 +26,8 @@ module VGA(
 	end
 
 	always @(posedge i_clock) begin
-		if (!counter) begin
+		prescale <= prescale + 1;
+		if (prescale >= PRESCALE - 1) begin
 			// Display Horizontal
 			if (vga_h == 0 && vga_v != 524) begin
 				vga_h <= vga_h + 1'b1;
@@ -49,14 +53,16 @@ module VGA(
 				o_hsync <= 1;
 			end
 			else
-				vga_h <= 0; // pixel 800
+				vga_h <= 0;
 
 			if (vga_v == 491 || vga_v == 492)
 				o_vsync <= 0;
 			else
 				o_vsync <= 1;
+
+			prescale <= 0;
 		end
-		counter <= ~counter;
+		o_vga_clock <= !prescale[1];
 	end
 
 	always @(posedge i_clock) begin
@@ -66,10 +72,6 @@ module VGA(
 		end
 		else
 			o_data_enable <= 0;
-	end
-
-	always @(posedge i_clock) begin
-		o_vga_clock <= ~o_vga_clock;
 	end
 
 endmodule

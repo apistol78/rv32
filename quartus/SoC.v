@@ -144,7 +144,16 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-	wire clock = CLOCK_50_B5B;
+	//wire clock = CLOCK_125_p; // CLOCK_50_B5B;
+
+	wire clock;
+	IP_PLL_Clk pll_clk(
+		.refclk(CLOCK_125_p),
+		.rst(!CPU_RESET_n),
+		.outclk_0(clock),
+		.locked()
+	);
+	
 
 	reg [31:0] cont = 0;
 	always@(posedge clock)
@@ -189,7 +198,9 @@ module SoC(
 	);
   
 	// VGA signal generator
-	VGA vga(
+	VGA #(
+		.PRESCALE(100000000 / 25000000)
+	) vga(
 		.i_clock(clock),
 		.o_hsync(HDMI_TX_HS),
 		.o_vsync(HDMI_TX_VS),
@@ -305,7 +316,8 @@ module SoC(
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
-		.PRESCALE(50000000 / (115200 * 8))
+		//.PRESCALE(50000000 / (115200 * 8))
+		.PRESCALE(100000000 / (115200 * 8))
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -394,7 +406,7 @@ module SoC(
 		.i_bus_ready(cpu_ready),
 		.o_bus_address(cpu_address),
 		.i_bus_rdata(cpu_rdata),
-		.o_bus_wdata(cpu_wdata),
+		.o_bus_wdata(cpu_wdata)
 	);
 	
 	//=====================================

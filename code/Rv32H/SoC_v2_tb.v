@@ -21,14 +21,32 @@
 `include "SD.v"
 `include "SRAM_interface.v"
 `include "SRAM_tb.v"
+`include "VGA.v"
 `include "Video_tb.v"
 
-`timescale 10ns / 1ns // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/1ns // time-unit = 1 ns, precision = 10 ps
 
 module SoC_v2_tb;
 
     reg reset = 1'b1;
 	reg clock = 1'b0;
+
+	// VGA signal generator
+	wire vga_hsync;
+	wire vga_vsync;
+	wire vga_data_enable;
+	wire vga_address;
+	wire vga_clock;
+	VGA #(
+		.PRESCALE(100000000 / 25000000)
+	) vga(
+		.i_clock(clock),
+		.o_hsync(vga_hsync),
+		.o_vsync(vga_vsync),
+		.o_data_enable(vga_data_enable),
+		.o_vga_address(vga_address),
+		.o_vga_clock(vga_clock)
+	);
 
 	// ROM
 	wire rom_select;
@@ -232,7 +250,7 @@ module SoC_v2_tb;
 
 	// Generate clock.
 	initial begin
-		forever #1 begin
+		forever #5 begin
 			clock <= !clock;
 		end
 	end
@@ -255,7 +273,7 @@ module SoC_v2_tb;
 */
         reset <= 0;
 
-		repeat(1000) @(posedge clock);
+		repeat(100000) @(posedge clock);
 
 		$finish;
 	end

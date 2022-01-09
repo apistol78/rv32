@@ -121,7 +121,13 @@ module CPU_v2 (
 	wire [4:0] decode_inst_rs2;
 	wire [4:0] decode_inst_rd;
 	wire [31:0] decode_imm;
-	
+	wire decode_alu;
+	wire [3:0] decode_alu_operation;
+	wire [2:0] decode_alu_operand1;
+	wire [2:0] decode_alu_operand2;
+	wire decode_branch;
+	wire [4:0] decode_op;
+
 	CPU_Decode decode(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -139,7 +145,13 @@ module CPU_v2 (
 		.o_inst_rs1(decode_inst_rs1),
 		.o_inst_rs2(decode_inst_rs2),
 		.o_inst_rd(decode_inst_rd),
-		.o_imm(decode_imm)
+		.o_imm(decode_imm),
+		.o_alu(decode_alu),
+		.o_alu_operation(decode_alu_operation),
+		.o_alu_operand1(decode_alu_operand1),
+		.o_alu_operand2(decode_alu_operand2),
+		.o_branch(decode_branch),
+		.o_op(decode_op)
 	);
 
 	//====================================================
@@ -185,6 +197,12 @@ module CPU_v2 (
 		.i_rs2(fwd_rs2),
 		.i_inst_rd(decode_inst_rd),
 		.i_imm(decode_imm),
+		.i_alu(decode_alu),
+		.i_alu_operation(decode_alu_operation),
+		.i_alu_operand1(decode_alu_operand1),
+		.i_alu_operand2(decode_alu_operand2),
+		.i_branch(decode_branch),
+		.i_op(decode_op),
 
 		// Output from execute.
 		.o_tag(execute_tag),

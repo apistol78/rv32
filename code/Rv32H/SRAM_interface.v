@@ -20,8 +20,8 @@ module SRAM_interface(
 	output reg SRAM_UB_n
 );
 	// Number of cycles for entire transaction, must to be multiple of 2.
-	// 50 MHz -> 6
-	localparam CYCLES = 8;
+	// 50 MHz -> 8
+	localparam CYCLES = 18;
 
 	reg [4:0] count;
 	reg [15:0] wdata;
