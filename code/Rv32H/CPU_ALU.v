@@ -18,9 +18,9 @@ module CPU_ALU(
 	wire [31:0] and_result = i_op1 & i_op2;
 	wire [31:0] or_result = i_op1 | i_op2;
 	wire [31:0] xor_result = i_op1 ^ i_op2;
-	wire [31:0] shl_result = i_op1 << i_op2;
-	wire [31:0] shr_result = i_op1 >> i_op2;
-	wire [31:0] ashr_result = i_op1 >>> i_op2;
+	wire [31:0] shl_result = i_op1 << (i_op2 & 32'h1f);
+	wire [31:0] shr_result = i_op1 >> (i_op2 & 32'h1f);
+	wire [31:0] ashr_result = $signed(i_op1) >>> (i_op2 & 32'h1f);
 
 	wire signed_lt_result = ($signed(i_op1) < $signed(i_op2)) ? 1 : 0;
 	wire unsigned_lt_result = (i_op1 < i_op2) ? 1 : 0;
@@ -39,12 +39,12 @@ module CPU_ALU(
 		i_op == `OP_SHIFT_LEFT ? shl_result :
 		i_op == `OP_SHIFT_RIGHT ? shr_result :
 		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :
-		i_op == `OP_SIGNED_LESS_THAN ? { 32{ signed_lt_result } } :
-		i_op == `OP_UNSIGNED_LESS_THAN ? { 32{ unsigned_lt_result } } :
-		i_op == `OP_EQUAL ? { 32{ equal_result } } :
-		i_op == `OP_NOT_EQUAL ? { 32{ not_equal_result } } :
-		i_op == `OP_SIGNED_GREATER_EQUAL ? { 32{ signed_get_result } } :
-		i_op == `OP_UNSIGNED_GREATER_EQUAL ? { 32{ unsigned_get_result } } :
+		i_op == `OP_SIGNED_LESS_THAN ? { 31'b0, signed_lt_result } :
+		i_op == `OP_UNSIGNED_LESS_THAN ? { 31'b0, unsigned_lt_result } :
+		i_op == `OP_EQUAL ? { 31'b0, equal_result } :
+		i_op == `OP_NOT_EQUAL ? { 31'b0, not_equal_result } :
+		i_op == `OP_SIGNED_GREATER_EQUAL ? { 31'b0, signed_get_result } :
+		i_op == `OP_UNSIGNED_GREATER_EQUAL ? { 31'b0, unsigned_get_result } :
 		0;
 		
 	assign o_compare_result =

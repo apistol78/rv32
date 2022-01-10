@@ -110,7 +110,6 @@ module CPU_Execute (
 		i_op
 
 	`define EXECUTE_DONE			\
-		$display("EXECUTE_DONE");	\
 		o_tag <= i_tag;				\
 		cycle <= 0;
 
@@ -192,17 +191,16 @@ module CPU_Execute (
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
-				$display("Execute %x (%d)", i_instruction, i_tag);
-				$display("  cycle %d", cycle);
-				$display("     PC %x", i_pc);
-				$display("    RS1 %x", i_rs1);
-				$display("    RS2 %x", i_rs2);
-				$display("    IMM %d", i_imm);
-
-				$display("    ALU %b", i_alu);
-				$display("    ALU OP  %d", i_alu_operation);
-				$display("    ALU OP1 %d", i_alu_operand1);
-				$display("    ALU OP2 %d", i_alu_operand2);
+				// $display("Execute %x (%d)", i_instruction, i_tag);
+				// $display("  cycle %d", cycle);
+				// $display("     PC %x", i_pc);
+				// $display("    RS1 %x", i_rs1);
+				// $display("    RS2 %x", i_rs2);
+				// $display("    IMM %d", i_imm);
+				// $display("    ALU %b", i_alu);
+				// $display("    ALU OP  %d", i_alu_operation);
+				// $display("    ALU OP1 %d", i_alu_operand1);
+				// $display("    ALU OP2 %d", i_alu_operand2);
 
 				o_pc_next <= i_pc + 4;
 				o_mem_read <= 0;

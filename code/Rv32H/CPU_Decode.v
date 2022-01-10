@@ -74,10 +74,10 @@ module CPU_Decode(
 				o_inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
 				o_inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
 				
-				$display("%x", i_instruction);
-				$display("RS1 idx %d", 5'(`INSTRUCTION[19:15] & 5'h1f));
-				$display("RS2 idx %d", 5'(`INSTRUCTION[24:20] & 5'h1f));
-				$display("RD  idx %d", 5'(`INSTRUCTION[ 11:7] & 5'h1f));
+				// $display("%x", i_instruction);
+				// $display("RS1 idx %d", 5'(`INSTRUCTION[19:15] & 5'h1f));
+				// $display("RS2 idx %d", 5'(`INSTRUCTION[24:20] & 5'h1f));
+				// $display("RD  idx %d", 5'(`INSTRUCTION[ 11:7] & 5'h1f));
 
 				o_imm <=
 					is_B ? inst_B_imm :
