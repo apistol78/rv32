@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module ClockDivider #(
     parameter CLOCK_RATE = 50000000,
     parameter BAUD_RATE = 9600

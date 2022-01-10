@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 // Fake SRAM module, for testing wait signal.
 module SRAM_tb(
 	input wire [17:0] SRAM_A,
@@ -10,9 +12,9 @@ module SRAM_tb(
 	input wire SRAM_UB_n
 );
 
-	reg [15:0] data [0:32'h0040_0000 - 1];
+	reg [15:0] data [0:32'h00040000 - 1];
 
-	assign SRAM_D = !SRAM_OE_n ? data[SRAM_A] : 17'hz;
+	assign SRAM_D = !SRAM_OE_n ? data[SRAM_A] : 16'hz;
 
 	always @ (posedge SRAM_WE_n) begin
 		$display("sram saved %x at %x (%0t)", SRAM_D, SRAM_A, $time);

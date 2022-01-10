@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module BROM(
 	input wire i_clock,
 	input wire i_request,
@@ -10,7 +13,7 @@ module BROM(
 
 	initial o_ready = 0;
 
-`ifdef __ICARUS__
+`ifdef __TESTBENCH__
 	initial $readmemh("code/Firmware/Firmware.vmem", data);
 `else
 	initial $readmemh("../code/Firmware/Firmware.vmem", data);

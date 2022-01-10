@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module FIFO #(
 	parameter DEPTH = 64
 )(
@@ -13,7 +16,7 @@ module FIFO #(
 	output wire [7:0] o_rdata
 );
 
-`ifdef __ICARUS__
+`ifdef __TESTBENCH__
 
 	reg [7:0] rdata;
 	reg [7:0] data [0:DEPTH - 1];

@@ -24,7 +24,7 @@
 `include "VGA.v"
 `include "Video_tb.v"
 
-`timescale 1ns/1ns // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/1ns
 
 module SoC_v2_tb;
 
@@ -35,7 +35,7 @@ module SoC_v2_tb;
 	wire vga_hsync;
 	wire vga_vsync;
 	wire vga_data_enable;
-	wire vga_address;
+	wire [15:0] vga_address;
 	wire vga_clock;
 	VGA #(
 		.PRESCALE(100000000 / 25000000)
@@ -99,6 +99,7 @@ module SoC_v2_tb;
 	wire [31:0] sram32_rdata;
 	wire sram32_ready;
 	SRAM_interface sram(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(sram32_select && cpu_request),
 		.i_rw(cpu_rw),
@@ -131,14 +132,18 @@ module SoC_v2_tb;
 
 	// GPIO
 	wire gpio_select;
+	wire [31:0] gpio_address;
 	wire [31:0] gpio_rdata;
+	wire gpio_ready;
 	wire [35:0] GPIO;
 	GPIO gpio(
 		.i_clock(clock),
 		.i_request(gpio_select && cpu_request),
 		.i_rw(cpu_rw),
+		.i_address(gpio_address),
 		.i_wdata(cpu_wdata),
 		.o_rdata(gpio_rdata),
+		.o_ready(gpio_ready),
 		// ---
 		.GPIO(GPIO)
 	);
@@ -204,7 +209,7 @@ module SoC_v2_tb;
 
 	//=====================================
 
-	assign rom_select = (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
+	assign rom_select = (cpu_address < 32'h00010000);
 	assign rom_address = cpu_address - 32'h00000000;
 
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
@@ -213,14 +218,15 @@ module SoC_v2_tb;
 	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram32_address = cpu_address - 32'h10000000;
 
-	assign led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
+	wire led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 
-	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
+	wire uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
 
 	assign video_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
 	assign video_address = cpu_address - 32'h40000000;
 
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
+	assign gpio_address = cpu_address - 32'h50000020;
 	
 	assign i2c_select = (cpu_address >= 32'h50000030 && cpu_address < 32'h50000040);
 
@@ -243,39 +249,28 @@ module SoC_v2_tb;
 		led_select ? 1'b1 :
 		uart_select ? 1'b1 :
 		video_select ? 1'b1 :
-		gpio_select ? 1'b1 :
+		gpio_select ? gpio_ready :
 		i2c_select ? i2c_ready :
 		sd_select ? sd_ready :
 		1'b0;
 
-	// Generate clock.
+`ifdef __ICARUS__
 	initial begin
 		forever #5 begin
 			clock <= !clock;
 		end
 	end
 
-	// Simulate.
 	initial begin
 		$dumpfile("SoC_v2_tb.vcd");
 		$dumpvars(0, SoC_v2_tb);
-/*
-		reset <= 1;
 
-        #2
-        reset <= 0;
-
-		repeat(50) @(posedge clock);
-		#1
-		reset <= 1;
-
-        #2
-*/
         reset <= 0;
 
 		repeat(100000) @(posedge clock);
 
 		$finish;
 	end
+`endif
 	
 endmodule

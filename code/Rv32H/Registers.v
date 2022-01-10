@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module Registers(
 	input wire i_reset,
 	input wire i_clock,
@@ -15,14 +18,12 @@ module Registers(
 
 	reg [31:0] r[31:0];
 
-	/*
 	integer i;
 	initial begin
 		for (i = 0; i < 32; i = i + 1)
 			r[i] <= 32'h0000_0000;
 		r[2] <= 32'h0001_0400;	// sp
 	end
-	*/
 
 	assign o_rs1 = (i_rs1_idx != 0) ? r[i_rs1_idx] : 32'h0;
 	assign o_rs2 = (i_rs2_idx != 0) ? r[i_rs2_idx] : 32'h0;	

@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_Writeback(
 	input wire i_reset,
 	input wire i_clock,
@@ -18,8 +20,8 @@ module CPU_Writeback(
 );
 
 	initial begin
-		o_tag <= 0;
-		o_pc_next <= 0;
+		o_tag = 0;
+		o_pc_next = 0;
 	end
 
 	always @(posedge i_clock) begin

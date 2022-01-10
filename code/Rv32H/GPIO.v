@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module GPIO (
 	input wire i_clock,
 	input wire i_request,

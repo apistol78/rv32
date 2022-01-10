@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_ALU(
 	input wire [3:0] i_op,
 
@@ -37,12 +39,12 @@ module CPU_ALU(
 		i_op == `OP_SHIFT_LEFT ? shl_result :
 		i_op == `OP_SHIFT_RIGHT ? shr_result :
 		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :
-		i_op == `OP_SIGNED_LESS_THAN ? signed_lt_result :
-		i_op == `OP_UNSIGNED_LESS_THAN ? unsigned_lt_result :
-		i_op == `OP_EQUAL ? equal_result :
-		i_op == `OP_NOT_EQUAL ? not_equal_result :
-		i_op == `OP_SIGNED_GREATER_EQUAL ? signed_get_result :
-		i_op == `OP_UNSIGNED_GREATER_EQUAL ? unsigned_get_result :
+		i_op == `OP_SIGNED_LESS_THAN ? { 32{ signed_lt_result } } :
+		i_op == `OP_UNSIGNED_LESS_THAN ? { 32{ unsigned_lt_result } } :
+		i_op == `OP_EQUAL ? { 32{ equal_result } } :
+		i_op == `OP_NOT_EQUAL ? { 32{ not_equal_result } } :
+		i_op == `OP_SIGNED_GREATER_EQUAL ? { 32{ signed_get_result } } :
+		i_op == `OP_UNSIGNED_GREATER_EQUAL ? { 32{ unsigned_get_result } } :
 		0;
 		
 	assign o_compare_result =

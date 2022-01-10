@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module Video_tb(
 	input wire i_clock,
 	input wire i_request,

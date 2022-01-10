@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module CPU_BusAccess(
 	input wire i_reset,
 	input wire i_clock,
@@ -31,9 +34,9 @@ module CPU_BusAccess(
 
 	initial begin
 		state = 2'd0;
-		o_bus_rw <= 1'b0;
-		o_bus_address <= 0;
-		o_bus_wdata <= 0;
+		o_bus_rw = 1'b0;
+		o_bus_address = 0;
+		o_bus_wdata = 0;
 	end
 
 	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
@@ -44,7 +47,7 @@ module CPU_BusAccess(
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
-			state = 2'd0;
+			state <= 2'd0;
 			o_bus_rw <= 1'b0;
 			o_bus_address <= 0;
 			o_bus_wdata <= 0;
@@ -57,13 +60,13 @@ module CPU_BusAccess(
 					if (i_pb_request) begin
 						o_bus_rw <= i_pb_rw;
 						o_bus_address <= i_pb_address;
-						o_bus_wdata <= i_pb_rw ? i_pb_wdata : 32'hz;
+						o_bus_wdata <= i_pb_wdata;
 						state <= 2'd2;
 					end
 					else if (i_pa_request) begin
 						o_bus_rw <= i_pa_rw;
 						o_bus_address <= i_pa_address;
-						o_bus_wdata <= i_pa_rw ? i_pa_wdata : 32'hz;
+						o_bus_wdata <= i_pa_wdata;
 						state <= 2'd1;		
 					end
 				end
@@ -74,6 +77,9 @@ module CPU_BusAccess(
 						state <= 2'd0;
 					end
 				end
+
+				default:
+					state <= 2'd0;
 
 			endcase
 		end

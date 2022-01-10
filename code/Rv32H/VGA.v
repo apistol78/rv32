@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module VGA #(
     parameter PRESCALE = 50000000 / 25000000
 )(
@@ -27,7 +29,7 @@ module VGA #(
 
 	always @(posedge i_clock) begin
 		prescale <= prescale + 1;
-		if (prescale >= PRESCALE - 1) begin
+		if (prescale >= 4'(PRESCALE - 1)) begin
 			// Display Horizontal
 			if (vga_h == 0 && vga_v != 524) begin
 				vga_h <= vga_h + 1'b1;
@@ -66,8 +68,8 @@ module VGA #(
 	end
 
 	always @(posedge i_clock) begin
-		if (vga_h >= 0 && vga_h < 640 && vga_v >= 0 && vga_v < 480) begin
-			o_vga_address <= (vga_h >> 1) + (vga_v >> 1) * 320;
+		if (vga_h < 640 && vga_v < 480) begin
+			o_vga_address <= { 7'b0, vga_h[9:1] + 9'(vga_v[9:1] * 320) };
 			o_data_enable <= 1;
 		end
 		else

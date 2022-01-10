@@ -2,6 +2,8 @@
 // Since we're using DSP to implement multiplication
 // we need to pipeline result so we can meet timing.
 
+`timescale 1ns/1ns
+
 module CPU_Divide(
 	input wire i_clock,
 	input wire i_signed,
@@ -11,7 +13,7 @@ module CPU_Divide(
     output wire [31:0] o_remainder
 );
 
-`ifndef __ICARUS__
+`ifndef __TESTBENCH__
 
 	wire [31:0] sdiv_result;
 	wire [31:0] sdiv_remainder;

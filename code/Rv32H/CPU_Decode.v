@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_Decode(
 	input wire i_reset,
 	input wire i_clock,
@@ -37,7 +39,6 @@ module CPU_Decode(
 	`undef RS2
 	`undef PC
 	`undef IMM
-	`undef IMM_25_20
 	`define ZERO 3'd0
 	`define RS1 3'd1
 	`define RS2 3'd2
@@ -57,7 +58,7 @@ module CPU_Decode(
 	wire have_RD  = is_I | is_J | is_R | is_U;
 
 	initial begin
-		o_tag <= 0;
+		o_tag = 0;
 	end
 
 	always @(posedge i_clock) begin

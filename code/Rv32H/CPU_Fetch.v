@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_Fetch(
 	input wire i_reset,
 	input wire i_clock,
@@ -44,16 +46,17 @@ module CPU_Fetch(
 	);
 
 	// 
+	`undef INSTRUCTION
 	`define INSTRUCTION icache_rdata
 	`include "Instructions_decode.v"
 
 	initial begin
-		state <= 0;
-		pc <= 0;
-		icache_input_tag <= 0;
-		o_tag <= 0;
-		o_instruction <= 0;
-		o_pc <= 0;
+		state = 0;
+		pc = 0;
+		icache_input_tag = 0;
+		o_tag = 0;
+		o_instruction = 0;
+		o_pc = 0;
 	end
 
 	always @(posedge i_clock) begin

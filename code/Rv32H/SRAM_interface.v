@@ -1,9 +1,9 @@
 
-// SRAM interface
+`timescale 1ns/1ns
+
 module SRAM_interface(
 	input wire i_reset,
 	input wire i_clock,
-	input wire i_clock125,
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,
@@ -27,12 +27,12 @@ module SRAM_interface(
 	reg [15:0] wdata;
 	
 	initial begin
-		count <= 0;
-		SRAM_A <= 18'h0;
-		SRAM_CE_n <= 0;
-		SRAM_WE_n <= 1;
-		SRAM_LB_n <= 0;
-		SRAM_UB_n <= 0;
+		count = 0;
+		SRAM_A = 18'h0;
+		SRAM_CE_n = 0;
+		SRAM_WE_n = 1;
+		SRAM_LB_n = 0;
+		SRAM_UB_n = 0;
 	end
 	
 	// Output 
@@ -51,9 +51,9 @@ module SRAM_interface(
 	always @(*) begin
 		if (i_request) begin
 			if (count < CYCLES / 2)
-				SRAM_A = ((i_address >> 1) & 32'hfffffffe);
+				SRAM_A = 18'((i_address >> 1) & 32'hfffffffe);
 			else
-				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
+				SRAM_A = 18'(((i_address >> 1) & 32'hfffffffe) + 1);
 		end
 	end
 

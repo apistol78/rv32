@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,				// CPU clock
@@ -46,6 +48,7 @@ module CPU_v2 (
 		.o_pa_ready(bus_pa_ready),
 		.i_pa_address(bus_pa_address),
 		.o_pa_rdata(bus_pa_rdata),
+		.i_pa_wdata(),
 
 		// Port B (MEMORY)
 		.i_pb_rw(bus_pb_rw),

@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module SD (
 	input wire i_reset,
 	input wire i_clock,
@@ -25,11 +27,11 @@ module SD (
 	wire [7:0] mask = i_wdata[15:8];
 	wire [7:0] write = i_wdata[7:0];
 
-	initial o_rdata <= 32'h0000_0000;
+	initial o_rdata = 32'h0000_0000;
 
 	assign SD_CLK = clk;
     assign SD_CMD = (cdir == DIR_OUT) ? cmd : 1'bZ;
-	assign SD_DAT = (ddir == DIR_OUT) ? dat : 1'bZ;
+	assign SD_DAT = (ddir == DIR_OUT) ? dat : 4'bZ;
 	
 	wire cmd_in = SD_CMD;
 	wire [3:0] dat_in = SD_DAT;

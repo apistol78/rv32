@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_ICache(
 	input wire i_reset,
 	input wire i_clock,
@@ -43,12 +45,12 @@ module CPU_ICache(
 	assign o_bus_address = i_address;
 
 	initial begin
-		o_output_tag <= 0;
-		o_bus_request <= 0;
-		state <= 0;
-		valid <= 128'b0;
-		cache_rw <= 0;
-		cache_wdata <= 0;
+		o_output_tag = 0;
+		o_bus_request = 0;
+		state = 0;
+		valid = 128'b0;
+		cache_rw = 0;
+		cache_wdata = 0;
 	end
 
 	always @(posedge i_clock) begin

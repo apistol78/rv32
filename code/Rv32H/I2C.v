@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module I2C (
 	input wire i_clock,
 	input wire i_request,

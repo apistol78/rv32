@@ -1,3 +1,6 @@
+
+`timescale 1ns/1ns
+
 module BRAM #(
 	parameter WIDTH = 32,
 	parameter SIZE = 32'h400,

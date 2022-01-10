@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_Execute (
 	input wire i_reset,
 	input wire i_clock,
@@ -37,6 +39,12 @@ module CPU_Execute (
 	`include "Instructions_ops.v"
 
 	// Alias symbols for generated code.
+	`undef PC
+	`undef RS1
+	`undef RS2
+	`undef PD
+	`undef IMM
+	`undef ZERO
 	`define PC		i_pc
 	`define RS1		i_rs1
 	`define RS2		i_rs2
@@ -156,15 +164,15 @@ module CPU_Execute (
 	);
 
 	initial begin
-		o_inst_rd <= 0;
-		o_pc_next <= 0;
-		o_mem_read <= 0;
-		o_mem_write <= 0;
-		o_mem_width <= 0;
-		o_mem_signed <= 0;
-		o_mem_address <= 0;
-		o_tag <= 0;
-		cycle <= 0;
+		o_inst_rd = 0;
+		o_pc_next = 0;
+		o_mem_read = 0;
+		o_mem_write = 0;
+		o_mem_width = 0;
+		o_mem_signed = 0;
+		o_mem_address = 0;
+		o_tag = 0;
+		cycle = 0;
 	end
 
 	assign o_stall = (i_tag != o_tag) && (cycle != 0);

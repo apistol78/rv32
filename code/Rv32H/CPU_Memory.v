@@ -1,5 +1,7 @@
 `include "CPU_Defines.v"
 
+`timescale 1ns/1ns
+
 module CPU_Memory(
 	input wire i_reset,
 	input wire i_clock,
@@ -38,14 +40,14 @@ module CPU_Memory(
 	reg [4:0] state;
 
 	initial begin
-		state <= 0;
-		o_bus_rw <= 0;
-		o_bus_request <= 0;
-		o_bus_wdata <= 0;
-		o_tag <= 0;
-		o_inst_rd <= 0;
-		o_rd <= 0;
-		o_pc_next <= 0;
+		state = 0;
+		o_bus_rw = 0;
+		o_bus_request = 0;
+		o_bus_wdata = 0;
+		o_tag = 0;
+		o_inst_rd = 0;
+		o_rd = 0;
+		o_pc_next = 0;
 	end
 
 	// Stall pipeline if we perform a memory access.
@@ -54,8 +56,8 @@ module CPU_Memory(
 	assign o_bus_address = { i_mem_address[31:2], 2'b00 };
 
 	wire [1:0] address_byte_index = i_mem_address[1:0];
-	wire [7:0] bus_rdata_byte = i_bus_rdata >> (address_byte_index * 8);
-	wire [15:0] bus_rdata_half = i_bus_rdata >> (address_byte_index * 8);
+	wire [7:0] bus_rdata_byte = 8'(i_bus_rdata >> (address_byte_index * 8));
+	wire [15:0] bus_rdata_half = 16'(i_bus_rdata >> (address_byte_index * 8));
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
@@ -142,6 +144,8 @@ module CPU_Memory(
 							case ( address_byte_index  )
 								2'd0: o_bus_wdata <= { i_bus_rdata[31:16],        i_rd[15:0] };
 								2'd2: o_bus_wdata <= {         i_rd[15:0], i_bus_rdata[15:0] };
+								default:
+									o_bus_wdata <= 0;
 							endcase						
 						end
 						state <= STATE_RMW_RST_REQUEST;

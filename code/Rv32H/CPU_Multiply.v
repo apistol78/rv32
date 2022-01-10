@@ -2,6 +2,8 @@
 // Since we're using DSP to implement multiplication
 // we need to pipeline result so we can meet timing.
 
+`timescale 1ns/1ns
+
 module CPU_Multiply(
 	input wire i_clock,
 	input wire i_signed,
@@ -10,7 +12,7 @@ module CPU_Multiply(
 	output wire [63:0] o_result
 );
 
-`ifndef __ICARUS__
+`ifndef __TESTBENCH__
 
 	wire [63:0] smul_result;
     IP_Multiply ip_signed_multiply(
