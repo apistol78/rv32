@@ -102,31 +102,13 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x0000001b,
 		name = "ADDIW",
-		format = "I",
-        cpp = [[
-			auto f = parseFormatI(word);
-			R(f.rd) = R(f.rs1) + f.imm;
-        ]],
-		verilog = {
-			operation = operations.SIGNED_ADD,
-			operand1 = operands.RS1,
-			operand2 = operands.IMM
-		}		
+		format = "I"
 	},
 	{
 		mask = 0xfe00707f,
 		data = 0x0000003b,
 		name = "ADDW",
-		format = "R",
-		cpp = [[
-			auto f = parseFormatR(word);
-			R(f.rd) = R(f.rs1) + R(f.rs2);
-		]],
-		verilog = {
-			operation = operations.UNSIGNED_ADD,
-			operand1 = operands.RS1,
-			operand2 = operands.RS2
-		}
+		format = "R"
 	},
 	{
 		mask = 0xf800707f,
@@ -404,6 +386,7 @@ local instructions = {
 			else begin
 				div_signed <= 1;
 				if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+					$display("Division finished, %d", div_result[31:0]);
 					`RD <= div_result[31:0];
 					`EXECUTE_DONE;
 				end

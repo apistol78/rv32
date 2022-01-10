@@ -4,8 +4,6 @@
 wire [3:0] alu_operation = 
 	is_ADD   ? `OP_SIGNED_ADD             :
 	is_ADDI  ? `OP_SIGNED_ADD             :
-	is_ADDIW ? `OP_SIGNED_ADD             :
-	is_ADDW  ? `OP_UNSIGNED_ADD           :
 	is_AND   ? `OP_AND                    :
 	is_ANDI  ? `OP_AND                    :
 	is_AUIPC ? `OP_SIGNED_ADD             :
@@ -36,8 +34,6 @@ wire [3:0] alu_operation =
 wire [2:0] alu_operand1 = 
 	is_ADD   ? `RS1  :
 	is_ADDI  ? `RS1  :
-	is_ADDIW ? `RS1  :
-	is_ADDW  ? `RS1  :
 	is_AND   ? `RS1  :
 	is_ANDI  ? `RS1  :
 	is_AUIPC ? `PC   :
@@ -68,8 +64,6 @@ wire [2:0] alu_operand1 =
 wire [2:0] alu_operand2 = 
 	is_ADD   ? `RS2  :
 	is_ADDI  ? `IMM  :
-	is_ADDIW ? `IMM  :
-	is_ADDW  ? `RS2  :
 	is_AND   ? `RS2  :
 	is_ANDI  ? `IMM  :
 	is_AUIPC ? `IMM  :

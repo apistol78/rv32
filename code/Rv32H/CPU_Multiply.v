@@ -41,7 +41,11 @@ module CPU_Multiply(
 
     always @(posedge i_clock)
     begin
-        p1 <= i_op1 * i_op2;
+        if (i_signed)
+            p1 <= $signed(i_op1) * $signed(i_op2);
+        else
+            p1 <= i_op1 * i_op2;
+
         p2 <= p1;
     end
 

@@ -26,10 +26,20 @@
 
 `timescale 1ns/1ns
 
-module SoC_v2_tb;
+module SoC_v2_tb(
+`ifdef __VERILATOR__
+	input wire i_reset,
+	input wire i_clock
+`endif
+);
 
+`ifdef __VERILATOR__
+	wire reset = i_reset;
+	wire clock = i_clock;
+`else
     reg reset = 1'b1;
 	reg clock = 1'b0;
+`endif
 
 	// VGA signal generator
 	wire vga_hsync;

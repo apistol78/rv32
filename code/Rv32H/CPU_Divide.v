@@ -50,8 +50,15 @@ module CPU_Divide(
 
     always @(posedge i_clock)
     begin
-		p1_result <= i_numerator / i_denominator;
-		p1_remainder <= i_numerator % i_denominator;
+        if (i_signed) begin
+		    p1_result <= $signed(i_numerator) / $signed(i_denominator);
+		    p1_remainder <= $signed(i_numerator) % $signed(i_denominator);
+        end
+        else begin
+		    p1_result <= i_numerator / i_denominator;
+		    p1_remainder <= i_numerator % i_denominator;
+        end
+
         p2_result <= p1_result;
         p2_remainder <= p1_remainder;
     end

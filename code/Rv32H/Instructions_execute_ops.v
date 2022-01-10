@@ -14,6 +14,7 @@ if (`EXECUTE_OP == OP_DIV) begin
 	else begin
 		div_signed <= 1;
 		if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+			$display("Division finished, %d", div_result[31:0]);
 			`RD <= div_result[31:0];
 			`EXECUTE_DONE;
 		end
