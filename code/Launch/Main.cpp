@@ -2,8 +2,10 @@
 #include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/BufferedStream.h>
+#include <Core/Io/DynamicMemoryStream.h>
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/FileOutputStream.h>
+#include <Core/Io/StreamCopy.h>
 #include <Core/Io/StringReader.h>
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
@@ -14,6 +16,70 @@
 #include "Launch/Serial.h"
 
 using namespace traktor;
+
+#define EI_NIDENT 16
+
+#pragma pack(1)
+struct ELF32_Header
+{
+	uint8_t e_ident[EI_NIDENT];
+	uint16_t e_type;
+	uint16_t e_machine;
+	uint32_t e_version;
+	uint32_t e_entry;
+	uint32_t e_phoff;
+	uint32_t e_shoff;
+	uint32_t e_flags;
+	uint16_t e_ehsize;
+	uint16_t e_phentsize;
+	uint16_t e_phnum;
+	uint16_t e_shentsize;
+	uint16_t e_shnum;
+	uint16_t e_shstrndx;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct ELF32_ProgramHeader
+{
+	uint32_t p_type;
+	uint32_t p_offset;
+	uint32_t p_vaddr;
+	uint32_t p_paddr;
+	uint32_t p_filesz;
+	uint32_t p_memsz;
+	uint32_t p_flags;
+	uint32_t p_align;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct ELF32_SectionHeader
+{
+	uint32_t sh_name;
+	uint32_t sh_type;
+	uint32_t sh_flags;
+	uint32_t sh_addr;
+	uint32_t sh_offset;
+	uint32_t sh_size;
+	uint32_t sh_link;
+	uint32_t sh_info;
+	uint32_t sh_addralign;
+	uint32_t sh_entsize;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct ELF32_Sym
+{
+	uint32_t st_name;
+	uint32_t st_value;
+	uint32_t st_size;
+	uint8_t st_info;
+	uint8_t st_other;
+	uint16_t st_shndx;
+};
+#pragma pack()
 
 template < typename T >
 void write(Serial& serial, T value)
@@ -41,6 +107,74 @@ void read(Serial& serial, T* value, int32_t count)
 	serial.read(value, count * sizeof(T));
 }
 
+bool sendLine(Serial& serial, uint32_t base, const uint8_t* line, uint32_t length)
+{
+	uint8_t cs = 0;
+
+	// Add address to checksum.
+	const uint8_t* p = (const uint8_t*)&base;
+	cs ^= p[0];
+	cs ^= p[1];
+	cs ^= p[2];
+	cs ^= p[3];
+
+	// Parse record and calculate checksum.
+	for (uint32_t i = 0; i < length; ++i)
+		cs ^= line[i];
+
+	write< uint8_t >(serial, 0x01);
+	write< uint32_t >(serial, base);
+	write< uint8_t >(serial, (uint8_t)length);
+	write< uint8_t >(serial, line, length);
+	write< uint8_t >(serial, cs);
+
+	uint8_t reply = read< uint8_t >(serial);
+	if (reply != 0x80)
+	{
+		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+		return false;
+	}
+
+	return true;
+}
+
+bool sendJump(Serial& serial, uint32_t start, uint32_t sp)
+{
+	uint8_t cs = 0;
+
+	// Add address to checksum.
+	{
+		const uint8_t* p = (const uint8_t*)&start;
+		cs ^= p[0];
+		cs ^= p[1];
+		cs ^= p[2];
+		cs ^= p[3];
+	}
+
+	// Add stack to checksum.
+	{
+		const uint8_t* p = (const uint8_t*)&sp;
+		cs ^= p[0];
+		cs ^= p[1];
+		cs ^= p[2];
+		cs ^= p[3];				
+	}
+
+	write< uint8_t >(serial, 0x03);
+	write< uint32_t >(serial, start);
+	write< uint32_t >(serial, sp);
+	write< uint8_t >(serial, cs);
+
+	uint8_t reply = read< uint8_t >(serial);
+	if (reply != 0x80)
+	{
+		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+		return false;
+	}
+
+	return true;
+}
+
 bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
 {
 	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
@@ -60,31 +194,8 @@ bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
 
 		log::info << L"DATA " << str(L"%08x", linear) << L"..." << Endl;
 
-		uint8_t cs = 0;
-
-		// Add address to checksum.
-		const uint8_t* p = (const uint8_t*)&linear;
-		cs ^= p[0];
-		cs ^= p[1];
-		cs ^= p[2];
-		cs ^= p[3];
-
-		// Add data to calculate checksum.
-		for (int32_t i = 0; i < 16; ++i)
-			cs ^= data[i];
-
-		write< uint8_t >(serial, 0x01);
-		write< uint32_t >(serial, linear);
-		write< uint8_t >(serial, 16);
-		write< uint8_t >(serial, data, 16);
-		write< uint8_t >(serial, cs);
-
-		uint8_t reply = read< uint8_t >(serial);
-		if (reply != 0x80)
-		{
-			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+		if (!sendLine(serial, linear, data, 16))
 			return false;
-		}
 
 		linear += 16;
 	}
@@ -95,11 +206,79 @@ bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
 
 bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 {
-	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
-	if (!f)
+	AlignedVector< uint8_t > elf;
+	uint32_t start = -1;
+
+	// Read entire ELF into memory.
 	{
-		log::error << L"Unable to open ELF \"" << fileName << L"\"." << Endl;
-		return false;
+		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+		if (!f)
+		{
+			log::error << L"Unable to open ELF \"" << fileName << L"\"." << Endl;
+			return false;
+		}
+
+		DynamicMemoryStream dms(elf, false, true);
+		if (!StreamCopy(&dms, f).execute())
+		{
+			log::error << L"Unable to open ELF \"" << fileName << L"\"; failed to read file." << Endl;
+			return false;
+		}
+	}
+
+	auto hdr = (const ELF32_Header*)elf.c_ptr();
+
+	if (hdr->e_machine != 0xF3)
+	{
+		log::error << L"Unable to parse ELF \"" << fileName << L"\"; incorrect machine type." << Endl;
+		return false;		
+	}
+
+	auto shdr = (const ELF32_SectionHeader*)(elf.c_ptr() + hdr->e_shoff);
+	for (uint32_t i = 0; i < hdr->e_shnum; ++i)
+	{
+		if (
+			shdr[i].sh_type == 0x01 ||	// SHT_PROGBITS
+			shdr[i].sh_type == 0x0e ||	// SHT_INIT_ARRAY
+			shdr[i].sh_type == 0x0f		// SHT_FINI_ARRAY
+		)
+		{
+			if ((shdr[i].sh_flags & 0x02) == 0x02)	// SHF_ALLOC
+			{
+				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
+				const uint32_t addr = shdr[i].sh_addr;
+
+				for (uint32_t j = 0; j < shdr[i].sh_size; j += 64)
+				{
+					log::info << L"TEXT " << str(L"%08x", addr) << L"..." << Endl;
+
+					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 64);
+					if (!sendLine(serial, addr + j, pbits + j, cnt))
+						return false;
+				}
+			}
+		}
+		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
+		{
+			const char* strings = (const char*)(elf.c_ptr() + shdr[shdr[i].sh_link].sh_offset);
+			auto sym = (const ELF32_Sym*)(elf.c_ptr() + shdr[i].sh_offset);
+			for (int32_t j = 0; j < shdr[i].sh_size / sizeof(ELF32_Sym); ++j)
+			{
+				const char* name = strings + sym[j].st_name;
+				if (strcmp(name, "_start") == 0)
+				{
+					log::info << L"Entry found, " << str(L"0x%08x", sym[j].st_value) << Endl;
+					start = sym[j].st_value;
+					break;
+				}
+			}
+		}
+	}
+
+	if (start != -1)
+	{
+		if (!sendJump(serial, start, sp))
+			return false;
 	}
 
 	return true;
@@ -155,36 +334,17 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 			log::info << L"TEXT " << str(L"%08x", (upper | addr) + segment) << L" (" << percent << L"%)..." << Endl;
 
 			const uint32_t linear = (upper | addr) + segment;
-			uint8_t cs = 0;
 
-			// Add address to checksum.
-			const uint8_t* p = (const uint8_t*)&linear;
-			cs ^= p[0];
-			cs ^= p[1];
-			cs ^= p[2];
-			cs ^= p[3];
-
-			// Parse record and calculate checksum.
+			// Parse record.
 			record.resize(0);
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
 				record.push_back((uint8_t)v);
-				cs ^= (uint8_t)v;
 			}
 
-			write< uint8_t >(serial, 0x01);
-			write< uint32_t >(serial, linear);
-			write< uint8_t >(serial, (uint8_t)record.size());
-			write< uint8_t >(serial, record.c_ptr(), record.size());
-			write< uint8_t >(serial, cs);
-
-			uint8_t reply = read< uint8_t >(serial);
-			if (reply != 0x80)
-			{
-				log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			if (!sendLine(serial, linear, record.c_ptr(), record.size()))
 				return false;
-			}
 
 			addr += record.size();
 
@@ -214,37 +374,8 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 			else
 				log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
 
-			uint8_t cs = 0;
-
-			// Add address to checksum.
-			{
-				const uint8_t* p = (const uint8_t*)&linear;
-				cs ^= p[0];
-				cs ^= p[1];
-				cs ^= p[2];
-				cs ^= p[3];
-			}
-
-			// Add stack to checksum.
-			{
-				const uint8_t* p = (const uint8_t*)&sp;
-				cs ^= p[0];
-				cs ^= p[1];
-				cs ^= p[2];
-				cs ^= p[3];				
-			}
-
-			write< uint8_t >(serial, 0x03);
-			write< uint32_t >(serial, linear);
-			write< uint32_t >(serial, sp);
-			write< uint8_t >(serial, cs);
-
-			uint8_t reply = read< uint8_t >(serial);
-			if (reply != 0x80)
-			{
-				log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			if (!sendJump(serial, linear, sp))
 				return false;
-			}
 
 			// Cannot load more since target is executing.
 			break;
@@ -363,6 +494,10 @@ int main(int argc, const char** argv)
 		return 1;
 	}
 
+	uint32_t sp = 0;
+	if (commandLine.hasOption('s', L"stack"))
+		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
+
 	if (commandLine.hasOption('e', L"echocheck"))
 	{
 		for (;;)
@@ -405,14 +540,15 @@ int main(int argc, const char** argv)
 			return 1;
 	}
 
-	if (commandLine.hasOption('u', L"upload"))
+	if (commandLine.hasOption(L'e', L"elf"))
 	{
-		uint32_t sp = 0;
+		if (!uploadELF(serial, commandLine.getOption(L'e', L"elf").getString(), sp))
+			return 1;
+	}
 
-		if (commandLine.hasOption('s', L"stack"))
-			sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
-
-		if (!uploadHEX(serial, commandLine.getOption('u', L"upload").getString(), sp))
+	if (commandLine.hasOption(L'h', L"hex"))
+	{
+		if (!uploadHEX(serial, commandLine.getOption(L'h', L"hex").getString(), sp))
 			return 1;
 	}
 

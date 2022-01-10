@@ -22,23 +22,21 @@ else if ((word & 0x0000707f) == 0x00000013)
 else if ((word & 0x0000707f) == 0x0000001b)
 {
 	TRACE(L"	ADDIW");
+	log::info << L"No verilog implementation of ADDIW" << Endl;
 	{
 			auto f = parseFormatI(word);
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
 			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
 		}
-			auto f = parseFormatI(word);
-			R(f.rd) = R(f.rs1) + f.imm;
-        
-	return true;
+	log::error << L"Not implemented." << Endl;
+	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000003b)
 {
 	TRACE(L"	ADDW");
-			auto f = parseFormatR(word);
-			R(f.rd) = R(f.rs1) + R(f.rs2);
-		
-	return true;
+	log::info << L"No verilog implementation of ADDW" << Endl;
+	log::error << L"Not implemented." << Endl;
+	return false;
 }
 else if ((word & 0xf800707f) == 0x0000302f)
 {

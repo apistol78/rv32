@@ -67,7 +67,7 @@ void main()
 			uint8_t nb = uart_rx_u8();
 			uint8_t cs = 0;
 
-			if (nb == 0 || nb > 16)
+			if (nb == 0)
 			{
 				uart_tx_u8(0x81);	// Invalid data.
 				continue;
@@ -81,7 +81,7 @@ void main()
 			cs ^= p[3];
 
 			// Receive 
-			uint8_t r[16];
+			uint8_t r[256];
 			for (uint8_t i = 0; i < nb; ++i)
 			{
 				uint8_t d = uart_rx_u8();
@@ -105,7 +105,7 @@ void main()
 			uint32_t addr = uart_rx_u32();
 			uint8_t nb = uart_rx_u8();
 
-			if (nb == 0 || nb > 16)
+			if (nb == 0)
 			{
 				uart_tx_u8(0x81);	// Invalid data.
 				continue;

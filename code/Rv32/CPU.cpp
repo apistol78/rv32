@@ -23,7 +23,7 @@ FormatCSR parseFormatCSR(uint32_t word)
 	return FormatCSR {
 		(word >> 7) & 0x1f,
 		(word >> 15) & 0x1f,
-		(word >> 20) & 0xfff
+		(uint16_t)((word >> 20) & 0xfff)
 	};
 }
 
