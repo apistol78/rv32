@@ -259,21 +259,93 @@ bool verify_JALR()
 
 bool verify_LB()
 {
-	return true;
+	for (int i = 0; i < 4; ++i)
+	{
+		uint8_t v = rand() & 255;
+		int32_t r = (int32_t)((int8_t)v);
+
+		auto tb = create_soc();
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00400403 + (i << 20); // lb	s0,4(zero) # 4
+		tb->SoC_v2_tb__DOT__rom__DOT__data[1] = ((uint32_t)v) << (i * 8);
+
+		evaluate_single(tb);
+
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] != r)
+			return false;
+
+		delete tb;
+	}
+
+	return true;	
 }
 
 bool verify_LBU()
 {
+	for (int i = 0; i < 4; ++i)
+	{
+		uint8_t v = rand() & 255;
+		uint32_t r = (uint32_t)v;
+
+		auto tb = create_soc();
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00404403 + (i << 20); // lbu	s0,4(zero) # 4
+		tb->SoC_v2_tb__DOT__rom__DOT__data[1] = ((uint32_t)v) << (i * 8);
+
+		evaluate_single(tb);
+
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] != r)
+			return false;
+
+		delete tb;
+	}
+
 	return true;
 }
 
 bool verify_LH()
 {
+	for (int i = 0; i < 2; ++i)
+	{
+		uint16_t v = (uint16_t)urnd32();
+		int32_t r = (int32_t)((int16_t)v);
+
+		auto tb = create_soc();
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00401403 + ((i * 2) << 20); // lh	s0,4(zero) # 4
+		tb->SoC_v2_tb__DOT__rom__DOT__data[1] = ((uint32_t)v) << (i * 16);
+
+		evaluate_single(tb);
+
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] != r)
+			return false;
+
+		delete tb;
+	}
+
 	return true;
 }
 
 bool verify_LHU()
 {
+	for (int i = 0; i < 2; ++i)
+	{
+		uint16_t v = (uint16_t)urnd32();
+		uint32_t r = (uint32_t)v;
+
+		auto tb = create_soc();
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00405403 + ((i * 2) << 20); // lhu	s0,4(zero) # 4
+		tb->SoC_v2_tb__DOT__rom__DOT__data[1] = ((uint32_t)v) << (i * 16);
+
+		evaluate_single(tb);
+
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] != r)
+			return false;
+
+		delete tb;
+	}
+
 	return true;
 }
 
