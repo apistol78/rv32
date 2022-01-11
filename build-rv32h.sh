@@ -19,5 +19,5 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run veri
 #fi
 
 mkdir -p build/verilator
-#verilator --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT --Mdir build/verilator --top-module SoC_v2_tb --build --exe code/Rv32H/SoC_v2_tb.v ../../code/SoC_v2_main.cpp
-verilator --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT --Mdir build/verilator --top-module SoC_v2_tb --build --exe code/Rv32H/SoC_v2_run.v ../../code/SoC_v2_run.cpp
+verilator --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT --Mdir build/verilator --top-module SoC_v2_tb --build --exe code/Rv32H/SoC_v2_tb.v ../../code/SoC_v2_main.cpp
+#verilator --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT --Mdir build/verilator --top-module SoC_v2_tb --build --exe code/Rv32H/SoC_v2_run.v ../../code/SoC_v2_run.cpp

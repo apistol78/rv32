@@ -571,7 +571,7 @@ bool verify_SB()
 	evaluate_single(tb);
 	evaluate_single(tb);
 
-	printf("%08x\n", tb->SoC_v2_tb__DOT__ram__DOT__data[0]);
+	// printf("%08x\n", tb->SoC_v2_tb__DOT__ram__DOT__data[0]);
 
 	if (tb->SoC_v2_tb__DOT__ram__DOT__data[0] != 0x00001200)
 		return false;
@@ -794,7 +794,7 @@ bool verify_SRLI()
 
 	evaluate_single(tb);
 
-	printf("%08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2]);
+	// printf("%08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2]);
 
 	// printf("%d -- %d\n", s1 << 5,
 	// tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0]);
@@ -959,49 +959,49 @@ int main(int argc, char **argv)
 	CHECK(verify_ADD);
 	CHECK(verify_ADDI);
 	CHECK(verify_AND);
-	// CHECK(verify_ANDI);
-	// CHECK(verify_AUIPC);
-	// CHECK(verify_BEQ);
-	// CHECK(verify_BGE);
-	// CHECK(verify_BGEU);
-	// CHECK(verify_BLT);
-	// CHECK(verify_BLTU);
-	// CHECK(verify_BNE);
-	// CHECK(verify_DIV);
-	// CHECK(verify_UDIV);
-	// CHECK(verify_JAL);
-	// CHECK(verify_JALR);
-	// CHECK(verify_LB);
-	// CHECK(verify_LBU);
-	// CHECK(verify_LH);
-	// CHECK(verify_LHU);
-	// CHECK(verify_LUI);
-	// CHECK(verify_LW);
-	// CHECK(verify_LWU);
-	// CHECK(verify_MUL);
-	// CHECK(verify_MULH);
-	// CHECK(verify_MULHU);
-	// CHECK(verify_OR);
-	// CHECK(verify_ORI);
-	// CHECK(verify_REM);
-	// CHECK(verify_REMU);
-	// CHECK(verify_SB);
-	// CHECK(verify_SH);
-	// CHECK(verify_SLL);
-	// CHECK(verify_SLLI);
-	// CHECK(verify_SLT);
-	// CHECK(verify_SLTI);
-	// CHECK(verify_SLTIU);
-	// CHECK(verify_SLTU);
-	// CHECK(verify_SRA);
-	// CHECK(verify_SRAI);
-	// CHECK(verify_SRL);
+	CHECK(verify_ANDI);
+	CHECK(verify_AUIPC);
+	CHECK(verify_BEQ);
+	CHECK(verify_BGE);
+	CHECK(verify_BGEU);
+	CHECK(verify_BLT);
+	CHECK(verify_BLTU);
+	CHECK(verify_BNE);
+	CHECK(verify_DIV);
+	CHECK(verify_UDIV);
+	CHECK(verify_JAL);
+	CHECK(verify_JALR);
+	CHECK(verify_LB);
+	CHECK(verify_LBU);
+	CHECK(verify_LH);
+	CHECK(verify_LHU);
+	CHECK(verify_LUI);
+	CHECK(verify_LW);
+	CHECK(verify_LWU);
+	CHECK(verify_MUL);
+	CHECK(verify_MULH);
+	CHECK(verify_MULHU);
+	CHECK(verify_OR);
+	CHECK(verify_ORI);
+	CHECK(verify_REM);
+	CHECK(verify_REMU);
+	CHECK(verify_SB);
+	CHECK(verify_SH);
+	CHECK(verify_SLL);
+	CHECK(verify_SLLI);
+	CHECK(verify_SLT);
+	CHECK(verify_SLTI);
+	CHECK(verify_SLTIU);
+	CHECK(verify_SLTU);
+	CHECK(verify_SRA);
+	CHECK(verify_SRAI);
+	CHECK(verify_SRL);
 	CHECK(verify_SRLI);
-	// CHECK(verify_SUB);
-	// CHECK(verify_SW);
-	// CHECK(verify_XOR);
-	// CHECK(verify_XORI);
-	// CHECK(verify_ENDIAN);
+	CHECK(verify_SUB);
+	CHECK(verify_SW);
+	CHECK(verify_XOR);
+	CHECK(verify_XORI);
+	CHECK(verify_ENDIAN);
 
 	if (success)
 		printf("SUCCESS!\n");

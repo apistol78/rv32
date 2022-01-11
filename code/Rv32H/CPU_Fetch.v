@@ -52,7 +52,7 @@ module CPU_Fetch(
 
 	initial begin
 		state = 0;
-		pc = 32'h0000009c;
+		pc = 32'h00000000;
 		icache_input_tag = 0;
 		o_tag = 0;
 		o_instruction = 0;
