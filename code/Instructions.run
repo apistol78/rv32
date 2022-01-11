@@ -375,20 +375,10 @@ local instructions = {
 				R_s(f.rd) = dividend / divisor;
 		]],
 		verilog = [[
-			if (`RS2 == 0) begin
-				`RD <= -1;
+			div_signed <= 1;
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
 				`EXECUTE_DONE;
-			end
-			else if (&`RS1 && $signed(`RS2) == -1) begin
-				`RD <= `RS1;
-				`EXECUTE_DONE;
-			end
-			else begin
-				div_signed <= 1;
-				if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
-					`EXECUTE_DONE;
-				end
 			end
 		]]
 	},
@@ -407,16 +397,10 @@ local instructions = {
 				R_u(f.rd) = dividend / divisor;
 		]],
 		verilog = [[
-			if (`RS2 == 0) begin
-				`RD <= -1;
+			div_signed <= 0;
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_result[31:0];
 				`EXECUTE_DONE;
-			end
-			else begin
-				div_signed <= 0;
-				if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_result[31:0];
-					`EXECUTE_DONE;
-				end
 			end
 		]]
 	},
@@ -647,7 +631,7 @@ local instructions = {
 		]],
 		verilog = [[
 			`RD <= `PC + 4;
-			`GOTO($signed(`RS1) + $signed(`IMM));
+			`GOTO(($signed(`RS1) + $signed(`IMM)) & ~1);
 			`EXECUTE_DONE;
 		]]
 	},
@@ -661,7 +645,7 @@ local instructions = {
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ_SB(`RS1 + $signed(`IMM));
+			`MEM_READ_SB($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -675,7 +659,7 @@ local instructions = {
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ_UB(`RS1 + $signed(`IMM));
+			`MEM_READ_UB($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -695,7 +679,7 @@ local instructions = {
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ_SH(`RS1 + $signed(`IMM));
+			`MEM_READ_SH($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -709,7 +693,7 @@ local instructions = {
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		]],
 		verilog = [[
-			`MEM_READ_UH(`RS1 + $signed(`IMM));
+			`MEM_READ_UH($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -750,7 +734,7 @@ local instructions = {
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ_W(`RS1 + $signed(`IMM));
+			`MEM_READ_W($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -764,7 +748,7 @@ local instructions = {
 			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
 		]],
 		verilog = [[
-			`MEM_READ_W(`RS1 + $signed(`IMM));
+			`MEM_READ_W($signed(`RS1) + $signed(`IMM));
 			`EXECUTE_DONE;
 		]]
 	},
@@ -778,11 +762,15 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog = [[
+			/*
 			mul_signed <= 1;
 			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[31:0];
 				`EXECUTE_DONE;
 			end
+			*/
+			`RD <= $signed(`RS1) * $signed(`RS2);
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -797,11 +785,15 @@ local instructions = {
 			R_s(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog = [[
+			/*
 			mul_signed <= 1;
 			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
+			*/
+			`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
+			`EXECUTE_DONE;
 		]]
 	},
 	{
@@ -816,11 +808,15 @@ local instructions = {
 			R(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog = [[
+			/*
 			mul_signed <= 0;
 			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
+			*/
+			`RD <= (`RS1 * `RS2) >> 32;
+			`EXECUTE_DONE;			
 		]]
 	},
 	{
@@ -886,17 +882,14 @@ local instructions = {
 				R_s(f.rd) = dividend % divisor;
 		]],
 		verilog = [[
-			if (`RS2 == 0) begin
-				`RD <= `RS1;
+			/*
+			div_signed <= 1;
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end
-			else begin
-				div_signed <= 1;
-				if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_remainder[31:0];
-					`EXECUTE_DONE;
-				end
-			end
+			*/
+			`RD <= $signed(`RS1) % $signed(`RS2);
 		]]
 	},
 	{
@@ -914,17 +907,17 @@ local instructions = {
 				R_u(f.rd) = dividend % divisor;
 		]],
 		verilog = [[
-			if (`RS2 == 0) begin
-				`RD <= `RS1;
+			/*
+			div_signed <= 0;
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end
-			else begin
-				div_signed <= 0;
-				if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-					`RD <= div_remainder[31:0];
-					`EXECUTE_DONE;
-				end
-			end
+			*/
+			if (`RS2 != 0)
+				`RD <= `RS1 % `RS2;
+			else
+				`RD <= `RS1;
 		]]
 	},
 	{
@@ -949,7 +942,7 @@ local instructions = {
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		]],
 		verilog = [[
-			`MEM_WRITE_B(`RS1 + $signed(`IMM), `RS2);
+			`MEM_WRITE_B($signed(`RS1) + $signed(`IMM), `RS2);
 			`EXECUTE_DONE;
 		]]
 	},
@@ -987,7 +980,7 @@ local instructions = {
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
 		verilog = [[
-			`MEM_WRITE_H(`RS1 + $signed(`IMM), `RS2);
+			`MEM_WRITE_H($signed(`RS1) + $signed(`IMM), `RS2);
 			`EXECUTE_DONE;
 		]]
 	},
@@ -1214,7 +1207,7 @@ local instructions = {
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
 		verilog = [[
-			`MEM_WRITE_W(`RS1 + $signed(`IMM), `RS2);
+			`MEM_WRITE_W($signed(`RS1) + $signed(`IMM), `RS2);
 			`EXECUTE_DONE;
 		]]
 	},
