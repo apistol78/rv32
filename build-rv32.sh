@@ -21,8 +21,8 @@ make -j4 -f Rv32.mak ReleaseStatic
 popd
 
 # Generate HEX images.
-#riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Bare Bare.hex
-#riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Doom Doom.hex
+riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Bare Bare.hex
+riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Doom Doom.hex
 
 # Generate useful dumps.
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > Bare.dump
