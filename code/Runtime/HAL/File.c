@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <ff.h>
 #include <diskio.h>
 
@@ -19,8 +21,16 @@ DSTATUS disk_status (BYTE pdrv)
 
 DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-    sd_read_block512(sector, buff, 512);
-    return RES_OK;
+    if (sd_read_block512(sector, buff, 512) == 512)
+    {
+        printf("SD block read succesfully!\n");
+        return RES_OK;
+    }
+    else
+    {
+        printf("SD block read failed!\n");
+        return RES_ERROR;
+    }
 }
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
@@ -40,8 +50,32 @@ FIL fp;
 
 int32_t file_init()
 {
-    f_mount(&fs, "", 0);
-    return 1;
+    int32_t result;
+
+    if ((result = f_mount(&fs, "", 1)) != FR_OK)
+    {
+        printf("Unable to mount file system!\n"); //, result = %d!\n", result);
+        printHex(result);
+        printLn("");
+        return 1;
+    }
+
+    DIR dp;
+    if (f_opendir(&dp, "") == FR_OK)
+    {
+        printf("Root directory:\n");
+
+        FILINFO fno;
+        while (f_readdir(&dp, &fno) == FR_OK)
+        {
+            printf("%s, %d\n", fno.fname, fno.fsize);
+        }
+        f_closedir(&dp);
+    }
+    else
+        printf("Unable to open directory!\n");
+
+    return 0;
 }
 
 int32_t file_open(const char* name)
@@ -49,7 +83,10 @@ int32_t file_open(const char* name)
     if (f_open(&fp, name, FA_READ) == FR_OK)
         return 1;
     else
+    {
+        printf("Unable to open file %s!\n", name);
         return 0;
+    }
 }
 
 void file_close(int32_t fd)

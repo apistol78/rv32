@@ -95,12 +95,12 @@ void adv7513_power_up()
         i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
 }
 
-int video_init()
+int32_t video_init()
 {
 	if (adv7513_chip_identify())
     {
     	adv7513_kick_up();
     	adv7513_power_up();
     }
-    return 1;
+    return 0;
 }

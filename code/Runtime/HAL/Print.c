@@ -28,3 +28,18 @@ void printHexU32(uint32_t v)
 	printHex(p[1]);
 	printHex(p[0]);
 }
+
+void printDec(int32_t v)
+{
+	if (v < 0)
+	{
+		print("-");
+		v = -v;
+	}
+	const static char digit[] = { "0123456789" };
+	while (v > 0)
+	{
+		uart_tx_u8(digit[v % 10]);
+		v /= 10;
+	}
+}

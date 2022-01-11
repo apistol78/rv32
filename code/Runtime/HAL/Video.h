@@ -1,3 +1,3 @@
 #pragma once
 
-int video_init();
+int32_t video_init();

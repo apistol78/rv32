@@ -45,11 +45,13 @@ typedef enum
     SD_STATE_TRAN    
 } SD_CURRENT_STATE;
 
-// void __attribute__ ((noinline)) sd_half_cycle()
-// {
-// }
+void __attribute__ ((noinline)) sd_half_cycle()
+{
+	for (int i = 0; i < 10; ++i)
+		__asm__ volatile ( "nop" );
+}
 
-#define SD_HALF_CYCLE()
+#define SD_HALF_CYCLE() sd_half_cycle()
 
 void sd_dummy_clock(uint32_t clockCnt)
 {
@@ -511,12 +513,16 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 #endif  
 
 		buffer[i] = Data8;
+
+		printf("%02x ", Data8);
+		if ((i & 15) == 15)
+			printf("\n");
 	}
 
-	return 1;
+	return bufferLen;
 }
 
-void sd_init()
+int32_t sd_init()
 {
 	*SD_BASE = 0x0000ff00;
 
@@ -544,12 +550,12 @@ void sd_init()
 	for (int32_t count = 0;; ++count)
 	{
 		if (!sd_cmd55(0x0000))
-			return;
+			return 1;
 
 		if (!sd_acmd41(hostOCR32, &OCR))
 		{
 			if (count > 10)
-				return;
+				return 1;
 
 			for (int i = 0; i < 100000; ++i)
 				__asm__ volatile ("nop");
@@ -583,4 +589,5 @@ void sd_init()
 	sd_acmd6(1);
 	sd_cmd55(RCA16);
 	sd_acmd42(1);
+	return 0;
 }
