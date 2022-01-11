@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module VRAM_page(
 	input wire i_clock,
 

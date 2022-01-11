@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module VRAM(
 	input wire i_clock,
 
@@ -70,7 +72,7 @@ module VRAM(
 	assign o_video_rdata = (active == 0) ? page1_video_rdata : page2_video_rdata;
 
 	// Swap active page when control register is written to.
-	always @ (posedge i_clock) begin
+	always @(posedge i_clock) begin
 		if (i_request && is_ctrl) begin
 			active <= i_wdata[0];
 		end

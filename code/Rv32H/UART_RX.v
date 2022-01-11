@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module UART_RX #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(
@@ -47,7 +49,7 @@ module UART_RX #(
 	assign o_ready = (rds == 5) && i_request;
 	
 	// Read from FIFO.
-	always @ (posedge i_clock) begin
+	always @(posedge i_clock) begin
 		if (i_reset) begin
 			rds <= 0;
 			o_rdata <= 32'h0;
@@ -80,7 +82,7 @@ module UART_RX #(
 	end	
 	
 	// Receive and put into FIFO.
-	always @ (posedge i_clock) begin
+	always @(posedge i_clock) begin
 		frame_error <= 0;
 
 		rx_fifo_write <= 0;
@@ -129,7 +131,6 @@ module UART_RX #(
 				data <= 0;
 			end
 		end
-		
 	end
 
 endmodule

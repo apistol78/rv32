@@ -30,11 +30,11 @@ module FIFO #(
 	assign o_rdata = rdata;
 
 	initial begin
-		rdata <= 0;
-		in <= 0;
-		out <= 0;
-		last_write <= 0;
-		last_read <= 0;
+		rdata = 0;
+		in = 0;
+		out = 0;
+		last_write = 0;
+		last_read = 0;
 	end
 
 	always @ (posedge i_clock) begin

@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module UART_TX #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(
@@ -23,7 +25,7 @@ module UART_TX #(
 		UART_TX = 1;
 	end
 
-	always @ (posedge i_clock) begin
+	always @(posedge i_clock) begin
 		if (prescale > 0) begin
 			prescale <= prescale - 1;
 		end

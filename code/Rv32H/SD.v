@@ -36,7 +36,7 @@ module SD (
 	wire cmd_in = SD_CMD;
 	wire [3:0] dat_in = SD_DAT;
 
-	always @ (posedge i_clock, posedge i_reset) begin
+	always @(posedge i_clock) begin
 		if (i_reset) begin
 			clk <= 1'b0;
 			cdir <= DIR_IN;

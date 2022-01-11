@@ -64,8 +64,8 @@ module VGA #(
 
 			prescale <= 0;
 		end
-		//o_vga_clock <= !prescale[1];
-		o_vga_clock <= !prescale[0];
+		o_vga_clock <= !prescale[1];
+		//o_vga_clock <= !prescale[0];
 	end
 
 	always @(posedge i_clock) begin

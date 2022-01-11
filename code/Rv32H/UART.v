@@ -1,4 +1,6 @@
 
+`timescale 1ns/1ns
+
 module UART #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(

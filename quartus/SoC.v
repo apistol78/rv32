@@ -241,19 +241,19 @@ module SoC(
 	
 `ifdef SOC_ENABLE_SRAM
 	// SRAM
-	wire sram32_select;
-	wire [31:0] sram32_address;
-	wire [31:0] sram32_rdata;
-	wire sram32_ready;
+	wire sram_select;
+	wire [31:0] sram_address;
+	wire [31:0] sram_rdata;
+	wire sram_ready;
 	SRAM_interface sram(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(sram32_select && cpu_request),
+		.i_request(sram_select && cpu_request),
 		.i_rw(cpu_rw),
-		.i_address(sram32_address),
+		.i_address(sram_address),
 		.i_wdata(cpu_wdata),
-		.o_rdata(sram32_rdata),
-		.o_ready(sram32_ready),
+		.o_rdata(sram_rdata),
+		.o_ready(sram_ready),
 		// ---
 		.SRAM_A(SRAM_A),
 		.SRAM_D(SRAM_D),
@@ -417,8 +417,8 @@ module SoC(
 	assign ram_address = cpu_address - 32'h00010000;
 
 `ifdef SOC_ENABLE_SRAM
-	assign sram32_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram32_address = cpu_address - 32'h10000000;
+	assign sram_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
+	assign sram_address = cpu_address - 32'h10000000;
 `endif
 
 `ifdef SOC_ENABLE_SDRAM
@@ -454,7 +454,7 @@ module SoC(
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 `ifdef SOC_ENABLE_SRAM
-		sram32_select ? sram32_rdata :
+		sram_select ? sram_rdata :
 `endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_rdata :
@@ -477,7 +477,7 @@ module SoC(
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 `ifdef SOC_ENABLE_SRAM
-		sram32_select ? sram32_ready :
+		sram_select ? sram_ready :
 `endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_ready :

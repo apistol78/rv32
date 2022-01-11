@@ -91,9 +91,22 @@ void main()
 
 			if (cs == uart_rx_u8())
 			{
+				// Write data to memory.
 				for (uint8_t i = 0; i < nb; ++i)
-					*(uint8_t*)addr++ = r[i];
-				uart_tx_u8(0x80);	// Ok
+					*(uint8_t*)(addr + i) = r[i];
+
+				// Verify data written to memory.
+				uint32_t result = 0x80;
+				for (uint8_t i = 0; i < nb; ++i)
+				{
+					if (*(uint8_t*)(addr + i) != r[i])
+					{
+						result = 0x83;
+						break;
+					}
+				}
+
+				uart_tx_u8(result);
 			}
 			else
 				uart_tx_u8(0x82);	// Invalid checksum.

@@ -94,4 +94,5 @@ module SRAM_interface(
 				count <= 0;
 		end
 	end
+
 endmodule

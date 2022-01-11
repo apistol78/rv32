@@ -16,7 +16,7 @@ module SRAM_tb(
 
 	assign SRAM_D = !SRAM_OE_n ? data[SRAM_A] : 16'hz;
 
-	always @ (posedge SRAM_WE_n) begin
+	always @(posedge SRAM_WE_n) begin
 		$display("sram saved %x at %x (%0t)", SRAM_D, SRAM_A, $time);
 		data[SRAM_A] = SRAM_D;
 	end

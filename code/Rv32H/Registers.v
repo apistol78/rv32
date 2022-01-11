@@ -68,7 +68,6 @@ module Registers(
 		end
 		else begin
 			if (i_wr_request) begin
-				// $display("WRITE REGISTER rd[%d] = %x", i_rd_idx, i_rd);
 				r[i_rd_idx] <= i_rd;
 			end
 		end

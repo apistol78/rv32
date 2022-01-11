@@ -21,7 +21,7 @@ module I2C (
 	assign I2C_SCL = scl;
 	assign I2C_SDA = sda ? 1'bz : 1'b0;	// pulled up
 
-	always @ (posedge i_clock) begin
+	always @(posedge i_clock) begin
 		if (i_request) begin
 			if (!i_rw) begin
 				o_rdata <= { 30'b0, scl, I2C_SDA };
@@ -35,4 +35,5 @@ module I2C (
 	
 	always @(posedge i_clock)
 		o_ready <= i_request;
+
 endmodule
