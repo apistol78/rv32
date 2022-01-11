@@ -3,8 +3,12 @@
 
 // DIV
 if (`EXECUTE_OP == OP_DIV) begin
-	div_signed <= 1;
-	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		div_signed <= 1;
+		div_numerator <= `RS1;
+		div_denominator <= `RS2;
+	end
+	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
 	end
@@ -12,8 +16,12 @@ end
 
 // DIVU
 else if (`EXECUTE_OP == OP_DIVU) begin
-	div_signed <= 0;
-	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		div_signed <= 0;
+		div_numerator <= `RS1;
+		div_denominator <= `RS2;
+	end
+	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
 	end
@@ -81,70 +89,71 @@ end
 
 // MUL
 else if (`EXECUTE_OP == OP_MUL) begin
-	/*
-	mul_signed <= 1;
-	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		mul_signed <= 1;
+		mul_op1 <= `RS1;
+		mul_op2 <= `RS2;
+	end
+	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[31:0];
 		`EXECUTE_DONE;
 	end
-	*/
-	`RD <= $signed(`RS1) * $signed(`RS2);
-	`EXECUTE_DONE;
 end
 
 // MULH
 else if (`EXECUTE_OP == OP_MULH) begin
-	/*
-	mul_signed <= 1;
-	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		mul_signed <= 1;
+		mul_op1 <= `RS1;
+		mul_op2 <= `RS2;
+	end
+	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
-	*/
-	`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
-	`EXECUTE_DONE;
+	//`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
 end
 
 // MULHU
 else if (`EXECUTE_OP == OP_MULHU) begin
-	/*
-	mul_signed <= 0;
-	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		mul_signed <= 0;
+		mul_op1 <= `RS1;
+		mul_op2 <= `RS2;
+	end
+	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
-	*/
-	`RD <= ({32'b0, `RS1} * {32'b0, `RS2}) >> 32;
-	//$display("MULHU (%x) %x * %x = %x", `PC, (`RS1), (`RS2), ({32'b0, `RS1} * {32'b0, `RS2}) >> 32);
-	`EXECUTE_DONE;			
+	//`RD <= ({32'b0, `RS1} * {32'b0, `RS2}) >> 32;
 end
 
 // REM
 else if (`EXECUTE_OP == OP_REM) begin
-	/*
-	div_signed <= 1;
-	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		div_signed <= 1;
+		div_numerator <= `RS1;
+		div_denominator <= `RS2;
+	end
+	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	*/
-	//$display("REM %d %% %d = %d", $signed(`RS1), $signed(`RS2), $signed(`RS1) % $signed(`RS2));
-	`RD <= $signed(`RS1) % $signed(`RS2);
-	`EXECUTE_DONE;
+	// `RD <= $signed(`RS1) % $signed(`RS2);
 end
 
 // REMU
 else if (`EXECUTE_OP == OP_REMU) begin
-	/*
-	div_signed <= 0;
-	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	if (`CYCLE == 0) begin
+		div_signed <= 0;
+		div_numerator <= `RS1;
+		div_denominator <= `RS2;
+	end
+	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	*/
-	//$display("REMU (%x) %d %% %d = %d", `PC, (`RS1), (`RS2), (`RS1) % (`RS2));
-	`RD <= `RS1 % `RS2;
-	`EXECUTE_DONE;
+	// `RD <= `RS1 % `RS2;
 end
 
 // SB

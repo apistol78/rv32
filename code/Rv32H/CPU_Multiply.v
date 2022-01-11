@@ -44,7 +44,7 @@ module CPU_Multiply(
         if (i_signed)
             p1 <= $signed(i_op1) * $signed(i_op2);
         else
-            p1 <= i_op1 * i_op2;
+            p1 <= { 32'b0, i_op1 } * { 32'b0, i_op2 };
 
         p2 <= p1;
     end

@@ -142,23 +142,27 @@ module CPU_Execute (
 	);
 
 	reg mul_signed;
+	reg [31:0] mul_op1;
+	reg [31:0] mul_op2;
 	wire [63:0] mul_result;
 	CPU_Multiply multiply(
 		.i_clock(i_clock),
 		.i_signed(mul_signed),
-		.i_op1(i_rs1),
-		.i_op2(i_rs2),
+		.i_op1(mul_op1),
+		.i_op2(mul_op2),
 		.o_result(mul_result)
 	);
 
 	reg div_signed;
+	reg [31:0] div_numerator;
+	reg [31:0] div_denominator;
 	wire [31:0] div_result;
 	wire [31:0] div_remainder;
 	CPU_Divide divide(
 		.i_clock(i_clock),
 		.i_signed(div_signed),
-		.i_numerator(i_rs1),
-		.i_denominator(i_rs2),
+		.i_numerator(div_numerator),
+		.i_denominator(div_denominator),
 		.o_result(div_result),
 		.o_remainder(div_remainder)
 	);
@@ -225,6 +229,9 @@ module CPU_Execute (
 					`EXECUTE_DONE;
 				end
 				else begin
+					// Note, input values are only valid in first cycle so
+					// in case of multicycle operations the inputs must be
+					// stored in temporary registers.
 					`include "Instructions_execute_ops.v"
 				end
 			end
