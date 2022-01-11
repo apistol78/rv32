@@ -13,6 +13,8 @@ class Bus : public traktor::Object
 public:
 	void map(uint32_t start, uint32_t end, Device* device);
 
+	Device* device(uint32_t address) const;
+
 	void writeU8(uint32_t address, uint8_t value);
 
 	void writeU16(uint32_t address, uint16_t value);

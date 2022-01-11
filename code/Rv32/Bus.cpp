@@ -13,6 +13,15 @@ void Bus::map(uint32_t start, uint32_t end, Device* device)
 	m_mappedDevices.push_back({ start, end, device });
 }
 
+Device* Bus::device(uint32_t address) const
+{
+	auto mappedDevice = findMappedDevice(address);
+	if (mappedDevice)
+		return mappedDevice->device;
+	else
+		return nullptr;	
+}
+
 void Bus::writeU8(uint32_t address, uint8_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
