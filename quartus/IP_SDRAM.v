@@ -28,10 +28,10 @@ module IP_SDRAM (
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
-		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        avl_read_req_0,             //                   .read
 		input  wire        avl_write_req_0,            //                   .write
 		input  wire [2:0]  avl_size_0,                 //                   .burstcount
+		input  wire [3:0]  avl_be_0,                   //                   .byteenable
 		input  wire        mp_cmd_clk_0_clk,           //       mp_cmd_clk_0.clk
 		input  wire        mp_cmd_reset_n_0_reset_n,   //   mp_cmd_reset_n_0.reset_n
 		input  wire        mp_rfifo_clk_0_clk,         //     mp_rfifo_clk_0.clk
@@ -77,10 +77,10 @@ module IP_SDRAM (
 		.avl_rdata_valid_0          (avl_rdata_valid_0),          //                   .readdatavalid
 		.avl_rdata_0                (avl_rdata_0),                //                   .readdata
 		.avl_wdata_0                (avl_wdata_0),                //                   .writedata
-		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.avl_read_req_0             (avl_read_req_0),             //                   .read
 		.avl_write_req_0            (avl_write_req_0),            //                   .write
 		.avl_size_0                 (avl_size_0),                 //                   .burstcount
+		.avl_be_0                   (avl_be_0),                   //                   .byteenable
 		.mp_cmd_clk_0_clk           (mp_cmd_clk_0_clk),           //       mp_cmd_clk_0.clk
 		.mp_cmd_reset_n_0_reset_n   (mp_cmd_reset_n_0_reset_n),   //   mp_cmd_reset_n_0.reset_n
 		.mp_rfifo_clk_0_clk         (mp_rfifo_clk_0_clk),         //     mp_rfifo_clk_0.clk
@@ -201,7 +201,7 @@ endmodule
 // Retrieval info: 	<generic name="MEM_TRRD_NS" value="10.0" />
 // Retrieval info: 	<generic name="MEM_TRTP_NS" value="7.5" />
 // Retrieval info: 	<generic name="RATE" value="Full" />
-// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="330.0" />
+// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="350.0" />
 // Retrieval info: 	<generic name="USE_MEM_CLK_FREQ" value="false" />
 // Retrieval info: 	<generic name="FORCE_DQS_TRACKING" value="AUTO" />
 // Retrieval info: 	<generic name="FORCE_SHADOW_REGS" value="AUTO" />
@@ -222,7 +222,7 @@ endmodule
 // Retrieval info: 	<generic name="POWER_OF_TWO_BUS" value="false" />
 // Retrieval info: 	<generic name="SOPC_COMPAT_RESET" value="false" />
 // Retrieval info: 	<generic name="AVL_MAX_SIZE" value="4" />
-// Retrieval info: 	<generic name="BYTE_ENABLE" value="true" />
+// Retrieval info: 	<generic name="BYTE_ENABLE" value="false" />
 // Retrieval info: 	<generic name="ENABLE_CTRL_AVALON_INTERFACE" value="true" />
 // Retrieval info: 	<generic name="CTL_DEEP_POWERDN_EN" value="false" />
 // Retrieval info: 	<generic name="CTL_SELF_REFRESH_EN" value="false" />

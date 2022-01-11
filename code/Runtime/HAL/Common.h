@@ -8,6 +8,7 @@
 #define GPIO_IO     (volatile uint32_t*)0x50000024
 #define I2C_BASE    (volatile uint32_t*)0x50000030
 #define SD_BASE     (volatile uint32_t*)0x50000040
+#define TIMER_BASE  (volatile uint32_t*)0x50000050
 #define VIDEO_BASE  (volatile uint32_t*)0x40000000
 #define VIDEO_CTRL  (volatile uint32_t*)0x4ffffff0
 

@@ -23,7 +23,7 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
     if (sd_read_block512(sector, buff, 512) == 512)
     {
-        printf("SD block read succesfully!\n");
+        // printf("SD block read succesfully!\n");
         return RES_OK;
     }
     else
@@ -54,26 +54,9 @@ int32_t file_init()
 
     if ((result = f_mount(&fs, "", 1)) != FR_OK)
     {
-        printf("Unable to mount file system!\n"); //, result = %d!\n", result);
-        printHex(result);
-        printLn("");
+        printf("Unable to mount file system!, result = %d!\n", result);
         return 1;
     }
-
-    DIR dp;
-    if (f_opendir(&dp, "") == FR_OK)
-    {
-        printf("Root directory:\n");
-
-        FILINFO fno;
-        while (f_readdir(&dp, &fno) == FR_OK)
-        {
-            printf("%s, %d\n", fno.fname, fno.fsize);
-        }
-        f_closedir(&dp);
-    }
-    else
-        printf("Unable to open directory!\n");
 
     return 0;
 }
@@ -111,7 +94,10 @@ int32_t file_seek(int32_t file, int32_t offset, int32_t from)
         result = f_lseek(&fp, f_size(&fp) + offset);
 
     if (result != FR_OK)
+    {
+        printf("file_seek failed, result = %d\n", result);
         return -1;
+    }
 
     return f_tell(&fp);
 }

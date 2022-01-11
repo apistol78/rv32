@@ -387,6 +387,19 @@ module SoC(
 		.SD_DAT(SD_DAT)
 	);
 `endif
+
+	// Timer
+	wire timer_select;
+	wire [31:0] timer_rdata;
+	wire timer_ready;
+	Timer #(
+		.FREQUENCY(100000000)
+	)(
+		.i_clock(clock),
+		.i_request(timer_select && cpu_request),
+		.o_rdata(timer_rdata),
+		.o_ready(timer_ready)
+	);
 	
 	// CPU
 	wire cpu_rw;
@@ -450,6 +463,8 @@ module SoC(
 	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
 `endif
 
+	assign timer_select = (cpu_address == 32'h50000050);
+
 	assign cpu_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
@@ -471,6 +486,7 @@ module SoC(
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_rdata :
 `endif
+		timer_select ? timer_rdata :
 		32'h00000000;
 		
 	assign cpu_ready =
@@ -498,6 +514,7 @@ module SoC(
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_ready :
 `endif
+		timer_select ? timer_ready :
 		1'b0;
 
 	// 7:0

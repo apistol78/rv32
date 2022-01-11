@@ -558,7 +558,10 @@ int main(int argc, const char** argv)
 		for (;;)
 		{
 			uint8_t ch = read< uint8_t >(serial);
-			log::info << (wchar_t)ch;
+			if (!iscntrl(ch))
+				log::info << wchar_t(ch);
+			else if (ch == '\n')
+				log::info << Endl;
 		}
 	}
 

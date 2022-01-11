@@ -2,27 +2,64 @@
 #include <stdlib.h>
 #include "Runtime/HAL.h"
 #include "Runtime/HAL/Print.h"
+#include "Runtime/HAL/Timer.h"
+
+void NO_OPTIMIZE test()
+{
+	{
+		int a = 6;
+		int b = 0;
+		printf("%d\n", a / b);	// -1
+		printf("%d\n", a % b);	// 6
+	}
+	{
+		int a = -6;
+		int b = 0;
+		printf("%d\n", a / b);	// -1
+		printf("%d\n", a % b);	// -6
+	}
+	{
+		int a = 6;
+		int b = 4;
+		printf("%d\n", a / b);	// 1
+		printf("%d\n", a % b);	// 2
+	}
+	{
+		int a = -6;
+		int b = 4;
+		printf("%d\n", a / b);	// -1
+		printf("%d\n", a % b);	// -2
+	}
+	{
+		int a = 6;
+		int b = -4;
+		printf("%d\n", a / b);	// -1
+		printf("%d\n", a % b);	// 2
+	}
+	{
+		int a = -6;
+		int b = -4;
+		printf("%d\n", a / b);	// 1
+		printf("%d\n", a % b);	// -2
+	}
+}
 
 void main()
 {
 	hal_init();
 
-	for (uint32_t i = 0; i < 100; ++i)
-	{
-		printHex(i % 10);
-		print(" ");
-		printHex(i / 10);
-		printLn("");
+	// for (uint32_t i = 0; i < 100; ++i)
+	// {
+	// 	printHex(i % 10);
+	// 	print(" ");
+	// 	printHex(i / 10);
+	// 	printLn("");
 
-		printf("%d\n", i);
-	}
+	// 	printf("%d\n", i);
+	// }
 
-		//printf("%d\n", i);
+	test();
 
-	printLn("THE END");
-	for (;;);
-
-/*
 	printf("STARFIELD\n");
 
 	int star[100][3];
@@ -31,10 +68,6 @@ void main()
 		star[i][0] = rand() % 320;
 		star[i][1] = rand() % 240;
 		star[i][2] = (rand() % 6) + 1;
-
-		printf("TEST\n");
-
-		//printf("%d, %d, %d\n", star[i][0], star[i][1], star[i][2]);
 	}
 
 	printf("RANDOMIZED...\n");
@@ -65,5 +98,4 @@ void main()
 		page = 1 - page;
 		*VIDEO_CTRL = (uint32_t)page;
 	}
-*/
 }

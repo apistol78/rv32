@@ -3,7 +3,7 @@
 
 module BRAM #(
 	parameter WIDTH = 32,
-	parameter SIZE = 32'h00004000,
+	parameter SIZE = 32'h400,
 	parameter ADDR_LSH = 2
 )(
 	input wire i_clock,

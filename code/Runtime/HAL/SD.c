@@ -48,11 +48,11 @@ typedef enum
 
 void __attribute__ ((noinline)) sd_half_cycle()
 {
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 40; ++i)
 		__asm__ volatile ( "nop" );
 }
 
-#define SD_HALF_CYCLE() sd_half_cycle()
+#define SD_HALF_CYCLE() // sd_half_cycle()
 
 void sd_dummy_clock(uint32_t clockCnt)
 {
@@ -515,9 +515,9 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 
 		buffer[i] = Data8;
 
-		printf("%02x ", Data8);
-		if ((i & 15) == 15)
-			printf("\n");
+		// printf("%02x ", Data8);
+		// if ((i & 15) == 15)
+		// 	printf("\n");
 	}
 
 	return bufferLen;

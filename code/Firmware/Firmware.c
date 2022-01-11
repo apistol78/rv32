@@ -53,6 +53,12 @@ void main()
 			__asm__ volatile ("nop");
 	}
 
+	*leds = 0x000000ff;
+
+	// clear sdram
+	for (uint32_t addr = 0x20000000; addr < 0x28000000; addr += 4)
+		*((uint32_t*)addr) = 0x00000000;
+
 	*leds = 0x00000000;
 
 	for (;;)

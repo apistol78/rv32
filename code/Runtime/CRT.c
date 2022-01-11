@@ -42,7 +42,7 @@ int _fstat(int file, struct stat* st)
 	{
 		int32_t fd = file - 100;
 		st->st_size = file_size(fd);
-		printf("_fstat, file size %d byte(s)\n", st->st_size);
+		// printf("_fstat, file size %d byte(s)\n", st->st_size);
 	}
 	return 0;
 }
