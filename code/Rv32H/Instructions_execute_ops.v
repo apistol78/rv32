@@ -3,35 +3,19 @@
 
 // DIV
 if (`EXECUTE_OP == OP_DIV) begin
-	if (`RS2 == 0) begin
-		`RD <= -1;
+	div_signed <= 1;
+	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
-	end
-	else if (&`RS1 && $signed(`RS2) == -1) begin
-		`RD <= `RS1;
-		`EXECUTE_DONE;
-	end
-	else begin
-		div_signed <= 1;
-		if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-			`RD <= div_result[31:0];
-			`EXECUTE_DONE;
-		end
 	end
 end
 
 // DIVU
 else if (`EXECUTE_OP == OP_DIVU) begin
-	if (`RS2 == 0) begin
-		`RD <= -1;
+	div_signed <= 0;
+	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
-	end
-	else begin
-		div_signed <= 0;
-		if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-			`RD <= div_result[31:0];
-			`EXECUTE_DONE;
-		end
 	end
 end
 
@@ -55,117 +39,126 @@ end
 // JALR
 else if (`EXECUTE_OP == OP_JALR) begin
 	`RD <= `PC + 4;
-	`GOTO($signed(`RS1) + $signed(`IMM));
+	`GOTO(($signed(`RS1) + $signed(`IMM)) & ~1);
 	`EXECUTE_DONE;
 end
 
 // LB
 else if (`EXECUTE_OP == OP_LB) begin
-	`MEM_READ_SB(`RS1 + $signed(`IMM));
+	`MEM_READ_SB($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // LBU
 else if (`EXECUTE_OP == OP_LBU) begin
-	`MEM_READ_UB(`RS1 + $signed(`IMM));
+	`MEM_READ_UB($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // LH
 else if (`EXECUTE_OP == OP_LH) begin
-	`MEM_READ_SH(`RS1 + $signed(`IMM));
+	`MEM_READ_SH($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // LHU
 else if (`EXECUTE_OP == OP_LHU) begin
-	`MEM_READ_UH(`RS1 + $signed(`IMM));
+	`MEM_READ_UH($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // LW
 else if (`EXECUTE_OP == OP_LW) begin
-	`MEM_READ_W(`RS1 + $signed(`IMM));
+	`MEM_READ_W($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // LWU
 else if (`EXECUTE_OP == OP_LWU) begin
-	`MEM_READ_W(`RS1 + $signed(`IMM));
+	`MEM_READ_W($signed(`RS1) + $signed(`IMM));
 	`EXECUTE_DONE;
 end
 
 // MUL
 else if (`EXECUTE_OP == OP_MUL) begin
+	/*
 	mul_signed <= 1;
 	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[31:0];
 		`EXECUTE_DONE;
 	end
+	*/
+	`RD <= $signed(`RS1) * $signed(`RS2);
+	`EXECUTE_DONE;
 end
 
 // MULH
 else if (`EXECUTE_OP == OP_MULH) begin
+	/*
 	mul_signed <= 1;
 	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
+	*/
+	`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
+	`EXECUTE_DONE;
 end
 
 // MULHU
 else if (`EXECUTE_OP == OP_MULHU) begin
+	/*
 	mul_signed <= 0;
 	if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
+	*/
+	`RD <= (`RS1 * `RS2) >> 32;
+	`EXECUTE_DONE;			
 end
 
 // REM
 else if (`EXECUTE_OP == OP_REM) begin
-	if (`RS2 == 0) begin
-		`RD <= `RS1;
+	/*
+	div_signed <= 1;
+	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	else begin
-		div_signed <= 1;
-		if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-			`RD <= div_remainder[31:0];
-			`EXECUTE_DONE;
-		end
-	end
+	*/
+	`RD <= $signed(`RS1) % $signed(`RS2);
 end
 
 // REMU
 else if (`EXECUTE_OP == OP_REMU) begin
-	if (`RS2 == 0) begin
-		`RD <= `RS1;
+	/*
+	div_signed <= 0;
+	if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	else begin
-		div_signed <= 0;
-		if (`CYCLE == `DIV_CYCLE_LATENCY) begin
-			`RD <= div_remainder[31:0];
-			`EXECUTE_DONE;
-		end
-	end
+	*/
+	if (`RS2 != 0)
+		`RD <= `RS1 % `RS2;
+	else
+		`RD <= `RS1;
 end
 
 // SB
 else if (`EXECUTE_OP == OP_SB) begin
-	`MEM_WRITE_B(`RS1 + $signed(`IMM), `RS2);
+	`MEM_WRITE_B($signed(`RS1) + $signed(`IMM), `RS2);
 	`EXECUTE_DONE;
 end
 
 // SH
 else if (`EXECUTE_OP == OP_SH) begin
-	`MEM_WRITE_H(`RS1 + $signed(`IMM), `RS2);
+	`MEM_WRITE_H($signed(`RS1) + $signed(`IMM), `RS2);
 	`EXECUTE_DONE;
 end
 
 // SW
 else if (`EXECUTE_OP == OP_SW) begin
-	`MEM_WRITE_W(`RS1 + $signed(`IMM), `RS2);
+	`MEM_WRITE_W($signed(`RS1) + $signed(`IMM), `RS2);
 	`EXECUTE_DONE;
 end

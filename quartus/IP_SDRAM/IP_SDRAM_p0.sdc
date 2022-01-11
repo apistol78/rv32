@@ -197,7 +197,6 @@ foreach { inst } $instances {
 	set pll_dq_write_clock $pins(pll_dq_write_clock)
 	set pll_ck_clock $pins(pll_ck_clock)
 	set pll_write_clock $pins(pll_write_clock)
-	set pll_afi_half_clock $pins(pll_afi_half_clock)
 	set pll_avl_clock $pins(pll_avl_clock)
 	set pll_avl_phy_clock $pins(pll_avl_phy_clock)
 	set pll_config_clock $pins(pll_config_clock)
@@ -328,14 +327,6 @@ foreach { inst } $instances {
 		-divide_by $::GLOBAL_IP_SDRAM_p0_pll_div(PLL_CONFIG_CLK) \
 		-phase $::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_CONFIG_CLK) ]	
 
-	# AFI-divided-by-2 clock
-	set local_pll_afi_half_clk [ IP_SDRAM_p0_get_or_add_clock_vseries \
-		-target $pll_afi_half_clock \
-		-suffix "afi_half_clk" \
-		-source $pll_ref_clock \
-		-multiply_by $::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_AFI_HALF_CLK) \
-		-divide_by $::GLOBAL_IP_SDRAM_p0_pll_div(PLL_AFI_HALF_CLK) \
-		-phase $::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_AFI_HALF_CLK) ]
 
 	# Pulse-generator used by DQS tracking
 	set local_sampling_clock "${inst}|IP_SDRAM_p0_sampling_clock"
@@ -689,13 +680,9 @@ foreach { inst } $instances {
 	# The paths between DQS_ENA_CLK and DQS_IN are calibrated, so they must not be analyzed
 	set_false_path -from [get_clocks $local_pll_write_clk] -to [get_clocks {*_IN}]
 
-	# Cut paths between the afi_half and avl clocks
-	set_false_path -from [get_clocks $local_pll_avl_clock] -to [get_clocks $local_pll_afi_half_clk]
-	set_false_path -from [get_clocks $local_pll_afi_half_clk] -to [get_clocks $local_pll_avl_clock]
 
 	# The following registers serve as anchors for the pin_map.tcl
 	# script and are not used by the IP during memory operation
-	set_false_path -from $pins(afi_half_ck_pins) -to $pins(afi_half_ck_pins)
 
 	# Cut internal calibrated paths
 	set dqs_delay_chain_pst_dff ${prefix}|*p0|*altdq_dqs2_inst|dqs_delay_chain~POSTAMBLE_DFF

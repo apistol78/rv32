@@ -51,9 +51,9 @@ module SRAM_interface(
 	always @(*) begin
 		if (i_request) begin
 			if (count < CYCLES / 2)
-				SRAM_A = 18'((i_address >> 1) & 32'hfffffffe);
+				SRAM_A = (i_address >> 1) & 32'hfffffffe;
 			else
-				SRAM_A = 18'(((i_address >> 1) & 32'hfffffffe) + 1);
+				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
 		end
 	end
 

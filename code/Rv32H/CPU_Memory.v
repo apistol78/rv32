@@ -56,8 +56,8 @@ module CPU_Memory(
 	assign o_bus_address = { i_mem_address[31:2], 2'b00 };
 
 	wire [1:0] address_byte_index = i_mem_address[1:0];
-	wire [7:0] bus_rdata_byte = 8'(i_bus_rdata >> (address_byte_index * 8));
-	wire [15:0] bus_rdata_half = 16'(i_bus_rdata >> (address_byte_index * 8));
+	wire [7:0] bus_rdata_byte = i_bus_rdata >> (address_byte_index * 8);
+	wire [15:0] bus_rdata_half = i_bus_rdata >> (address_byte_index * 8);
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin

@@ -352,7 +352,7 @@ endmodule
 // Retrieval info: 	<generic name="USE_SEQUENCER_BFM" value="false" />
 // Retrieval info: 	<generic name="PLL_SHARING_MODE" value="None" />
 // Retrieval info: 	<generic name="NUM_PLL_SHARING_INTERFACES" value="1" />
-// Retrieval info: 	<generic name="EXPORT_AFI_HALF_CLK" value="true" />
+// Retrieval info: 	<generic name="EXPORT_AFI_HALF_CLK" value="false" />
 // Retrieval info: 	<generic name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
 // Retrieval info: 	<generic name="INCLUDE_BOARD_DELAY_MODEL" value="false" />
 // Retrieval info: 	<generic name="INCLUDE_MULTIRANK_BOARD_DELAY_MODEL" value="false" />

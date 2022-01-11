@@ -145,8 +145,6 @@ input   global_reset_n;		// Resets (active-low) the whole system (all PHY logic 
 output	afi_clk;
 output	afi_half_clk;
 
-wire	pll_afi_half_clk;
-
 output	pll_mem_phy_clk;
 output	afi_phy_clk;
 output	pll_avl_phy_clk;
@@ -345,26 +343,6 @@ initial $display("Using %0s pll emif simulation models", FAST_SIM_MODEL ? "Fast"
 	// synthesis read_comments_as_HDL off
 	defparam pll4.duty_cycle = 50;
 
-	generic_pll pll5 (
-		.refclk({pll_ref_clk}),
-		.rst(~global_reset_n),
-		.fbclk(fbout),
-		.outclk(pll_afi_half_clk),
-		.fboutclk(),
-		.locked(),
-		.writerefclkdata(),
-    .writeoutclkdata(),
-    .writephaseshiftdata(), 
-		.writedutycycledata(),
-		.readrefclkdata(),
-    .readoutclkdata(),
-    .readphaseshiftdata(),
-    .readdutycycledata()								
-	);	
-	defparam pll5.reference_clock_frequency = REF_CLK_FREQ,
-		pll5.output_clock_frequency = AFI_HALF_CLK_FREQ,
-		pll5.phase_shift = AFI_HALF_CLK_PHASE,
-		pll5.duty_cycle = 50;
 	 
 	generic_pll pll6 (
 		.refclk({pll_ref_clk}),
@@ -453,7 +431,7 @@ initial $display("Using %0s pll emif simulation models", FAST_SIM_MODEL ? "Fast"
 
 	assign afi_clk = pll_afi_clk;
 
-	assign afi_half_clk = pll_afi_half_clk;
+  assign afi_half_clk = 1'b0;
 
 
 endmodule

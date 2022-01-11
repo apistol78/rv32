@@ -16,7 +16,8 @@ module Video_tb(
 				o_rdata <= 32'h0;
 			end
 			else begin
-				$display("VIDEO %d (%s)", i_wdata[7:0], i_wdata[7:0]);
+				//$display("VIDEO %d (%s)", i_wdata[7:0], i_wdata[7:0]);
+				$write("%s", i_wdata[7:0]);
 			end
 		end
 	end

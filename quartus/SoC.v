@@ -137,14 +137,14 @@ module SoC(
       output             UART_TX
 );
 
-`define SOC_ENABLE_SRAM
+//`define SOC_ENABLE_SRAM
 `define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-	//wire clock = CLOCK_125_p; // CLOCK_50_B5B;
+	//wire clock = CLOCK_50_B5B;
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -153,7 +153,6 @@ module SoC(
 		.outclk_0(clock),
 		.locked()
 	);
-	
 
 	reg [31:0] cont = 0;
 	always@(posedge clock)
