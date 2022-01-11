@@ -52,7 +52,7 @@ module CPU_Fetch(
 
 	initial begin
 		state = 0;
-		pc = 0;
+		pc = 32'h0000009c;
 		icache_input_tag = 0;
 		o_tag = 0;
 		o_instruction = 0;
@@ -68,15 +68,17 @@ module CPU_Fetch(
 			o_instruction <= 0;
 			o_pc <= 0;
 		end
-		else if(!i_stall) begin
+		else begin // if(!i_stall) begin
 			case (state)
 				0: begin
-					icache_input_tag <= icache_input_tag + 1;
-					state <= 1;
+					if (!i_stall) begin
+						icache_input_tag <= icache_input_tag + 1;
+						state <= 1;
+					end
 				end
 
 				1: begin
-					if (icache_output_tag == icache_input_tag) begin
+					if (!i_stall && icache_output_tag == icache_input_tag) begin
 
 						o_tag <= icache_output_tag;
 						o_instruction <= icache_rdata;

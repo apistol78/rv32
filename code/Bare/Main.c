@@ -7,16 +7,34 @@ void main()
 {
 	hal_init();
 
+	for (uint32_t i = 0; i < 100; ++i)
+	{
+		printHex(i % 10);
+		print(" ");
+		printHex(i / 10);
+		printLn("");
+
+		printf("%d\n", i);
+	}
+
+		//printf("%d\n", i);
+
+	printLn("THE END");
+	for (;;);
+
+/*
 	printf("STARFIELD\n");
 
-	static int star[100][3];
+	int star[100][3];
 	for (int i = 0; i < 100; ++i)
 	{
 		star[i][0] = rand() % 320;
 		star[i][1] = rand() % 240;
-		star[i][2] = (rand() % 4) + 1;
+		star[i][2] = (rand() % 6) + 1;
 
-		printf("%d, %d, %d\n", star[i][0], star[i][1], star[i][2]);
+		printf("TEST\n");
+
+		//printf("%d, %d, %d\n", star[i][0], star[i][1], star[i][2]);
 	}
 
 	printf("RANDOMIZED...\n");
@@ -29,8 +47,7 @@ void main()
 	{
 		// clear
 		for (uint32_t i = 0; i < 320 * 240; ++i)
-			video[i] = cc;
-		cc += 0x01010101;
+			video[i] = 0x00000000;
 
 		// draw stars.
 		for (int i = 0; i < 100; ++i)
@@ -48,4 +65,5 @@ void main()
 		page = 1 - page;
 		*VIDEO_CTRL = (uint32_t)page;
 	}
+*/
 }

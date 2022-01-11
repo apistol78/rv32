@@ -107,8 +107,8 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	Memory rom(0x00010000);
-	Memory ram(0x00010000);
+	//Memory rom(0x00010000);
+	Memory ram(0x10000000);
 	Memory sram(0x00400000);
 	Memory sdram(0x20000000);
 	Video video;
@@ -119,8 +119,9 @@ int main(int argc, const char** argv)
 	Unknown sd(L"SD");
 
 	Bus bus;
-	bus.map(0x00000000, 0x00010000, &rom);
-	bus.map(0x00010000, 0x00010400, &ram);
+	// bus.map(0x00000000, 0x00010000, &rom);
+	// bus.map(0x00010000, 0x00010400, &ram);
+	bus.map(0x00000000, 0x10000000, &ram);
 	bus.map(0x10000000, 0x10400000, &sram);
 	bus.map(0x20000000, 0x40000000, &sdram);
 	bus.map(0x40000000, 0x50000000, &video);
@@ -155,7 +156,7 @@ int main(int argc, const char** argv)
 	}
 
 	// Lock ROM from being mutable.
-	rom.setReadOnly(true);
+	//rom.setReadOnly(true);
 
 	if (cmdLine.hasOption(L's', L"start"))
 	{

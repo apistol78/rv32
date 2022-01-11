@@ -3,7 +3,7 @@
 
 module BRAM #(
 	parameter WIDTH = 32,
-	parameter SIZE = 32'h400,
+	parameter SIZE = 32'h1000000,
 	parameter ADDR_LSH = 2
 )(
 	input wire i_clock,
@@ -15,7 +15,9 @@ module BRAM #(
 	output reg o_ready
 );
 
-	reg [WIDTH - 1:0] data [0:SIZE - 1];
+	reg [WIDTH - 1:0] data [0:32'h1000000]; // SIZE - 1];
+
+	initial $readmemh("Bare.vmem", data);
 
 	initial o_ready = 0;
 

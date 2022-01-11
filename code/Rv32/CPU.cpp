@@ -158,7 +158,7 @@ FormatU parseFormatU(uint32_t word)
 #define MEM_RD_U8(addr) m_dcache->readU8(addr);
 #define MEM_WR_U8(addr, value) m_dcache->writeU8(addr, value)
 
-#define TRACE(s) if (m_trace) { *m_trace << s << Endl; }
+#define TRACE(s) // if (m_trace) { *m_trace << s << Endl; }
 
 
 
@@ -207,6 +207,8 @@ void CPU::setSP(uint32_t sp)
 	m_registers[2] = sp;
 }
 
+static int count = 9468;
+
 bool CPU::tick()
 {
 	uint32_t word;
@@ -214,6 +216,12 @@ bool CPU::tick()
 	// if (m_pc == 0x20003038)
 	// 	log::info << L"memset called" << Endl;
 	
+	if (--count <= 0)
+	{
+		log::info << L"S5 = " << str(L"%08x", m_registers[21]) << Endl;
+		return false;
+	}
+
 	//word = getFromICache(m_pc);
 	//if (word == 0)
 	//{
@@ -222,7 +230,13 @@ bool CPU::tick()
 	//}
 
 	if (m_trace)
-		*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;
+	{
+		//*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;
+		*m_trace << str(L"%08x", m_pc);
+		for (int i = 1; i < 32; ++i)
+			*m_trace << L" " << str(L"%08x", m_registers[i]);
+		*m_trace << Endl;
+	}
 
 	if ((word & 0x3) == 0x3)
 		m_next = m_pc + 4;
@@ -238,8 +252,8 @@ bool CPU::tick()
 		return false;
 	}
 
-	if (m_trace)
-		*m_trace << L"STATE_DECODE_FINISH, PC: " << str(L"%08x", m_pc) << L", PC_NEXT: " << str(L"%08x", m_next) << Endl << Endl;
+	//if (m_trace)
+	//	*m_trace << L"STATE_DECODE_FINISH, PC: " << str(L"%08x", m_pc) << L", PC_NEXT: " << str(L"%08x", m_next) << Endl << Endl;
 
 	m_pc = m_next;
 	return true;
