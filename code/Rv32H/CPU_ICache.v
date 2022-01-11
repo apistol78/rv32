@@ -18,10 +18,10 @@ module CPU_ICache(
 );
 
 	reg [1:0] state;
-	reg [127:0] valid;
+	reg [255:0] valid;
 
 	reg cache_rw;
-	wire [6:0] cache_label = i_address[6:0];
+	wire [7:0] cache_label = i_address[7:0];
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 	wire cache_ready;
@@ -30,13 +30,13 @@ module CPU_ICache(
 	// we rely on address only.
 	BRAM #(
 		.WIDTH(64),
-		.SIZE(128),
+		.SIZE(256),
 		.ADDR_LSH(0)
 	) cache(
 		.i_clock(i_clock),
 		.i_request(1'b1),
 		.i_rw(cache_rw),
-		.i_address({ 25'b0, cache_label }),
+		.i_address({ 24'b0, cache_label }),
 		.i_wdata(cache_wdata),
 		.o_rdata(cache_rdata),
 		.o_ready(cache_ready)
@@ -48,7 +48,7 @@ module CPU_ICache(
 		o_output_tag = 0;
 		o_bus_request = 0;
 		state = 0;
-		valid = 128'b0;
+		valid = 256'b0;
 		cache_rw = 0;
 		cache_wdata = 0;
 	end
@@ -58,7 +58,7 @@ module CPU_ICache(
 			o_output_tag <= 0;
 			o_bus_request <= 0;
 			state <= 0;
-			valid <= 128'b0;
+			valid <= 256'b0;
 			cache_rw <= 0;
 			cache_wdata <= 0;
 		end
