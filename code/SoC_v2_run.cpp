@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
 	uint32_t lastPC = -1;
 
-	int32_t cd = 9467;
+	int32_t cd = 19467;
 
 	uint32_t lastA2 = -1;
 
@@ -43,16 +43,16 @@ int main(int argc, char **argv)
 
 		 	lastPC = tb->SoC_v2_tb__DOT__cpu__DOT__decode_pc;
 
-			if (cd < 80)
-			{
-				printf("%08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__decode_pc);
-				printf("A0 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[10]);
-				printf("A1 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[11]);
-				printf("A2 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[12]);
-				printf("S5 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[21]);
-				printf("S8 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[24]);
-				printf("T6 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[31]);
-			}
+			// if (cd < 80)
+			// {
+			// 	printf("%08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__decode_pc);
+			// 	printf("A0 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[10]);
+			// 	printf("A1 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[11]);
+			// 	printf("A2 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[12]);
+			// 	printf("S5 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[21]);
+			// 	printf("S8 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[24]);
+			// 	printf("T6 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[31]);
+			// }
 
 			if (--cd < 0)
 			{
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 				// printf("rs2 id = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__decode_inst_rs2);
 				// printf("fwd rs1 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__fwd_rs1);
 				// printf("fwd rs2 = %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__fwd_rs2);
-				break;
+			//	break;
 			}
 		}
 

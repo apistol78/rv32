@@ -1,0 +1,72 @@
+import(traktor)
+
+function parse(ln)
+    local t = {}
+    for w in string.gmatch(ln,'[^ ]+') do
+        table.insert(t, w)
+    end
+    return t
+end
+
+local cnames = {
+    "INSTRUCTION",
+    "RA",
+    "SP",
+    "GP",
+    "TP",
+    "T0", "T1", "T2",
+    "S0",
+    "S1",
+    "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7",
+    "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11",
+    "T3", "T4", "T5", "T6"
+}
+
+function main()
+
+    local fl = FileSystem.getInstance():open(Path("Trace.log"), File.FmRead)
+    local fr = FileSystem.getInstance():open(Path("trace_hw_2.txt"), File.FmRead)
+
+    if fl == nil or fr == nil then return end
+
+    local srl = StringReader(fl, Utf8Encoding())
+    local srr = StringReader(fr, Utf8Encoding())
+
+    local line = 1
+    local prev = nil
+
+    while true do
+        local rl = srl:readLine()
+        local rr = srr:readLine()
+        if rl == nil or rr == nil then break end
+
+        if rl ~= rr then
+            stdout:printLn("Line " .. line)
+
+            stdout:printLn(rl)
+            stdout:printLn(rr)
+            stdout:printLn()
+
+            local tl = parse(rl)
+            local tr = parse(rr)
+
+            assert(#tl == #tr)
+            for i = 1, #tl do
+                if tl[i] ~= tr[i] then
+                    stdout:printLn("Column " .. i .. " mismatch (" .. cnames[i] .. ") ")
+                    stdout:printLn("Left  \"" .. tl[i] .. "\"")
+                    stdout:printLn("Right \"" .. tr[i] .. "\"")
+                end
+            end
+
+            break
+        end
+
+        line = line + 1
+        prev = rl
+    end
+
+    fl:close()
+    fr:close()
+
+end

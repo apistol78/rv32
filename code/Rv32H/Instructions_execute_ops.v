@@ -114,7 +114,8 @@ else if (`EXECUTE_OP == OP_MULHU) begin
 		`EXECUTE_DONE;
 	end
 	*/
-	`RD <= (`RS1 * `RS2) >> 32;
+	`RD <= ({32'b0, `RS1} * {32'b0, `RS2}) >> 32;
+	//$display("MULHU (%x) %x * %x = %x", `PC, (`RS1), (`RS2), ({32'b0, `RS1} * {32'b0, `RS2}) >> 32);
 	`EXECUTE_DONE;			
 end
 
@@ -127,7 +128,9 @@ else if (`EXECUTE_OP == OP_REM) begin
 		`EXECUTE_DONE;
 	end
 	*/
+	//$display("REM %d %% %d = %d", $signed(`RS1), $signed(`RS2), $signed(`RS1) % $signed(`RS2));
 	`RD <= $signed(`RS1) % $signed(`RS2);
+	`EXECUTE_DONE;
 end
 
 // REMU
@@ -139,10 +142,9 @@ else if (`EXECUTE_OP == OP_REMU) begin
 		`EXECUTE_DONE;
 	end
 	*/
-	if (`RS2 != 0)
-		`RD <= `RS1 % `RS2;
-	else
-		`RD <= `RS1;
+	//$display("REMU (%x) %d %% %d = %d", `PC, (`RS1), (`RS2), (`RS1) % (`RS2));
+	`RD <= `RS1 % `RS2;
+	`EXECUTE_DONE;
 end
 
 // SB
