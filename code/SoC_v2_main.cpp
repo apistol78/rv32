@@ -16,7 +16,8 @@ VSoC_v2_tb* create_soc()
 
 void evaluate_single(VSoC_v2_tb* tb)
 {
-	while (tb->SoC_v2_tb__DOT__cpu__DOT__writeback_tag == 0)
+	uint32_t from = tb->SoC_v2_tb__DOT__cpu__DOT__writeback_tag;
+	while (tb->SoC_v2_tb__DOT__cpu__DOT__writeback_tag == from)
 	{
 		tb->i_clock = 1;
 		tb->eval();
@@ -30,6 +31,8 @@ void evaluate_single(VSoC_v2_tb* tb)
 #define S0 8
 #define S1 9
 #define S2 18
+#define S3 19
+#define A2 12
 
 int32_t rnd32()
 {
@@ -556,6 +559,24 @@ bool verify_REMU()
 
 bool verify_SB()
 {
+	auto tb = create_soc();
+	tb->SoC_v2_tb__DOT__ram__DOT__data[0] = 0x00000000;
+	tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S1] = 0x12;
+	tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00010437; // lui	s0,0x10
+	tb->SoC_v2_tb__DOT__rom__DOT__data[1] = 0x00240413; // addi	s0,s0,2 # 10002 
+	tb->SoC_v2_tb__DOT__rom__DOT__data[2] = 0xfe940fa3; // sb	s1,-1(s0)
+
+	evaluate_single(tb);
+	evaluate_single(tb);
+	evaluate_single(tb);
+
+	printf("%08x\n", tb->SoC_v2_tb__DOT__ram__DOT__data[0]);
+
+	if (tb->SoC_v2_tb__DOT__ram__DOT__data[0] != 0x00001200)
+		return false;
+
+	delete tb;
 	return true;
 }
 
@@ -766,6 +787,24 @@ bool verify_SRL()
 
 bool verify_SRLI()
 {
+	auto tb = create_soc();
+	tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2] = 0x99999998;
+	tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2] = 0x99999998;
+	tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x00165613; // srli	a2,a2,0x1
+
+	evaluate_single(tb);
+
+	printf("%08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2]);
+
+	// printf("%d -- %d\n", s1 << 5,
+	// tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0]);
+
+	if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[A2] != (0x99999998 >> 1))
+		return false;
+
+	delete tb;
+
+/*
 	uint32_t s1 = rnd32();
 
 	auto tb = create_soc();
@@ -782,6 +821,7 @@ bool verify_SRLI()
 		return false;
 
 	delete tb;
+*/
 	return true;
 }
 
@@ -848,6 +888,53 @@ bool verify_XORI()
 	return true;
 }
 
+bool verify_ENDIAN()
+{
+	{
+		auto tb = create_soc();
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S1] = 0;
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
+		tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
+
+		tb->SoC_v2_tb__DOT__rom__DOT__data[0] = 0x000102b7; // lui	t0,0x10
+		tb->SoC_v2_tb__DOT__rom__DOT__data[1] = 0x11223437; // lui	s0,0x11223
+		tb->SoC_v2_tb__DOT__rom__DOT__data[2] = 0x34440413;	// addi	s0,s0,836 # 11223344
+		tb->SoC_v2_tb__DOT__rom__DOT__data[3] = 0x0082a023;	// sw	s0,0(t0) # 0
+		tb->SoC_v2_tb__DOT__rom__DOT__data[4] = 0x00028403;	// lb	s0,0(t0) # 0
+		tb->SoC_v2_tb__DOT__rom__DOT__data[5] = 0x00128483;	// lb	s1,1(t0) # 0
+		tb->SoC_v2_tb__DOT__rom__DOT__data[6] = 0x00228903;	// lb	s2,2(t0) # 0
+		tb->SoC_v2_tb__DOT__rom__DOT__data[7] = 0x00328983;	// lb	s3,3(t0) # 0
+
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+		evaluate_single(tb);
+
+		// printf("S0 %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0]);
+		// printf("S1 %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S1]);
+		// printf("S2 %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S2]);
+		// printf("S3 %08x\n", tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S3]);
+
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S0] != 0x44)
+			return false;
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S1] != 0x33)
+			return false;
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S2] != 0x22)
+			return false;
+		if (tb->SoC_v2_tb__DOT__cpu__DOT__registers__DOT__r[S3] != 0x11)
+			return false;
+
+		delete tb;
+	}
+
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)())
@@ -872,48 +959,49 @@ int main(int argc, char **argv)
 	CHECK(verify_ADD);
 	CHECK(verify_ADDI);
 	CHECK(verify_AND);
-	CHECK(verify_ANDI);
-	CHECK(verify_AUIPC);
-	CHECK(verify_BEQ);
-	CHECK(verify_BGE);
-	CHECK(verify_BGEU);
-	CHECK(verify_BLT);
-	CHECK(verify_BLTU);
-	CHECK(verify_BNE);
-	CHECK(verify_DIV);
-	CHECK(verify_UDIV);
-	CHECK(verify_JAL);
-	CHECK(verify_JALR);
-	CHECK(verify_LB);
-	CHECK(verify_LBU);
-	CHECK(verify_LH);
-	CHECK(verify_LHU);
-	CHECK(verify_LUI);
-	CHECK(verify_LW);
-	CHECK(verify_LWU);
-	CHECK(verify_MUL);
-	CHECK(verify_MULH);
-	CHECK(verify_MULHU);
-	CHECK(verify_OR);
-	CHECK(verify_ORI);
-	CHECK(verify_REM);
-	CHECK(verify_REMU);
-	CHECK(verify_SB);
-	CHECK(verify_SH);
-	CHECK(verify_SLL);
-	CHECK(verify_SLLI);
-	CHECK(verify_SLT);
-	CHECK(verify_SLTI);
-	CHECK(verify_SLTIU);
-	CHECK(verify_SLTU);
-	CHECK(verify_SRA);
-	CHECK(verify_SRAI);
-	CHECK(verify_SRL);
+	// CHECK(verify_ANDI);
+	// CHECK(verify_AUIPC);
+	// CHECK(verify_BEQ);
+	// CHECK(verify_BGE);
+	// CHECK(verify_BGEU);
+	// CHECK(verify_BLT);
+	// CHECK(verify_BLTU);
+	// CHECK(verify_BNE);
+	// CHECK(verify_DIV);
+	// CHECK(verify_UDIV);
+	// CHECK(verify_JAL);
+	// CHECK(verify_JALR);
+	// CHECK(verify_LB);
+	// CHECK(verify_LBU);
+	// CHECK(verify_LH);
+	// CHECK(verify_LHU);
+	// CHECK(verify_LUI);
+	// CHECK(verify_LW);
+	// CHECK(verify_LWU);
+	// CHECK(verify_MUL);
+	// CHECK(verify_MULH);
+	// CHECK(verify_MULHU);
+	// CHECK(verify_OR);
+	// CHECK(verify_ORI);
+	// CHECK(verify_REM);
+	// CHECK(verify_REMU);
+	// CHECK(verify_SB);
+	// CHECK(verify_SH);
+	// CHECK(verify_SLL);
+	// CHECK(verify_SLLI);
+	// CHECK(verify_SLT);
+	// CHECK(verify_SLTI);
+	// CHECK(verify_SLTIU);
+	// CHECK(verify_SLTU);
+	// CHECK(verify_SRA);
+	// CHECK(verify_SRAI);
+	// CHECK(verify_SRL);
 	CHECK(verify_SRLI);
-	CHECK(verify_SUB);
-	CHECK(verify_SW);
-	CHECK(verify_XOR);
-	CHECK(verify_XORI);
+	// CHECK(verify_SUB);
+	// CHECK(verify_SW);
+	// CHECK(verify_XOR);
+	// CHECK(verify_XORI);
+	// CHECK(verify_ENDIAN);
 
 	if (success)
 		printf("SUCCESS!\n");
