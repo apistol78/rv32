@@ -248,11 +248,11 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
 				const uint32_t addr = shdr[i].sh_addr;
 
-				for (uint32_t j = 0; j < shdr[i].sh_size; j += 64)
+				for (uint32_t j = 0; j < shdr[i].sh_size; j += 128)
 				{
-					log::info << L"TEXT " << str(L"%08x", addr) << L"..." << Endl;
+					log::info << L"TEXT " << str(L"%08x", addr + j) << L"..." << Endl;
 
-					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 64);
+					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 128);
 					if (!sendLine(serial, addr + j, pbits + j, cnt))
 						return false;
 				}
