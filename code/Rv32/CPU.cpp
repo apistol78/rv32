@@ -1,10 +1,10 @@
 #include <Core/Io/OutputStream.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
-#include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
 #include "Rv32/DCache.h"
 #include "Rv32/Helpers.h"
+#include "Rv32/ICache.h"
 
 using namespace traktor;
 
@@ -160,27 +160,6 @@ FormatU parseFormatU(uint32_t word)
 
 #define TRACE(s) // if (m_trace) { *m_trace << s << Endl; }
 
-
-
-uint32_t icache[64][2];
-
-uint32_t getFromICache(uint32_t pc)
-{
-	uint32_t slot = pc & 63;
-	if (icache[slot][0] == pc)
-		return icache[slot][1];
-	else
-		return 0;
-}
-
-void putIntoICache(uint32_t pc, uint32_t word)
-{
-	uint32_t slot = pc & 63;
-	icache[slot][0] = pc;
-	icache[slot][1] = word;
-}
-
-
 }
 
 T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
@@ -188,6 +167,7 @@ T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
 CPU::CPU(Bus* bus, OutputStream* trace)
 :   m_bus(bus)
 ,	m_dcache(new DCache(bus))
+,	m_icache(new ICache(bus))
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
 {
@@ -207,33 +187,14 @@ void CPU::setSP(uint32_t sp)
 	m_registers[2] = sp;
 }
 
-static int count = 9468;
-
 bool CPU::tick()
 {
-	uint32_t word;
-
-	// if (m_pc == 0x20003038)
-	// 	log::info << L"memset called" << Endl;
-	
-	if (--count <= 0)
-	{
-		log::info << L"S5 = " << str(L"%08x", m_registers[21]) << Endl;
-		return false;
-	}
-
-	//word = getFromICache(m_pc);
-	//if (word == 0)
-	//{
-		word = m_bus->readU32(m_pc);
-	//	putIntoICache(m_pc, word);
-	//}
+	uint32_t word = m_icache->readU32(m_pc);
 
 	if (m_trace)
 	{
-		//*m_trace << L"STATE_DECODE, PC: " << str(L"%08x", m_pc) << L", SP: " << str(L"%08x", m_registers[2]) << Endl;
 		*m_trace << str(L"%08x", m_pc);
-		for (int i = 1; i < 32; ++i)
+		for (int32_t i = 1; i < 32; ++i)
 			*m_trace << L" " << str(L"%08x", m_registers[i]);
 		*m_trace << Endl;
 	}
@@ -251,9 +212,6 @@ bool CPU::tick()
 		log::error << L"Decode failed at PC " << str(L"%08x", m_pc) << Endl;
 		return false;
 	}
-
-	//if (m_trace)
-	//	*m_trace << L"STATE_DECODE_FINISH, PC: " << str(L"%08x", m_pc) << L", PC_NEXT: " << str(L"%08x", m_next) << Endl << Endl;
 
 	m_pc = m_next;
 	return true;

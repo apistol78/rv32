@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/CRC.h"
 #include "Runtime/HAL/Print.h"

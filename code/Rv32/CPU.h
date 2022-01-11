@@ -12,6 +12,7 @@ class OutputStream;
 
 class Bus;
 class DCache;
+class ICache;
 
 class CPU : public traktor::Object
 {
@@ -33,6 +34,7 @@ public:
 private:
     traktor::Ref< Bus > m_bus;
     traktor::Ref< DCache > m_dcache;
+    traktor::Ref< ICache > m_icache;
     traktor::Ref< traktor::OutputStream > m_trace;
     uint32_t m_pc;
     uint32_t m_next;
