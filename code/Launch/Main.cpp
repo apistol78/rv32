@@ -521,13 +521,7 @@ int main(int argc, const char** argv)
 	if (commandLine.hasOption('m', L"memcheck"))
 	{
 		bool result = true;
-
-		// SRAM
-		result &= memcheck(serial, 0x10000000, 0x10000100);
-
-		// SDRAM
 		result &= memcheck(serial, 0x20000000, 0x28000000);
-
 		if (!result)
 			return 1;
 	}
