@@ -21,9 +21,9 @@ module SRAM_interface(
 );
 	// Number of cycles for entire transaction, must to be multiple of 2.
 	// 50 MHz -> 8
-	localparam CYCLES = 18;
+	localparam CYCLES = 8;
 
-	reg [4:0] count;
+	reg [15:0] count;
 	reg [15:0] wdata;
 	
 	initial begin
@@ -60,7 +60,7 @@ module SRAM_interface(
 	// Output SRAM write enable, memory is stored on positive edge.
 	always @(*) begin
 		if (i_request && i_rw) begin
-			if (count == 0 || count == CYCLES / 2)
+			if (count == 0 || count == 1 || count == CYCLES / 2 || count == CYCLES / 2 + 1)
 				SRAM_WE_n = 0;
 			else
 				SRAM_WE_n = 1;
@@ -85,9 +85,9 @@ module SRAM_interface(
 		else begin
 			if (i_request) begin
 				count <= count + 1;
-				if (count == 1)
+				if (count == 2)
 					o_rdata[15:0] <= sram_d;
-				else if (count == CYCLES / 2 + 1)
+				else if (count == CYCLES / 2 + 2)
 					o_rdata[31:16] <= sram_d;
 			end
 			else

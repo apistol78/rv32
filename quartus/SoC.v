@@ -137,7 +137,6 @@ module SoC(
       output             UART_TX
 );
 
-//`define SOC_ENABLE_SRAM
 `define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
@@ -175,28 +174,75 @@ module SoC(
 
   
 `ifdef SOC_ENABLE_VGA
-	wire vga_enable;
-	wire [15:0] vga_address;
-  
-	// VRAM
+	// Video memory.
+	wire video_sram_request;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+
+	SRAM_interface video_sram(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready),
+		// ---
+		.SRAM_A(SRAM_A),
+		.SRAM_D(SRAM_D),
+		.SRAM_CE_n(SRAM_CE_n),
+		.SRAM_OE_n(SRAM_OE_n),
+		.SRAM_WE_n(SRAM_WE_n),
+		.SRAM_LB_n(SRAM_LB_n),
+		.SRAM_UB_n(SRAM_UB_n)
+	);
+	/*
+	BRAM #(
+		.WIDTH(32),
+		.SIZE(320*200),
+		.ADDR_LSH(2)
+	) video_sram(
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready)
+	);
+	*/
+
+	// Video controller.
 	wire vram_select;
 	wire [31:0] vram_address;
 	wire vram_ready;
-	VRAM vram(
+	VideoBus video_bus(
 		.i_clock(clock),
-	
+		
+		.i_cpu_request(vram_select && cpu_request),
+		.i_cpu_address(vram_address),
+		.i_cpu_wdata(cpu_wdata),
+		.o_cpu_ready(vram_ready),
+		
+		.i_video_request(vga_enable),
 		.i_video_address(vga_address),
-		.i_video_enable(vga_enable),
 		.o_video_rdata(HDMI_TX_D),
 		
-		.i_request(vram_select && cpu_request),
-		.i_rw(cpu_rw),
-		.i_address(vram_address),
-		.i_wdata(cpu_wdata[23:0]),
-		.o_ready(vram_ready)
+		.o_mem_request(video_sram_request),
+		.o_mem_rw(video_sram_rw),
+		.o_mem_address(video_sram_address),
+		.o_mem_wdata(video_sram_wdata),
+		.i_mem_rdata(video_sram_rdata),
+		.i_mem_ready(video_sram_ready)
 	);
   
-	// VGA signal generator
+	// Video signal generator
+	wire vga_enable;
+	wire [15:0] vga_address;
 	VGA #(
 		.PRESCALE(100000000 / 25000000)
 	) vga(
@@ -238,32 +284,6 @@ module SoC(
 		.o_rdata(ram_rdata),
 		.o_ready(ram_ready)
 	);
-	
-`ifdef SOC_ENABLE_SRAM
-	// SRAM
-	wire sram_select;
-	wire [31:0] sram_address;
-	wire [31:0] sram_rdata;
-	wire sram_ready;
-	SRAM_interface sram(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(sram_select && cpu_request),
-		.i_rw(cpu_rw),
-		.i_address(sram_address),
-		.i_wdata(cpu_wdata),
-		.o_rdata(sram_rdata),
-		.o_ready(sram_ready),
-		// ---
-		.SRAM_A(SRAM_A),
-		.SRAM_D(SRAM_D),
-		.SRAM_CE_n(SRAM_CE_n),
-		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n),
-		.SRAM_LB_n(SRAM_LB_n),
-		.SRAM_UB_n(SRAM_UB_n)
-	);
-`endif
 
 `ifdef SOC_ENABLE_SDRAM
 	// SDRAM
@@ -429,11 +449,6 @@ module SoC(
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
 	assign ram_address = cpu_address - 32'h00010000;
 
-`ifdef SOC_ENABLE_SRAM
-	assign sram_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram_address = cpu_address - 32'h10000000;
-`endif
-
 `ifdef SOC_ENABLE_SDRAM
 	assign sdram_select = (cpu_address >= 32'h20000000 && cpu_address < 32'h40000000);
 	assign sdram_address = cpu_address - 32'h20000000;
@@ -492,9 +507,6 @@ module SoC(
 	assign cpu_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
-`ifdef SOC_ENABLE_SRAM
-		sram_select ? sram_ready :
-`endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_ready :
 `endif
