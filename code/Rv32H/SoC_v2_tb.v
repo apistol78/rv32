@@ -1,6 +1,7 @@
 `include "CPU_v2.v"
 `include "CPU_ALU.v"
 `include "CPU_BusAccess.v"
+`include "CPU_DCache.v"
 `include "CPU_Decode.v"
 `include "CPU_Divide.v"
 `include "CPU_Execute.v"
@@ -228,7 +229,7 @@ module SoC_v2_tb(
 
 	wire led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 
-	wire uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
+	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
 
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
 	assign gpio_address = cpu_address - 32'h50000020;

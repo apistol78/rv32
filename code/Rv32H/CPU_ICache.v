@@ -21,7 +21,7 @@ module CPU_ICache(
 	reg [255:0] valid;
 
 	reg cache_rw;
-	wire [7:0] cache_label = i_address[7:0];
+	wire [7:0] cache_label = i_address[9:2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 	wire cache_ready;

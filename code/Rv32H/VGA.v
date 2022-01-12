@@ -70,7 +70,7 @@ module VGA #(
 
 	always @(posedge i_clock) begin
 		if (vga_h < 640 && vga_v < 400) begin
-			o_vga_address <= { 7'b0, vga_h[9:1] + vga_v[9:1] * 320 };
+			o_vga_address <= { 7'b0, vga_h[9:1] + vga_v[9:1] * 16'd320 };
 			o_data_enable <= 1;
 		end
 		else
