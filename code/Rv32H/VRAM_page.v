@@ -17,7 +17,7 @@ module VRAM_page(
 );
 
 	// rrrgggbb
-	reg [23:0] data [0:320 * 240];
+	reg [23:0] data [0:320 * 200];
 	
 	always @ (posedge i_clock) begin
 		if (i_request && i_rw) begin
