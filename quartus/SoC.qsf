@@ -761,6 +761,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to HEX3[5]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to HEX3[6]
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE SoC.stp
+set_global_assignment -name VERILOG_FILE ../code/Rv32H/CPU_DCache.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/FIFO64.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/VideoBus.v
 set_global_assignment -name VERILOG_FILE ../code/Rv32H/Timer.v
