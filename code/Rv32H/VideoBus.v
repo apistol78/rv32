@@ -32,7 +32,7 @@ module VideoBus(
 	wire [63:0] fifo_rdata;
 
 	FIFO64 #(
-		.DEPTH(4096)
+		.DEPTH(16384)
 	) fifo(
 		.i_clock(i_clock),
 		.o_empty(fifo_empty),

@@ -128,6 +128,25 @@ module SoC_v2_tb(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 
+	// SDRAM
+	wire sdram_select;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+	BRAM #(
+		.WIDTH(32),
+		.SIZE(32'h100000),
+		.ADDR_LSH(2)
+	) sdram(
+		.i_clock(clock),
+		.i_request(sdram_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_address(sdram_address),
+		.i_wdata(cpu_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready)
+	);
+
 	// UART
 	wire uart_select;
 	wire [31:0] uart_rdata;
@@ -227,6 +246,9 @@ module SoC_v2_tb(
 	assign sram_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
 	assign sram_address = cpu_address - 32'h10000000;
 
+	assign sdram_select = (cpu_address >= 32'h20000000 && cpu_address < 32'h40000000);
+	assign sdram_address = cpu_address - 32'h20000000;
+
 	wire led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
 
 	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
@@ -242,6 +264,7 @@ module SoC_v2_tb(
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 		sram_select ? sram_rdata :
+		sdram_select ? sdram_rdata :
 		uart_select ? uart_rdata :
 		gpio_select ? gpio_rdata :
 		i2c_select ? i2c_rdata :
@@ -252,6 +275,7 @@ module SoC_v2_tb(
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		sram_select ? sram_ready :
+		sdram_select ? sdram_ready :
 		led_select ? 1'b1 :
 		uart_select ? 1'b1 :
 		gpio_select ? gpio_ready :

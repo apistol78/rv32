@@ -443,7 +443,7 @@ module SoC(
 	
 	//=====================================
 
-	assign rom_select = (cpu_address >= 32'h00000000 && cpu_address < 32'h00010000);
+	assign rom_select = (cpu_address < 32'h00010000);
 	assign rom_address = cpu_address - 32'h00000000;
 
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);

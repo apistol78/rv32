@@ -78,11 +78,11 @@ module IP_FIFO64 (
 	defparam
 		scfifo_component.add_ram_output_register = "OFF",
 		scfifo_component.intended_device_family = "Cyclone V",
-		scfifo_component.lpm_numwords = 4096,
+		scfifo_component.lpm_numwords = 16384,
 		scfifo_component.lpm_showahead = "OFF",
 		scfifo_component.lpm_type = "scfifo",
 		scfifo_component.lpm_width = 64,
-		scfifo_component.lpm_widthu = 12,
+		scfifo_component.lpm_widthu = 14,
 		scfifo_component.overflow_checking = "OFF",
 		scfifo_component.underflow_checking = "OFF",
 		scfifo_component.use_eab = "ON";
@@ -99,7 +99,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "1"
 // Retrieval info: PRIVATE: Clock NUMERIC "0"
-// Retrieval info: PRIVATE: Depth NUMERIC "4096"
+// Retrieval info: PRIVATE: Depth NUMERIC "16384"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
@@ -132,7 +132,7 @@ endmodule
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "scfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "64"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "12"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "14"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "OFF"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "OFF"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
