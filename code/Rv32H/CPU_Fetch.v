@@ -86,7 +86,7 @@ module CPU_Fetch(
 
 						pc <= pc + 4;
 
-						if (is_BRANCH) begin
+						if (is_JUMP || is_JUMP_CONDITIONAL) begin
 							// Branch instruction, need to wait
 							// for an explicit "goto" signal before
 							// we can continue feeding the pipeline.

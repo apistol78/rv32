@@ -201,7 +201,7 @@ endmodule
 // Retrieval info: 	<generic name="MEM_TRRD_NS" value="10.0" />
 // Retrieval info: 	<generic name="MEM_TRTP_NS" value="7.5" />
 // Retrieval info: 	<generic name="RATE" value="Full" />
-// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="350.0" />
+// Retrieval info: 	<generic name="MEM_CLK_FREQ" value="400.0" />
 // Retrieval info: 	<generic name="USE_MEM_CLK_FREQ" value="false" />
 // Retrieval info: 	<generic name="FORCE_DQS_TRACKING" value="AUTO" />
 // Retrieval info: 	<generic name="FORCE_SHADOW_REGS" value="AUTO" />

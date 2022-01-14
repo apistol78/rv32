@@ -12,7 +12,7 @@ module VideoBus(
 
 	// Video
 	input wire i_video_request,
-	input wire [31:0] i_video_address,
+	input wire [15:0] i_video_address,
 	output reg [31:0] o_video_rdata,
 
 	// Memory
@@ -32,7 +32,7 @@ module VideoBus(
 	wire [63:0] fifo_rdata;
 
 	FIFO64 #(
-		.DEPTH(16384)
+		.DEPTH(1024)
 	) fifo(
 		.i_clock(i_clock),
 		.o_empty(fifo_empty),
@@ -44,6 +44,7 @@ module VideoBus(
 	);
 
 	reg [2:0] state;
+	reg last_video_address;
 
 	initial begin
 		o_cpu_ready = 1'b0;
@@ -56,6 +57,7 @@ module VideoBus(
 		fifo_write = 1'b0;
 		fifo_read = 1'b0;
 		state = 0;
+		last_video_address = 1;
 	end
 
 	// Transfer from CPU to FIFO.
@@ -86,10 +88,13 @@ module VideoBus(
 					end
 				end
 				else begin
-					o_mem_request <= 1'b1;
-					o_mem_rw <= 1'b0;
-					o_mem_address <= { i_video_address, 2'b0 };
-					state <= 3;
+					if (i_video_address[0] != last_video_address) begin
+						o_mem_request <= 1'b1;
+						o_mem_rw <= 1'b0;
+						o_mem_address <= { i_video_address, 2'b0 };
+						last_video_address <= i_video_address[0];
+						state <= 3;
+					end
 				end
 			end
 

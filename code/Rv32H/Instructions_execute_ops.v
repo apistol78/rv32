@@ -27,66 +27,6 @@ else if (`EXECUTE_OP == OP_DIVU) begin
 	end
 end
 
-// EBREAK
-else if (`EXECUTE_OP == OP_EBREAK) begin
-	$finish;
-end
-
-// ECALL
-else if (`EXECUTE_OP == OP_ECALL) begin
-	`EXECUTE_DONE;
-end
-
-// JAL
-else if (`EXECUTE_OP == OP_JAL) begin
-	`RD <= `PC + 4;
-	`GOTO($signed(`PC) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// JALR
-else if (`EXECUTE_OP == OP_JALR) begin
-	`RD <= `PC + 4;
-	`GOTO(($signed(`RS1) + $signed(`IMM)) & ~1);
-	`EXECUTE_DONE;
-end
-
-// LB
-else if (`EXECUTE_OP == OP_LB) begin
-	`MEM_READ_SB($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// LBU
-else if (`EXECUTE_OP == OP_LBU) begin
-	`MEM_READ_UB($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// LH
-else if (`EXECUTE_OP == OP_LH) begin
-	`MEM_READ_SH($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// LHU
-else if (`EXECUTE_OP == OP_LHU) begin
-	`MEM_READ_UH($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// LW
-else if (`EXECUTE_OP == OP_LW) begin
-	`MEM_READ_W($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
-// LWU
-else if (`EXECUTE_OP == OP_LWU) begin
-	`MEM_READ_W($signed(`RS1) + $signed(`IMM));
-	`EXECUTE_DONE;
-end
-
 // MUL
 else if (`EXECUTE_OP == OP_MUL) begin
 	if (`CYCLE == 0) begin
@@ -111,7 +51,6 @@ else if (`EXECUTE_OP == OP_MULH) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
-	//`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
 end
 
 // MULHU
@@ -125,7 +64,6 @@ else if (`EXECUTE_OP == OP_MULHU) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
-	//`RD <= ({32'b0, `RS1} * {32'b0, `RS2}) >> 32;
 end
 
 // REM
@@ -139,7 +77,6 @@ else if (`EXECUTE_OP == OP_REM) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	// `RD <= $signed(`RS1) % $signed(`RS2);
 end
 
 // REMU
@@ -153,23 +90,4 @@ else if (`EXECUTE_OP == OP_REMU) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
-	// `RD <= `RS1 % `RS2;
-end
-
-// SB
-else if (`EXECUTE_OP == OP_SB) begin
-	`MEM_WRITE_B($signed(`RS1) + $signed(`IMM), `RS2);
-	`EXECUTE_DONE;
-end
-
-// SH
-else if (`EXECUTE_OP == OP_SH) begin
-	`MEM_WRITE_H($signed(`RS1) + $signed(`IMM), `RS2);
-	`EXECUTE_DONE;
-end
-
-// SW
-else if (`EXECUTE_OP == OP_SW) begin
-	`MEM_WRITE_W($signed(`RS1) + $signed(`IMM), `RS2);
-	`EXECUTE_DONE;
 end

@@ -13,9 +13,18 @@ wire [3:0] alu_operation =
 	is_BLT   ? `OP_SIGNED_LESS_THAN       :
 	is_BLTU  ? `OP_UNSIGNED_LESS_THAN     :
 	is_BNE   ? `OP_NOT_EQUAL              :
+	is_JAL   ? `OP_SIGNED_ADD             :
+	is_JALR  ? `OP_SIGNED_ADD             :
+	is_LB    ? `OP_SIGNED_ADD             :
+	is_LBU   ? `OP_SIGNED_ADD             :
+	is_LH    ? `OP_SIGNED_ADD             :
+	is_LHU   ? `OP_SIGNED_ADD             :
 	is_LUI   ? `OP_UNSIGNED_ADD           :
+	is_LW    ? `OP_SIGNED_ADD             :
 	is_OR    ? `OP_OR                     :
 	is_ORI   ? `OP_OR                     :
+	is_SB    ? `OP_SIGNED_ADD             :
+	is_SH    ? `OP_SIGNED_ADD             :
 	is_SLL   ? `OP_SHIFT_LEFT             :
 	is_SLLI  ? `OP_SHIFT_LEFT             :
 	is_SLT   ? `OP_SIGNED_LESS_THAN       :
@@ -27,6 +36,7 @@ wire [3:0] alu_operation =
 	is_SRL   ? `OP_SHIFT_RIGHT            :
 	is_SRLI  ? `OP_SHIFT_RIGHT            :
 	is_SUB   ? `OP_SIGNED_SUB             :
+	is_SW    ? `OP_SIGNED_ADD             :
 	is_XOR   ? `OP_XOR                    :
 	is_XORI  ? `OP_XOR                    :
 	0;
@@ -43,9 +53,18 @@ wire [2:0] alu_operand1 =
 	is_BLT   ? `RS1  :
 	is_BLTU  ? `RS1  :
 	is_BNE   ? `RS1  :
+	is_JAL   ? `PC   :
+	is_JALR  ? `RS1  :
+	is_LB    ? `RS1  :
+	is_LBU   ? `RS1  :
+	is_LH    ? `RS1  :
+	is_LHU   ? `RS1  :
 	is_LUI   ? `IMM  :
+	is_LW    ? `RS1  :
 	is_OR    ? `RS1  :
 	is_ORI   ? `RS1  :
+	is_SB    ? `RS1  :
+	is_SH    ? `RS1  :
 	is_SLL   ? `RS1  :
 	is_SLLI  ? `RS1  :
 	is_SLT   ? `RS1  :
@@ -57,6 +76,7 @@ wire [2:0] alu_operand1 =
 	is_SRL   ? `RS1  :
 	is_SRLI  ? `RS1  :
 	is_SUB   ? `RS1  :
+	is_SW    ? `RS1  :
 	is_XOR   ? `RS1  :
 	is_XORI  ? `RS1  :
 	0;
@@ -73,9 +93,18 @@ wire [2:0] alu_operand2 =
 	is_BLT   ? `RS2  :
 	is_BLTU  ? `RS2  :
 	is_BNE   ? `RS2  :
+	is_JAL   ? `IMM  :
+	is_JALR  ? `IMM  :
+	is_LB    ? `IMM  :
+	is_LBU   ? `IMM  :
+	is_LH    ? `IMM  :
+	is_LHU   ? `IMM  :
 	is_LUI   ? `ZERO :
+	is_LW    ? `IMM  :
 	is_OR    ? `RS2  :
 	is_ORI   ? `IMM  :
+	is_SB    ? `IMM  :
+	is_SH    ? `IMM  :
 	is_SLL   ? `RS2  :
 	is_SLLI  ? `IMM  :
 	is_SLT   ? `RS2  :
@@ -87,6 +116,7 @@ wire [2:0] alu_operand2 =
 	is_SRL   ? `RS2  :
 	is_SRLI  ? `IMM  :
 	is_SUB   ? `RS2  :
+	is_SW    ? `IMM  :
 	is_XOR   ? `RS2  :
 	is_XORI  ? `IMM  :
 	0;

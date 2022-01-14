@@ -5,7 +5,7 @@ module GPIO (
 	input wire i_clock,
 	input wire i_request,
 	input wire i_rw,
-	input wire [31:0] i_address,
+	input wire [1:0] i_address,
 	input wire [31:0] i_wdata,
 	output reg [31:0] o_rdata,
 	output reg o_ready,
@@ -24,18 +24,18 @@ module GPIO (
 	always @(posedge i_clock) begin
 		if (i_request) begin
 			if (!i_rw) begin
-				if (i_address[3:0] == 4'h0) begin	// ctrl
+				if (i_address == 2'h0) begin	// ctrl
 					o_rdata <= { 24'h0, ctrl };
 				end
-				else if (i_address[3:0] == 4'h4) begin	// output
+				else if (i_address == 2'h1) begin	// output
 					o_rdata <= { 24'h0, outd };
 				end			
 			end
 			else begin	// write
-				if (i_address[3:0] == 4'h0) begin	// ctrl
+				if (i_address == 2'h0) begin	// ctrl
 					ctrl <= i_wdata[7:0];
 				end
-				else if (i_address[3:0] == 4'h4) begin	// output
+				else if (i_address == 2'h1) begin	// output
 					outd <= i_wdata[7:0];
 				end
 			end

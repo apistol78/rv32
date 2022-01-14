@@ -1,10 +1,10 @@
 
 // Tag size, wider is useful for debugging but no more than a
 // single bit should be necessary.
-`define TAG_SIZE                    7:0
+`define TAG_SIZE                    3:0
 
 // Multiply and divide
-`define MUL_CYCLE_LATENCY           8
+`define MUL_CYCLE_LATENCY           6
 `define DIV_CYCLE_LATENCY           16
 
 // ALU operations

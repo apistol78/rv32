@@ -2,6 +2,9 @@
 
 `timescale 1ns/1ns
 
+// 5831 ALUT
+// 5178 DLR
+
 module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,				// CPU clock
@@ -12,7 +15,10 @@ module CPU_v2 (
 	input wire i_bus_ready,				// IO request ready.
 	output wire [31:0] o_bus_address,	// Address
 	input wire [31:0] i_bus_rdata,		// Read data
-	output wire [31:0] o_bus_wdata		// Write data
+	output wire [31:0] o_bus_wdata,		// Write data
+	
+	// Debug
+	output reg [31:0] o_retire_count
 );
 
 	//====================================================
@@ -124,11 +130,20 @@ module CPU_v2 (
 	wire [4:0] decode_inst_rs2;
 	wire [4:0] decode_inst_rd;
 	wire [31:0] decode_imm;
-	wire decode_alu;
+	
+	wire decode_arithmetic;
+	wire decode_jump;
+	wire decode_jump_conditional;
+
 	wire [3:0] decode_alu_operation;
 	wire [2:0] decode_alu_operand1;
 	wire [2:0] decode_alu_operand2;
-	wire decode_branch;
+	
+	wire decode_memory_read;
+	wire decode_memory_write;
+	wire [2:0] decode_memory_width;
+	wire decode_memory_signed;
+
 	wire [4:0] decode_op;
 
 	CPU_Decode decode(
@@ -149,11 +164,20 @@ module CPU_v2 (
 		.o_inst_rs2(decode_inst_rs2),
 		.o_inst_rd(decode_inst_rd),
 		.o_imm(decode_imm),
-		.o_alu(decode_alu),
+		
+		.o_arithmetic(decode_arithmetic),
+		.o_jump(decode_jump),
+		.o_jump_conditional(decode_jump_conditional),
+
 		.o_alu_operation(decode_alu_operation),
 		.o_alu_operand1(decode_alu_operand1),
 		.o_alu_operand2(decode_alu_operand2),
-		.o_branch(decode_branch),
+		
+		.o_memory_read(decode_memory_read),
+		.o_memory_write(decode_memory_write),
+		.o_memory_width(decode_memory_width),
+		.o_memory_signed(decode_memory_signed),
+
 		.o_op(decode_op)
 	);
 
@@ -200,11 +224,20 @@ module CPU_v2 (
 		.i_rs2(fwd_rs2),
 		.i_inst_rd(decode_inst_rd),
 		.i_imm(decode_imm),
-		.i_alu(decode_alu),
+
+		.i_arithmetic(decode_arithmetic),
+		.i_jump(decode_jump),
+		.i_jump_conditional(decode_jump_conditional),
+
 		.i_alu_operation(decode_alu_operation),
 		.i_alu_operand1(decode_alu_operand1),
 		.i_alu_operand2(decode_alu_operand2),
-		.i_branch(decode_branch),
+
+		.i_memory_read(decode_memory_read),
+		.i_memory_write(decode_memory_write),
+		.i_memory_width(decode_memory_width),
+		.i_memory_signed(decode_memory_signed),
+
 		.i_op(decode_op),
 
 		// Output from execute.
@@ -285,4 +318,23 @@ module CPU_v2 (
 		.o_pc_next(writeback_pc_next)
 	);
 
+	//====================================================
+	
+	reg [`TAG_SIZE] retire_tag = 0;
+
+	initial o_retire_count = 0;
+
+	always @(posedge i_clock) begin
+		if (i_reset) begin
+			retire_tag <= 0;
+			o_retire_count <= 0;
+		end
+		else begin
+			if (memory_tag != retire_tag) begin
+				o_retire_count <= o_retire_count + 1;
+				retire_tag <= memory_tag;
+			end
+		end
+	end
+	
 endmodule

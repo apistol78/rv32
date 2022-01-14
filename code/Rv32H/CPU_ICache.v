@@ -17,20 +17,22 @@ module CPU_ICache(
 	input wire [31:0] i_bus_rdata
 );
 
+	localparam SIZE	= 10;
+	localparam RANGE = 1 << SIZE;
+
 	reg [1:0] state;
-	reg [255:0] valid;
+	reg [RANGE - 1:0] valid;
 
 	reg cache_rw;
-	wire [7:0] cache_label = i_address[9:2];	// 2 lowest bits are always zero.
+	wire [SIZE - 1:0] cache_label = i_address[(SIZE - 1):2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
-	wire cache_ready;
 
 	// One cycle latency, important since
 	// we rely on address only.
 	BRAM #(
 		.WIDTH(64),
-		.SIZE(256),
+		.SIZE(RANGE),
 		.ADDR_LSH(0)
 	) cache(
 		.i_clock(i_clock),
@@ -39,7 +41,7 @@ module CPU_ICache(
 		.i_address({ 24'b0, cache_label }),
 		.i_wdata(cache_wdata),
 		.o_rdata(cache_rdata),
-		.o_ready(cache_ready)
+		.o_ready()
 	);
 
 	assign o_bus_address = i_address;
@@ -48,7 +50,7 @@ module CPU_ICache(
 		o_output_tag = 0;
 		o_bus_request = 0;
 		state = 0;
-		valid = 256'b0;
+		valid = { RANGE{ 1'b0 } };
 		cache_rw = 0;
 		cache_wdata = 0;
 	end
@@ -58,7 +60,7 @@ module CPU_ICache(
 			o_output_tag <= 0;
 			o_bus_request <= 0;
 			state <= 0;
-			valid <= 256'b0;
+			valid <= { RANGE{ 1'b0 } };
 			cache_rw <= 0;
 			cache_wdata <= 0;
 		end

@@ -8,6 +8,7 @@ module UART_RX #(
 	input wire i_clock,
 
 	input wire i_request,
+	input wire [1:0] i_address,
 	output reg [31:0] o_rdata,
     output wire o_ready,
 	
@@ -22,6 +23,7 @@ module UART_RX #(
 	
 	// FIFO
 	wire rx_fifo_empty;
+	//wire rx_fifo_full;
 	reg rx_fifo_write = 0;
 	reg rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
@@ -30,6 +32,7 @@ module UART_RX #(
 	) rx_fifo(
 		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
+		//.o_full(rx_fifo_full),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
 		.i_read(rx_fifo_read),
@@ -56,23 +59,29 @@ module UART_RX #(
 		end
 		else begin
 			if (i_request) begin
-				case (rds)
-					0: begin
-						if (!rx_fifo_empty) begin
-							rx_fifo_read <= 1;
-							rds <= 1;
+				if (i_address == 2'h0) begin	// Read byte from fifo.
+					case (rds)
+						0: begin
+							if (!rx_fifo_empty) begin
+								rx_fifo_read <= 1;
+								rds <= 1;
+							end
 						end
-					end
-					1, 2, 3: begin
-						// Need to wait a couple of cycles to ensure valid data out from fifo
-						// because empty is signaled before values has been latched into queue.
-						o_rdata <= { 24'b0, rx_fifo_rdata };
-						rds <= rds + 1;
-					end
-					4: begin
-						rds <= 5;
-					end
-				endcase
+						1, 2, 3: begin
+							// Need to wait a couple of cycles to ensure valid data out from fifo
+							// because empty is signaled before values has been latched into queue.
+							o_rdata <= { 24'b0, rx_fifo_rdata };
+							rds <= rds + 1;
+						end
+						4: begin
+							rds <= 5;
+						end
+					endcase
+				end
+				else if (i_address == 2'h1) begin	// Read status.
+					o_rdata <= { 30'b0, rx_fifo_empty, 1'b0 };
+					rds <= 5;
+				end
 			end
 			else begin
 				rx_fifo_read <= 0;

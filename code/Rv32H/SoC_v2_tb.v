@@ -22,6 +22,7 @@
 `include "SD.v"
 `include "SRAM_interface.v"
 `include "SRAM_tb.v"
+`include "Timer.v"
 `include "UART_tb.v"
 `include "VGA.v"
 
@@ -87,47 +88,6 @@ module SoC_v2_tb(
 		.o_ready(ram_ready)
 	);
 
-	// SRAM
-	wire [17:0] SRAM_A;
-	wire [15:0] SRAM_D;
-	wire SRAM_CE_n;
-	wire SRAM_OE_n;
-	wire SRAM_WE_n;
-	wire SRAM_LB_n;
-	wire SRAM_UB_n;
-	SRAM_tb sram_tb(
-		.SRAM_A(SRAM_A),
-		.SRAM_D(SRAM_D),
-		.SRAM_CE_n(SRAM_CE_n),
-		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n),
-		.SRAM_LB_n(SRAM_LB_n),
-		.SRAM_UB_n(SRAM_UB_n)
-	);
-
-	wire sram_select;
-	wire [31:0] sram_address;
-	wire [31:0] sram_rdata;
-	wire sram_ready;
-	SRAM_interface sram(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(sram_select && cpu_request),
-		.i_rw(cpu_rw),
-		.i_address(sram_address),
-		.i_wdata(cpu_wdata),
-		.o_rdata(sram_rdata),
-		.o_ready(sram_ready),
-		// ---
-		.SRAM_A(SRAM_A),
-		.SRAM_D(SRAM_D),
-		.SRAM_CE_n(SRAM_CE_n),
-		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n),
-		.SRAM_LB_n(SRAM_LB_n),
-		.SRAM_UB_n(SRAM_UB_n)
-	);
-
 	// SDRAM
 	wire sdram_select;
 	wire [31:0] sdram_address;
@@ -149,18 +109,23 @@ module SoC_v2_tb(
 
 	// UART
 	wire uart_select;
+	wire [1:0] uart_address;
 	wire [31:0] uart_rdata;
+	wire uart_ready;
 	UART_tb uart(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(uart_select && cpu_request),
 		.i_rw(cpu_rw),
+		.i_address(uart_address),
 		.i_wdata(cpu_wdata),
-		.o_rdata(uart_rdata)
+		.o_rdata(uart_rdata),
+		.o_ready(uart_ready)
 	);
 
 	// GPIO
 	wire gpio_select;
-	wire [31:0] gpio_address;
+	wire [1:0] gpio_address;
 	wire [31:0] gpio_rdata;
 	wire gpio_ready;
 	wire [35:0] GPIO;
@@ -215,6 +180,25 @@ module SoC_v2_tb(
 		.SD_DAT(SD_DAT)
 	);
 
+	// Timer
+	wire timer_select;
+	wire [1:0] timer_address;
+	wire [31:0] timer_rdata;
+	wire timer_ready;
+	Timer #(
+		.FREQUENCY(100000000)
+	) timer(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(timer_select && cpu_request),
+		.i_address(timer_address),
+		.o_rdata(timer_rdata),
+		.o_ready(timer_ready),
+		
+		// Debug
+		.i_retire_count(cpu_retire_count)
+	);
+
     // CPU
 	wire cpu_rw;
 	wire cpu_request;
@@ -222,6 +206,7 @@ module SoC_v2_tb(
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
+	wire [31:0] cpu_retire_count;
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -232,7 +217,10 @@ module SoC_v2_tb(
 		.i_bus_ready(cpu_ready),
 		.o_bus_address(cpu_address),
 		.i_bus_rdata(cpu_rdata),
-		.o_bus_wdata(cpu_wdata)
+		.o_bus_wdata(cpu_wdata),
+		
+		// Debug
+		.o_retire_count(cpu_retire_count)		
 	);
 
 	//=====================================
@@ -243,44 +231,48 @@ module SoC_v2_tb(
 	assign ram_select = (cpu_address >= 32'h00010000 && cpu_address < 32'h00020000);
 	assign ram_address = cpu_address - 32'h00010000;
 
-	assign sram_select = (cpu_address >= 32'h10000000 && cpu_address < 32'h20000000);
-	assign sram_address = cpu_address - 32'h10000000;
-
 	assign sdram_select = (cpu_address >= 32'h20000000 && cpu_address < 32'h40000000);
 	assign sdram_address = cpu_address - 32'h20000000;
 
-	wire led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
+	// assign vram_select = (cpu_address >= 32'h40000000 && cpu_address < 32'h50000000);
+	// assign vram_address = cpu_address - 32'h40000000;
 
+	wire led_select = (cpu_address >= 32'h50000000 && cpu_address < 32'h50000010);
+	
 	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
+	assign uart_address = cpu_address[3:2]; // - 32'h50000010;
 
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
-	assign gpio_address = cpu_address - 32'h50000020;
-	
+	assign gpio_address = cpu_address[3:2]; // - 32'h50000020;
+
 	assign i2c_select = (cpu_address >= 32'h50000030 && cpu_address < 32'h50000040);
 
 	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
 
+	assign timer_select = (cpu_address >= 32'h50000050 && cpu_address < 32'h50000060);
+	assign timer_address = cpu_address[3:2]; // - 32'h50000050;
+
 	assign cpu_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
-		sram_select ? sram_rdata :
 		sdram_select ? sdram_rdata :
 		uart_select ? uart_rdata :
 		gpio_select ? gpio_rdata :
-		i2c_select ? i2c_rdata :
 		sd_select ? sd_rdata :
+		i2c_select ? i2c_rdata :
+		timer_select ? timer_rdata :
 		32'h00000000;
 
 	assign cpu_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
-		sram_select ? sram_ready :
 		sdram_select ? sdram_ready :
 		led_select ? 1'b1 :
-		uart_select ? 1'b1 :
+		uart_select ? uart_ready :
 		gpio_select ? gpio_ready :
-		i2c_select ? i2c_ready :
 		sd_select ? sd_ready :
+		i2c_select ? i2c_ready :
+		timer_select ? timer_ready :
 		1'b0;
 
 `ifdef __ICARUS__

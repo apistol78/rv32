@@ -18,9 +18,9 @@ module CPU_ALU(
 	wire [31:0] and_result = i_op1 & i_op2;
 	wire [31:0] or_result = i_op1 | i_op2;
 	wire [31:0] xor_result = i_op1 ^ i_op2;
-	wire [31:0] shl_result = i_op1 << (i_op2 & 32'h1f);
-	wire [31:0] shr_result = i_op1 >> (i_op2 & 32'h1f);
-	wire [31:0] ashr_result = $signed(i_op1) >>> (i_op2 & 32'h1f);
+	wire [31:0] shl_result = i_op1 << i_op2[4:0];
+	wire [31:0] shr_result = i_op1 >> i_op2[4:0];
+	wire [31:0] ashr_result = $signed(i_op1) >>> i_op2[4:0];
 
 	wire signed_lt_result = ($signed(i_op1) < $signed(i_op2)) ? 1 : 0;
 	wire unsigned_lt_result = (i_op1 < i_op2) ? 1 : 0;

@@ -9,6 +9,7 @@ module UART #(
 
 	input wire i_request,
 	input wire i_rw,
+	input wire [1:0] i_address,
 	input wire [31:0] i_wdata,
 	output wire [31:0] o_rdata,
     output wire o_ready,
@@ -25,6 +26,7 @@ module UART #(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_request(rx_request),
+		.i_address(i_address),
 		.o_rdata(o_rdata),
 		.o_ready(rx_ready),
 		.UART_RX(UART_RX)

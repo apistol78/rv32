@@ -143,7 +143,7 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-	//wire clock = CLOCK_50_B5B;
+//	wire clock = CLOCK_125_p;
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -332,6 +332,7 @@ module SoC(
 `ifdef SOC_ENABLE_UART
 	// UART
 	wire uart_select;
+	wire [1:0] uart_address;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
@@ -342,6 +343,7 @@ module SoC(
 		.i_clock(clock),
 		.i_request(uart_select && cpu_request),
 		.i_rw(cpu_rw),
+		.i_address(uart_address),
 		.i_wdata(cpu_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
@@ -354,7 +356,7 @@ module SoC(
 `ifdef SOC_ENABLE_GPIO
 	// GPIO
 	wire gpio_select;
-	wire [31:0] gpio_address;
+	wire [1:0] gpio_address;
 	wire [31:0] gpio_rdata;
 	wire gpio_ready;
 	GPIO gpio(
@@ -410,15 +412,21 @@ module SoC(
 
 	// Timer
 	wire timer_select;
+	wire [1:0] timer_address;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	Timer #(
 		.FREQUENCY(100000000)
-	)(
+	) timer(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(timer_select && cpu_request),
+		.i_address(timer_address),
 		.o_rdata(timer_rdata),
-		.o_ready(timer_ready)
+		.o_ready(timer_ready),
+		
+		// Debug
+		.i_retire_count(cpu_retire_count)
 	);
 	
 	// CPU
@@ -428,6 +436,7 @@ module SoC(
 	wire [31:0] cpu_address;
 	wire [31:0] cpu_rdata;
 	wire [31:0] cpu_wdata;
+	wire [31:0] cpu_retire_count;
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -438,7 +447,10 @@ module SoC(
 		.i_bus_ready(cpu_ready),
 		.o_bus_address(cpu_address),
 		.i_bus_rdata(cpu_rdata),
-		.o_bus_wdata(cpu_wdata)
+		.o_bus_wdata(cpu_wdata),
+		
+		// Debug
+		.o_retire_count(cpu_retire_count)
 	);
 	
 	//=====================================
@@ -463,11 +475,12 @@ module SoC(
 	
 `ifdef SOC_ENABLE_UART
 	assign uart_select = (cpu_address >= 32'h50000010 && cpu_address < 32'h50000020);
+	assign uart_address = cpu_address[3:2]; // - 32'h50000010;
 `endif
 
 `ifdef SOC_ENABLE_GPIO
 	assign gpio_select = (cpu_address >= 32'h50000020 && cpu_address < 32'h50000030);
-	assign gpio_address = cpu_address - 32'h50000020;
+	assign gpio_address = cpu_address[3:2]; // - 32'h50000020;
 `endif
 	
 `ifdef SOC_ENABLE_I2C
@@ -478,7 +491,8 @@ module SoC(
 	assign sd_select = (cpu_address >= 32'h50000040 && cpu_address < 32'h50000050);
 `endif
 
-	assign timer_select = (cpu_address == 32'h50000050);
+	assign timer_select = (cpu_address >= 32'h50000050 && cpu_address < 32'h50000060);
+	assign timer_address = cpu_address[3:2]; // - 32'h50000050;
 
 	assign cpu_rdata =
 		rom_select ? rom_rdata :

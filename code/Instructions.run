@@ -1,6 +1,14 @@
 
 -- https://github.com/takahirox/riscv-rust/blob/master/src/cpu.rs
 
+local insttype = {
+	ARITHMETIC = "ARITHMETIC",
+	JUMP = "JUMP",
+	JUMP_CONDITIONAL = "JUMP_CONDITIONAL",
+	MEMORY = "MEMORY",
+	COMPLEX = "COMPLEX"
+}
+
 local operations = {
 	SIGNED_ADD = "`OP_SIGNED_ADD",
 	UNSIGNED_ADD = "`OP_UNSIGNED_ADD",
@@ -73,11 +81,12 @@ local instructions = {
 		data = 0x00000033,
 		name = "ADD",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -88,11 +97,12 @@ local instructions = {
 		data = 0x00000013,
 		name = "ADDI",
 		format = "I",
+		type = insttype.ARITHMETIC,
         cpp = [[
 			auto f = parseFormatI(word);
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         ]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -175,11 +185,12 @@ local instructions = {
 		data = 0x00007033,
 		name = "AND",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.AND,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -190,11 +201,12 @@ local instructions = {
 		data = 0x00007013,
 		name = "ANDI",
 		format = "I",
-        cpp = [[
+ 		type = insttype.ARITHMETIC,
+		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
         ]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.AND,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -205,11 +217,12 @@ local instructions = {
 		data = 0x00000017,
 		name = "AUIPC",
 		format = "U",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatU(word);
 			R_u(f.rd) = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.PC,
 			operand2 = operands.IMM
@@ -220,13 +233,13 @@ local instructions = {
 		data = 0x00000063,
 		name = "BEQ",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.EQUAL,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -237,13 +250,13 @@ local instructions = {
 		data = 0x00005063,
 		name = "BGE",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_GREATER_EQUAL,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -254,13 +267,13 @@ local instructions = {
 		data = 0x00007063,
 		name = "BGEU",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.UNSIGNED_GREATER_EQUAL,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -271,13 +284,13 @@ local instructions = {
 		data = 0x00004063,
 		name = "BLT",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -288,13 +301,13 @@ local instructions = {
 		data = 0x00006063,
 		name = "BLTU",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.UNSIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -305,13 +318,13 @@ local instructions = {
 		data = 0x00001063,
 		name = "BNE",
 		format = "B",
-		branch = true,
+		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.NOT_EQUAL,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -363,6 +376,7 @@ local instructions = {
 		data = 0x02004033,
 		name = "DIV",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
@@ -374,7 +388,7 @@ local instructions = {
 			else
 				R_s(f.rd) = dividend / divisor;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				div_signed <= 1;
 				div_numerator <= `RS1;
@@ -391,6 +405,7 @@ local instructions = {
 		data = 0x02005033,
 		name = "DIVU",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
@@ -400,7 +415,7 @@ local instructions = {
 			else		
 				R_u(f.rd) = dividend / divisor;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				div_signed <= 0;
 				div_numerator <= `RS1;
@@ -429,6 +444,7 @@ local instructions = {
 		data = 0x00100073,
 		name = "EBREAK",
 		format = "",
+		type = insttype.COMPLEX,
 		cpp = [[
 			return false;
 		]],
@@ -441,6 +457,7 @@ local instructions = {
 		data = 0x00000073,
 		name = "ECALL",
 		format = "",
+		type = insttype.COMPLEX,
 		cpp = [[
 		]],
 		verilog = [[
@@ -614,15 +631,20 @@ local instructions = {
 		data = 0x0000006f,
 		name = "JAL",
 		format = "J",
-		branch = true,
+		type = insttype.JUMP,
 		cpp = [[
 			auto f = parseFormatJ(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = PC + f.imm;
 		]],
-		verilog = [[
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.PC,
+			operand2 = operands.IMM
+		},
+		verilog_text = [[
 			`RD <= `PC + 4;
-			`GOTO($signed(`PC) + $signed(`IMM));
+			`GOTO(alu_result);
 			`EXECUTE_DONE;
 		]]
 	},
@@ -631,15 +653,20 @@ local instructions = {
 		data = 0x00000067,
 		name = "JALR",
 		format = "I",
-		branch = true,
+		type = insttype.JUMP,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = R(f.rs1) + f.imm;
 		]],
-		verilog = [[
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_text = [[
 			`RD <= `PC + 4;
-			`GOTO(($signed(`RS1) + $signed(`IMM)) & ~1);
+			`GOTO(alu_result & ~1);
 			`EXECUTE_DONE;
 		]]
 	},
@@ -648,28 +675,42 @@ local instructions = {
 		data = 0x00000003,
 		name = "LB",
 		format = "I",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
-		verilog = [[
-			`MEM_READ_SB($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 1,
+			signed = true
+		},
 	},
 	{
 		mask = 0x0000707f,
 		data = 0x00004003,
 		name = "LBU",
 		format = "I",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
-		verilog = [[
-			`MEM_READ_UB($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 1,
+			signed = false
+		},
 	},
 	{
 		mask = 0x0000707f,
@@ -682,28 +723,42 @@ local instructions = {
 		data = 0x00001003,
 		name = "LH",
 		format = "I",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]],
-		verilog = [[
-			`MEM_READ_SH($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 2,
+			signed = true
+		},
 	},
 	{
 		mask = 0x0000707f,
 		data = 0x00005003,
 		name = "LHU",
 		format = "I",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		]],
-		verilog = [[
-			`MEM_READ_UH($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 2,
+			signed = false
+		},
 	},
 	{
 		mask = 0xf9f0707f,
@@ -722,11 +777,12 @@ local instructions = {
 		data = 0x00000037,
 		name = "LUI",
 		format = "U",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatU(word);
 			R_s(f.rd) = f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.UNSIGNED_ADD,
 			operand1 = operands.IMM,
 			operand2 = operands.ZERO
@@ -737,39 +793,39 @@ local instructions = {
 		data = 0x00002003,
 		name = "LW",
 		format = "I",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
-		verilog = [[
-			`MEM_READ_W($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 4,
+			signed = false
+		},
 	},
 	{
 		mask = 0x0000707f,
 		data = 0x00006003,
 		name = "LWU",
-		format = "I",
-		cpp = [[
-			auto f = parseFormatI(word);
-			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
-		]],
-		verilog = [[
-			`MEM_READ_W($signed(`RS1) + $signed(`IMM));
-			`EXECUTE_DONE;
-		]]
+		format = "I"
 	},
 	{
 		mask = 0xfe00707f,
 		data = 0x02000033,
 		name = "MUL",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				mul_signed <= 1;
 				mul_op1 <= `RS1;
@@ -786,13 +842,14 @@ local instructions = {
 		data = 0x02001033,
 		name = "MULH",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			int64_t lh = (int64_t)R_s(f.rs1);
 			int64_t rh = (int64_t)R_s(f.rs2);
 			R_s(f.rd) = (lh * rh) >> 32;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				mul_signed <= 1;
 				mul_op1 <= `RS1;
@@ -802,7 +859,6 @@ local instructions = {
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
-			//`RD <= ($signed(`RS1) * $signed(`RS2)) >>> 32;
 		]]
 	},
 	{
@@ -810,13 +866,14 @@ local instructions = {
 		data = 0x02003033,
 		name = "MULHU",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			uint64_t lh = (uint64_t)R(f.rs1);
 			uint64_t rh = (uint64_t)R(f.rs2);
 			R(f.rd) = (lh * rh) >> 32;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				mul_signed <= 0;
 				mul_op1 <= `RS1;
@@ -826,7 +883,6 @@ local instructions = {
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
-			//`RD <= ({32'b0, `RS1} * {32'b0, `RS2}) >> 32;
 		]]
 	},
 	{
@@ -852,11 +908,12 @@ local instructions = {
 		data = 0x00006033,
 		name = "OR",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.OR,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -867,11 +924,12 @@ local instructions = {
 		data = 0x00006013,
 		name = "ORI",
 		format = "I",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.OR,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -882,6 +940,7 @@ local instructions = {
 		data = 0x02006033,
 		name = "REM",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
@@ -891,7 +950,7 @@ local instructions = {
 			else
 				R_s(f.rd) = dividend % divisor;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				div_signed <= 1;
 				div_numerator <= `RS1;
@@ -901,7 +960,6 @@ local instructions = {
 				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end
-			// `RD <= $signed(`RS1) % $signed(`RS2);
 		]]
 	},
 	{
@@ -909,6 +967,7 @@ local instructions = {
 		data = 0x02007033,
 		name = "REMU",
 		format = "R",
+		type = insttype.COMPLEX,
 		cpp = [[
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
@@ -918,7 +977,7 @@ local instructions = {
 			else
 				R_u(f.rd) = dividend % divisor;
 		]],
-		verilog = [[
+		verilog_text = [[
 			if (`CYCLE == 0) begin
 				div_signed <= 0;
 				div_numerator <= `RS1;
@@ -928,7 +987,6 @@ local instructions = {
 				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end
-			// `RD <= `RS1 % `RS2;
 		]]
 	},
 	{
@@ -948,14 +1006,21 @@ local instructions = {
 		data = 0x00000023,
 		name = "SB",
 		format = "S",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		]],
-		verilog = [[
-			`MEM_WRITE_B($signed(`RS1) + $signed(`IMM), `RS2);
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "W",
+			width = 1,
+			signed = false
+		},
 	},
 	{
 		mask = 0xf800707f,
@@ -986,25 +1051,33 @@ local instructions = {
 		data = 0x00001023,
 		name = "SH",
 		format = "S",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
-		verilog = [[
-			`MEM_WRITE_H($signed(`RS1) + $signed(`IMM), `RS2);
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "W",
+			width = 2,
+			signed = false
+		},
 	},
 	{
 		mask = 0xfe00707f,
 		data = 0x00001033,
 		name = "SLL",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SHIFT_LEFT,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1015,11 +1088,12 @@ local instructions = {
 		data = 0x00001013,
 		name = "SLLI",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SHIFT_LEFT,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1042,11 +1116,12 @@ local instructions = {
 		data = 0x00002033,
 		name = "SLT",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1057,11 +1132,12 @@ local instructions = {
 		data = 0x00002013,
 		name = "SLTI",
 		format = "I",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1072,11 +1148,12 @@ local instructions = {
 		data = 0x00003013,
 		name = "SLTIU",
 		format = "I",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.UNSIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1087,11 +1164,12 @@ local instructions = {
 		data = 0x00003033,
 		name = "SLTU",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.UNSIGNED_LESS_THAN,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1102,11 +1180,12 @@ local instructions = {
 		data = 0x40005033,
 		name = "SRA",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.ARITHMETIC_SHIFT_RIGHT,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1117,11 +1196,12 @@ local instructions = {
 		data = 0x40005013,
 		name = "SRAI",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.ARITHMETIC_SHIFT_RIGHT,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1150,11 +1230,12 @@ local instructions = {
 		data = 0x00005033,
 		name = "SRL",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SHIFT_RIGHT,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1165,11 +1246,12 @@ local instructions = {
 		data = 0x00005013,
 		name = "SRLI",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SHIFT_RIGHT,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1192,11 +1274,12 @@ local instructions = {
 		data = 0x40000033,
 		name = "SUB",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.SIGNED_SUB,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1213,14 +1296,21 @@ local instructions = {
 		data = 0x00002023,
 		name = "SW",
 		format = "S",
+		type = insttype.MEMORY,
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
-		verilog = [[
-			`MEM_WRITE_W($signed(`RS1) + $signed(`IMM), `RS2);
-			`EXECUTE_DONE;
-		]]
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "W",
+			width = 4,
+			signed = false
+		},
 	},
 	{
 		mask = 0xffffffff,
@@ -1239,11 +1329,12 @@ local instructions = {
 		data = 0x00004033,
 		name = "XOR",
 		format = "R",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.XOR,
 			operand1 = operands.RS1,
 			operand2 = operands.RS2
@@ -1254,11 +1345,12 @@ local instructions = {
 		data = 0x00004013,
 		name = "XORI",
 		format = "I",
+		type = insttype.ARITHMETIC,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		]],
-		verilog = {
+		verilog_alu = {
 			operation = operations.XOR,
 			operand1 = operands.RS1,
 			operand2 = operands.IMM
@@ -1303,11 +1395,6 @@ function main(argv)
 			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
 			stdout:printLn("{")
 			stdout:printLn("\tTRACE(L\"\t" .. inst.name .. "\");")
-
-			if inst.verilog == nil then
-				stdout:printLn("\tlog::info << L\"No verilog implementation of " .. inst.name .. "\" << Endl;")
-			end
-
 			local pfx = prefixes[inst.format];
 			if pfx ~= nil and pfx.cpp ~= nil then
 				stdout:printLn("\t" .. trim(pfx.cpp))
@@ -1327,82 +1414,6 @@ function main(argv)
 		stdout:printLn("\treturn false;")
 		stdout:printLn("}")
 
-	elseif language == "verilog_decode" then 
-		local P < const > = "BIJRSU"
-
-		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
-		stdout:printLn("// ==================================================")
-
-		local count = 0
-		for prefix in P:gmatch(".") do
-			local t = {}
-			for i, inst in ipairs(instructions) do
-				if type(inst.verilog) == "string" and inst.format == prefix then
-					table.insert(t, inst)
-				end
-			end
-			if #t > 0 then
-				if count > 0 then stdout:print("else if") else stdout:print("if") end
-				stdout:printLn(" (is_" .. prefix .. ") begin")
-				for i, inst in ipairs(t) do
-					stdout:printLn("")
-					stdout:printLn("\t// " .. inst.name)
-					if i > 1 then stdout:print("\telse if") else stdout:print("\tif") end
-					stdout:printLn(" (is_" .. inst.name .. ") begin")
-					if debug then
-						stdout:printLn("\t\t$display(\"\t" .. inst.name .. "\");")
-						local pfx = prefixes[inst.format];
-						if pfx ~= nil and pfx.verilog ~= nil then
-							stdout:printLn("\t\t" .. trim(pfx.verilog))
-						end
-					end
-					for ln in lines(inst.verilog) do
-						if #ln > 0 then
-							stdout:printLn("\t" .. ln)
-						end
-					end
-					stdout:printLn("\tend")
-				end
-				stdout:printLn("")
-				stdout:printLn("end")
-				count = count + 1
-			end
-		end
-
-		-- Non format, such as EBREAK
-		local t = {}
-		for i, inst in ipairs(instructions) do
-			if type(inst.verilog) == "string" and inst.format == "" then
-				table.insert(t, inst)
-			end
-		end
-		for i, inst in ipairs(t) do
-			stdout:printLn("")
-			stdout:printLn("// " .. inst.name)
-			stdout:printLn("else if (is_" .. inst.name .. ") begin")
-			if debug then
-				stdout:printLn("\t$display(\"\t" .. inst.name .. "\");")
-				local pfx = prefixes[inst.format];
-				if pfx ~= nil and pfx.verilog ~= nil then
-					stdout:printLn("\t" .. trim(pfx.verilog))
-				end
-			end
-			for ln in lines(inst.verilog) do
-				if #ln > 0 then
-					stdout:printLn(ln)
-				end
-			end
-			stdout:printLn("end")
-		end
-
-		-- Error
-		stdout:printLn("")
-		stdout:printLn("// Unknown instruction.")
-		stdout:printLn("else begin")
-		stdout:printLn("\t`ERROR;")
-		stdout:printLn("end")
-
-
 	elseif language == "verilog_inst_wire" then
 		local P < const > = "BIJRSU"
 
@@ -1410,87 +1421,133 @@ function main(argv)
 		stdout:printLn("// ==================================================")
 		stdout:printLn("")
 
-		for i, inst in ipairs(instructions) do
-			if inst.verilog ~= nil then
-				stdout:printLn("wire is_" .. string.format("%-6s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+		-- Get all verilog instructions.
+		local vi = {}
+		for _, inst in ipairs(instructions) do
+			if inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
+				table.insert(vi, inst)
 			end
 		end
+
+		-- Instruction signals.
+		for _, inst in ipairs(vi) do
+			stdout:printLn("wire is_" .. string.format("%-6s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+		end
 		stdout:printLn("")
+
+		-- Format signals.
 		for prefix in P:gmatch(".") do
 			local t = {}
-			for i, inst in ipairs(instructions) do
-				if inst.verilog ~= nil and inst.format == prefix then
+			for i, inst in ipairs(vi) do
+				if inst.format == prefix then
 					table.insert(t, inst)
 				end
 			end
 			if #t > 0 then
 				stdout:print("wire is_" .. prefix .. " =")
 				for i, inst in ipairs(t) do
-
 					if i > 1 then stdout:print(" |") end
 					stdout:print(" is_" .. inst.name)
-
 				end
 				stdout:printLn(";")
 			else
 				stdout:printLn("wire is_" .. prefix .. " = 1'b0;")
 			end
 		end
-
 		stdout:printLn("")
-		stdout:print("wire is_ALU =")
-		local count = 0
-		for _, inst in ipairs(instructions) do
-			if type(inst.verilog) == "table" then
-				if count > 0 then stdout:print(" |") end
-				stdout:print(" is_" .. inst.name)
-				count = count + 1
-			end
-		end
-		stdout:printLn(";")
 
-		stdout:printLn("")
-		stdout:print("wire is_BRANCH =")
-		local count = 0
-		for _, inst in ipairs(instructions) do
-			if inst.branch == true then
-				if count > 0 then stdout:print(" |") end
-				stdout:print(" is_" .. inst.name)
-				count = count + 1
+		-- Instruction type signals.
+		for _, it in pairs(insttype) do
+			stdout:print("wire is_" .. it .. " =")
+			local count = 0
+			for _, inst in ipairs(vi) do
+				assert(inst.type ~= nil);
+				if inst.type == it then
+					if count > 0 then stdout:print(" |") end
+					stdout:print(" is_" .. inst.name)
+					count = count + 1
+				end
 			end
+			stdout:printLn(";")
 		end
-		stdout:printLn(";")
 
 	elseif language == "verilog_alu" then
 		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
 		stdout:printLn("// ==================================================")
 		stdout:printLn("")
 
-		-- Get list of all ALU instructions.
+		-- Get list of all instructions with an ALU specification.
 		local alu = {}
 		for i, inst in ipairs(instructions) do
-			if type(inst.verilog) == "table" then
+			if inst.verilog_alu ~= nil then
 				table.insert(alu, inst)
 			end
 		end
 
 		stdout:printLn("wire [3:0] alu_operation = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-26s", inst.verilog.operation) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-26s", inst.verilog_alu.operation) .. " :")
 		end
 		stdout:printLn("\t0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [2:0] alu_operand1 = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog.operand1) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand1) .. " :")
 		end
 		stdout:printLn("\t0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [2:0] alu_operand2 = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog.operand2) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand2) .. " :")
+		end
+		stdout:printLn("\t0;")
+		stdout:printLn("")
+
+	elseif language == "verilog_memory" then
+		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
+		stdout:printLn("// ==================================================")
+		stdout:printLn("")
+
+		-- Get list of all instructions with a MEMORY specification.
+		local alu = {}
+		for i, inst in ipairs(instructions) do
+			if inst.verilog_memory ~= nil then
+				table.insert(alu, inst)
+			end
+		end
+
+		stdout:printLn("wire memory_read = ")
+		for i, inst in ipairs(alu) do
+			if inst.verilog_memory.direction == "R" then
+				stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. "|")
+			end
+		end
+		stdout:printLn("\t0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire memory_write = ")
+		for i, inst in ipairs(alu) do
+			if inst.verilog_memory.direction == "W" then
+				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
+			end
+		end
+		stdout:printLn("\t0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire [2:0] memory_width = ")
+		for i, inst in ipairs(alu) do
+			stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " ? 3'd" .. inst.verilog_memory.width .. " :")
+		end
+		stdout:printLn("\t0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire memory_signed = ")
+		for i, inst in ipairs(alu) do
+			if inst.verilog_memory.signed == true then
+				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
+			end
 		end
 		stdout:printLn("\t0;")
 		stdout:printLn("")
@@ -1500,10 +1557,18 @@ function main(argv)
 		stdout:printLn("// ==================================================")
 		stdout:printLn("")
 		
-		-- Collect non-alu instructions.
-		local t = {}
+		-- Get all verilog instructions.
+		local vi = {}
 		for _, inst in ipairs(instructions) do
-			if type(inst.verilog) == "string" then
+			if inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
+				table.insert(vi, inst)
+			end
+		end
+
+		-- Collect COMPEX instructions.
+		local t = {}
+		for _, inst in ipairs(vi) do
+			if inst.type == insttype.COMPLEX then
 				table.insert(t, inst)
 			end
 		end	
@@ -1520,10 +1585,18 @@ function main(argv)
 		stdout:printLn("// ==================================================")
 		stdout:printLn("")
 		
-		-- Collect non-alu instructions.
-		local t = {}
+		-- Get all verilog instructions.
+		local vi = {}
 		for _, inst in ipairs(instructions) do
-			if type(inst.verilog) == "string" then
+			if inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
+				table.insert(vi, inst)
+			end
+		end
+
+		-- Collect COMPEX instructions.
+		local t = {}
+		for _, inst in ipairs(vi) do
+			if inst.type == insttype.COMPLEX then
 				table.insert(t, inst)
 			end
 		end	
@@ -1545,13 +1618,21 @@ function main(argv)
 		stdout:printLn("// ==================================================")
 		stdout:printLn("")
 		
-		-- Collect non-alu instructions.
-		local t = {}
+		-- Get all verilog instructions.
+		local vi = {}
 		for _, inst in ipairs(instructions) do
-			if type(inst.verilog) == "string" then
+			if inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
+				table.insert(vi, inst)
+			end
+		end
+
+		-- Collect COMPEX instructions.
+		local t = {}
+		for _, inst in ipairs(vi) do
+			if inst.type == insttype.COMPLEX then
 				table.insert(t, inst)
 			end
-		end	
+		end
 		
 		local count = 0;
 		for i, inst in ipairs(t) do
@@ -1569,7 +1650,7 @@ function main(argv)
 				stdout:printLn("\t$display(\"" .. inst.name .. "\");")
 			end
 
-			local lns = iter2tbl(lines(inst.verilog))
+			local lns = iter2tbl(lines(inst.verilog_text))
 			while #lns > 0 and trim(lns[1]) == "" do
 				table.remove(lns, 1)
 			end
