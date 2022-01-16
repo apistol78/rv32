@@ -7,7 +7,7 @@ class Unknown : public Device
 	T_RTTI_CLASS;
 
 public:
-	explicit Unknown(const std::wstring& deviceName);
+	explicit Unknown(const std::wstring& deviceName, bool mute);
 
 	virtual bool writeU8(uint32_t address, uint8_t value) override final;
 
@@ -23,4 +23,5 @@ public:
 
 private:
 	std::wstring m_deviceName;
+	bool m_mute;
 };

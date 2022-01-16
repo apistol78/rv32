@@ -18,6 +18,7 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
+#include <Core/Timer/Timer.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
 #include <Ui/Image.h>
@@ -93,30 +94,16 @@ int main(int argc, const char** argv)
 #endif
 	}
 
-	Ref< IStream > uartStream;
-	if (cmdLine.hasOption(L'u', L"uart"))
-	{
-		uartStream = FileSystem::getInstance().open(
-			cmdLine.getOption(L'u', L"uart").getString(),
-			File::FmRead
-		);
-		if (!uartStream)
-		{
-			log::error << L"Unable to open UART stream." << Endl;
-			return 1;
-		}
-	}
-
 	//Memory rom(0x00010000);
 	Memory ram(0x10000000);
 	Memory sram(0x00400000);
 	Memory sdram(0x20000000);
 	Video video;
-	Unknown led(L"LED");
-	UART uart(uartStream);
-	Unknown gpio(L"GPIO");
-	Unknown i2c(L"I2C");
-	Unknown sd(L"SD");
+	Unknown led(L"LED", false);
+	UART uart;
+	Unknown gpio(L"GPIO", true);
+	Unknown i2c(L"I2C", true);
+	Unknown sd(L"SD", true);
 
 	Bus bus;
 	// bus.map(0x00000000, 0x00010000, &rom);
@@ -190,9 +177,9 @@ int main(int argc, const char** argv)
 	if (!headless)
 	{
 		form = new ui::Form();
-		form->create(L"RV32", ui::dpi96(640), ui::dpi96(480), ui::Form::WsDefault, new ui::FloodLayout());
+		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
 
-		uiImage = new ui::Bitmap(320, 240);
+		uiImage = new ui::Bitmap(320, 200);
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale);
@@ -201,6 +188,7 @@ int main(int argc, const char** argv)
 		form->show();
 	}
 
+	Timer timer;
 	while (g_going)
 	{
 		if (!headless)
@@ -224,16 +212,14 @@ int main(int argc, const char** argv)
 					g_going = false;
 					break;
 				}
-
-				if (video.shouldPresent())
-					break;
 			}
 
-			if (video.shouldPresent() && video.getImage())
+			// if (video.shouldPresent() && video.getImage())
+			if (timer.getElapsedTime() > 1.0f/60.0f && video.getImage())
 			{
 				uiImage->copyImage(video.getImage());
 				image->setImage(uiImage);
-				video.clearPresent();
+				timer.reset();
 			}
 		}
 		else

@@ -35,11 +35,6 @@ public:
 
 	traktor::drawing::Image* getImage() const { return m_image; }
 
-	bool shouldPresent() { return m_dirty; }
-
-	void clearPresent() { m_dirty = false; }
-
 private:
 	traktor::Ref< traktor::drawing::Image > m_image;
-	bool m_dirty = true;
 };

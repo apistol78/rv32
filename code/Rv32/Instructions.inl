@@ -22,7 +22,6 @@ else if ((word & 0x0000707f) == 0x00000013)
 else if ((word & 0x0000707f) == 0x0000001b)
 {
 	TRACE(L"	ADDIW");
-	log::info << L"No verilog implementation of ADDIW" << Endl;
 	{
 			auto f = parseFormatI(word);
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
@@ -34,77 +33,66 @@ else if ((word & 0x0000707f) == 0x0000001b)
 else if ((word & 0xfe00707f) == 0x0000003b)
 {
 	TRACE(L"	ADDW");
-	log::info << L"No verilog implementation of ADDW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0000302f)
 {
 	TRACE(L"	AMOADD.D");
-	log::info << L"No verilog implementation of AMOADD.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0000202f)
 {
 	TRACE(L"	AMOADD.W");
-	log::info << L"No verilog implementation of AMOADD.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x6000302f)
 {
 	TRACE(L"	AMOAND.D");
-	log::info << L"No verilog implementation of AMOAND.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x6000202f)
 {
 	TRACE(L"	AMOAND.W");
-	log::info << L"No verilog implementation of AMOAND.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0xe000302f)
 {
 	TRACE(L"	AMOMAXU.D");
-	log::info << L"No verilog implementation of AMOMAXU.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0xe000202f)
 {
 	TRACE(L"	AMOMAXU.W");
-	log::info << L"No verilog implementation of AMOMAXU.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x4000302f)
 {
 	TRACE(L"	AMOOR.D");
-	log::info << L"No verilog implementation of AMOOR.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x4000202f)
 {
 	TRACE(L"	AMOOR.W");
-	log::info << L"No verilog implementation of AMOOR.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0800302f)
 {
 	TRACE(L"	AMOSWAP.D");
-	log::info << L"No verilog implementation of AMOSWAP.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0800202f)
 {
 	TRACE(L"	AMOSWAP.W");
-	log::info << L"No verilog implementation of AMOSWAP.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -194,35 +182,30 @@ else if ((word & 0x0000707f) == 0x00001063)
 else if ((word & 0x0000707f) == 0x00003073)
 {
 	TRACE(L"	CSRRC");
-	log::info << L"No verilog implementation of CSRRC" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00007073)
 {
 	TRACE(L"	CSRRCI");
-	log::info << L"No verilog implementation of CSRRCI" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002073)
 {
 	TRACE(L"	CSRRS");
-	log::info << L"No verilog implementation of CSRRS" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00006073)
 {
 	TRACE(L"	CSRRSI");
-	log::info << L"No verilog implementation of CSRRSI" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00001073)
 {
 	TRACE(L"	CSRRW");
-	log::info << L"No verilog implementation of CSRRW" << Endl;
 			auto f = parseFormatCSR(word);
 			R_s(f.rd) = readCSR(f.csr);
 			writeCSR(f.csr, R_s(f.rs1));
@@ -232,7 +215,6 @@ else if ((word & 0x0000707f) == 0x00001073)
 else if ((word & 0x0000707f) == 0x00005073)
 {
 	TRACE(L"	CSRRWI");
-	log::info << L"No verilog implementation of CSRRWI" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -267,14 +249,12 @@ else if ((word & 0xfe00707f) == 0x02005033)
 else if ((word & 0xfe00707f) == 0x0200503b)
 {
 	TRACE(L"	DIVUW");
-	log::info << L"No verilog implementation of DIVUW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200403b)
 {
 	TRACE(L"	DIVW");
-	log::info << L"No verilog implementation of DIVW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -294,84 +274,72 @@ else if ((word & 0xffffffff) == 0x00000073)
 else if ((word & 0xfe00007f) == 0x02000053)
 {
 	TRACE(L"	FADD.D");
-	log::info << L"No verilog implementation of FADD.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xd2200053)
 {
 	TRACE(L"	FCVT.D.L");
-	log::info << L"No verilog implementation of FCVT.D.L" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0x42000053)
 {
 	TRACE(L"	FCVT.D.S");
-	log::info << L"No verilog implementation of FCVT.D.S" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xd2000053)
 {
 	TRACE(L"	FCVT.D.W");
-	log::info << L"No verilog implementation of FCVT.D.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xd2100053)
 {
 	TRACE(L"	FCVT.D.WU");
-	log::info << L"No verilog implementation of FCVT.D.WU" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0x40100053)
 {
 	TRACE(L"	FCVT.S.D");
-	log::info << L"No verilog implementation of FCVT.S.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xc2000053)
 {
 	TRACE(L"	FCVT.W.D");
-	log::info << L"No verilog implementation of FCVT.W.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x1a000053)
 {
 	TRACE(L"	FDIV.D");
-	log::info << L"No verilog implementation of FDIV.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
 	TRACE(L"	FENCE");
-	log::info << L"No verilog implementation of FENCE" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x0000100f)
 {
 	TRACE(L"	FENCE.I");
-	log::info << L"No verilog implementation of FENCE.I" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0xa2002053)
 {
 	TRACE(L"	FEQ.D");
-	log::info << L"No verilog implementation of FEQ.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003007)
 {
 	TRACE(L"	FLD");
-	log::info << L"No verilog implementation of FLD" << Endl;
 	{
 			auto f = parseFormatI(word);
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
@@ -383,21 +351,18 @@ else if ((word & 0x0000707f) == 0x00003007)
 else if ((word & 0xfe00707f) == 0xa2000053)
 {
 	TRACE(L"	FLE.D");
-	log::info << L"No verilog implementation of FLE.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0xa2001053)
 {
 	TRACE(L"	FLT.D");
-	log::info << L"No verilog implementation of FLT.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002007)
 {
 	TRACE(L"	FLW");
-	log::info << L"No verilog implementation of FLW" << Endl;
 	{
 			auto f = parseFormatI(word);
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
@@ -409,56 +374,48 @@ else if ((word & 0x0000707f) == 0x00002007)
 else if ((word & 0x0600007f) == 0x02000043)
 {
 	TRACE(L"	FMADD.D");
-	log::info << L"No verilog implementation of FMADD.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x12000053)
 {
 	TRACE(L"	FMUL.D");
-	log::info << L"No verilog implementation of FMUL.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xf2000053)
 {
 	TRACE(L"	FMV.D.X");
-	log::info << L"No verilog implementation of FMV.D.X" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xe2000053)
 {
 	TRACE(L"	FMV.X.D");
-	log::info << L"No verilog implementation of FMV.X.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xe0000053)
 {
 	TRACE(L"	FMV.X.W");
-	log::info << L"No verilog implementation of FMV.X.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
 	TRACE(L"	FMV.W.X");
-	log::info << L"No verilog implementation of FMV.W.X" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0600007f) == 0x0200004b)
 {
 	TRACE(L"	FNMSUB.D");
-	log::info << L"No verilog implementation of FNMSUB.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003027)
 {
 	TRACE(L"	FSD");
-	log::info << L"No verilog implementation of FSD" << Endl;
 	{
 			auto f = parseFormatS(word);
 			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
@@ -469,28 +426,24 @@ else if ((word & 0x0000707f) == 0x00003027)
 else if ((word & 0xfe00707f) == 0x22000053)
 {
 	TRACE(L"	FSGNJ.D");
-	log::info << L"No verilog implementation of FSGNJ.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x22002053)
 {
 	TRACE(L"	FSGNJX.D");
-	log::info << L"No verilog implementation of FSGNJX.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x0a000053)
 {
 	TRACE(L"	FSUB.D");
-	log::info << L"No verilog implementation of FSUB.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002027)
 {
 	TRACE(L"	FSW");
-	log::info << L"No verilog implementation of FSW" << Endl;
 	{
 			auto f = parseFormatS(word);
 			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
@@ -554,7 +507,6 @@ else if ((word & 0x0000707f) == 0x00004003)
 else if ((word & 0x0000707f) == 0x00003003)
 {
 	TRACE(L"	LD");
-	log::info << L"No verilog implementation of LD" << Endl;
 	{
 			auto f = parseFormatI(word);
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
@@ -592,14 +544,12 @@ else if ((word & 0x0000707f) == 0x00005003)
 else if ((word & 0xf9f0707f) == 0x1000302f)
 {
 	TRACE(L"	LR.D");
-	log::info << L"No verilog implementation of LR.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf9f0707f) == 0x1000202f)
 {
 	TRACE(L"	LR.W");
-	log::info << L"No verilog implementation of LR.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -632,10 +582,8 @@ else if ((word & 0x0000707f) == 0x00006003)
 			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
 			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
 		}
-			auto f = parseFormatI(word);
-			R_u(f.rd) = MEM_RD(R_u(f.rs1) + f.imm);
-		
-	return true;
+	log::error << L"Not implemented." << Endl;
+	return false;
 }
 else if ((word & 0xfe00707f) == 0x02000033)
 {
@@ -668,21 +616,18 @@ else if ((word & 0xfe00707f) == 0x02003033)
 else if ((word & 0xfe00707f) == 0x02002033)
 {
 	TRACE(L"	MULHSU");
-	log::info << L"No verilog implementation of MULHSU" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200003b)
 {
 	TRACE(L"	MULW");
-	log::info << L"No verilog implementation of MULW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x30200073)
 {
 	TRACE(L"	MRET");
-	log::info << L"No verilog implementation of MRET" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -736,14 +681,12 @@ else if ((word & 0xfe00707f) == 0x02007033)
 else if ((word & 0xfe00707f) == 0x0200703b)
 {
 	TRACE(L"	REMUW");
-	log::info << L"No verilog implementation of REMUW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200603b)
 {
 	TRACE(L"	REMW");
-	log::info << L"No verilog implementation of REMW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -762,21 +705,18 @@ else if ((word & 0x0000707f) == 0x00000023)
 else if ((word & 0xf800707f) == 0x1800302f)
 {
 	TRACE(L"	SC.D");
-	log::info << L"No verilog implementation of SC.D" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x1800202f)
 {
 	TRACE(L"	SC.W");
-	log::info << L"No verilog implementation of SC.W" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003023)
 {
 	TRACE(L"	SD");
-	log::info << L"No verilog implementation of SD" << Endl;
 	{
 			auto f = parseFormatS(word);
 			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
@@ -787,7 +727,6 @@ else if ((word & 0x0000707f) == 0x00003023)
 else if ((word & 0xfe007fff) == 0x12000073)
 {
 	TRACE(L"	SFENCE.VMA");
-	log::info << L"No verilog implementation of SFENCE.VMA" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -822,14 +761,12 @@ else if ((word & 0xfc00707f) == 0x00001013)
 else if ((word & 0xfe00707f) == 0x0000101b)
 {
 	TRACE(L"	SLLIW");
-	log::info << L"No verilog implementation of SLLIW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000103b)
 {
 	TRACE(L"	SLLW");
-	log::info << L"No verilog implementation of SLLW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -894,21 +831,18 @@ else if ((word & 0xfc00707f) == 0x40005013)
 else if ((word & 0xfc00707f) == 0x4000501b)
 {
 	TRACE(L"	SRAIW");
-	log::info << L"No verilog implementation of SRAIW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x4000503b)
 {
 	TRACE(L"	SRAW");
-	log::info << L"No verilog implementation of SRAW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x10200073)
 {
 	TRACE(L"	SRET");
-	log::info << L"No verilog implementation of SRET" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -931,14 +865,12 @@ else if ((word & 0xfc00707f) == 0x00005013)
 else if ((word & 0xfc00707f) == 0x0000501b)
 {
 	TRACE(L"	SRLIW");
-	log::info << L"No verilog implementation of SRLIW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000503b)
 {
 	TRACE(L"	SRLW");
-	log::info << L"No verilog implementation of SRLW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -953,7 +885,6 @@ else if ((word & 0xfe00707f) == 0x40000033)
 else if ((word & 0xfe00707f) == 0x4000003b)
 {
 	TRACE(L"	SUBW");
-	log::info << L"No verilog implementation of SUBW" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -972,14 +903,12 @@ else if ((word & 0x0000707f) == 0x00002023)
 else if ((word & 0xffffffff) == 0x00200073)
 {
 	TRACE(L"	URET");
-	log::info << L"No verilog implementation of URET" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x10500073)
 {
 	TRACE(L"	WFI");
-	log::info << L"No verilog implementation of WFI" << Endl;
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

@@ -16,7 +16,7 @@ Video::Video()
 	m_image = new drawing::Image(
 		drawing::PixelFormat::getR8G8B8X8(),
 		320,
-		240
+		200
 	);
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
@@ -35,9 +35,7 @@ bool Video::writeU16(uint32_t address, uint16_t value)
 
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
-	if (address == 0x0ffffff0)
-		m_dirty = true;
-	else if (address < (320 * 240) * 4)
+	if (address < (320 * 200) * 4)
 	{
 		uint32_t offset = address / 4;
 

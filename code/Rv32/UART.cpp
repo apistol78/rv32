@@ -3,12 +3,7 @@
 
 using namespace traktor;
 
-
 T_IMPLEMENT_RTTI_CLASS(L"UART", UART, Device)
-
-UART::UART(IStream* stream)
-{
-}
 
 bool UART::writeU8(uint32_t address, uint8_t value)
 {

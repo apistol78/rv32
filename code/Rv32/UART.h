@@ -4,20 +4,11 @@
 #include <Core/Containers/AlignedVector.h>
 #include "Rv32/Device.h"
 
-namespace traktor
-{
-
-class IStream;
-
-}
-
 class UART : public Device
 {
 	T_RTTI_CLASS;
 
 public:
-	explicit UART(traktor::IStream* stream);
-
 	virtual bool writeU8(uint32_t address, uint8_t value) override final;
 
 	virtual bool writeU16(uint32_t address, uint16_t value) override final;
@@ -29,8 +20,4 @@ public:
 	virtual uint16_t readU16(uint32_t address) const override final;
 
 	virtual uint32_t readU32(uint32_t address) const override final;
-
-private:
-    traktor::AlignedVector< uint8_t > m_stream;
-	mutable uint32_t m_position = 0;
 };
