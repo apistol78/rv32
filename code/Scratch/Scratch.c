@@ -3,12 +3,15 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
-void main()
+void _start()
 {
 
 	__asm__ volatile (
-		"li	s0, 0x00010002	\n"
-		"sb	s1, -1(s0)		\n"
+"		bltu s0, s1, jt	\n"
+"jf:	li s0, 1		\n"
+"		nop				\n"
+"jt:	li s0, 2		\n"		
+"		nop				\n"
 	);
 
 }
