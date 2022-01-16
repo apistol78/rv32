@@ -240,7 +240,9 @@ int64_t Serial::tell() const
 
 int64_t Serial::available() const
 {
-	return 0;
+	int32_t available = 0;
+	::ioctl(m_fd, FIONREAD, &available);
+	return available;
 }
 
 int64_t Serial::seek(SeekOriginType origin, int64_t offset)
