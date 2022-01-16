@@ -62,11 +62,11 @@ module CPU_Fetch(
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= 0;
-			pc <= 0;
+			pc <= 32'h00000000;
 			icache_input_tag <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
-			o_pc <= 0;
+			pc <= 32'h00000000;
 		end
 		else begin
 			case (state)

@@ -1,5 +1,5 @@
 
-// 52 ALUTS
+// 55 ALUTS
 // 81 DL Registers
 
 `timescale 1ns/1ns
@@ -30,9 +30,9 @@ module Timer#(
 
 	always @(posedge i_clock) begin
 		if (i_reset)
-			cycles <= 0;
+			cycles <= 32'h00;
 		else
-			cycles <= cycles + 1;
+			cycles <= cycles + 32'h01;
 	end
 
 	always @(posedge i_clock) begin
@@ -57,8 +57,6 @@ module Timer#(
 				o_rdata <= cycles;
 			else if (i_address == 2'h2)
 				o_rdata <= i_retire_count;
-			else
-				o_rdata <= 0;
 		end
 	end
 

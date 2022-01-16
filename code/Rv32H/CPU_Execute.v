@@ -74,7 +74,7 @@ module CPU_Execute (
 		o_tag <= i_tag;				\
 		cycle <= 0;
 
-	reg [7:0] cycle;
+	reg [4:0] cycle;
 	
 	wire [31:0] alu_operand1 =
 		(i_alu_operand1 == 3'd0) ? `ZERO :
@@ -141,6 +141,8 @@ module CPU_Execute (
 	end
 
 	assign o_stall = (i_tag != o_tag) && (cycle != 0);
+	
+	wire [31:0] jump_conditional_target = $signed(`PC) + $signed(`IMM);
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
@@ -178,7 +180,7 @@ module CPU_Execute (
 				end
 				else if (i_jump_conditional) begin
 					if (alu_compare_result) begin
-						`GOTO($signed(`PC) + $signed(`IMM));
+						`GOTO(jump_conditional_target);
 					end
 					`EXECUTE_DONE;
 				end

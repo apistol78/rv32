@@ -37,6 +37,8 @@ module CPU_Prefetch(
 			0: begin
 				if (i_request) begin
 					if (i_address == address) begin
+						// Prefetched word is valid, return word to CPU but also
+						// simultaneously prefetch next word.
 						o_rdata <= prefetch;
 						o_ready <= 1;
 						o_bus_request <= 1;
@@ -44,6 +46,7 @@ module CPU_Prefetch(
 						state <= 1;
 					end
 					else begin
+						// Prefetched word not valid, request word from bus.
 						o_bus_request <= 1;
 						o_bus_address <= i_address;
 						state <= 2;
@@ -54,6 +57,8 @@ module CPU_Prefetch(
 			end
 
 			1: begin
+				// Wait until bus read finished, fetched word is
+				// stored as prefetched word for next CPU request.
 				o_ready <= 0;
 				if (i_bus_ready) begin
 					o_bus_request <= 0;
@@ -64,6 +69,8 @@ module CPU_Prefetch(
 			end
 
 			2: begin
+				// Wait until bus read finished, signal CPU word is ready but
+				// also continue prefetching next word.
 				if (i_bus_ready) begin
 					o_rdata <= i_bus_rdata;
 					o_ready <= 1;
