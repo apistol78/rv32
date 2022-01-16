@@ -2,6 +2,8 @@
 // 52 ALUTS
 // 81 DL Registers
 
+`timescale 1ns/1ns
+
 module Timer#(
     parameter FREQUENCY = 50000000
 )(
@@ -24,7 +26,7 @@ module Timer#(
 	reg [31:0] cycles = 0;
 	reg [31:0] ms = 0;
 
-	assign o_ready = i_request;
+	assign o_ready = 1'b1;
 
 	always @(posedge i_clock) begin
 		if (i_reset)

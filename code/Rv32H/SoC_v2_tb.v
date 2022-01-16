@@ -9,6 +9,7 @@
 `include "CPU_ICache.v"
 `include "CPU_Memory.v"
 `include "CPU_Multiply.v"
+`include "CPU_Prefetch.v"
 `include "CPU_Registers.v"
 `include "CPU_Writeback.v"
 

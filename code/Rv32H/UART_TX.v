@@ -15,13 +15,13 @@ module UART_TX #(
 
 	reg [18:0] prescale;
 	reg [8:0] data;
-	reg [3:0] bit;
+	reg [3:0] bidx;
 
 	initial begin
 		o_ready = 0;
 		prescale = 0;
 		data = 0;
-		bit = 0;
+		bidx = 0;
 		UART_TX = 1;
 	end
 
@@ -30,19 +30,19 @@ module UART_TX #(
 			prescale <= prescale - 1;
 		end
 		else if (i_request) begin
-			if (bit == 0) begin
+			if (bidx == 0) begin
 				prescale <= (PRESCALE << 3) - 1;
-				bit <= 8 + 1;
+				bidx <= 8 + 1;
 				data <= { 1'b1, i_wdata };
 				UART_TX <= 0;
 			end
-			else if (bit > 1) begin
-				bit <= bit - 1;
+			else if (bidx > 1) begin
+				bidx <= bidx - 1;
 				prescale <= (PRESCALE << 3) - 1;
 				{ data, UART_TX } <= { 1'b0, data };
 			end
-			else if (bit == 1) begin
-				bit <= bit - 1;
+			else if (bidx == 1) begin
+				bidx <= bidx - 1;
 				prescale <= (PRESCALE << 3);
 				UART_TX <= 1;
 				o_ready <= 1;
@@ -50,7 +50,7 @@ module UART_TX #(
 		end
 		
 		if (!i_request) begin
-			bit <= 0;
+			bidx <= 0;
 			o_ready <= 0;
 		end
 	end

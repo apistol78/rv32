@@ -17,7 +17,7 @@ module UART_RX #(
 	reg frame_error;
 	reg [18:0] prescale;
 	reg [7:0] data;
-	reg [3:0] bit;
+	reg [3:0] bidx;
 	reg [3:0] rds;
 	reg rx;
 	
@@ -32,7 +32,7 @@ module UART_RX #(
 	) rx_fifo(
 		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
-		//.o_full(rx_fifo_full),
+		.o_full(/*rx_fifo_full*/),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
 		.i_read(rx_fifo_read),
@@ -43,7 +43,7 @@ module UART_RX #(
 		frame_error = 0;
 		prescale = 0;
 		data = 0;
-		bit = 0;
+		bidx = 0;
 		rds = 0;
 		rx = 0;
 		o_rdata = 32'h0;
@@ -100,28 +100,28 @@ module UART_RX #(
 		if (prescale > 0) begin
 			prescale <= prescale - 1;
 		end
-		else if (bit > 0) begin
-			if (bit > 8 + 1) begin
+		else if (bidx > 0) begin
+			if (bidx > 8 + 1) begin
 				if (!rx) begin
 					// Assume mid point of start bit,
 					// continue with data bits.
-					bit <= bit - 1;
+					bidx <= bidx - 1;
 					prescale <= (PRESCALE << 3) - 1;
 				end
 				else begin
 					// Unexpected end of start bit.
-					bit <= 0;
+					bidx <= 0;
 					prescale <= 0;
 				end
 			end
-			else if (bit > 1) begin
+			else if (bidx > 1) begin
 				// Shift in data bits.
-				bit <= bit - 1;
+				bidx <= bidx - 1;
 				prescale <= (PRESCALE << 3) - 1;
 				data <= { rx, data[8 - 1:1] };
 			end
-			else if (bit == 1) begin
-				bit <= bit - 1;
+			else if (bidx == 1) begin
+				bidx <= bidx - 1;
 				if (rx) begin
 					// Stop bit found, save data into fifo.
 					rx_fifo_write <= 1;
@@ -136,7 +136,7 @@ module UART_RX #(
 			// Wait for start bit.
 			if (!rx) begin
 				prescale <= (PRESCALE << 2) - 2;
-				bit <= 8 + 2;
+				bidx <= 8 + 2;
 				data <= 0;
 			end
 		end

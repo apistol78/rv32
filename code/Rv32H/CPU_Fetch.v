@@ -68,7 +68,7 @@ module CPU_Fetch(
 			o_instruction <= 0;
 			o_pc <= 0;
 		end
-		else begin // if(!i_stall) begin
+		else begin
 			case (state)
 				0: begin
 					if (!i_stall) begin
@@ -93,12 +93,8 @@ module CPU_Fetch(
 							state <= 2;
 						end
 						else begin
-							// Issue another request directly without going back
-							// to state 0.
-							//if (!i_stall)
-								icache_input_tag <= icache_input_tag + 1;
-							//else
-							//	state <= 0;
+							// Issue another request directly.
+							icache_input_tag <= icache_input_tag + 1;
 						end
 					end
 				end

@@ -11,7 +11,7 @@ module CPU_ICache(
 	input wire [31:0] i_address,
 	output reg [31:0] o_rdata,
 
-	output reg o_bus_request,
+	output wire o_bus_request,
 	input wire i_bus_ready,
 	output wire [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata
@@ -38,17 +38,33 @@ module CPU_ICache(
 		.i_clock(i_clock),
 		.i_request(1'b1),
 		.i_rw(cache_rw),
-		.i_address({ 24'b0, cache_label }),
+		.i_address(cache_label),
 		.i_wdata(cache_wdata),
 		.o_rdata(cache_rdata),
 		.o_ready()
 	);
 
-	assign o_bus_address = i_address;
+	//assign o_bus_address = i_address;
+	reg prefetch_request;
+	wire prefetch_ready;
+	wire [31:0] prefetch_rdata;
+	CPU_Prefetch prefetch(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(prefetch_request),
+		.o_ready(prefetch_ready),
+		.i_address(i_address),
+		.o_rdata(prefetch_rdata),
+
+		.o_bus_request(o_bus_request),
+		.i_bus_ready(i_bus_ready),
+		.o_bus_address(o_bus_address),
+		.i_bus_rdata(i_bus_rdata)
+	);
 
 	initial begin
 		o_output_tag = 0;
-		o_bus_request = 0;
+		prefetch_request = 0;
 		state = 0;
 		valid = { RANGE{ 1'b0 } };
 		cache_rw = 0;
@@ -58,7 +74,7 @@ module CPU_ICache(
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			o_output_tag <= 0;
-			o_bus_request <= 0;
+			prefetch_request <= 0;
 			state <= 0;
 			valid <= { RANGE{ 1'b0 } };
 			cache_rw <= 0;
@@ -72,7 +88,7 @@ module CPU_ICache(
 							state <= 1;
 						end
 						else begin
-							o_bus_request <= 1;
+							prefetch_request <= 1;
 							state <= 2;
 						end
 					end
@@ -85,18 +101,18 @@ module CPU_ICache(
 						state <= 0;
 					end
 					else begin
-						o_bus_request <= 1;
+						prefetch_request <= 1;
 						state <= 2;
 					end
 				end
 
 				2: begin
-					if (i_bus_ready) begin
-						o_bus_request <= 0;
-						o_rdata <= i_bus_rdata;
+					if (prefetch_ready) begin
+						prefetch_request <= 0;
+						o_rdata <= prefetch_rdata;
 						o_output_tag <= i_input_tag;
 						cache_rw <= 1;
-						cache_wdata <= { i_bus_rdata, i_address };
+						cache_wdata <= { prefetch_rdata, i_address };
 						state <= 3;
 					end
 				end

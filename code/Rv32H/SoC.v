@@ -1,8 +1,11 @@
+
 `define ENABLE_DDR2LP
 //`define ENABLE_HSMC_XCVR
 //`define ENABLE_SMA
 //`define ENABLE_REFCLK
 `define ENABLE_GPIO
+
+`timescale 1ns/1ns
 
 module SoC(
 
@@ -143,7 +146,7 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-//	wire clock = CLOCK_125_p;
+`ifndef __VERILATOR__
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -166,12 +169,19 @@ module SoC(
 			sample[4:0] = sample[4:0];
 	end
 
-	assign soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	assign global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
-	assign start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	
-	assign reset = !start_n; // CPU_RESET_n;
+	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
+	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
+	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
+	wire reset = !start_n;
 
+`else
+
+	// Since we want to share pins with HW
+	// this clock will actually be simulated at 100 MHz.
+	wire clock = CLOCK_125_p;
+	wire reset = !CPU_RESET_n;
+
+`endif
   
 `ifdef SOC_ENABLE_VGA
 	// Video memory.
@@ -182,6 +192,7 @@ module SoC(
 	wire [31:0] video_sram_rdata;
 	wire video_sram_ready;
 
+	`ifndef __VERILATOR__
 	SRAM_interface video_sram(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -200,7 +211,7 @@ module SoC(
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
 	);
-	/*
+	`else
 	BRAM #(
 		.WIDTH(32),
 		.SIZE(320*200),
@@ -214,7 +225,7 @@ module SoC(
 		.o_rdata(video_sram_rdata),
 		.o_ready(video_sram_ready)
 	);
-	*/
+	`endif
 
 	// Video controller.
 	wire vram_select;
@@ -295,6 +306,7 @@ module SoC(
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
+	`ifndef __VERILATOR__
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
@@ -319,6 +331,21 @@ module SoC(
 		.DDR2LP_DQS_p(DDR2LP_DQS_p),
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
+	`else
+	BRAM #(
+		.WIDTH(32),
+		.SIZE(32'h08000000 / 4),
+		.ADDR_LSH(2)
+	) sdram(
+		.i_clock(clock),
+		.i_request(sdram_select && cpu_request),
+		.i_rw(cpu_rw),
+		.i_address(sdram_address),
+		.i_wdata(cpu_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready)
+	);
+	`endif
 `endif
 
 	// LEDS
@@ -547,7 +574,9 @@ module SoC(
 		timer_select ? timer_ready :
 		1'b0;
 
+`ifndef __VERILATOR__
 	// 7:0
 	assign LEDG = { soft_reset_n, global_reset_n, start_n };
+`endif
 
 endmodule
