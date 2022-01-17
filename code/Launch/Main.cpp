@@ -1,4 +1,5 @@
 #include <string.h>
+
 #include <Core/Containers/StaticVector.h>
 #include <Core/Io/AnsiEncoding.h>
 #include <Core/Io/BufferedStream.h>
@@ -9,77 +10,36 @@
 #include <Core/Io/StringReader.h>
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
+#include <Core/Log/LogRedirectTarget.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
 #include <Core/Thread/ThreadManager.h>
 #include <Core/Thread/Thread.h>
+
+#include <Ui/Application.h>
+#include <Ui/Button.h>
+#include <Ui/Edit.h>
+#include <Ui/FileDialog.h>
+#include <Ui/FloodLayout.h>
+#include <Ui/Form.h>
+#include <Ui/StyleSheet.h>
+#include <Ui/TableLayout.h>
+#include <Ui/Itf/IWidget.h>
+#include <Ui/LogList/LogList.h>
+#if defined(_WIN32)
+#	include <Ui/Win32/WidgetFactoryWin32.h>
+#elif defined(__APPLE__)
+#	include <Ui/Cocoa/WidgetFactoryCocoa.h>
+#elif defined(__LINUX__) || defined(__RPI__)
+#	include <Ui/X11/WidgetFactoryX11.h>
+#endif
+
+#include <Xml/XmlDeserializer.h>
+
+#include "Launch/ELF.h"
 #include "Launch/Serial.h"
 
 using namespace traktor;
-
-#define EI_NIDENT 16
-
-#pragma pack(1)
-struct ELF32_Header
-{
-	uint8_t e_ident[EI_NIDENT];
-	uint16_t e_type;
-	uint16_t e_machine;
-	uint32_t e_version;
-	uint32_t e_entry;
-	uint32_t e_phoff;
-	uint32_t e_shoff;
-	uint32_t e_flags;
-	uint16_t e_ehsize;
-	uint16_t e_phentsize;
-	uint16_t e_phnum;
-	uint16_t e_shentsize;
-	uint16_t e_shnum;
-	uint16_t e_shstrndx;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct ELF32_ProgramHeader
-{
-	uint32_t p_type;
-	uint32_t p_offset;
-	uint32_t p_vaddr;
-	uint32_t p_paddr;
-	uint32_t p_filesz;
-	uint32_t p_memsz;
-	uint32_t p_flags;
-	uint32_t p_align;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct ELF32_SectionHeader
-{
-	uint32_t sh_name;
-	uint32_t sh_type;
-	uint32_t sh_flags;
-	uint32_t sh_addr;
-	uint32_t sh_offset;
-	uint32_t sh_size;
-	uint32_t sh_link;
-	uint32_t sh_info;
-	uint32_t sh_addralign;
-	uint32_t sh_entsize;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct ELF32_Sym
-{
-	uint32_t st_name;
-	uint32_t st_value;
-	uint32_t st_size;
-	uint8_t st_info;
-	uint8_t st_other;
-	uint16_t st_shndx;
-};
-#pragma pack()
 
 template < typename T >
 void write(Serial& serial, T value)
@@ -472,6 +432,51 @@ uint8_t echoRnd()
 	return v;
 }
 
+class LogListTarget : public ILogTarget
+{
+public:
+	LogListTarget(ui::LogList* logList)
+	:	m_logList(logList)
+	{
+	}
+
+	virtual void log(uint32_t threadId, int32_t level, const wchar_t* str) override final
+	{
+		m_logList->add(threadId, (ui::LogList::LogLevel)(1 << level), str);
+	}
+
+private:
+	ui::LogList* m_logList;
+};
+
+
+Ref< ui::StyleSheet > loadStyleSheet(const Path& pathName)
+{
+	Ref< traktor::IStream > file = FileSystem::getInstance().open(pathName, traktor::File::FmRead);
+	if (file)
+	{
+		Ref< ui::StyleSheet > styleSheet = xml::XmlDeserializer(file, pathName.getPathName()).readObject< ui::StyleSheet >();
+		if (!styleSheet)
+			return nullptr;
+
+		auto includes = styleSheet->getInclude();
+		for (const auto& include : includes)
+		{
+			Ref< ui::StyleSheet > includeStyleSheet = loadStyleSheet(include);
+			if (!includeStyleSheet)
+				return nullptr;
+
+			styleSheet = includeStyleSheet->merge(styleSheet);
+			if (!styleSheet)
+				return nullptr;
+		}
+
+		return styleSheet;
+	}
+	else
+		return nullptr;
+}
+
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
@@ -497,7 +502,7 @@ int main(int argc, const char** argv)
 	uint32_t sp = 0;
 	if (commandLine.hasOption('s', L"stack"))
 		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
-
+/*
 	if (commandLine.hasOption('e', L"echocheck"))
 	{
 		for (;;)
@@ -549,15 +554,206 @@ int main(int argc, const char** argv)
 	if (commandLine.hasOption('t', L"terminal"))
 	{
 		log::info << L"Terminal ready! Waiting for data..." << Endl;
-		for (;;)
+
+*/
+
+#if defined(_WIN32)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryWin32(),
+		nullptr
+	);
+#elif defined(__APPLE__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryCocoa(),
+		nullptr
+	);
+#elif defined(__LINUX__) || defined(__RPI__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryX11(),
+		nullptr
+	);
+#endif
+
+	// Load default stylesheet.
+	std::wstring styleSheetName = L"$(TRAKTOR_HOME)/resources/runtime/themes/Light/StyleSheet.xss";
+	Ref< ui::StyleSheet > styleSheet = loadStyleSheet(styleSheetName);
+	if (!styleSheet)
+	{
+		log::error << L"Unable to load stylesheet " << styleSheetName << Endl;
+		return false;
+	}
+	ui::Application::getInstance()->setStyleSheet(styleSheet);
+
+	Ref< ui::Form > form = new ui::Form();
+	form->create(L"Launcher", 640, 480, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
+
+	Ref< ui::Container > top = new ui::Container();
+	top->create(form, ui::WsNone, new ui::TableLayout(L"100%,*,*", L"*", 0, 4));
+
+	Ref< ui::Edit > editFile = new ui::Edit();
+	editFile->create(top, L"");
+
+	Ref< ui::Button > buttonBrowse = new ui::Button();
+	buttonBrowse->create(top, L"...");
+	buttonBrowse->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+		ui::FileDialog fileDialog;
+		fileDialog.create(form, L"File", L"Select file to upload", L"All files (*.*);*.*");
+
+		Path path;
+		if (fileDialog.showModal(path))
 		{
-			uint8_t ch = read< uint8_t >(serial);
-			if (!iscntrl(ch))
-				log::info << wchar_t(ch);
-			else if (ch == '\n')
-				log::info << Endl;
+			editFile->setText(path.getPathNameNoVolume());
+			editFile->update();
+		}
+
+		fileDialog.destroy();
+	});
+
+	Thread* threadUpload = nullptr;
+	bool running = false;
+
+	Ref< ui::Button > buttonUpload = new ui::Button();
+	buttonUpload->create(top, L"Run");
+	buttonUpload->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+
+		if (threadUpload)
+		{
+			log::info << L"Upload already in progress." << Endl;
+			return;
+		}
+
+		running = false;
+
+		threadUpload = ThreadManager::getInstance().create([&]() {
+			if (uploadELF(serial, editFile->getText(), sp))
+				running = true;
+		});
+		threadUpload->start();
+		
+	});
+
+	Ref< ui::LogList > logList = new ui::LogList();
+	logList->create(form, ui::WsAccelerated, nullptr);
+
+	Ref< ILogTarget > defaultInfoLog = log::info.getGlobalTarget();
+	Ref< LogListTarget > logTarget = new LogListTarget(logList);
+	log::info.setGlobalTarget(new LogRedirectTarget(defaultInfoLog, logTarget));
+
+	form->update();
+	form->show();
+
+	bool keyStates[9] = {};
+
+	ui::Application::getInstance()->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
+
+		if (!running)
+			return;
+
+		uint8_t keyCode = 0;
+		switch (event->getVirtualKey())
+		{
+		case ui::VkLeft:
+			keyCode = 1;
+			break;
+		case ui::VkRight:
+			keyCode = 2;
+			break;
+		case ui::VkUp:
+			keyCode = 3;
+			break;
+		case ui::VkDown:
+			keyCode = 4;
+			break;
+		case ui::VkShift:
+			keyCode = 5;
+			break;
+		case ui::VkControl:
+			keyCode = 6;
+			break;
+		case ui::VkEscape:
+			keyCode = 7;
+			break;
+		case ui::VkReturn:
+			keyCode = 8;
+			break;
+		default:
+			break;
+		}
+
+		if (keyCode != 0 && keyStates[keyCode] == false)
+		{
+			write< uint8_t >(serial, keyCode | 0x80);
+			keyStates[keyCode] = true;
+		}			
+	});
+	ui::Application::getInstance()->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
+
+		if (!running)
+			return;
+		if (event->isRepeat())
+			return;
+
+		uint8_t keyCode = 0;
+		switch (event->getVirtualKey())
+		{
+		case ui::VkLeft:
+			keyCode = 1;
+			break;
+		case ui::VkRight:
+			keyCode = 2;
+			break;
+		case ui::VkUp:
+			keyCode = 3;
+			break;
+		case ui::VkDown:
+			keyCode = 4;
+			break;
+		case ui::VkShift:
+			keyCode = 5;
+			break;
+		case ui::VkControl:
+			keyCode = 6;
+			break;
+		case ui::VkEscape:
+			keyCode = 7;
+			break;
+		case ui::VkReturn:
+			keyCode = 8;
+			break;
+		default:
+			break;
+		}
+
+		if (keyCode != 0 && keyStates[keyCode] == true)
+		{
+			write< uint8_t >(serial, keyCode);
+			keyStates[keyCode] = false;
+		}	
+	});
+
+	while (ui::Application::getInstance()->process())
+	{
+		if (threadUpload != nullptr && threadUpload->wait(0))
+		{
+			ThreadManager::getInstance().destroy(threadUpload);
+			threadUpload = nullptr;
+		}
+
+		if (running)
+		{
+			if (serial.available() > 0)
+			{
+				uint8_t ch = read< uint8_t >(serial);
+				if (!iscntrl(ch))
+					log::info << wchar_t(ch);
+				else if (ch == '\n')
+					log::info << Endl;
+			}
 		}
 	}
 
+	form->destroy();
+
+	ui::Application::getInstance()->finalize();
 	return 0;
 }
