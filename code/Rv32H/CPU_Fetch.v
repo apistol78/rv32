@@ -20,7 +20,11 @@ module CPU_Fetch(
 	// Output
 	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
-	output reg [31:0] o_pc
+	output reg [31:0] o_pc,
+
+	// Debug
+	output wire [31:0] o_icache_hit_count,
+	output wire [31:0] o_icache_miss_count
 );
 
 	reg [2:0] state;
@@ -42,7 +46,11 @@ module CPU_Fetch(
 		.o_bus_request(o_bus_request),
 		.i_bus_ready(i_bus_ready),
 		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata)
+		.i_bus_rdata(i_bus_rdata),
+
+		// Debug
+		.o_icache_hit_count(o_icache_hit_count),
+		.o_icache_miss_count(o_icache_miss_count)		
 	);
 
 	// 

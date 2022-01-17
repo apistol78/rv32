@@ -53,8 +53,9 @@ wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_MUL | is_MULH | is_MULHU | i
 wire is_S = is_SB | is_SH | is_SW;
 wire is_U = is_AUIPC | is_LUI;
 
+wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR | is_XORI;
+wire is_COMPARE = is_SLT | is_SLTI | is_SLTIU | is_SLTU;
+wire is_COMPLEX = is_DIV | is_DIVU | is_MUL | is_MULH | is_MULHU | is_REM | is_REMU;
 wire is_JUMP = is_JAL | is_JALR;
 wire is_JUMP_CONDITIONAL = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
-wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SLL | is_SLLI | is_SLT | is_SLTI | is_SLTIU | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR | is_XORI;
-wire is_COMPLEX = is_DIV | is_DIVU | is_MUL | is_MULH | is_MULHU | is_REM | is_REMU;
 wire is_MEMORY = is_LB | is_LBU | is_LH | is_LHU | is_LW | is_SB | is_SH | is_SW;

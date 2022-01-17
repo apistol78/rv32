@@ -3,6 +3,7 @@
 
 local insttype = {
 	ARITHMETIC = "ARITHMETIC",
+	COMPARE = "COMPARE",
 	JUMP = "JUMP",
 	JUMP_CONDITIONAL = "JUMP_CONDITIONAL",
 	MEMORY = "MEMORY",
@@ -1116,7 +1117,7 @@ local instructions = {
 		data = 0x00002033,
 		name = "SLT",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.COMPARE,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
@@ -1132,7 +1133,7 @@ local instructions = {
 		data = 0x00002013,
 		name = "SLTI",
 		format = "I",
-		type = insttype.ARITHMETIC,
+		type = insttype.COMPARE,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
@@ -1148,7 +1149,7 @@ local instructions = {
 		data = 0x00003013,
 		name = "SLTIU",
 		format = "I",
-		type = insttype.ARITHMETIC,
+		type = insttype.COMPARE,
 		cpp = [[
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
@@ -1164,7 +1165,7 @@ local instructions = {
 		data = 0x00003033,
 		name = "SLTU",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.COMPARE,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
@@ -1457,7 +1458,8 @@ function main(argv)
 		stdout:printLn("")
 
 		-- Instruction type signals.
-		for _, it in pairs(insttype) do
+
+		for _, it in pairs({ insttype.ARITHMETIC, insttype.COMPARE, insttype.COMPLEX, insttype.JUMP, insttype.JUMP_CONDITIONAL, insttype.MEMORY }) do
 			stdout:print("wire is_" .. it .. " =")
 			local count = 0
 			for _, inst in ipairs(vi) do

@@ -17,6 +17,7 @@ module CPU_Execute (
 	input wire [31:0] i_imm,
 
 	input wire i_arithmetic,
+	input wire i_compare,
 	input wire i_jump,
 	input wire i_jump_conditional,
 
@@ -143,6 +144,7 @@ module CPU_Execute (
 	assign o_stall = (i_tag != o_tag) && (cycle != 0);
 	
 	wire [31:0] jump_conditional_target = $signed(`PC) + $signed(`IMM);
+	wire [31:0] next_target = `PC + 4;
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
@@ -158,7 +160,9 @@ module CPU_Execute (
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
-				o_pc_next <= i_pc + 4;
+				$display("execute");
+			
+				o_pc_next <= next_target;
 				o_inst_rd <= i_inst_rd;
 
 				o_mem_address <= alu_result;
@@ -171,10 +175,14 @@ module CPU_Execute (
 
 				if (i_arithmetic) begin
 					`RD <= alu_result;
-					`EXECUTE_DONE;				
+					`EXECUTE_DONE;
+				end
+				else if (i_compare) begin
+					`RD <= { 31'b0, alu_compare_result };
+					`EXECUTE_DONE;
 				end
 				else if (i_jump) begin
-					`RD <= `PC + 4;
+					`RD <= next_target;
 					`GOTO(alu_result);
 					`EXECUTE_DONE;
 				end

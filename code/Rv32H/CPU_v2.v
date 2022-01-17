@@ -24,7 +24,9 @@ module CPU_v2 (
 	output wire [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
-	output reg [31:0] o_retire_count
+	output reg [31:0] o_retire_count,
+	output wire [31:0] o_icache_hit_count,
+	output wire [31:0] o_icache_miss_count
 );
 
 	//====================================================
@@ -79,7 +81,11 @@ module CPU_v2 (
 		// Output
 		.o_tag(fetch_tag),
 		.o_instruction(fetch_instruction),
-		.o_pc(fetch_pc)
+		.o_pc(fetch_pc),
+
+		// Debug
+		.o_icache_hit_count(o_icache_hit_count),
+		.o_icache_miss_count(o_icache_miss_count)
 	);
 
 	//====================================================
@@ -94,6 +100,7 @@ module CPU_v2 (
 	wire [31:0] decode_imm;
 	
 	wire decode_arithmetic;
+	wire decode_compare;
 	wire decode_jump;
 	wire decode_jump_conditional;
 
@@ -128,6 +135,7 @@ module CPU_v2 (
 		.o_imm(decode_imm),
 		
 		.o_arithmetic(decode_arithmetic),
+		.o_compare(decode_compare),
 		.o_jump(decode_jump),
 		.o_jump_conditional(decode_jump_conditional),
 
@@ -188,6 +196,7 @@ module CPU_v2 (
 		.i_imm(decode_imm),
 
 		.i_arithmetic(decode_arithmetic),
+		.i_compare(decode_compare),
 		.i_jump(decode_jump),
 		.i_jump_conditional(decode_jump_conditional),
 

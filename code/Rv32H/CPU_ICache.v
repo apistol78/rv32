@@ -14,7 +14,11 @@ module CPU_ICache(
 	output wire o_bus_request,
 	input wire i_bus_ready,
 	output wire [31:0] o_bus_address,
-	input wire [31:0] i_bus_rdata
+	input wire [31:0] i_bus_rdata,
+
+	// Debug
+	output wire [31:0] o_icache_hit_count,
+	output wire [31:0] o_icache_miss_count	
 );
 
 	localparam SIZE	= 10;
@@ -27,6 +31,12 @@ module CPU_ICache(
 	wire [SIZE - 1:0] cache_label = i_address[(SIZE - 1):2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
+
+	reg [31:0] hit_count;
+	reg [31:0] miss_count;
+
+	assign o_icache_hit_count = hit_count;
+	assign o_icache_miss_count = miss_count;
 
 	// One cycle latency, important since
 	// we rely on address only.
@@ -44,7 +54,6 @@ module CPU_ICache(
 		.o_ready()
 	);
 
-	//assign o_bus_address = i_address;
 	reg prefetch_request;
 	wire prefetch_ready;
 	wire [31:0] prefetch_rdata;
@@ -69,6 +78,8 @@ module CPU_ICache(
 		valid = { RANGE{ 1'b0 } };
 		cache_rw = 0;
 		cache_wdata = 0;
+		hit_count = 0;
+		miss_count = 0;
 	end
 
 	always @(posedge i_clock) begin
@@ -88,6 +99,7 @@ module CPU_ICache(
 							state <= 1;
 						end
 						else begin
+							miss_count <= miss_count + 1;
 							prefetch_request <= 1;
 							state <= 2;
 						end
@@ -96,11 +108,13 @@ module CPU_ICache(
 
 				1: begin
 					if (cache_rdata[31:0] == i_address) begin
+						hit_count <= hit_count + 1;
 						o_rdata <= cache_rdata[63:32];
 						o_output_tag <= i_input_tag;
 						state <= 0;
 					end
 					else begin
+						miss_count <= miss_count + 1;
 						prefetch_request <= 1;
 						state <= 2;
 					end

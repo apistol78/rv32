@@ -10,23 +10,25 @@ module Timer#(
 	input wire i_reset,
 	input wire i_clock,
 	input wire i_request,
-	input wire [1:0] i_address,
+	input wire [2:0] i_address,
 	output reg [31:0] o_rdata,
-	output wire o_ready,
+	output reg o_ready,
 	
 	// Debug
-	input wire [31:0] i_retire_count
+	input wire [31:0] i_retire_count,
+	input wire [31:0] i_icache_hit_count,
+	input wire [31:0] i_icache_miss_count
 );
 
 	localparam PRESCALE = FREQUENCY / 1000;
 	localparam PRESCALE_WIDTH = $clog2(PRESCALE);
 
 	reg [PRESCALE_WIDTH - 1:0] prescale = 0;
-	
 	reg [31:0] cycles = 0;
 	reg [31:0] ms = 0;
+	reg request = 0;
 
-	assign o_ready = 1'b1;
+	initial o_ready = 1'b0;
 
 	always @(posedge i_clock) begin
 		if (i_reset)
@@ -50,14 +52,32 @@ module Timer#(
 	end
 
 	always @(posedge i_clock) begin
-		if (i_request) begin
-			if (i_address == 2'h0)
-				o_rdata <= ms;
-			else if (i_address == 2'h1)
-				o_rdata <= cycles;
-			else if (i_address == 2'h2)
-				o_rdata <= i_retire_count;
-		end
-	end
+		if (i_request && !request) begin
 
+			if (i_address == 3'h0) begin
+				o_rdata <= ms;
+			end
+			else if (i_address == 3'h1) begin
+				o_rdata <= cycles;
+			end
+			else if (i_address == 3'h2) begin
+				o_rdata <= i_retire_count;
+			end
+			else if (i_address == 3'h3) begin
+				o_rdata <= i_icache_hit_count;
+			end
+			else if (i_address == 3'h4) begin
+				o_rdata <= i_icache_miss_count;
+			end
+			else
+				o_rdata <= i_address;
+
+			o_ready <= 1;
+		end
+		else if (!i_request)
+			o_ready <= 0;
+			
+		request <= i_request;
+	end
+	
 endmodule

@@ -140,6 +140,8 @@ module SoC(
       output             UART_TX
 );
 
+`define FREQUENCY 100000000
+
 `define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
@@ -255,7 +257,7 @@ module SoC(
 	wire vga_enable;
 	wire [15:0] vga_address;
 	VGA #(
-		.PRESCALE(100000000 / 25000000)
+		.PRESCALE(`FREQUENCY / 25000000)
 	) vga(
 		.i_clock(clock),
 		.o_hsync(HDMI_TX_HS),
@@ -367,8 +369,7 @@ module SoC(
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
-		//.PRESCALE(50000000 / (115200 * 8))
-		.PRESCALE(100000000 / (115200 * 8))
+		.PRESCALE(`FREQUENCY / (115200 * 8))
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -443,11 +444,11 @@ module SoC(
 
 	// Timer
 	wire timer_select;
-	wire [1:0] timer_address;
+	wire [2:0] timer_address;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	Timer #(
-		.FREQUENCY(100000000)
+		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -457,7 +458,9 @@ module SoC(
 		.o_ready(timer_ready),
 		
 		// Debug
-		.i_retire_count(cpu_retire_count)
+		.i_retire_count(cpu_retire_count),
+		.i_icache_hit_count(cpu_icache_hit_count),
+		.i_icache_miss_count(cpu_icache_miss_count)
 	);
 	
 	//====================================================
@@ -521,6 +524,8 @@ module SoC(
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
 	wire [31:0] cpu_retire_count;
+	wire [31:0] cpu_icache_hit_count;
+	wire [31:0] cpu_icache_miss_count;
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -540,7 +545,9 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_retire_count(cpu_retire_count)
+		.o_retire_count(cpu_retire_count),
+		.o_icache_hit_count(cpu_icache_hit_count),
+		.o_icache_miss_count(cpu_icache_miss_count)	
 	);
 	
 	//=====================================
@@ -565,12 +572,12 @@ module SoC(
 	
 `ifdef SOC_ENABLE_UART
 	assign uart_select = (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
-	assign uart_address = bus_address[3:2]; // - 32'h50000010;
+	assign uart_address = bus_address[3:2];
 `endif
 
 `ifdef SOC_ENABLE_GPIO
 	assign gpio_select = (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
-	assign gpio_address = bus_address[3:2]; // - 32'h50000020;
+	assign gpio_address = bus_address[3:2];
 `endif
 	
 `ifdef SOC_ENABLE_I2C
@@ -581,8 +588,8 @@ module SoC(
 	assign sd_select = (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
 `endif
 
-	assign timer_select = (bus_address >= 32'h50000050 && bus_address < 32'h50000060);
-	assign timer_address = bus_address[3:2]; // - 32'h50000050;
+	assign timer_select = bus_address >= 32'h60000000;
+	assign timer_address = bus_address[4:2];
 
 	assign bus_rdata =
 		rom_select ? rom_rdata :

@@ -22,6 +22,7 @@ module CPU_Decode(
 	output reg [31:0] o_imm,
 
 	output reg o_arithmetic,
+	output reg o_compare,
 	output reg o_jump,
 	output reg o_jump_conditional,
 
@@ -96,6 +97,7 @@ module CPU_Decode(
 					32'h0;
 				
 				o_arithmetic <= is_ARITHMETIC;
+				o_compare <= is_COMPARE;
 				o_jump <= is_JUMP;
 				o_jump_conditional <= is_JUMP_CONDITIONAL;
 
