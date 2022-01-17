@@ -48,33 +48,39 @@ module SRAM_interface(
 	assign o_ready = i_request && count >= (CYCLES - 1);
 
 	// Output 16-bit SRAM address, first low then high parts.
-	always @(i_request or count) begin
+	always @(*) begin
 		if (i_request) begin
 			if (count < CYCLES / 2)
 				SRAM_A = (i_address >> 1) & 32'hfffffffe;
 			else
 				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
 		end
+		else
+			SRAM_A = 32'h0;
 	end
 
 	// Output SRAM write enable, memory is stored on positive edge.
-	always @(i_request or count) begin
+	always @(*) begin
 		if (i_request && i_rw) begin
 			if (count == 0 || count == CYCLES / 2)
 				SRAM_WE_n = 0;
 			else
 				SRAM_WE_n = 1;
 		end
+		else
+			SRAM_WE_n = 1;
 	end
 
 	// Output 16-bit SRAM data, first low the high part.
-	always @(i_request or count) begin
+	always @(*) begin
 		if (i_request && i_rw) begin
 			if (count < CYCLES / 2)
 				wdata = i_wdata[15:0];
 			else
 				wdata = i_wdata[31:16];
 		end
+		else
+			wdata = 32'h0;
 	end
 
 	// Increment counter, store data read from SRAM.

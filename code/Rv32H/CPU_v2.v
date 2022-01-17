@@ -7,63 +7,25 @@
 
 module CPU_v2 (
 	input wire i_reset,
-	input wire i_clock,				// CPU clock
+	input wire i_clock,					// CPU clock
 
-	// Bus
-	output wire o_bus_rw,				// Data read/write
-	output wire o_bus_request,			// IO request.
-	input wire i_bus_ready,				// IO request ready.
-	output wire [31:0] o_bus_address,	// Address
-	input wire [31:0] i_bus_rdata,		// Read data
-	output wire [31:0] o_bus_wdata,		// Write data
+	// Instruction bus
+	output wire o_ibus_request,			// IO request.
+	input wire i_ibus_ready,			// IO request ready.
+	output wire [31:0] o_ibus_address,	// Address
+	input wire [31:0] i_ibus_rdata,		// Read data
+	
+	// Data bus
+	output wire o_dbus_rw,				// Data read/write
+	output wire o_dbus_request,			// IO request.
+	input wire i_dbus_ready,			// IO request ready.
+	output wire [31:0] o_dbus_address,	// Address
+	input wire [31:0] i_dbus_rdata,		// Read data
+	output wire [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
 	output reg [31:0] o_retire_count
 );
-
-	//====================================================
-	// BUS ACCESS
-
-	wire bus_pa_request;
-	wire bus_pa_ready;
-	wire [31:0] bus_pa_address;
-	wire [31:0] bus_pa_rdata;
-
-	wire bus_pb_rw;
-	wire bus_pb_request;
-	wire bus_pb_ready;
-	wire [31:0] bus_pb_address;
-	wire [31:0] bus_pb_rdata;
-	wire [31:0] bus_pb_wdata;
-
-	CPU_BusAccess bus(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-
-		// Bus
-		.o_bus_rw(o_bus_rw),
-		.o_bus_request(o_bus_request),
-		.i_bus_ready(i_bus_ready),
-		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata),
-		.o_bus_wdata(o_bus_wdata),
-
-		// Port A (FETCH)
-		.i_pa_rw(1'b0),
-		.i_pa_request(bus_pa_request),
-		.o_pa_ready(bus_pa_ready),
-		.i_pa_address(bus_pa_address),
-		.o_pa_rdata(bus_pa_rdata),
-		.i_pa_wdata(),
-
-		// Port B (MEMORY)
-		.i_pb_rw(bus_pb_rw),
-		.i_pb_request(bus_pb_request),
-		.o_pb_ready(bus_pb_ready),
-		.i_pb_address(bus_pb_address),
-		.o_pb_rdata(bus_pb_rdata),
-		.i_pb_wdata(bus_pb_wdata)
-	);
 
 	//====================================================
 	// REGISTERS
@@ -105,10 +67,10 @@ module CPU_v2 (
 		.i_stall(memory_stall || execute_stall),
 
 		// Bus
-		.o_bus_request(bus_pa_request),
-		.i_bus_ready(bus_pa_ready),
-		.o_bus_address(bus_pa_address),
-		.i_bus_rdata(bus_pa_rdata),
+		.o_bus_request(o_ibus_request),
+		.i_bus_ready(i_ibus_ready),
+		.o_bus_address(o_ibus_address),
+		.i_bus_rdata(i_ibus_rdata),
 
 		// Input
 		.i_tag(writeback_tag),
@@ -267,12 +229,12 @@ module CPU_v2 (
 		.i_clock(i_clock),
 	
 		// Bus
-		.o_bus_rw(bus_pb_rw),
-		.o_bus_request(bus_pb_request),
-		.i_bus_ready(bus_pb_ready),
-		.o_bus_address(bus_pb_address),
-		.i_bus_rdata(bus_pb_rdata),
-		.o_bus_wdata(bus_pb_wdata),
+		.o_bus_rw(o_dbus_rw),
+		.o_bus_request(o_dbus_request),
+		.i_bus_ready(i_dbus_ready),
+		.o_bus_address(o_dbus_address),
+		.i_bus_rdata(i_dbus_rdata),
+		.o_bus_wdata(o_dbus_wdata),
 
 		// Input from execute.
 		.i_tag(execute_tag),

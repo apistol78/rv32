@@ -13,13 +13,11 @@ module CPU_BusAccess(
 	input wire [31:0] i_bus_rdata,		// Read data
 	output reg [31:0] o_bus_wdata,		// Write data,
 
-	// Port A
-	input wire i_pa_rw,
+	// Port A (Read only)
 	input wire i_pa_request,
 	output wire o_pa_ready,
 	input wire [31:0] i_pa_address,
 	output wire [31:0] o_pa_rdata,
-	input wire [31:0] i_pa_wdata,
 
 	// Port B
 	input wire i_pb_rw,
@@ -41,7 +39,7 @@ module CPU_BusAccess(
 
 	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
 	assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
-	assign o_pa_rdata = i_pa_request && i_pa_rw == 1'b0 && (state == 2'd1) ? i_bus_rdata : 32'hz;
+	assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
 	assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
 	assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
 
@@ -64,9 +62,8 @@ module CPU_BusAccess(
 						state <= 2'd2;
 					end
 					else if (i_pa_request) begin
-						o_bus_rw <= i_pa_rw;
+						o_bus_rw <= 1'b0;
 						o_bus_address <= i_pa_address;
-						o_bus_wdata <= i_pa_wdata;
 						state <= 2'd1;		
 					end
 				end
