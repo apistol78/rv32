@@ -6,8 +6,9 @@ module CPU_ICache(
 	input wire i_reset,
 	input wire i_clock,
 	
-	input wire [31:0] i_input_pc,
-	output reg [31:0] o_output_pc,
+	input wire [`TAG_SIZE] i_input_tag,
+	output reg [`TAG_SIZE] o_output_tag,
+	input wire [31:0] i_address,
 	output reg [31:0] o_rdata,
 
 	output wire o_bus_request,
@@ -19,11 +20,11 @@ module CPU_ICache(
 	localparam SIZE	= 10;
 	localparam RANGE = 1 << SIZE;
 
-	reg [3:0] state;
+	reg [1:0] state;
 	reg [RANGE - 1:0] valid;
 
 	reg cache_rw;
-	wire [SIZE - 1:0] cache_label = i_input_pc[(SIZE - 1):2];	// 2 lowest bits are always zero.
+	wire [SIZE - 1:0] cache_label = i_address[(SIZE - 1):2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 
@@ -43,15 +44,16 @@ module CPU_ICache(
 		.o_ready()
 	);
 
-	reg [31:0] prefetch_input_address;
-	wire [31:0] prefetch_output_address;
+	//assign o_bus_address = i_address;
+	reg prefetch_request;
+	wire prefetch_ready;
 	wire [31:0] prefetch_rdata;
 	CPU_Prefetch prefetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-
-		.i_address(prefetch_input_address),
-		.o_address(prefetch_output_address),
+		.i_request(prefetch_request),
+		.o_ready(prefetch_ready),
+		.i_address(i_address),
 		.o_rdata(prefetch_rdata),
 
 		.o_bus_request(o_bus_request),
@@ -61,8 +63,8 @@ module CPU_ICache(
 	);
 
 	initial begin
-		o_output_pc = 32'hffff_ffff;
-		prefetch_input_address = 32'h0000_0000;
+		o_output_tag = 0;
+		prefetch_request = 0;
 		state = 0;
 		valid = { RANGE{ 1'b0 } };
 		cache_rw = 0;
@@ -71,8 +73,8 @@ module CPU_ICache(
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
-			o_output_pc <= 32'hffff_ffff;
-			prefetch_input_address <= 32'h0000_0000;
+			o_output_tag <= 0;
+			prefetch_request <= 0;
 			state <= 0;
 			valid <= { RANGE{ 1'b0 } };
 			cache_rw <= 0;
@@ -81,44 +83,45 @@ module CPU_ICache(
 		else begin
 			case (state)
 				0: begin
-					cache_rw <= 0;
-					if (i_input_pc != o_output_pc) begin
-
-						// #1 Pop from prefetcher
-						if (prefetch_output_address == i_input_pc) begin
-							o_rdata <= prefetch_rdata;
-							o_output_pc <= i_input_pc;
-
-							cache_rw <= 1;
-					 		cache_wdata <= { prefetch_rdata, i_input_pc };
-							valid[cache_label] <= 1;
-
-							prefetch_input_address <= i_input_pc + 4;
-						end
-						// #2 Read from cache
-						else if (valid[cache_label]) begin
+					if (i_input_tag != o_output_tag) begin
+						if (valid[cache_label]) begin
 							state <= 1;
 						end
-						// #3 Read into prefetcher
 						else begin
-							prefetch_input_address <= i_input_pc;
+							prefetch_request <= 1;
+							state <= 2;
 						end
 					end
 				end
 
 				1: begin
-					// Use cached data if valid.
-					if (cache_rdata[31:0] == i_input_pc) begin
+					if (cache_rdata[31:0] == i_address) begin
 						o_rdata <= cache_rdata[63:32];
-						o_output_pc <= i_input_pc;
+						o_output_tag <= i_input_tag;
+						state <= 0;
 					end
-					// Read into prefetcher.
 					else begin
-						prefetch_input_address <= i_input_pc;
+						prefetch_request <= 1;
+						state <= 2;
 					end
-					state <= 0;
 				end
 
+				2: begin
+					if (prefetch_ready) begin
+						prefetch_request <= 0;
+						o_rdata <= prefetch_rdata;
+						o_output_tag <= i_input_tag;
+						cache_rw <= 1;
+						cache_wdata <= { prefetch_rdata, i_address };
+						state <= 3;
+					end
+				end
+
+				3: begin
+					valid[cache_label] <= 1;
+					cache_rw <= 0;
+					state <= 0;
+				end
 			endcase
 		end
 	end

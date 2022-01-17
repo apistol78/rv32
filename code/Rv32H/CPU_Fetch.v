@@ -26,15 +26,19 @@ module CPU_Fetch(
 	reg [2:0] state;
 	reg [31:0] pc;
 	
-	wire [31:0] icache_output_pc;
+	reg [`TAG_SIZE] icache_input_tag;
+	wire [`TAG_SIZE] icache_output_tag;
 	wire [31:0] icache_rdata;
 
 	CPU_ICache icache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_input_pc(pc),
-		.o_output_pc(icache_output_pc),
+
+		.i_input_tag(icache_input_tag),
+		.o_output_tag(icache_output_tag),
+		.i_address(pc),
 		.o_rdata(icache_rdata),
+
 		.o_bus_request(o_bus_request),
 		.i_bus_ready(i_bus_ready),
 		.o_bus_address(o_bus_address),
@@ -49,6 +53,7 @@ module CPU_Fetch(
 	initial begin
 		state = 0;
 		pc = 32'h00000000;
+		icache_input_tag = 0;
 		o_tag = 0;
 		o_instruction = 0;
 		o_pc = 0;
@@ -58,6 +63,7 @@ module CPU_Fetch(
 		if (i_reset) begin
 			state <= 0;
 			pc <= 32'h00000000;
+			icache_input_tag <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
 			pc <= 32'h00000000;
@@ -65,28 +71,35 @@ module CPU_Fetch(
 		else begin
 			case (state)
 				0: begin
-					if (!i_stall && icache_output_pc == pc) begin
-						// Output to pipeline instruction and PC.
-						o_tag <= o_tag + 1;
+					if (!i_stall) begin
+						icache_input_tag <= icache_input_tag + 1;
+						state <= 1;
+					end
+				end
+
+				1: begin
+					if (!i_stall && icache_output_tag == icache_input_tag) begin
+
+						o_tag <= icache_output_tag;
 						o_instruction <= icache_rdata;
 						o_pc <= pc;
+
+						pc <= pc + 4;
 
 						if (is_JUMP || is_JUMP_CONDITIONAL) begin
 							// Branch instruction, need to wait
 							// for an explicit "goto" signal before
 							// we can continue feeding the pipeline.
-							state <= 1;
+							state <= 2;
 						end
 						else begin
-							// Move PC to next instruction, will
-							// enable to icache to start loading
-							// next instruction.
-							pc <= pc + 4;
+							// Issue another request directly.
+							icache_input_tag <= icache_input_tag + 1;
 						end
 					end
 				end
 
-				1: begin
+				2: begin
 					// Wait for branch result.
 					if (i_tag == o_tag) begin
 						pc <= i_pc_next;
