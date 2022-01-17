@@ -114,6 +114,7 @@ VL_MODULE(VSoC) {
         CData/*0:0*/ SoC__DOT__sd_ready;
         CData/*0:0*/ SoC__DOT__timer_select;
         CData/*0:0*/ SoC__DOT__cpu_rw;
+        CData/*0:0*/ SoC__DOT__cpu_request;
         CData/*0:0*/ SoC__DOT__cpu_ready;
         CData/*0:0*/ SoC__DOT__video_bus__DOT__fifo_write;
         CData/*0:0*/ SoC__DOT__video_bus__DOT__fifo_read;
@@ -146,8 +147,8 @@ VL_MODULE(VSoC) {
         CData/*0:0*/ SoC__DOT__sd__DOT__ddir;
         CData/*0:0*/ SoC__DOT__sd__DOT__cmd;
         CData/*3:0*/ SoC__DOT__sd__DOT__dat;
+        CData/*0:0*/ SoC__DOT__cpu__DOT__bus_busy;
         CData/*0:0*/ SoC__DOT__cpu__DOT__bus_pa_request;
-        CData/*0:0*/ SoC__DOT__cpu__DOT__bus_pa_ready;
         CData/*0:0*/ SoC__DOT__cpu__DOT__bus_pb_rw;
         CData/*0:0*/ SoC__DOT__cpu__DOT__bus_pb_request;
         CData/*0:0*/ SoC__DOT__cpu__DOT__bus_pb_ready;
@@ -156,9 +157,9 @@ VL_MODULE(VSoC) {
         CData/*4:0*/ SoC__DOT__cpu__DOT__decode_inst_rs1;
         CData/*4:0*/ SoC__DOT__cpu__DOT__decode_inst_rs2;
         CData/*4:0*/ SoC__DOT__cpu__DOT__decode_inst_rd;
-        CData/*0:0*/ SoC__DOT__cpu__DOT__decode_arithmetic;
     };
     struct {
+        CData/*0:0*/ SoC__DOT__cpu__DOT__decode_arithmetic;
         CData/*0:0*/ SoC__DOT__cpu__DOT__decode_jump;
         CData/*0:0*/ SoC__DOT__cpu__DOT__decode_jump_conditional;
         CData/*3:0*/ SoC__DOT__cpu__DOT__decode_alu_operation;
@@ -182,18 +183,13 @@ VL_MODULE(VSoC) {
         CData/*3:0*/ SoC__DOT__cpu__DOT__writeback_tag;
         CData/*4:0*/ SoC__DOT__cpu__DOT__writeback_inst_rd;
         CData/*3:0*/ SoC__DOT__cpu__DOT__retire_tag;
-        CData/*1:0*/ SoC__DOT__cpu__DOT__bus__DOT__state;
         CData/*3:0*/ SoC__DOT__cpu__DOT__registers__DOT__read_tag;
         CData/*3:0*/ SoC__DOT__cpu__DOT__registers__DOT__write_tag;
         CData/*2:0*/ SoC__DOT__cpu__DOT__fetch__DOT__state;
-        CData/*3:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
-        CData/*3:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag;
         CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__is_R;
         CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__is_ARITHMETIC;
-        CData/*1:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state;
+        CData/*3:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state;
         CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw;
-        CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request;
-        CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready;
         CData/*0:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__o_ready;
         CData/*3:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state;
         CData/*0:0*/ SoC__DOT__cpu__DOT__decode__DOT__is_B;
@@ -205,7 +201,7 @@ VL_MODULE(VSoC) {
         CData/*3:0*/ SoC__DOT__cpu__DOT__decode__DOT__alu_operation;
         CData/*2:0*/ SoC__DOT__cpu__DOT__decode__DOT__alu_operand1;
         CData/*2:0*/ SoC__DOT__cpu__DOT__decode__DOT__alu_operand2;
-        CData/*7:0*/ SoC__DOT__cpu__DOT__execute__DOT__cycle;
+        CData/*4:0*/ SoC__DOT__cpu__DOT__execute__DOT__cycle;
         CData/*0:0*/ SoC__DOT__cpu__DOT__execute__DOT__mul_signed;
         CData/*0:0*/ SoC__DOT__cpu__DOT__execute__DOT__div_signed;
         CData/*0:0*/ SoC__DOT__cpu__DOT__execute__DOT__alu__DOT__signed_lt_result;
@@ -223,12 +219,12 @@ VL_MODULE(VSoC) {
         CData/*0:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
         CData/*0:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__o_ready;
         SData/*15:0*/ SoC__DOT__vga_address;
-    };
-    struct {
         SData/*9:0*/ SoC__DOT__video_bus__DOT__fifo__DOT__in;
         SData/*9:0*/ SoC__DOT__video_bus__DOT__fifo__DOT__out;
         SData/*9:0*/ SoC__DOT__vga__DOT__vga_h;
         SData/*9:0*/ SoC__DOT__vga__DOT__vga_v;
+    };
+    struct {
         SData/*9:0*/ SoC__DOT__led__DOT__leds;
         SData/*8:0*/ SoC__DOT__uart__DOT__tx__DOT__data;
         SData/*15:0*/ SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half;
@@ -252,9 +248,7 @@ VL_MODULE(VSoC) {
         IData/*31:0*/ SoC__DOT__timer__DOT__cycles;
         IData/*31:0*/ SoC__DOT__timer__DOT__ms;
         IData/*31:0*/ SoC__DOT__cpu__DOT__bus_pa_address;
-        IData/*31:0*/ SoC__DOT__cpu__DOT__bus_pa_rdata;
         IData/*31:0*/ SoC__DOT__cpu__DOT__bus_pb_address;
-        IData/*31:0*/ SoC__DOT__cpu__DOT__bus_pb_rdata;
         IData/*31:0*/ SoC__DOT__cpu__DOT__bus_pb_wdata;
         IData/*31:0*/ SoC__DOT__cpu__DOT__rs1;
         IData/*31:0*/ SoC__DOT__cpu__DOT__rs2;
@@ -275,9 +269,10 @@ VL_MODULE(VSoC) {
         IData/*31:0*/ SoC__DOT__cpu__DOT__writeback_pc_next;
         IData/*31:0*/ SoC__DOT__cpu__DOT__bus__DOT__i_pa_wdata;
         IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__pc;
+        IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc;
         IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata;
         WData/*1023:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[32];
-        IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata;
+        IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address;
         IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address;
         IData/*31:0*/ SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__prefetch;
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__alu_operand1;
@@ -289,13 +284,13 @@ VL_MODULE(VSoC) {
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__div_denominator;
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__divide__DOT__p1_result;
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__divide__DOT__p1_remainder;
-    };
-    struct {
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__divide__DOT__p2_result;
         IData/*31:0*/ SoC__DOT__cpu__DOT__execute__DOT__divide__DOT__p2_remainder;
         IData/*31:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
         IData/*31:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata;
         WData/*255:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[8];
+    };
+    struct {
         WData/*255:0*/ SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[8];
         QData/*63:0*/ SoC__DOT__video_bus__DOT__fifo_wdata;
         QData/*63:0*/ SoC__DOT__video_bus__DOT__fifo__DOT__rdata;
@@ -326,28 +321,19 @@ VL_MODULE(VSoC) {
     CData/*0:0*/ SoC__DOT____Vcellinp__uart__i_request;
     CData/*0:0*/ SoC__DOT____Vcellinp__i2c__i_request;
     CData/*0:0*/ SoC__DOT____Vcellinp__sd__i_request;
-    CData/*0:0*/ SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall;
-    CData/*1:0*/ __Vdly__SoC__DOT__cpu__DOT__bus__DOT__state;
     CData/*2:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state;
-    CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch_tag;
-    CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag;
-    CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request;
-    CData/*1:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state;
+    CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state;
     CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw;
     CData/*0:0*/ __Vdlyvset__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__decode_tag;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__execute_tag;
-    CData/*7:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__cycle;
+    CData/*4:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__cycle;
     CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_signed;
     CData/*4:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__state;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__memory_tag;
-    CData/*4:0*/ __Vdly__SoC__DOT__cpu__DOT__memory_inst_rd;
-    CData/*7:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state;
-    CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
-    CData/*7:0*/ __Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
-    CData/*0:0*/ __Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
+    CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__bus_pb_request;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__writeback_tag;
     CData/*0:0*/ __VinpClk__TOP__SoC__DOT__reset;
     CData/*0:0*/ __Vclklast__TOP__CLOCK_125_p;
@@ -356,21 +342,17 @@ VL_MODULE(VSoC) {
     SData/*9:0*/ __Vdlyvdim0__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0;
     IData/*31:0*/ SoC__DOT____Vcellout__video_bus__o_video_rdata;
     IData/*31:0*/ SoC__DOT__video_sram__DOT____Vlvbound1;
-    IData/*31:0*/ SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0;
-    IData/*31:0*/ SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1;
     IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc;
+    IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc;
+    IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address;
     WData/*1023:0*/ __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[32];
     IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__bus_pa_address;
     IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_numerator;
     IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_denominator;
-    IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__memory_rd;
-    IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__memory_pc_next;
     IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
-    WData/*255:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[8];
-    WData/*255:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[8];
+    IData/*31:0*/ __Vdly__SoC__DOT__cpu__DOT__writeback_pc_next;
     QData/*63:0*/ __Vdlyvval__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0;
     QData/*63:0*/ __Vdly__SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1;
-    QData/*63:0*/ __Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
     CData/*0:0*/ __Vm_traceActivity[5];
     
     // INTERNAL VARIABLES
@@ -410,7 +392,7 @@ VL_MODULE(VSoC) {
     static QData _change_request(VSoC__Syms* __restrict vlSymsp);
     static QData _change_request_1(VSoC__Syms* __restrict vlSymsp);
   public:
-    static void _combo__TOP__6(VSoC__Syms* __restrict vlSymsp);
+    static void _combo__TOP__7(VSoC__Syms* __restrict vlSymsp);
   private:
     void _ctor_var_reset() VL_ATTR_COLD;
   public:
@@ -426,7 +408,7 @@ VL_MODULE(VSoC) {
     static void _sequent__TOP__2(VSoC__Syms* __restrict vlSymsp);
     static void _sequent__TOP__3(VSoC__Syms* __restrict vlSymsp);
     static void _sequent__TOP__5(VSoC__Syms* __restrict vlSymsp);
-    static void _sequent__TOP__7(VSoC__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__6(VSoC__Syms* __restrict vlSymsp);
     static void _settle__TOP__4(VSoC__Syms* __restrict vlSymsp) VL_ATTR_COLD;
   private:
     static void traceChgSub0(void* userp, VerilatedVcd* tracep);

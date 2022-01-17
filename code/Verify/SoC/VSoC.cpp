@@ -79,11 +79,11 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
     CData/*0:0*/ __Vdlyvset__SoC__DOT__ram__DOT__data__v0;
     CData/*0:0*/ __Vdlyvset__SoC__DOT__sdram__DOT__data__v0;
     CData/*3:0*/ __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds;
-    CData/*0:0*/ __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read;
     CData/*3:0*/ __Vdly__SoC__DOT__uart__DOT__rx__DOT__bidx;
     CData/*1:0*/ __Vdlyvdim0__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0;
     CData/*7:0*/ __Vdlyvval__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0;
     CData/*0:0*/ __Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0;
+    CData/*7:0*/ __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata;
     CData/*3:0*/ __Vdly__SoC__DOT__uart__DOT__tx__DOT__bidx;
     CData/*0:0*/ __Vdly__SoC__DOT__i2c__DOT__scl;
     CData/*0:0*/ __Vdly__SoC__DOT__sd__DOT__clk;
@@ -92,6 +92,10 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
     CData/*0:0*/ __Vdly__SoC__DOT__sd__DOT__cmd;
     CData/*3:0*/ __Vdly__SoC__DOT__sd__DOT__dat;
     CData/*3:0*/ __Vdly__SoC__DOT__cpu__DOT__retire_tag;
+    CData/*7:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state;
+    CData/*0:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
+    CData/*7:0*/ __Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
+    CData/*0:0*/ __Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
     SData/*15:0*/ __Vdlyvdim0__SoC__DOT__video_sram__DOT__data__v0;
     SData/*9:0*/ __Vdlyvdim0__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0;
     SData/*9:0*/ __Vdly__SoC__DOT__video_bus__DOT__fifo__DOT__in;
@@ -108,7 +112,10 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
     IData/*31:0*/ __Vdly__SoC__DOT__timer__DOT__ms;
     IData/*16:0*/ __Vdly__SoC__DOT__timer__DOT__prescale;
     IData/*31:0*/ __Vdly__SoC__DOT__cpu_retire_count;
+    WData/*255:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[8];
+    WData/*255:0*/ __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[8];
     QData/*63:0*/ __Vdlyvval__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0;
+    QData/*63:0*/ __Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
     // Body
     __Vdly__SoC__DOT__timer__DOT__cycles = vlTOPp->SoC__DOT__timer__DOT__cycles;
     __Vdly__SoC__DOT__timer__DOT__prescale = vlTOPp->SoC__DOT__timer__DOT__prescale;
@@ -116,14 +123,35 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
     __Vdly__SoC__DOT__vga__DOT__vga_v = vlTOPp->SoC__DOT__vga__DOT__vga_v;
     __Vdly__SoC__DOT__vga__DOT__vga_h = vlTOPp->SoC__DOT__vga__DOT__vga_h;
     __Vdly__SoC__DOT__vga__DOT__prescale = vlTOPp->SoC__DOT__vga__DOT__prescale;
+    __Vdly__SoC__DOT__uart__DOT__tx__DOT__data = vlTOPp->SoC__DOT__uart__DOT__tx__DOT__data;
+    __Vdly__SoC__DOT__uart__DOT__tx__DOT__bidx = vlTOPp->SoC__DOT__uart__DOT__tx__DOT__bidx;
+    __Vdly__SoC__DOT__uart__DOT__rx__DOT__bidx = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__bidx;
+    __Vdly__SoC__DOT__i2c__DOT__scl = vlTOPp->SoC__DOT__i2c__DOT__scl;
+    __Vdly__SoC__DOT__video_bus__DOT__fifo_read = vlTOPp->SoC__DOT__video_bus__DOT__fifo_read;
+    __Vdly__SoC__DOT__video_bus__DOT__state = vlTOPp->SoC__DOT__video_bus__DOT__state;
+    __Vdly__SoC__DOT__sd__DOT__clk = vlTOPp->SoC__DOT__sd__DOT__clk;
+    __Vdly__SoC__DOT__sd__DOT__dat = vlTOPp->SoC__DOT__sd__DOT__dat;
+    __Vdly__SoC__DOT__sd__DOT__cmd = vlTOPp->SoC__DOT__sd__DOT__cmd;
+    __Vdly__SoC__DOT__sd__DOT__ddir = vlTOPp->SoC__DOT__sd__DOT__ddir;
+    __Vdly__SoC__DOT__sd__DOT__cdir = vlTOPp->SoC__DOT__sd__DOT__cdir;
+    __Vdly__SoC__DOT__video_sram_ready = vlTOPp->SoC__DOT__video_sram_ready;
+    __Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 = 0U;
+    __Vdly__SoC__DOT__video_sram_rdata = vlTOPp->SoC__DOT__video_sram_rdata;
+    __Vdlyvset__SoC__DOT__video_sram__DOT__data__v0 = 0U;
+    __Vdly__SoC__DOT__video_bus__DOT__fifo__DOT__in 
+        = vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in;
+    __Vdlyvset__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0 = 0U;
+    __Vdlyvset__SoC__DOT__sdram__DOT__data__v0 = 0U;
+    __Vdlyvset__SoC__DOT__ram__DOT__data__v0 = 0U;
+    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds;
+    __Vdly__SoC__DOT__cpu_retire_count = vlTOPp->SoC__DOT__cpu_retire_count;
+    __Vdly__SoC__DOT__cpu__DOT__retire_tag = vlTOPp->SoC__DOT__cpu__DOT__retire_tag;
+    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata 
+        = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state 
         = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address 
         = vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address;
-    __Vdly__SoC__DOT__uart__DOT__rx__DOT__bidx = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__bidx;
-    __Vdly__SoC__DOT__video_bus__DOT__fifo_read = vlTOPp->SoC__DOT__video_bus__DOT__fifo_read;
-    __Vdly__SoC__DOT__video_bus__DOT__state = vlTOPp->SoC__DOT__video_bus__DOT__state;
-    __Vdly__SoC__DOT__video_sram_ready = vlTOPp->SoC__DOT__video_sram_ready;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw 
         = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0U] 
@@ -192,21 +220,12 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0x1fU];
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state 
         = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request 
-        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag 
-        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag;
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address;
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc 
+        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc;
     vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 = 0U;
-    __Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 = 0U;
-    __Vdly__SoC__DOT__video_sram_rdata = vlTOPp->SoC__DOT__video_sram_rdata;
-    __Vdlyvset__SoC__DOT__video_sram__DOT__data__v0 = 0U;
-    __Vdly__SoC__DOT__cpu_retire_count = vlTOPp->SoC__DOT__cpu_retire_count;
-    __Vdly__SoC__DOT__cpu__DOT__retire_tag = vlTOPp->SoC__DOT__cpu__DOT__retire_tag;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag 
-        = vlTOPp->SoC__DOT__cpu__DOT__writeback_tag;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch_tag = vlTOPp->SoC__DOT__cpu__DOT__fetch_tag;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag 
-        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc 
         = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state 
@@ -225,72 +244,55 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         = vlTOPp->SoC__DOT__cpu__DOT__execute_tag;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1 
         = vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next 
-        = vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__state 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__state;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag 
         = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd = vlTOPp->SoC__DOT__cpu__DOT__memory_rd;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd 
-        = vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw 
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_pc_next 
+        = vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next;
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag 
+        = vlTOPp->SoC__DOT__cpu__DOT__writeback_tag;
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U];
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state 
+    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state;
     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
         = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
-    vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 0U;
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state 
-        = vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state;
-    __Vdly__SoC__DOT__uart__DOT__tx__DOT__data = vlTOPp->SoC__DOT__uart__DOT__tx__DOT__data;
-    __Vdly__SoC__DOT__uart__DOT__tx__DOT__bidx = vlTOPp->SoC__DOT__uart__DOT__tx__DOT__bidx;
-    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read 
-        = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read;
-    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds;
-    __Vdly__SoC__DOT__i2c__DOT__scl = vlTOPp->SoC__DOT__i2c__DOT__scl;
-    __Vdly__SoC__DOT__sd__DOT__clk = vlTOPp->SoC__DOT__sd__DOT__clk;
-    __Vdly__SoC__DOT__sd__DOT__dat = vlTOPp->SoC__DOT__sd__DOT__dat;
-    __Vdly__SoC__DOT__sd__DOT__cmd = vlTOPp->SoC__DOT__sd__DOT__cmd;
-    __Vdly__SoC__DOT__sd__DOT__ddir = vlTOPp->SoC__DOT__sd__DOT__ddir;
-    __Vdly__SoC__DOT__sd__DOT__cdir = vlTOPp->SoC__DOT__sd__DOT__cdir;
-    __Vdly__SoC__DOT__video_bus__DOT__fifo__DOT__in 
-        = vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in;
-    __Vdlyvset__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0 = 0U;
-    __Vdlyvset__SoC__DOT__sdram__DOT__data__v0 = 0U;
-    __Vdlyvset__SoC__DOT__ram__DOT__data__v0 = 0U;
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request 
+        = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request;
+    __Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__o_ready = 1U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__o_ready = 1U;
     __Vdly__SoC__DOT__timer__DOT__cycles = ((IData)(vlTOPp->SoC__DOT__reset)
@@ -369,81 +371,15 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__rom_ready = vlTOPp->SoC__DOT____Vcellinp__rom__i_request;
     vlTOPp->SoC__DOT__sdram_ready = vlTOPp->SoC__DOT____Vcellinp__sdram__i_request;
     vlTOPp->SoC__DOT__ram_ready = vlTOPp->SoC__DOT____Vcellinp__ram__i_request;
-    __Vdly__SoC__DOT__video_sram_ready = vlTOPp->SoC__DOT__video_sram_request;
-    if (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw) {
-        vlTOPp->__Vdlyvval__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 
-            = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata;
-        vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 = 1U;
-        vlTOPp->__Vdlyvdim0__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 
-            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                        >> 2U));
-    }
-    if (((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_write) 
-         & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_write)))) {
-        __Vdlyvval__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 
-            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__data;
-        __Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 = 1U;
-        __Vdlyvdim0__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 
-            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in;
-        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in 
-            = (3U & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in)));
-    }
-    if (vlTOPp->SoC__DOT__video_sram_request) {
-        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__video_sram_rw)))) {
-            __Vdly__SoC__DOT__video_sram_rdata = ((0xf9ffU 
-                                                   >= 
-                                                   (0xffffU 
-                                                    & (vlTOPp->SoC__DOT__video_sram_address 
-                                                       >> 2U)))
-                                                   ? 
-                                                  vlTOPp->SoC__DOT__video_sram__DOT__data
-                                                  [
-                                                  (0xffffU 
-                                                   & (vlTOPp->SoC__DOT__video_sram_address 
-                                                      >> 2U))]
-                                                   : 0U);
+    if (vlTOPp->SoC__DOT____Vcellinp__i2c__i_request) {
+        if (vlTOPp->SoC__DOT__cpu_rw) {
+            vlTOPp->SoC__DOT__i2c__DOT__sda = (1U & 
+                                               (((IData)(vlTOPp->SoC__DOT__i2c__DOT__sda) 
+                                                 & (~ 
+                                                    (vlTOPp->SoC__DOT__cpu_wdata 
+                                                     >> 4U))) 
+                                                | vlTOPp->SoC__DOT__cpu_wdata));
         }
-    }
-    if (vlTOPp->SoC__DOT__video_sram_request) {
-        if (vlTOPp->SoC__DOT__video_sram_rw) {
-            vlTOPp->SoC__DOT__video_sram__DOT____Vlvbound1 
-                = vlTOPp->SoC__DOT__video_sram_wdata;
-            if ((0xf9ffU >= (0xffffU & (vlTOPp->SoC__DOT__video_sram_address 
-                                        >> 2U)))) {
-                __Vdlyvval__SoC__DOT__video_sram__DOT__data__v0 
-                    = vlTOPp->SoC__DOT__video_sram__DOT____Vlvbound1;
-                __Vdlyvset__SoC__DOT__video_sram__DOT__data__v0 = 1U;
-                __Vdlyvdim0__SoC__DOT__video_sram__DOT__data__v0 
-                    = (0xffffU & (vlTOPp->SoC__DOT__video_sram_address 
-                                  >> 2U));
-            }
-        }
-    }
-    if (vlTOPp->SoC__DOT__reset) {
-        __Vdly__SoC__DOT__cpu__DOT__retire_tag = 0U;
-        __Vdly__SoC__DOT__cpu_retire_count = 0U;
-    } else {
-        if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag) 
-             != (IData)(vlTOPp->SoC__DOT__cpu__DOT__retire_tag))) {
-            __Vdly__SoC__DOT__cpu_retire_count = ((IData)(1U) 
-                                                  + vlTOPp->SoC__DOT__cpu_retire_count);
-            __Vdly__SoC__DOT__cpu__DOT__retire_tag 
-                = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
-        }
-    }
-    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1 
-        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_signed)
-            ? VL_MULS_QQQ(64,64,64, VL_EXTENDS_QI(64,32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op1), 
-                          VL_EXTENDS_QI(64,32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op2))
-            : ((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op1)) 
-               * (QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op2))));
-    if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw) {
-        vlTOPp->__Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 
-            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata;
-        vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 1U;
-        vlTOPp->__Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 
-            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                        >> 2U));
     }
     if ((0U < vlTOPp->SoC__DOT__uart__DOT__tx__DOT__prescale)) {
         vlTOPp->SoC__DOT__uart__DOT__tx__DOT__prescale 
@@ -484,84 +420,6 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         __Vdly__SoC__DOT__uart__DOT__tx__DOT__bidx = 0U;
         vlTOPp->SoC__DOT__uart__DOT__tx_ready = 0U;
     }
-    vlTOPp->SoC__DOT__rom_rdata = ((IData)(vlTOPp->SoC__DOT____Vcellinp__rom__i_request)
-                                    ? ((0x190U >= (0x1ffU 
-                                                   & (vlTOPp->SoC__DOT__cpu_address 
-                                                      >> 2U)))
-                                        ? vlTOPp->SoC__DOT__rom__DOT__data
-                                       [(0x1ffU & (vlTOPp->SoC__DOT__cpu_address 
-                                                   >> 2U))]
-                                        : 0U) : 0U);
-    if (vlTOPp->SoC__DOT__reset) {
-        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 0U;
-        vlTOPp->SoC__DOT__uart_rdata = 0U;
-    } else {
-        if (vlTOPp->SoC__DOT__uart__DOT__rx_request) {
-            if ((0U == (3U & (vlTOPp->SoC__DOT__cpu_address 
-                              >> 2U)))) {
-                if ((0U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) {
-                    if ((1U & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty)))) {
-                        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 1U;
-                        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 1U;
-                    }
-                } else {
-                    if ((((1U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
-                          | (2U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) 
-                         | (3U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)))) {
-                        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds 
-                            = (0xfU & ((IData)(1U) 
-                                       + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)));
-                        vlTOPp->SoC__DOT__uart_rdata 
-                            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata;
-                    } else {
-                        if ((4U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) {
-                            __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 5U;
-                        }
-                    }
-                }
-            } else {
-                if ((1U == (3U & (vlTOPp->SoC__DOT__cpu_address 
-                                  >> 2U)))) {
-                    vlTOPp->SoC__DOT__uart_rdata = 
-                        ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty) 
-                         << 1U);
-                    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 5U;
-                }
-            }
-        } else {
-            __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 0U;
-            __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 0U;
-        }
-    }
-    if (((IData)(vlTOPp->SoC__DOT__timer_select) & 
-         (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))) {
-        vlTOPp->SoC__DOT__timer_rdata = ((0U == (3U 
-                                                 & (vlTOPp->SoC__DOT__cpu_address 
-                                                    >> 2U)))
-                                          ? vlTOPp->SoC__DOT__timer__DOT__ms
-                                          : ((1U == 
-                                              (3U & 
-                                               (vlTOPp->SoC__DOT__cpu_address 
-                                                >> 2U)))
-                                              ? vlTOPp->SoC__DOT__timer__DOT__cycles
-                                              : ((2U 
-                                                  == 
-                                                  (3U 
-                                                   & (vlTOPp->SoC__DOT__cpu_address 
-                                                      >> 2U)))
-                                                  ? vlTOPp->SoC__DOT__cpu_retire_count
-                                                  : 0U)));
-    }
-    if (vlTOPp->SoC__DOT____Vcellinp__i2c__i_request) {
-        if (vlTOPp->SoC__DOT__cpu_rw) {
-            vlTOPp->SoC__DOT__i2c__DOT__sda = (1U & 
-                                               (((IData)(vlTOPp->SoC__DOT__i2c__DOT__sda) 
-                                                 & (~ 
-                                                    (vlTOPp->SoC__DOT__cpu_wdata 
-                                                     >> 4U))) 
-                                                | vlTOPp->SoC__DOT__cpu_wdata));
-        }
-    }
     if (vlTOPp->SoC__DOT____Vcellinp__i2c__i_request) {
         if (vlTOPp->SoC__DOT__cpu_rw) {
             __Vdly__SoC__DOT__i2c__DOT__scl = (1U & 
@@ -577,6 +435,7 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
                                            | (IData)(vlTOPp->I2C_SDA));
         }
     }
+    __Vdly__SoC__DOT__video_sram_ready = vlTOPp->SoC__DOT__video_sram_request;
     if (vlTOPp->SoC__DOT__reset) {
         __Vdly__SoC__DOT__sd__DOT__clk = 0U;
         __Vdly__SoC__DOT__sd__DOT__cdir = 0U;
@@ -636,6 +495,55 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
             }
         }
     }
+    if (((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_write) 
+         & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_write)))) {
+        __Vdlyvval__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 
+            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__data;
+        __Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 = 1U;
+        __Vdlyvdim0__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0 
+            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in;
+        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in 
+            = (3U & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in)));
+    }
+    if (vlTOPp->SoC__DOT__video_sram_request) {
+        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__video_sram_rw)))) {
+            __Vdly__SoC__DOT__video_sram_rdata = ((0xf9ffU 
+                                                   >= 
+                                                   (0xffffU 
+                                                    & (vlTOPp->SoC__DOT__video_sram_address 
+                                                       >> 2U)))
+                                                   ? 
+                                                  vlTOPp->SoC__DOT__video_sram__DOT__data
+                                                  [
+                                                  (0xffffU 
+                                                   & (vlTOPp->SoC__DOT__video_sram_address 
+                                                      >> 2U))]
+                                                   : 0U);
+        }
+    }
+    if (vlTOPp->SoC__DOT__video_sram_request) {
+        if (vlTOPp->SoC__DOT__video_sram_rw) {
+            vlTOPp->SoC__DOT__video_sram__DOT____Vlvbound1 
+                = vlTOPp->SoC__DOT__video_sram_wdata;
+            if ((0xf9ffU >= (0xffffU & (vlTOPp->SoC__DOT__video_sram_address 
+                                        >> 2U)))) {
+                __Vdlyvval__SoC__DOT__video_sram__DOT__data__v0 
+                    = vlTOPp->SoC__DOT__video_sram__DOT____Vlvbound1;
+                __Vdlyvset__SoC__DOT__video_sram__DOT__data__v0 = 1U;
+                __Vdlyvdim0__SoC__DOT__video_sram__DOT__data__v0 
+                    = (0xffffU & (vlTOPp->SoC__DOT__video_sram_address 
+                                  >> 2U));
+            }
+        }
+    }
+    vlTOPp->SoC__DOT__rom_rdata = ((IData)(vlTOPp->SoC__DOT____Vcellinp__rom__i_request)
+                                    ? ((0x190U >= (0x1ffU 
+                                                   & (vlTOPp->SoC__DOT__cpu_address 
+                                                      >> 2U)))
+                                        ? vlTOPp->SoC__DOT__rom__DOT__data
+                                       [(0x1ffU & (vlTOPp->SoC__DOT__cpu_address 
+                                                   >> 2U))]
+                                        : 0U) : 0U);
     if (((IData)(vlTOPp->SoC__DOT__video_bus__DOT__fifo_write) 
          & (~ (IData)(vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__last_write)))) {
         __Vdlyvval__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0 
@@ -645,22 +553,6 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
             = vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in;
         __Vdly__SoC__DOT__video_bus__DOT__fifo__DOT__in 
             = (0x3ffU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in)));
-    }
-    if (vlTOPp->SoC__DOT____Vcellinp__sdram__i_request) {
-        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)))) {
-            vlTOPp->SoC__DOT__sdram_rdata = vlTOPp->SoC__DOT__sdram__DOT__data
-                [(0x1ffffffU & ((vlTOPp->SoC__DOT__cpu_address 
-                                 - (IData)(0x20000000U)) 
-                                >> 2U))];
-        }
-    }
-    if (vlTOPp->SoC__DOT____Vcellinp__ram__i_request) {
-        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)))) {
-            vlTOPp->SoC__DOT__ram_rdata = vlTOPp->SoC__DOT__ram__DOT__data
-                [(0x3fffU & ((vlTOPp->SoC__DOT__cpu_address 
-                              - (IData)(0x10000U)) 
-                             >> 2U))];
-        }
     }
     if (vlTOPp->SoC__DOT____Vcellinp__sdram__i_request) {
         if (vlTOPp->SoC__DOT__cpu_rw) {
@@ -684,25 +576,110 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
                               >> 2U));
         }
     }
+    if (vlTOPp->SoC__DOT____Vcellinp__sdram__i_request) {
+        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)))) {
+            vlTOPp->SoC__DOT__sdram_rdata = vlTOPp->SoC__DOT__sdram__DOT__data
+                [(0x1ffffffU & ((vlTOPp->SoC__DOT__cpu_address 
+                                 - (IData)(0x20000000U)) 
+                                >> 2U))];
+        }
+    }
+    if (vlTOPp->SoC__DOT____Vcellinp__ram__i_request) {
+        if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)))) {
+            vlTOPp->SoC__DOT__ram_rdata = vlTOPp->SoC__DOT__ram__DOT__data
+                [(0x3fffU & ((vlTOPp->SoC__DOT__cpu_address 
+                              - (IData)(0x10000U)) 
+                             >> 2U))];
+        }
+    }
+    if (((IData)(vlTOPp->SoC__DOT__timer_select) & (IData)(vlTOPp->SoC__DOT__cpu_request))) {
+        if ((0U == (3U & (vlTOPp->SoC__DOT__cpu_address 
+                          >> 2U)))) {
+            vlTOPp->SoC__DOT__timer_rdata = vlTOPp->SoC__DOT__timer__DOT__ms;
+        } else {
+            if ((1U == (3U & (vlTOPp->SoC__DOT__cpu_address 
+                              >> 2U)))) {
+                vlTOPp->SoC__DOT__timer_rdata = vlTOPp->SoC__DOT__timer__DOT__cycles;
+            } else {
+                if ((2U == (3U & (vlTOPp->SoC__DOT__cpu_address 
+                                  >> 2U)))) {
+                    vlTOPp->SoC__DOT__timer_rdata = vlTOPp->SoC__DOT__cpu_retire_count;
+                }
+            }
+        }
+    }
+    if (vlTOPp->SoC__DOT__reset) {
+        __Vdly__SoC__DOT__cpu__DOT__retire_tag = 0U;
+        __Vdly__SoC__DOT__cpu_retire_count = 0U;
+    } else {
+        if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag) 
+             != (IData)(vlTOPp->SoC__DOT__cpu__DOT__retire_tag))) {
+            __Vdly__SoC__DOT__cpu_retire_count = ((IData)(1U) 
+                                                  + vlTOPp->SoC__DOT__cpu_retire_count);
+            __Vdly__SoC__DOT__cpu__DOT__retire_tag 
+                = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
+        }
+    }
+    if (((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read) 
+         & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read)))) {
+        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata 
+            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data
+            [vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out];
+        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out 
+            = (3U & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out)));
+    }
+    if (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw) {
+        vlTOPp->__Vdlyvval__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 
+            = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata;
+        vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 = 1U;
+        vlTOPp->__Vdlyvdim0__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 
+            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                        >> 2U));
+    }
+    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1 
+        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_signed)
+            ? VL_MULS_QQQ(64,64,64, VL_EXTENDS_QI(64,32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op1), 
+                          VL_EXTENDS_QI(64,32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op2))
+            : ((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op1)) 
+               * (QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__mul_op2))));
+    if (vlTOPp->SoC__DOT__reset) {
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag = 0U;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_pc_next = 0U;
+    } else {
+        if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag) 
+             != (IData)(vlTOPp->SoC__DOT__cpu__DOT__writeback_tag))) {
+            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag 
+                = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
+            vlTOPp->SoC__DOT__cpu__DOT__writeback_inst_rd 
+                = vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd;
+            vlTOPp->SoC__DOT__cpu__DOT__writeback_rd 
+                = vlTOPp->SoC__DOT__cpu__DOT__memory_rd;
+            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_pc_next 
+                = vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next;
+        }
+    }
+    if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw) {
+        __Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 
+            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata;
+        __Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 1U;
+        __Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 
+            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                        >> 2U));
+    }
     vlTOPp->SoC__DOT__timer__DOT__prescale = __Vdly__SoC__DOT__timer__DOT__prescale;
     vlTOPp->SoC__DOT__vga__DOT__prescale = __Vdly__SoC__DOT__vga__DOT__prescale;
-    if (__Vdlyvset__SoC__DOT__video_sram__DOT__data__v0) {
-        vlTOPp->SoC__DOT__video_sram__DOT__data[__Vdlyvdim0__SoC__DOT__video_sram__DOT__data__v0] 
-            = __Vdlyvval__SoC__DOT__video_sram__DOT__data__v0;
-    }
-    vlTOPp->SoC__DOT__cpu__DOT__retire_tag = __Vdly__SoC__DOT__cpu__DOT__retire_tag;
     vlTOPp->SoC__DOT__uart__DOT__tx__DOT__bidx = __Vdly__SoC__DOT__uart__DOT__tx__DOT__bidx;
     vlTOPp->SoC__DOT__uart__DOT__tx__DOT__data = __Vdly__SoC__DOT__uart__DOT__tx__DOT__data;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds = __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds;
-    vlTOPp->SoC__DOT__timer__DOT__ms = __Vdly__SoC__DOT__timer__DOT__ms;
-    vlTOPp->SoC__DOT__timer__DOT__cycles = __Vdly__SoC__DOT__timer__DOT__cycles;
-    vlTOPp->SoC__DOT__cpu_retire_count = __Vdly__SoC__DOT__cpu_retire_count;
     vlTOPp->SoC__DOT__i2c__DOT__scl = __Vdly__SoC__DOT__i2c__DOT__scl;
     vlTOPp->SoC__DOT__sd__DOT__cmd = __Vdly__SoC__DOT__sd__DOT__cmd;
     vlTOPp->SoC__DOT__sd__DOT__dat = __Vdly__SoC__DOT__sd__DOT__dat;
     vlTOPp->SoC__DOT__sd__DOT__clk = __Vdly__SoC__DOT__sd__DOT__clk;
     vlTOPp->SoC__DOT__sd__DOT__cdir = __Vdly__SoC__DOT__sd__DOT__cdir;
     vlTOPp->SoC__DOT__sd__DOT__ddir = __Vdly__SoC__DOT__sd__DOT__ddir;
+    if (__Vdlyvset__SoC__DOT__video_sram__DOT__data__v0) {
+        vlTOPp->SoC__DOT__video_sram__DOT__data[__Vdlyvdim0__SoC__DOT__video_sram__DOT__data__v0] 
+            = __Vdlyvval__SoC__DOT__video_sram__DOT__data__v0;
+    }
     if (__Vdlyvset__SoC__DOT__sdram__DOT__data__v0) {
         vlTOPp->SoC__DOT__sdram__DOT__data[__Vdlyvdim0__SoC__DOT__sdram__DOT__data__v0] 
             = __Vdlyvval__SoC__DOT__sdram__DOT__data__v0;
@@ -711,6 +688,28 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->SoC__DOT__ram__DOT__data[__Vdlyvdim0__SoC__DOT__ram__DOT__data__v0] 
             = __Vdlyvval__SoC__DOT__ram__DOT__data__v0;
     }
+    vlTOPp->SoC__DOT__timer__DOT__ms = __Vdly__SoC__DOT__timer__DOT__ms;
+    vlTOPp->SoC__DOT__timer__DOT__cycles = __Vdly__SoC__DOT__timer__DOT__cycles;
+    vlTOPp->SoC__DOT__cpu__DOT__retire_tag = __Vdly__SoC__DOT__cpu__DOT__retire_tag;
+    vlTOPp->SoC__DOT__cpu_retire_count = __Vdly__SoC__DOT__cpu_retire_count;
+    if (__Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0) {
+        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data[__Vdlyvdim0__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0] 
+            = __Vdlyvval__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0;
+    }
+    vlTOPp->I2C_SCL = vlTOPp->SoC__DOT__i2c__DOT__scl;
+    vlTOPp->SD_CLK = vlTOPp->SoC__DOT__sd__DOT__clk;
+    vlTOPp->SD_CMD = (((((IData)(vlTOPp->SoC__DOT__sd__DOT__cdir) 
+                         & (IData)(vlTOPp->SoC__DOT__sd__DOT__cmd)) 
+                        & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir)) 
+                       & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir)) 
+                      & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir));
+    vlTOPp->SD_DAT = (((((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
+                          ? (IData)(vlTOPp->SoC__DOT__sd__DOT__dat)
+                          : 0U) & ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
+                                    ? 0xfU : 0U)) & 
+                       ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
+                         ? 0xfU : 0U)) & ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
+                                           ? 0xfU : 0U));
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_write 
         = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_write;
     if ((0U == (IData)(vlTOPp->SoC__DOT__video_bus__DOT__state))) {
@@ -762,28 +761,6 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
             }
         }
     }
-    if (((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read) 
-         & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read)))) {
-        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata 
-            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data
-            [vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out];
-        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out 
-            = (3U & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out)));
-    }
-    vlTOPp->I2C_SCL = vlTOPp->SoC__DOT__i2c__DOT__scl;
-    vlTOPp->SD_CLK = vlTOPp->SoC__DOT__sd__DOT__clk;
-    vlTOPp->SD_CMD = (((((IData)(vlTOPp->SoC__DOT__sd__DOT__cdir) 
-                         & (IData)(vlTOPp->SoC__DOT__sd__DOT__cmd)) 
-                        & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir)) 
-                       & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir)) 
-                      & (IData)(vlTOPp->SoC__DOT__sd__DOT__cdir));
-    vlTOPp->SD_DAT = (((((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
-                          ? (IData)(vlTOPp->SoC__DOT__sd__DOT__dat)
-                          : 0U) & ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
-                                    ? 0xfU : 0U)) & 
-                       ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
-                         ? 0xfU : 0U)) & ((IData)(vlTOPp->SoC__DOT__sd__DOT__ddir)
-                                           ? 0xfU : 0U));
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__last_write 
         = vlTOPp->SoC__DOT__video_bus__DOT__fifo_write;
     if ((((IData)(vlTOPp->SoC__DOT____Vcellinp__video_bus__i_cpu_request) 
@@ -802,15 +779,270 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
             vlTOPp->SoC__DOT__vram_ready = 0U;
         }
     }
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read 
+        = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read;
+    if (vlTOPp->SoC__DOT__reset) {
+        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata = 0U;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] = 0U;
+        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata = 0ULL;
+    } else {
+        if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+            if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request) 
+                 & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_busy)))) {
+                if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw) {
+                    if ((0x40000000U > (0xfffffffcU 
+                                        & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))) {
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 1U;
+                        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata 
+                            = (((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata)) 
+                                << 0x20U) | (QData)((IData)(
+                                                            (0xfffffffcU 
+                                                             & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))));
+                        if ((1U & ((~ (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                                       (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                              >> 7U))] 
+                                       >> (0x1fU & 
+                                           (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                            >> 2U)))) 
+                                   | ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata) 
+                                      == (0xfffffffcU 
+                                          & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))))) {
+                            __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
+                        } else {
+                            if ((1U & ((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                                        (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                               >> 7U))] 
+                                        >> (0x1fU & 
+                                            (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                             >> 2U))) 
+                                       & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
+                                          (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                 >> 7U))] 
+                                          >> (0x1fU 
+                                              & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                 >> 2U)))))) {
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
+                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                                    = (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata);
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
+                                    = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
+                                               >> 0x20U));
+                                __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 4U;
+                            }
+                        }
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[(7U 
+                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                                                >> 7U))] 
+                            = (__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                      >> 7U))] | ((IData)(1U) 
+                                                  << 
+                                                  (0x1fU 
+                                                   & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                      >> 2U))));
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[(7U 
+                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                                                >> 7U))] 
+                            = (__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
+                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                      >> 7U))] | ((IData)(1U) 
+                                                  << 
+                                                  (0x1fU 
+                                                   & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                      >> 2U))));
+                    } else {
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
+                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
+                            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata;
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 4U;
+                    }
+                } else {
+                    if ((0x40000000U > (0xfffffffcU 
+                                        & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))) {
+                        if (((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                              (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                     >> 7U))] >> (0x1fU 
+                                                  & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                     >> 2U))) 
+                             & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata) 
+                                == (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address)))) {
+                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+                                = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
+                                           >> 0x20U));
+                            __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
+                        } else {
+                            if ((1U & ((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                                        (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                               >> 7U))] 
+                                        >> (0x1fU & 
+                                            (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                             >> 2U))) 
+                                       & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
+                                          (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                 >> 7U))] 
+                                          >> (0x1fU 
+                                              & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                 >> 2U)))))) {
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
+                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                                    = (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata);
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
+                                    = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
+                                               >> 0x20U));
+                                __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 2U;
+                            } else {
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                                    = (0xfffffffcU 
+                                       & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
+                                __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 1U;
+                            }
+                        }
+                    } else {
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 3U;
+                    }
+                }
+            }
+        } else {
+            if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+                if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
+                    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[(7U 
+                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                                                >> 7U))] 
+                        = (__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
+                           (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                  >> 7U))] | ((IData)(1U) 
+                                              << (0x1fU 
+                                                  & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                     >> 2U))));
+                    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[(7U 
+                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                                                >> 7U))] 
+                        = ((~ ((IData)(1U) << (0x1fU 
+                                               & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                                  >> 2U)))) 
+                           & __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
+                           (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                  >> 7U))]);
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 0U;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+                        = vlTOPp->SoC__DOT__cpu_rdata;
+                    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 1U;
+                    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata 
+                        = (((QData)((IData)(vlTOPp->SoC__DOT__cpu_rdata)) 
+                            << 0x20U) | (QData)((IData)(
+                                                        (0xfffffffcU 
+                                                         & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))));
+                    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
+                }
+            } else {
+                if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+                    if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 1U;
+                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
+                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
+                        __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 1U;
+                    }
+                } else {
+                    if ((3U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+                        if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
+                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 0U;
+                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+                                = vlTOPp->SoC__DOT__cpu_rdata;
+                            __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
+                        }
+                    } else {
+                        if ((4U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+                            __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
+                            if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
+                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request = 0U;
+                                __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
+                            }
+                        } else {
+                            if ((5U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
+                                __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
+                                if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request)))) {
+                                    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     vlTOPp->SoC__DOT__video_sram_rdata = __Vdly__SoC__DOT__video_sram_rdata;
     vlTOPp->SoC__DOT__video_sram_ready = __Vdly__SoC__DOT__video_sram_ready;
     vlTOPp->SoC__DOT__video_bus__DOT__state = __Vdly__SoC__DOT__video_bus__DOT__state;
-    if (__Vdlyvset__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0) {
-        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data[__Vdlyvdim0__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0] 
-            = __Vdlyvval__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__data__v0;
-    }
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in 
         = __Vdly__SoC__DOT__video_bus__DOT__fifo__DOT__in;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U];
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__frame_error = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_write = 0U;
     if ((0U < vlTOPp->SoC__DOT__uart__DOT__rx__DOT__prescale)) {
@@ -882,11 +1114,53 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__out 
             = (0x3ffU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__out)));
     }
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read 
-        = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty 
-        = ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in) 
-           == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out));
+    if (vlTOPp->SoC__DOT__reset) {
+        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 0U;
+        vlTOPp->SoC__DOT__uart_rdata = 0U;
+    } else {
+        if (vlTOPp->SoC__DOT__uart__DOT__rx_request) {
+            if ((0U == (3U & (vlTOPp->SoC__DOT__cpu_address 
+                              >> 2U)))) {
+                if ((0U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) {
+                    if ((1U & (~ (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty)))) {
+                        vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 1U;
+                        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 1U;
+                    }
+                } else {
+                    if ((((1U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
+                          | (2U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) 
+                         | (3U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)))) {
+                        __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds 
+                            = (0xfU & ((IData)(1U) 
+                                       + (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)));
+                        vlTOPp->SoC__DOT__uart_rdata 
+                            = vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata;
+                    } else {
+                        if ((4U == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds))) {
+                            __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 5U;
+                        }
+                    }
+                }
+            } else {
+                if ((1U == (3U & (vlTOPp->SoC__DOT__cpu_address 
+                                  >> 2U)))) {
+                    vlTOPp->SoC__DOT__uart_rdata = 
+                        ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty) 
+                         << 1U);
+                    __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 5U;
+                }
+            }
+        } else {
+            vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 0U;
+            __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds = 0U;
+        }
+    }
+    if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw)))) {
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
+            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data
+            [(0xffU & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                       >> 2U))];
+    }
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__bidx = __Vdly__SoC__DOT__uart__DOT__rx__DOT__bidx;
     vlTOPp->SoC__DOT__vga__DOT__vga_h = __Vdly__SoC__DOT__vga__DOT__vga_h;
     vlTOPp->SoC__DOT__vga__DOT__vga_v = __Vdly__SoC__DOT__vga__DOT__vga_v;
@@ -894,8 +1168,18 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__2(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__data[__Vdlyvdim0__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0] 
             = __Vdlyvval__SoC__DOT__video_bus__DOT__fifo__DOT__data__v0;
     }
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read 
-        = __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty 
+        = ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in) 
+           == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out));
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata 
+        = __Vdly__SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds = __Vdly__SoC__DOT__uart__DOT__rx__DOT__rds;
+    if (__Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0) {
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data[__Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0] 
+            = __Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
+    }
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw 
+        = __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx = vlTOPp->UART_RX;
     vlTOPp->HDMI_TX_DE = vlTOPp->SoC__DOT__vga_enable;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__last_read 
@@ -914,12 +1198,20 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__3(VSoC__Syms* __restrict vlSymsp) {
     CData/*0:0*/ __Vdlyvset__SoC__DOT__cpu__DOT__registers__DOT__r__v32;
     IData/*31:0*/ __Vdlyvval__SoC__DOT__cpu__DOT__registers__DOT__r__v32;
     // Body
-    __Vdly__SoC__DOT__cpu__DOT__registers__DOT__write_tag 
-        = vlTOPp->SoC__DOT__cpu__DOT__registers__DOT__write_tag;
     __Vdly__SoC__DOT__cpu__DOT__registers__DOT__read_tag 
         = vlTOPp->SoC__DOT__cpu__DOT__registers__DOT__read_tag;
+    __Vdly__SoC__DOT__cpu__DOT__registers__DOT__write_tag 
+        = vlTOPp->SoC__DOT__cpu__DOT__registers__DOT__write_tag;
     __Vdlyvset__SoC__DOT__cpu__DOT__registers__DOT__r__v0 = 0U;
     __Vdlyvset__SoC__DOT__cpu__DOT__registers__DOT__r__v32 = 0U;
+    if (vlTOPp->SoC__DOT__reset) {
+        vlTOPp->SoC__DOT__led__DOT__leds = 0x155U;
+    } else {
+        if (vlTOPp->SoC__DOT____Vcellinp__led__i_request) {
+            vlTOPp->SoC__DOT__led__DOT__leds = (0x3ffU 
+                                                & vlTOPp->SoC__DOT__cpu_wdata);
+        }
+    }
     if (vlTOPp->SoC__DOT__reset) {
         vlTOPp->SoC__DOT__cpu__DOT__rs1 = 0U;
         vlTOPp->SoC__DOT__cpu__DOT__rs2 = 0U;
@@ -964,14 +1256,6 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__3(VSoC__Syms* __restrict vlSymsp) {
                 = vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd;
             __Vdly__SoC__DOT__cpu__DOT__registers__DOT__write_tag 
                 = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
-        }
-    }
-    if (vlTOPp->SoC__DOT__reset) {
-        vlTOPp->SoC__DOT__led__DOT__leds = 0x155U;
-    } else {
-        if (vlTOPp->SoC__DOT____Vcellinp__led__i_request) {
-            vlTOPp->SoC__DOT__led__DOT__leds = (0x3ffU 
-                                                & vlTOPp->SoC__DOT__cpu_wdata);
         }
     }
     vlTOPp->SoC__DOT__cpu__DOT__registers__DOT__read_tag 
@@ -1024,382 +1308,14 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
     VSoC* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
     if (vlTOPp->SoC__DOT__reset) {
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = 0U;
-        vlTOPp->SoC__DOT__cpu_rw = 0U;
-        vlTOPp->SoC__DOT__cpu_address = 0U;
-        vlTOPp->SoC__DOT__cpu_wdata = 0U;
-    } else {
-        if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state))) {
-            if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) {
-                vlTOPp->SoC__DOT__cpu_rw = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw;
-                vlTOPp->SoC__DOT__cpu_address = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address;
-                vlTOPp->SoC__DOT__cpu_wdata = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata;
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = 2U;
-            } else {
-                if (vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) {
-                    vlTOPp->SoC__DOT__cpu_rw = 0U;
-                    vlTOPp->SoC__DOT__cpu_address = vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address;
-                    vlTOPp->SoC__DOT__cpu_wdata = vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__i_pa_wdata;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = 1U;
-                }
-            }
-        } else {
-            if (((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)) 
-                 | (2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))) {
-                if (vlTOPp->SoC__DOT__cpu_ready) {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = 0U;
-                }
-            } else {
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = 0U;
-            }
-        }
-    }
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus__DOT__state;
-    vlTOPp->SoC__DOT__vram_select = ((0x40000000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                     & (0x50000000U 
-                                        > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__led_select = ((0x50000000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x50000010U 
-                                       > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__timer_select = ((0x50000050U 
-                                       <= vlTOPp->SoC__DOT__cpu_address) 
-                                      & (0x50000060U 
-                                         > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__ram_select = ((0x10000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x20000U > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__sdram_select = ((0x20000000U 
-                                       <= vlTOPp->SoC__DOT__cpu_address) 
-                                      & (0x40000000U 
-                                         > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__i2c_select = ((0x50000030U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x50000040U 
-                                       > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__sd_select = ((0x50000040U <= vlTOPp->SoC__DOT__cpu_address) 
-                                   & (0x50000050U > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__uart_select = ((0x50000010U <= vlTOPp->SoC__DOT__cpu_address) 
-                                     & (0x50000020U 
-                                        > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT____Vcellinp__rom__i_request = 
-        ((0x10000U > vlTOPp->SoC__DOT__cpu_address) 
-         & (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    if (vlTOPp->SoC__DOT__reset) {
-        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata = 0ULL;
-    } else {
-        if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-            if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request) {
-                if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw) {
-                    if ((0x40000000U > (0xfffffffcU 
-                                        & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))) {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata 
-                            = (((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata)) 
-                                << 0x20U) | (QData)((IData)(
-                                                            (0xfffffffcU 
-                                                             & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))));
-                        if ((1U & ((~ (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                                       (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                              >> 7U))] 
-                                       >> (0x1fU & 
-                                           (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                            >> 2U)))) 
-                                   | ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata) 
-                                      == (0xfffffffcU 
-                                          & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))))) {
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
-                        } else {
-                            if ((1U & ((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                                        (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                               >> 7U))] 
-                                        >> (0x1fU & 
-                                            (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                             >> 2U))) 
-                                       & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
-                                          (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                 >> 7U))] 
-                                          >> (0x1fU 
-                                              & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                 >> 2U)))))) {
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                                    = (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata);
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
-                                    = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
-                                               >> 0x20U));
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 4U;
-                            }
-                        }
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[(7U 
-                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                                                >> 7U))] 
-                            = (vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                      >> 7U))] | ((IData)(1U) 
-                                                  << 
-                                                  (0x1fU 
-                                                   & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                      >> 2U))));
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[(7U 
-                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                                                >> 7U))] 
-                            = (vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
-                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                      >> 7U))] | ((IData)(1U) 
-                                                  << 
-                                                  (0x1fU 
-                                                   & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                      >> 2U))));
-                    } else {
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
-                            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 4U;
-                    }
-                } else {
-                    if ((0x40000000U > (0xfffffffcU 
-                                        & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))) {
-                        if (((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                              (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                     >> 7U))] >> (0x1fU 
-                                                  & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                     >> 2U))) 
-                             & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata) 
-                                == (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address)))) {
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-                                = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
-                                           >> 0x20U));
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
-                        } else {
-                            if ((1U & ((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                                        (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                               >> 7U))] 
-                                        >> (0x1fU & 
-                                            (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                             >> 2U))) 
-                                       & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
-                                          (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                 >> 7U))] 
-                                          >> (0x1fU 
-                                              & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                 >> 2U)))))) {
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 1U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                                    = (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata);
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata 
-                                    = (IData)((vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
-                                               >> 0x20U));
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 2U;
-                            } else {
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                                    = (0xfffffffcU 
-                                       & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 1U;
-                            }
-                        }
-                    } else {
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 3U;
-                    }
-                }
-            }
-        } else {
-            if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-                if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[(7U 
-                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                                                >> 7U))] 
-                        = (vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[
-                           (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                  >> 7U))] | ((IData)(1U) 
-                                              << (0x1fU 
-                                                  & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                     >> 2U))));
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[(7U 
-                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                                                >> 7U))] 
-                        = ((~ ((IData)(1U) << (0x1fU 
-                                               & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                                  >> 2U)))) 
-                           & vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[
-                           (7U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                  >> 7U))]);
-                    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-                        = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rdata;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 1U;
-                    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata 
-                        = (((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rdata)) 
-                            << 0x20U) | (QData)((IData)(
-                                                        (0xfffffffcU 
-                                                         & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address))));
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
-                }
-            } else {
-                if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-                    if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address 
-                            = (0xfffffffcU & vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address);
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 1U;
-                    }
-                } else {
-                    if ((3U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-                        if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
-                            vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-                                = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rdata;
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
-                        }
-                    } else {
-                        if ((4U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
-                            if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready) {
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-                                vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 5U;
-                            }
-                        } else {
-                            if ((5U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state))) {
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
-                                if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request)))) {
-                                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    vlTOPp->SoC__DOT____Vcellinp__video_bus__i_cpu_request 
-        = ((IData)(vlTOPp->SoC__DOT__vram_select) & 
-           (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__led__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__led_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__ram__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__ram_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__sdram__i_request 
-        = ((IData)(vlTOPp->SoC__DOT__sdram_select) 
-           & (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__i2c__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__i2c_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__sd__i_request = ((IData)(vlTOPp->SoC__DOT__sd_select) 
-                                                   & (0U 
-                                                      != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT__cpu_rdata = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
-                                    ? vlTOPp->SoC__DOT__rom_rdata
-                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
-                                        ? vlTOPp->SoC__DOT__ram_rdata
-                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
-                                            ? vlTOPp->SoC__DOT__sdram_rdata
-                                            : ((IData)(vlTOPp->SoC__DOT__uart_select)
-                                                ? vlTOPp->SoC__DOT__uart_rdata
-                                                : ((IData)(vlTOPp->SoC__DOT__sd_select)
-                                                    ? vlTOPp->SoC__DOT__sd_rdata
-                                                    : 
-                                                   ((IData)(vlTOPp->SoC__DOT__i2c_select)
-                                                     ? vlTOPp->SoC__DOT__i2c_rdata
-                                                     : 
-                                                    ((IData)(vlTOPp->SoC__DOT__timer_select)
-                                                      ? vlTOPp->SoC__DOT__timer_rdata
-                                                      : 0U)))))));
-    vlTOPp->SoC__DOT____Vcellinp__uart__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__uart_select) & (0U 
-                                                   != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U];
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state;
-    vlTOPp->SoC__DOT__uart__DOT__rx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
-                                               & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)));
-    vlTOPp->SoC__DOT__uart__DOT__tx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
-                                               & (IData)(vlTOPp->SoC__DOT__cpu_rw));
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1 
-        = ((((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-             & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw))) 
-            & (2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-            ? 0xffffffffU : 0U);
-    if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw)))) {
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rdata 
-            = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data
-            [(0xffU & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                       >> 2U))];
-    }
-    if (vlTOPp->SoC__DOT__reset) {
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__state = 0U;
         vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw = 0U;
         vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
         vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__memory_rd = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next = 0U;
     } else {
         if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__state))) {
             if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag) 
@@ -1408,11 +1324,11 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                     vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 1U;
                     if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready) {
                         if ((4U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_width))) {
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd 
+                            vlTOPp->SoC__DOT__cpu__DOT__memory_rd 
                                 = vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
                         } else {
                             if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_width))) {
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd 
+                                vlTOPp->SoC__DOT__cpu__DOT__memory_rd 
                                     = ((0xffff0000U 
                                         & ((- (IData)(
                                                       ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_signed) 
@@ -1422,7 +1338,7 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                                        | (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half));
                             } else {
                                 if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_width))) {
-                                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd 
+                                    vlTOPp->SoC__DOT__cpu__DOT__memory_rd 
                                         = ((0xffffff00U 
                                             & ((- (IData)(
                                                           ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_signed) 
@@ -1434,9 +1350,9 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                             }
                         }
                         vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next 
+                        vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_pc_next;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd 
+                        vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_inst_rd;
                         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_tag;
@@ -1451,9 +1367,9 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                             if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready) {
                                 vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw = 0U;
                                 vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next 
+                                vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next 
                                     = vlTOPp->SoC__DOT__cpu__DOT__execute_pc_next;
-                                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd 
+                                vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd 
                                     = vlTOPp->SoC__DOT__cpu__DOT__execute_inst_rd;
                                 vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag 
                                     = vlTOPp->SoC__DOT__cpu__DOT__execute_tag;
@@ -1463,11 +1379,11 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                             vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__state = 1U;
                         }
                     } else {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next 
+                        vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_pc_next;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd 
+                        vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_inst_rd;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd 
+                        vlTOPp->SoC__DOT__cpu__DOT__memory_rd 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_rd;
                         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag 
                             = vlTOPp->SoC__DOT__cpu__DOT__execute_tag;
@@ -1526,9 +1442,9 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                         if (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready) {
                             vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
                             vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw = 0U;
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next 
+                            vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next 
                                 = vlTOPp->SoC__DOT__cpu__DOT__execute_pc_next;
-                            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd 
+                            vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd 
                                 = vlTOPp->SoC__DOT__cpu__DOT__execute_inst_rd;
                             vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag 
                                 = vlTOPp->SoC__DOT__cpu__DOT__execute_tag;
@@ -1539,57 +1455,11 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
             }
         }
     }
-    vlTOPp->SoC__DOT__cpu_ready = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
-                                    ? (IData)(vlTOPp->SoC__DOT__rom_ready)
-                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
-                                        ? (IData)(vlTOPp->SoC__DOT__ram_ready)
-                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
-                                            ? (IData)(vlTOPp->SoC__DOT__sdram_ready)
-                                            : ((IData)(vlTOPp->SoC__DOT__vram_select)
-                                                ? (IData)(vlTOPp->SoC__DOT__vram_ready)
-                                                : ((IData)(vlTOPp->SoC__DOT__led_select)
-                                                    ? (IData)(vlTOPp->SoC__DOT__led_ready)
-                                                    : 
-                                                   ((IData)(vlTOPp->SoC__DOT__uart_select)
-                                                     ? 
-                                                    ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request)
-                                                      ? 
-                                                     ((5U 
-                                                       == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
-                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request))
-                                                      : 
-                                                     ((IData)(vlTOPp->SoC__DOT__uart__DOT__tx_request) 
-                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__tx_ready)))
-                                                     : 
-                                                    ((IData)(vlTOPp->SoC__DOT__sd_select)
-                                                      ? (IData)(vlTOPp->SoC__DOT__sd_ready)
-                                                      : 
-                                                     ((IData)(vlTOPp->SoC__DOT__i2c_select)
-                                                       ? (IData)(vlTOPp->SoC__DOT__i2c_ready)
-                                                       : (IData)(vlTOPp->SoC__DOT__timer_select)))))))));
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rdata = ((((
-                                                   ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-                                                    & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw))) 
-                                                   & (2U 
-                                                      == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-                                                   ? vlTOPp->SoC__DOT__cpu_rdata
-                                                   : 0U) 
-                                                 & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1) 
-                                                & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1);
-    if (vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0) {
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data[vlTOPp->__Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0] 
-            = vlTOPp->__Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0;
-    }
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
     vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__state 
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__state;
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-                                                 & (2U 
-                                                    == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state))) 
-                                                & (IData)(vlTOPp->SoC__DOT__cpu_ready));
+    vlTOPp->SoC__DOT__cpu__DOT__memory_tag = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata;
     vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready 
         = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request) 
            & (5U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state)));
@@ -1622,7 +1492,7 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
             vlTOPp->SoC__DOT__cpu__DOT__execute_mem_signed 
                 = vlTOPp->SoC__DOT__cpu__DOT__decode_memory_signed;
             vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__cycle 
-                = (0xffU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
+                = (0x1fU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
             if (vlTOPp->SoC__DOT__cpu__DOT__decode_arithmetic) {
                 vlTOPp->SoC__DOT__cpu__DOT__execute_rd 
                     = vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_result;
@@ -2061,66 +1931,46 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__divide__DOT__p1_remainder 
             = VL_MODDIV_III(32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__div_numerator, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__div_denominator);
     }
-    vlTOPp->SoC__DOT__cpu__DOT__execute_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_tag) 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag)) 
-                                                 & (0U 
-                                                    != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
     if (vlTOPp->SoC__DOT__reset) {
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch_tag = 0U;
         vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__fetch_pc = 0U;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc = 0U;
     } else {
         if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state))) {
-            if ((1U & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall)))) {
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag 
-                    = (0xfU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag)));
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 1U;
-            }
-        } else {
-            if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state))) {
-                if (((~ (IData)(vlTOPp->SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall)) 
-                     & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag) 
-                        == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag)))) {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch_tag 
-                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag;
-                    vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction 
-                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata;
-                    vlTOPp->SoC__DOT__cpu__DOT__fetch_pc 
-                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
-                    if ((((0x6fU == (0x7fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata)) 
-                          | (0x67U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
-                         | ((((((0x63U == (0x707fU 
-                                           & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata)) 
-                                | (0x5063U == (0x707fU 
-                                               & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
-                               | (0x7063U == (0x707fU 
-                                              & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
-                              | (0x4063U == (0x707fU 
-                                             & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
-                             | (0x6063U == (0x707fU 
-                                            & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
-                            | (0x1063U == (0x707fU 
-                                           & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))))) {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 2U;
-                    } else {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag 
-                            = (0xfU & ((IData)(1U) 
-                                       + (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag)));
-                    }
+            if (((~ ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_stall) 
+                     | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_stall))) 
+                 & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc 
+                    == vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc))) {
+                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch_tag 
+                    = (0xfU & ((IData)(1U) + (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch_tag)));
+                vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction 
+                    = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata;
+                vlTOPp->SoC__DOT__cpu__DOT__fetch_pc 
+                    = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
+                if ((((0x6fU == (0x7fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata)) 
+                      | (0x67U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
+                     | ((((((0x63U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata)) 
+                            | (0x5063U == (0x707fU 
+                                           & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
+                           | (0x7063U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
+                          | (0x4063U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
+                         | (0x6063U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))) 
+                        | (0x1063U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata))))) {
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 1U;
+                } else {
                     vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc 
                         = ((IData)(4U) + vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc);
                 }
-            } else {
-                if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state))) {
-                    if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__writeback_tag) 
-                         == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch_tag))) {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                            = vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 0U;
-                    }
+            }
+        } else {
+            if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state))) {
+                if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__writeback_tag) 
+                     == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch_tag))) {
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                        = vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = 0U;
                 }
             }
         }
@@ -2131,6 +1981,16 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_numerator;
     vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__div_denominator 
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_denominator;
+    vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_pc_next;
+    vlTOPp->SoC__DOT__cpu__DOT__writeback_tag = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag;
+    vlTOPp->SoC__DOT__cpu__DOT__execute_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_tag) 
+                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag)) 
+                                                 & (0U 
+                                                    != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
+    vlTOPp->SoC__DOT__cpu__DOT__memory_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag) 
+                                                 != (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag)) 
+                                                & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_read) 
+                                                   | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_write)));
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state;
     vlTOPp->SoC__DOT__cpu__DOT__fetch_tag = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch_tag;
     vlTOPp->SoC__DOT__cpu__DOT__decode__DOT__is_B = 
@@ -2821,8 +2681,8 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                                                                                  : 0U))))))))))))))))))))))))))))))))))));
     }
     if (vlTOPp->SoC__DOT__reset) {
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag = 0U;
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = 0U;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc = 0xffffffffU;
+        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0U] = 0U;
         vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[1U] = 0U;
@@ -2860,17 +2720,41 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata = 0ULL;
     } else {
         if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state))) {
-            if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag) 
-                 != (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag))) {
-                if ((1U & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[
+            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = 0U;
+            if ((vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                 != vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc)) {
+                if ((vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address 
+                     == vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc)) {
+                    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata 
+                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__prefetch;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc 
+                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = 1U;
+                    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata 
+                        = (((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__prefetch)) 
+                            << 0x20U) | (QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc)));
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[(7U 
+                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                                                                                >> 7U))] 
+                        = (vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[
                            (7U & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                                  >> 7U))] >> (0x1fU 
-                                               & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                                                  >> 2U))))) {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1U;
+                                  >> 7U))] | ((IData)(1U) 
+                                              << (0x1fU 
+                                                  & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                                                     >> 2U))));
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+                        = ((IData)(4U) + vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc);
                 } else {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = 1U;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 2U;
+                    if ((1U & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[
+                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                                      >> 7U))] >> (0x1fU 
+                                                   & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
+                                                      >> 2U))))) {
+                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1U;
+                    } else {
+                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+                            = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
+                    }
                 }
             }
         } else {
@@ -2880,60 +2764,14 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata 
                         = (IData)((vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rdata 
                                    >> 0x20U));
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag 
-                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 0U;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc 
+                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
                 } else {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = 1U;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 2U;
+                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+                        = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
                 }
-            } else {
-                if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state))) {
-                    if (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready) {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = 0U;
-                        vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata 
-                            = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag 
-                            = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = 1U;
-                        vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata 
-                            = (((QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata)) 
-                                << 0x20U) | (QData)((IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc)));
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 3U;
-                    }
-                } else {
-                    if ((3U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state))) {
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[(7U 
-                                                                                & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                                                                                >> 7U))] 
-                            = (vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[
-                               (7U & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                                      >> 7U))] | ((IData)(1U) 
-                                                  << 
-                                                  (0x1fU 
-                                                   & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                                                      >> 2U))));
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = 0U;
-                        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 0U;
-                    }
-                }
+                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 0U;
             }
-        }
-    }
-    if (vlTOPp->SoC__DOT__reset) {
-        vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next = 0U;
-    } else {
-        if (((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag) 
-             != (IData)(vlTOPp->SoC__DOT__cpu__DOT__writeback_tag))) {
-            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag 
-                = vlTOPp->SoC__DOT__cpu__DOT__memory_tag;
-            vlTOPp->SoC__DOT__cpu__DOT__writeback_inst_rd 
-                = vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd;
-            vlTOPp->SoC__DOT__cpu__DOT__writeback_rd 
-                = vlTOPp->SoC__DOT__cpu__DOT__memory_rd;
-            vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next 
-                = vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next;
         }
     }
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state 
@@ -3002,15 +2840,8 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0x1eU];
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0x1fU] 
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0x1fU];
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag;
-    vlTOPp->SoC__DOT__cpu__DOT__writeback_tag = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__writeback_tag;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_pc_next;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_tag = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_tag;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_inst_rd;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_rd = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__memory_rd;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc 
+        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__is_R = 
         ((((((((((((((((((((0x33U == (0xfe00707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata)) 
                            | (0x7033U == (0xfe00707fU 
@@ -3072,94 +2903,156 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__5(VSoC__Syms* __restrict vlSymsp) {
                        >> 2U))];
     }
     if ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state))) {
-        if (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request) {
-            if ((vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc 
-                 == vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address)) {
-                vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata 
-                    = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__prefetch;
-                vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = 1U;
-                vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request = 1U;
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address 
-                    = ((IData)(4U) + vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc);
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 1U;
-            } else {
-                vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request = 1U;
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address 
-                    = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc;
-                vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 2U;
-            }
-        } else {
-            vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = 0U;
+        if (((~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_busy)) 
+             & (vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+                != vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address))) {
+            vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request = 1U;
+            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address 
+                = vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address;
+            vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 1U;
         }
     } else {
         if ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state))) {
-            vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = 0U;
-            if (vlTOPp->SoC__DOT__cpu__DOT__bus_pa_ready) {
+            if (((~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request)) 
+                 & (IData)(vlTOPp->SoC__DOT__cpu_ready))) {
                 vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request = 0U;
                 vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__prefetch 
-                    = vlTOPp->SoC__DOT__cpu__DOT__bus_pa_rdata;
+                    = vlTOPp->SoC__DOT__cpu_rdata;
                 vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address 
                     = vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address;
                 vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 0U;
             }
-        } else {
-            if ((2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state))) {
-                if (vlTOPp->SoC__DOT__cpu__DOT__bus_pa_ready) {
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address 
-                        = ((IData)(4U) + vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address);
-                    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata 
-                        = vlTOPp->SoC__DOT__cpu__DOT__bus_pa_rdata;
-                    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = 1U;
-                    vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 1U;
-                }
-            }
         }
     }
-    vlTOPp->SoC__DOT__cpu__DOT__memory_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag) 
-                                                 != (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag)) 
-                                                & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_read) 
-                                                   | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_write)));
     if (vlTOPp->__Vdlyvset__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0) {
         vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[vlTOPp->__Vdlyvdim0__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0] 
             = vlTOPp->__Vdlyvval__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0;
     }
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw 
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request 
-        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address 
+        = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state 
         = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state;
     vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pa_address;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc;
-    vlTOPp->SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall 
-        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_stall) 
-           | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_stall));
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pa_ready = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-                                                 & (1U 
-                                                    == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state))) 
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = vlTOPp->__Vdly__SoC__DOT__cpu__DOT__bus_pb_request;
+    vlTOPp->SoC__DOT__cpu__DOT__bus_busy = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
+                                            | (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request));
+    if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) {
+        vlTOPp->SoC__DOT__cpu_wdata = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata;
+        vlTOPp->SoC__DOT__cpu_rw = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw) 
+                                    & 1U);
+    } else {
+        vlTOPp->SoC__DOT__cpu_wdata = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)
+                                        ? vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__i_pa_wdata
+                                        : 0U);
+        vlTOPp->SoC__DOT__cpu_rw = 0U;
+    }
+    vlTOPp->SoC__DOT__cpu_request = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
+                                     | (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request));
+    vlTOPp->SoC__DOT__cpu_address = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request)
+                                      ? vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address
+                                      : ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)
+                                          ? vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address
+                                          : 0U));
+    vlTOPp->SoC__DOT____Vcellinp__rom__i_request = 
+        ((0x10000U > vlTOPp->SoC__DOT__cpu_address) 
+         & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT__vram_select = ((0x40000000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                     & (0x50000000U 
+                                        > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__led_select = ((0x50000000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x50000010U 
+                                       > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__timer_select = ((0x50000050U 
+                                       <= vlTOPp->SoC__DOT__cpu_address) 
+                                      & (0x50000060U 
+                                         > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__ram_select = ((0x10000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x20000U > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__sdram_select = ((0x20000000U 
+                                       <= vlTOPp->SoC__DOT__cpu_address) 
+                                      & (0x40000000U 
+                                         > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__i2c_select = ((0x50000030U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x50000040U 
+                                       > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__sd_select = ((0x50000040U <= vlTOPp->SoC__DOT__cpu_address) 
+                                   & (0x50000050U > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__uart_select = ((0x50000010U <= vlTOPp->SoC__DOT__cpu_address) 
+                                     & (0x50000020U 
+                                        > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT____Vcellinp__video_bus__i_cpu_request 
+        = ((IData)(vlTOPp->SoC__DOT__vram_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__led__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__led_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__ram__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__ram_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__sdram__i_request 
+        = ((IData)(vlTOPp->SoC__DOT__sdram_select) 
+           & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__i2c__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__i2c_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__sd__i_request = ((IData)(vlTOPp->SoC__DOT__sd_select) 
+                                                   & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT__cpu_rdata = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
+                                    ? vlTOPp->SoC__DOT__rom_rdata
+                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
+                                        ? vlTOPp->SoC__DOT__ram_rdata
+                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
+                                            ? vlTOPp->SoC__DOT__sdram_rdata
+                                            : ((IData)(vlTOPp->SoC__DOT__uart_select)
+                                                ? vlTOPp->SoC__DOT__uart_rdata
+                                                : ((IData)(vlTOPp->SoC__DOT__sd_select)
+                                                    ? vlTOPp->SoC__DOT__sd_rdata
+                                                    : 
+                                                   ((IData)(vlTOPp->SoC__DOT__i2c_select)
+                                                     ? vlTOPp->SoC__DOT__i2c_rdata
+                                                     : 
+                                                    ((IData)(vlTOPp->SoC__DOT__timer_select)
+                                                      ? vlTOPp->SoC__DOT__timer_rdata
+                                                      : 0U)))))));
+    vlTOPp->SoC__DOT____Vcellinp__uart__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__uart_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT__uart__DOT__rx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
+                                               & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)));
+    vlTOPp->SoC__DOT__uart__DOT__tx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
+                                               & (IData)(vlTOPp->SoC__DOT__cpu_rw));
+    vlTOPp->SoC__DOT__cpu_ready = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
+                                    ? (IData)(vlTOPp->SoC__DOT__rom_ready)
+                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
+                                        ? (IData)(vlTOPp->SoC__DOT__ram_ready)
+                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
+                                            ? (IData)(vlTOPp->SoC__DOT__sdram_ready)
+                                            : ((IData)(vlTOPp->SoC__DOT__vram_select)
+                                                ? (IData)(vlTOPp->SoC__DOT__vram_ready)
+                                                : ((IData)(vlTOPp->SoC__DOT__led_select)
+                                                    ? (IData)(vlTOPp->SoC__DOT__led_ready)
+                                                    : 
+                                                   ((IData)(vlTOPp->SoC__DOT__uart_select)
+                                                     ? 
+                                                    ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request)
+                                                      ? 
+                                                     ((5U 
+                                                       == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
+                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request))
+                                                      : 
+                                                     ((IData)(vlTOPp->SoC__DOT__uart__DOT__tx_request) 
+                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__tx_ready)))
+                                                     : 
+                                                    ((IData)(vlTOPp->SoC__DOT__sd_select)
+                                                      ? (IData)(vlTOPp->SoC__DOT__sd_ready)
+                                                      : 
+                                                     ((IData)(vlTOPp->SoC__DOT__i2c_select)
+                                                       ? (IData)(vlTOPp->SoC__DOT__i2c_ready)
+                                                       : (IData)(vlTOPp->SoC__DOT__timer_select)))))))));
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready = ((~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)) 
                                                 & (IData)(vlTOPp->SoC__DOT__cpu_ready));
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0 
-        = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-            & (1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-            ? 0xffffffffU : 0U);
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pa_rdata = (((((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-                                                   & (1U 
-                                                      == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-                                                   ? vlTOPp->SoC__DOT__cpu_rdata
-                                                   : 0U) 
-                                                 & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0) 
-                                                & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0);
 }
 
-VL_INLINE_OPT void VSoC::_combo__TOP__6(VSoC__Syms* __restrict vlSymsp) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    VSoC::_combo__TOP__6\n"); );
-    VSoC* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
-    // Body
-    vlTOPp->SoC__DOT__reset = (1U & (~ (IData)(vlTOPp->CPU_RESET_n)));
-}
-
-VL_INLINE_OPT void VSoC::_sequent__TOP__7(VSoC__Syms* __restrict vlSymsp) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    VSoC::_sequent__TOP__7\n"); );
+VL_INLINE_OPT void VSoC::_sequent__TOP__6(VSoC__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    VSoC::_sequent__TOP__6\n"); );
     VSoC* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
     vlTOPp->SoC__DOT__cpu__DOT__fwd_rs1 = ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_inst_rs1))
@@ -3290,6 +3183,13 @@ VL_INLINE_OPT void VSoC::_sequent__TOP__7(VSoC__Syms* __restrict vlSymsp) {
                                                         : 0U)))))))))))))));
 }
 
+VL_INLINE_OPT void VSoC::_combo__TOP__7(VSoC__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    VSoC::_combo__TOP__7\n"); );
+    VSoC* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
+    // Body
+    vlTOPp->SoC__DOT__reset = (1U & (~ (IData)(vlTOPp->CPU_RESET_n)));
+}
+
 void VSoC::_eval(VSoC__Syms* __restrict vlSymsp) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    VSoC::_eval\n"); );
     VSoC* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
@@ -3308,13 +3208,13 @@ void VSoC::_eval(VSoC__Syms* __restrict vlSymsp) {
         vlTOPp->_sequent__TOP__5(vlSymsp);
         vlTOPp->__Vm_traceActivity[3U] = 1U;
     }
-    vlTOPp->_combo__TOP__6(vlSymsp);
     if ((((IData)(vlTOPp->CLOCK_125_p) & (~ (IData)(vlTOPp->__Vclklast__TOP__CLOCK_125_p))) 
          | ((IData)(vlTOPp->__VinpClk__TOP__SoC__DOT__reset) 
             & (~ (IData)(vlTOPp->__Vclklast__TOP____VinpClk__TOP__SoC__DOT__reset))))) {
-        vlTOPp->_sequent__TOP__7(vlSymsp);
+        vlTOPp->_sequent__TOP__6(vlSymsp);
         vlTOPp->__Vm_traceActivity[4U] = 1U;
     }
+    vlTOPp->_combo__TOP__7(vlSymsp);
     // Final
     vlTOPp->__Vclklast__TOP__CLOCK_125_p = vlTOPp->CLOCK_125_p;
     vlTOPp->__Vclklast__TOP____VinpClk__TOP__SoC__DOT__reset 

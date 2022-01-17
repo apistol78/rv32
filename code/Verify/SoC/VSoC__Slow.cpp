@@ -44,18 +44,18 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->HSMC_RX_p = 0U;
     vlTOPp->HSMC_TX_n = 0U;
     vlTOPp->HSMC_TX_p = 0U;
-    vlTOPp->DDR2LP_DQ = 0U;
     vlTOPp->DDR2LP_DQS_p = 0U;
-    vlTOPp->GPIO = 0ULL;
+    vlTOPp->DDR2LP_DQ = 0U;
     vlTOPp->AUD_BCLK = 0U;
     vlTOPp->DDR2LP_DQS_n = 0U;
+    vlTOPp->GPIO = 0ULL;
     vlTOPp->HDMI_TX_CLK = 0U;
     vlTOPp->SoC__DOT__led__DOT__leds = 0x2aaU;
+    vlTOPp->SoC__DOT__sd_rdata = 0U;
     vlTOPp->SoC__DOT__rom_ready = 0U;
     vlTOPp->SoC__DOT__ram_ready = 0U;
     vlTOPp->SoC__DOT__sdram_ready = 0U;
     vlTOPp->SoC__DOT__led_ready = 0U;
-    vlTOPp->SoC__DOT__sd_rdata = 0U;
     __Vtemp1[0U] = 0x766d656dU;
     __Vtemp1[1U] = 0x6172652eU;
     __Vtemp1[2U] = 0x69726d77U;
@@ -120,24 +120,24 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__cpu__DOT__registers__DOT__r[0x1fU] = 0U;
     vlTOPp->SoC__DOT__video_sram_ready = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_write = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 0U;
     vlTOPp->HDMI_TX_HS = 1U;
     vlTOPp->HDMI_TX_VS = 1U;
     vlTOPp->SoC__DOT__vga_address = 0U;
     vlTOPp->SoC__DOT__vga_enable = 0U;
     vlTOPp->HDMI_TX_CLK = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_write = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read = 0U;
     vlTOPp->SoC__DOT__vga__DOT__vga_h = 0U;
     vlTOPp->SoC__DOT__vga__DOT__vga_v = 0U;
-    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_read = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__rdata = 0ULL;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__in = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__out = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__last_write = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__fifo__DOT__last_read = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__rdata = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_write = 0U;
+    vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__last_read = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__frame_error = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__prescale = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__data = 0U;
@@ -145,10 +145,14 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds = 0U;
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx = 0U;
     vlTOPp->SoC__DOT__uart_rdata = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state = 0U;
-    vlTOPp->SoC__DOT__cpu_rw = 0U;
-    vlTOPp->SoC__DOT__cpu_address = 0U;
-    vlTOPp->SoC__DOT__cpu_wdata = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__state = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory_tag = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory_rd = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next = 0U;
     vlTOPp->SoC__DOT__vram_ready = 0U;
     vlTOPp->SoC__DOT____Vcellout__video_bus__o_video_rdata = 0U;
     vlTOPp->SoC__DOT__video_sram_request = 0U;
@@ -159,30 +163,6 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__video_bus__DOT__fifo_read = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__state = 0U;
     vlTOPp->SoC__DOT__video_bus__DOT__last_video_address = 1U;
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata = 0ULL;
     vlTOPp->SoC__DOT__cpu__DOT__execute_inst_rd = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__execute_pc_next = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__execute_mem_read = 0U;
@@ -196,16 +176,8 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__cpu__DOT__decode_op = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__writeback_tag = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__writeback_pc_next = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__state = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rw = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_wdata = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_tag = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_inst_rd = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_rd = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__memory_pc_next = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc = 0xffffffffU;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0U] = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[1U] = 0U;
@@ -241,18 +213,39 @@ void VSoC::_initial__TOP__1(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid[0x1fU] = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata = 0ULL;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch_tag = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__fetch_pc = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = 0U;
     vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__address = 0xffffffffU;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__state = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__pc = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch_tag = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction = 0U;
-    vlTOPp->SoC__DOT__cpu__DOT__fetch_pc = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[0U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[1U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[2U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[3U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[4U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[5U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[6U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid[7U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[0U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[1U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[2U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[3U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[4U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[5U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[6U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty[7U] = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = 0U;
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_wdata = 0ULL;
 }
 
 void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
@@ -334,64 +327,7 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
     vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo_empty 
         = ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__in) 
            == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rx_fifo__DOT__out));
-    vlTOPp->SoC__DOT____Vcellinp__rom__i_request = 
-        ((0x10000U > vlTOPp->SoC__DOT__cpu_address) 
-         & (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT__vram_select = ((0x40000000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                     & (0x50000000U 
-                                        > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__led_select = ((0x50000000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x50000010U 
-                                       > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__timer_select = ((0x50000050U 
-                                       <= vlTOPp->SoC__DOT__cpu_address) 
-                                      & (0x50000060U 
-                                         > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__ram_select = ((0x10000U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x20000U > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__sdram_select = ((0x20000000U 
-                                       <= vlTOPp->SoC__DOT__cpu_address) 
-                                      & (0x40000000U 
-                                         > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__i2c_select = ((0x50000030U <= vlTOPp->SoC__DOT__cpu_address) 
-                                    & (0x50000040U 
-                                       > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__sd_select = ((0x50000040U <= vlTOPp->SoC__DOT__cpu_address) 
-                                   & (0x50000050U > vlTOPp->SoC__DOT__cpu_address));
-    vlTOPp->SoC__DOT__uart_select = ((0x50000010U <= vlTOPp->SoC__DOT__cpu_address) 
-                                     & (0x50000020U 
-                                        > vlTOPp->SoC__DOT__cpu_address));
     vlTOPp->HDMI_TX_D = (0xffffffU & vlTOPp->SoC__DOT____Vcellout__video_bus__o_video_rdata);
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1 
-        = ((((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-             & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw))) 
-            & (2U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-            ? 0xffffffffU : 0U);
-    if ((0x1fU >= (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                            << 3U)))) {
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_byte 
-            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-                        >> (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                     << 3U))));
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half 
-            = (0xffffU & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
-                          >> (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
-                                       << 3U))));
-    } else {
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_byte = 0U;
-        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half = 0U;
-    }
-    vlTOPp->SoC__DOT__cpu__DOT__execute_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_tag) 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag)) 
-                                                 & (0U 
-                                                    != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
-    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready 
-        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request) 
-           & (5U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state)));
-    vlTOPp->SoC__DOT__cpu__DOT__memory_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag) 
-                                                 != (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag)) 
-                                                & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_read) 
-                                                   | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_write)));
     vlTOPp->SoC__DOT__cpu__DOT__fwd_rs1 = ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_inst_rs1))
                                             ? 0U : 
                                            ((((IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_inst_rs1) 
@@ -420,10 +356,14 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
                                                   == (IData)(vlTOPp->SoC__DOT__cpu__DOT__writeback_inst_rd))
                                                   ? vlTOPp->SoC__DOT__cpu__DOT__writeback_rd
                                                   : vlTOPp->SoC__DOT__cpu__DOT__rs2))));
-    vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0 
-        = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-            & (1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-            ? 0xffffffffU : 0U);
+    vlTOPp->SoC__DOT__cpu__DOT__memory_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag) 
+                                                 != (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_tag)) 
+                                                & ((IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_read) 
+                                                   | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_mem_write)));
+    vlTOPp->SoC__DOT__cpu__DOT__execute_stall = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_tag) 
+                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_tag)) 
+                                                 & (0U 
+                                                    != (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__cycle)));
     vlTOPp->SoC__DOT__cpu__DOT__decode__DOT__is_B = 
         ((((((0x63U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction)) 
              | (0x5063U == (0x707fU & vlTOPp->SoC__DOT__cpu__DOT__fetch_instruction))) 
@@ -1111,47 +1051,42 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
                                                                                  ? 4U
                                                                                  : 0U))))))))))))))))))))))))))))))))))));
     }
-    vlTOPp->SoC__DOT____Vcellinp__video_bus__i_cpu_request 
-        = ((IData)(vlTOPp->SoC__DOT__vram_select) & 
-           (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__led__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__led_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__ram__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__ram_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__sdram__i_request 
-        = ((IData)(vlTOPp->SoC__DOT__sdram_select) 
-           & (0U != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__i2c__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__i2c_select) & (0U 
-                                                  != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT____Vcellinp__sd__i_request = ((IData)(vlTOPp->SoC__DOT__sd_select) 
-                                                   & (0U 
-                                                      != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT__cpu_rdata = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
-                                    ? vlTOPp->SoC__DOT__rom_rdata
-                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
-                                        ? vlTOPp->SoC__DOT__ram_rdata
-                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
-                                            ? vlTOPp->SoC__DOT__sdram_rdata
-                                            : ((IData)(vlTOPp->SoC__DOT__uart_select)
-                                                ? vlTOPp->SoC__DOT__uart_rdata
-                                                : ((IData)(vlTOPp->SoC__DOT__sd_select)
-                                                    ? vlTOPp->SoC__DOT__sd_rdata
-                                                    : 
-                                                   ((IData)(vlTOPp->SoC__DOT__i2c_select)
-                                                     ? vlTOPp->SoC__DOT__i2c_rdata
-                                                     : 
-                                                    ((IData)(vlTOPp->SoC__DOT__timer_select)
-                                                      ? vlTOPp->SoC__DOT__timer_rdata
-                                                      : 0U)))))));
-    vlTOPp->SoC__DOT____Vcellinp__uart__i_request = 
-        ((IData)(vlTOPp->SoC__DOT__uart_select) & (0U 
-                                                   != (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)));
-    vlTOPp->SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall 
-        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory_stall) 
-           | (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute_stall));
+    vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_ready 
+        = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_request) 
+           & (5U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state)));
+    if ((0x1fU >= (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                            << 3U)))) {
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_byte 
+            = (0xffU & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+                        >> (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                     << 3U))));
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half 
+            = (0xffffU & (vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata 
+                          >> (0x18U & (vlTOPp->SoC__DOT__cpu__DOT__execute_mem_address 
+                                       << 3U))));
+    } else {
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_byte = 0U;
+        vlTOPp->SoC__DOT__cpu__DOT__memory__DOT__bus_rdata_half = 0U;
+    }
+    vlTOPp->SoC__DOT__cpu__DOT__bus_busy = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
+                                            | (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request));
+    if (vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) {
+        vlTOPp->SoC__DOT__cpu_wdata = vlTOPp->SoC__DOT__cpu__DOT__bus_pb_wdata;
+        vlTOPp->SoC__DOT__cpu_rw = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw) 
+                                    & 1U);
+    } else {
+        vlTOPp->SoC__DOT__cpu_wdata = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)
+                                        ? vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__i_pa_wdata
+                                        : 0U);
+        vlTOPp->SoC__DOT__cpu_rw = 0U;
+    }
+    vlTOPp->SoC__DOT__cpu_request = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
+                                     | (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request));
+    vlTOPp->SoC__DOT__cpu_address = ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request)
+                                      ? vlTOPp->SoC__DOT__cpu__DOT__bus_pb_address
+                                      : ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)
+                                          ? vlTOPp->SoC__DOT__cpu__DOT__bus_pa_address
+                                          : 0U));
     vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand1 
         = ((0U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_alu_operand1))
             ? 0U : ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_alu_operand1))
@@ -1174,26 +1109,33 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
                              : ((4U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_alu_operand2))
                                  ? vlTOPp->SoC__DOT__cpu__DOT__decode_imm
                                  : 0U)))));
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rdata = ((((
-                                                   ((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-                                                    & (~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_rw))) 
-                                                   & (2U 
-                                                      == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-                                                   ? vlTOPp->SoC__DOT__cpu_rdata
-                                                   : 0U) 
-                                                 & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1) 
-                                                & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1);
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pa_rdata = (((((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-                                                   & (1U 
-                                                      == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state)))
-                                                   ? vlTOPp->SoC__DOT__cpu_rdata
-                                                   : 0U) 
-                                                 & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0) 
-                                                & vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0);
-    vlTOPp->SoC__DOT__uart__DOT__rx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
-                                               & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)));
-    vlTOPp->SoC__DOT__uart__DOT__tx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
-                                               & (IData)(vlTOPp->SoC__DOT__cpu_rw));
+    vlTOPp->SoC__DOT____Vcellinp__rom__i_request = 
+        ((0x10000U > vlTOPp->SoC__DOT__cpu_address) 
+         & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT__vram_select = ((0x40000000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                     & (0x50000000U 
+                                        > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__led_select = ((0x50000000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x50000010U 
+                                       > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__timer_select = ((0x50000050U 
+                                       <= vlTOPp->SoC__DOT__cpu_address) 
+                                      & (0x50000060U 
+                                         > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__ram_select = ((0x10000U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x20000U > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__sdram_select = ((0x20000000U 
+                                       <= vlTOPp->SoC__DOT__cpu_address) 
+                                      & (0x40000000U 
+                                         > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__i2c_select = ((0x50000030U <= vlTOPp->SoC__DOT__cpu_address) 
+                                    & (0x50000040U 
+                                       > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__sd_select = ((0x50000040U <= vlTOPp->SoC__DOT__cpu_address) 
+                                   & (0x50000050U > vlTOPp->SoC__DOT__cpu_address));
+    vlTOPp->SoC__DOT__uart_select = ((0x50000010U <= vlTOPp->SoC__DOT__cpu_address) 
+                                     & (0x50000020U 
+                                        > vlTOPp->SoC__DOT__cpu_address));
     vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu__DOT__signed_lt_result 
         = (VL_LTS_III(1,32,32, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand1, vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand2)
             ? 1U : 0U);
@@ -1216,34 +1158,38 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
         = ((vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand1 
             >= vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand2)
             ? 1U : 0U);
-    vlTOPp->SoC__DOT__cpu_ready = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
-                                    ? (IData)(vlTOPp->SoC__DOT__rom_ready)
+    vlTOPp->SoC__DOT____Vcellinp__video_bus__i_cpu_request 
+        = ((IData)(vlTOPp->SoC__DOT__vram_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__led__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__led_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__ram__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__ram_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__sdram__i_request 
+        = ((IData)(vlTOPp->SoC__DOT__sdram_select) 
+           & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__i2c__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__i2c_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT____Vcellinp__sd__i_request = ((IData)(vlTOPp->SoC__DOT__sd_select) 
+                                                   & (IData)(vlTOPp->SoC__DOT__cpu_request));
+    vlTOPp->SoC__DOT__cpu_rdata = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
+                                    ? vlTOPp->SoC__DOT__rom_rdata
                                     : ((IData)(vlTOPp->SoC__DOT__ram_select)
-                                        ? (IData)(vlTOPp->SoC__DOT__ram_ready)
+                                        ? vlTOPp->SoC__DOT__ram_rdata
                                         : ((IData)(vlTOPp->SoC__DOT__sdram_select)
-                                            ? (IData)(vlTOPp->SoC__DOT__sdram_ready)
-                                            : ((IData)(vlTOPp->SoC__DOT__vram_select)
-                                                ? (IData)(vlTOPp->SoC__DOT__vram_ready)
-                                                : ((IData)(vlTOPp->SoC__DOT__led_select)
-                                                    ? (IData)(vlTOPp->SoC__DOT__led_ready)
+                                            ? vlTOPp->SoC__DOT__sdram_rdata
+                                            : ((IData)(vlTOPp->SoC__DOT__uart_select)
+                                                ? vlTOPp->SoC__DOT__uart_rdata
+                                                : ((IData)(vlTOPp->SoC__DOT__sd_select)
+                                                    ? vlTOPp->SoC__DOT__sd_rdata
                                                     : 
-                                                   ((IData)(vlTOPp->SoC__DOT__uart_select)
-                                                     ? 
-                                                    ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request)
-                                                      ? 
-                                                     ((5U 
-                                                       == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
-                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request))
-                                                      : 
-                                                     ((IData)(vlTOPp->SoC__DOT__uart__DOT__tx_request) 
-                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__tx_ready)))
+                                                   ((IData)(vlTOPp->SoC__DOT__i2c_select)
+                                                     ? vlTOPp->SoC__DOT__i2c_rdata
                                                      : 
-                                                    ((IData)(vlTOPp->SoC__DOT__sd_select)
-                                                      ? (IData)(vlTOPp->SoC__DOT__sd_ready)
-                                                      : 
-                                                     ((IData)(vlTOPp->SoC__DOT__i2c_select)
-                                                       ? (IData)(vlTOPp->SoC__DOT__i2c_ready)
-                                                       : (IData)(vlTOPp->SoC__DOT__timer_select)))))))));
+                                                    ((IData)(vlTOPp->SoC__DOT__timer_select)
+                                                      ? vlTOPp->SoC__DOT__timer_rdata
+                                                      : 0U)))))));
+    vlTOPp->SoC__DOT____Vcellinp__uart__i_request = 
+        ((IData)(vlTOPp->SoC__DOT__uart_select) & (IData)(vlTOPp->SoC__DOT__cpu_request));
     vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_result 
         = ((1U == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_alu_operation))
             ? (vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu_operand1 
@@ -1298,13 +1244,39 @@ void VSoC::_settle__TOP__4(VSoC__Syms* __restrict vlSymsp) {
                                                         == (IData)(vlTOPp->SoC__DOT__cpu__DOT__decode_alu_operation))
                                                         ? (IData)(vlTOPp->SoC__DOT__cpu__DOT__execute__DOT__alu__DOT__unsigned_get_result)
                                                         : 0U)))))))))))))));
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pb_request) 
-                                                 & (2U 
-                                                    == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state))) 
-                                                & (IData)(vlTOPp->SoC__DOT__cpu_ready));
-    vlTOPp->SoC__DOT__cpu__DOT__bus_pa_ready = (((IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request) 
-                                                 & (1U 
-                                                    == (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus__DOT__state))) 
+    vlTOPp->SoC__DOT__uart__DOT__rx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
+                                               & (~ (IData)(vlTOPp->SoC__DOT__cpu_rw)));
+    vlTOPp->SoC__DOT__uart__DOT__tx_request = ((IData)(vlTOPp->SoC__DOT____Vcellinp__uart__i_request) 
+                                               & (IData)(vlTOPp->SoC__DOT__cpu_rw));
+    vlTOPp->SoC__DOT__cpu_ready = ((0x10000U > vlTOPp->SoC__DOT__cpu_address)
+                                    ? (IData)(vlTOPp->SoC__DOT__rom_ready)
+                                    : ((IData)(vlTOPp->SoC__DOT__ram_select)
+                                        ? (IData)(vlTOPp->SoC__DOT__ram_ready)
+                                        : ((IData)(vlTOPp->SoC__DOT__sdram_select)
+                                            ? (IData)(vlTOPp->SoC__DOT__sdram_ready)
+                                            : ((IData)(vlTOPp->SoC__DOT__vram_select)
+                                                ? (IData)(vlTOPp->SoC__DOT__vram_ready)
+                                                : ((IData)(vlTOPp->SoC__DOT__led_select)
+                                                    ? (IData)(vlTOPp->SoC__DOT__led_ready)
+                                                    : 
+                                                   ((IData)(vlTOPp->SoC__DOT__uart_select)
+                                                     ? 
+                                                    ((IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request)
+                                                      ? 
+                                                     ((5U 
+                                                       == (IData)(vlTOPp->SoC__DOT__uart__DOT__rx__DOT__rds)) 
+                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__rx_request))
+                                                      : 
+                                                     ((IData)(vlTOPp->SoC__DOT__uart__DOT__tx_request) 
+                                                      & (IData)(vlTOPp->SoC__DOT__uart__DOT__tx_ready)))
+                                                     : 
+                                                    ((IData)(vlTOPp->SoC__DOT__sd_select)
+                                                      ? (IData)(vlTOPp->SoC__DOT__sd_ready)
+                                                      : 
+                                                     ((IData)(vlTOPp->SoC__DOT__i2c_select)
+                                                       ? (IData)(vlTOPp->SoC__DOT__i2c_ready)
+                                                       : (IData)(vlTOPp->SoC__DOT__timer_select)))))))));
+    vlTOPp->SoC__DOT__cpu__DOT__bus_pb_ready = ((~ (IData)(vlTOPp->SoC__DOT__cpu__DOT__bus_pa_request)) 
                                                 & (IData)(vlTOPp->SoC__DOT__cpu_ready));
 }
 
@@ -1450,6 +1422,7 @@ void VSoC::_ctor_var_reset() {
     SoC__DOT__timer_select = VL_RAND_RESET_I(1);
     SoC__DOT__timer_rdata = VL_RAND_RESET_I(32);
     SoC__DOT__cpu_rw = VL_RAND_RESET_I(1);
+    SoC__DOT__cpu_request = VL_RAND_RESET_I(1);
     SoC__DOT__cpu_ready = VL_RAND_RESET_I(1);
     SoC__DOT__cpu_address = VL_RAND_RESET_I(32);
     SoC__DOT__cpu_rdata = VL_RAND_RESET_I(32);
@@ -1518,22 +1491,19 @@ void VSoC::_ctor_var_reset() {
     SoC__DOT__timer__DOT__prescale = VL_RAND_RESET_I(17);
     SoC__DOT__timer__DOT__cycles = VL_RAND_RESET_I(32);
     SoC__DOT__timer__DOT__ms = VL_RAND_RESET_I(32);
+    SoC__DOT__cpu__DOT__bus_busy = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__bus_pa_request = VL_RAND_RESET_I(1);
-    SoC__DOT__cpu__DOT__bus_pa_ready = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__bus_pa_address = VL_RAND_RESET_I(32);
-    SoC__DOT__cpu__DOT__bus_pa_rdata = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__bus_pb_rw = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__bus_pb_request = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__bus_pb_ready = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__bus_pb_address = VL_RAND_RESET_I(32);
-    SoC__DOT__cpu__DOT__bus_pb_rdata = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__bus_pb_wdata = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__rs1 = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__rs2 = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__fetch_tag = VL_RAND_RESET_I(4);
     SoC__DOT__cpu__DOT__fetch_instruction = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__fetch_pc = VL_RAND_RESET_I(32);
-    SoC__DOT__cpu__DOT____Vcellinp__fetch__i_stall = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__decode_tag = VL_RAND_RESET_I(4);
     SoC__DOT__cpu__DOT__decode_instruction = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__decode_pc = VL_RAND_RESET_I(32);
@@ -1576,9 +1546,6 @@ void VSoC::_ctor_var_reset() {
     SoC__DOT__cpu__DOT__writeback_pc_next = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__retire_tag = VL_RAND_RESET_I(4);
     SoC__DOT__cpu__DOT__bus__DOT__i_pa_wdata = VL_RAND_RESET_I(32);
-    SoC__DOT__cpu__DOT__bus__DOT__state = VL_RAND_RESET_I(2);
-    SoC__DOT__cpu__DOT__bus__DOT__o_pa_rdata__out__en0 = 0;
-    SoC__DOT__cpu__DOT__bus__DOT__o_pb_rdata__out__en1 = 0;
     SoC__DOT__cpu__DOT__registers__DOT__read_tag = VL_RAND_RESET_I(4);
     SoC__DOT__cpu__DOT__registers__DOT__write_tag = VL_RAND_RESET_I(4);
     { int __Vi0=0; for (; __Vi0<32; ++__Vi0) {
@@ -1586,19 +1553,16 @@ void VSoC::_ctor_var_reset() {
     }}
     SoC__DOT__cpu__DOT__fetch__DOT__state = VL_RAND_RESET_I(3);
     SoC__DOT__cpu__DOT__fetch__DOT__pc = VL_RAND_RESET_I(32);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag = VL_RAND_RESET_I(4);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag = VL_RAND_RESET_I(4);
+    SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__fetch__DOT__icache_rdata = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__fetch__DOT__is_R = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__fetch__DOT__is_ARITHMETIC = VL_RAND_RESET_I(1);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = VL_RAND_RESET_I(2);
+    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = VL_RAND_RESET_I(4);
     VL_RAND_RESET_W(1024, SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid);
     SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = VL_RAND_RESET_I(1);
     SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_wdata = VL_RAND_RESET_Q(64);
     SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rdata = VL_RAND_RESET_Q(64);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = VL_RAND_RESET_I(1);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_ready = VL_RAND_RESET_I(1);
-    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_rdata = VL_RAND_RESET_I(32);
+    SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__o_ready = VL_RAND_RESET_I(1);
     { int __Vi0=0; for (; __Vi0<1024; ++__Vi0) {
             SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[__Vi0] = VL_RAND_RESET_Q(64);
@@ -1615,7 +1579,7 @@ void VSoC::_ctor_var_reset() {
     SoC__DOT__cpu__DOT__decode__DOT__alu_operation = VL_RAND_RESET_I(4);
     SoC__DOT__cpu__DOT__decode__DOT__alu_operand1 = VL_RAND_RESET_I(3);
     SoC__DOT__cpu__DOT__decode__DOT__alu_operand2 = VL_RAND_RESET_I(3);
-    SoC__DOT__cpu__DOT__execute__DOT__cycle = VL_RAND_RESET_I(8);
+    SoC__DOT__cpu__DOT__execute__DOT__cycle = VL_RAND_RESET_I(5);
     SoC__DOT__cpu__DOT__execute__DOT__alu_operand1 = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__execute__DOT__alu_operand2 = VL_RAND_RESET_I(32);
     SoC__DOT__cpu__DOT__execute__DOT__alu_result = VL_RAND_RESET_I(32);
@@ -1655,14 +1619,12 @@ void VSoC::_ctor_var_reset() {
     { int __Vi0=0; for (; __Vi0<256; ++__Vi0) {
             SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data[__Vi0] = VL_RAND_RESET_Q(64);
     }}
-    __Vdly__SoC__DOT__cpu__DOT__bus__DOT__state = VL_RAND_RESET_I(2);
     __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__state = VL_RAND_RESET_I(3);
     __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__pc = VL_RAND_RESET_I(32);
-    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_input_tag = VL_RAND_RESET_I(4);
     __Vdly__SoC__DOT__cpu__DOT__fetch_tag = VL_RAND_RESET_I(4);
-    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_tag = VL_RAND_RESET_I(4);
-    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_request = VL_RAND_RESET_I(1);
-    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = VL_RAND_RESET_I(2);
+    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache_output_pc = VL_RAND_RESET_I(32);
+    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch_input_address = VL_RAND_RESET_I(32);
+    __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = VL_RAND_RESET_I(4);
     VL_RAND_RESET_W(1024, __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__valid);
     __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache_rw = VL_RAND_RESET_I(1);
     __Vdlyvdim0__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data__v0 = 0;
@@ -1672,25 +1634,17 @@ void VSoC::_ctor_var_reset() {
     __Vdly__SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__prefetch__DOT__state = VL_RAND_RESET_I(4);
     __Vdly__SoC__DOT__cpu__DOT__decode_tag = VL_RAND_RESET_I(4);
     __Vdly__SoC__DOT__cpu__DOT__execute_tag = VL_RAND_RESET_I(4);
-    __Vdly__SoC__DOT__cpu__DOT__execute__DOT__cycle = VL_RAND_RESET_I(8);
+    __Vdly__SoC__DOT__cpu__DOT__execute__DOT__cycle = VL_RAND_RESET_I(5);
     __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_signed = VL_RAND_RESET_I(1);
     __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_numerator = VL_RAND_RESET_I(32);
     __Vdly__SoC__DOT__cpu__DOT__execute__DOT__div_denominator = VL_RAND_RESET_I(32);
     __Vdly__SoC__DOT__cpu__DOT__execute__DOT__multiply__DOT__p1 = VL_RAND_RESET_Q(64);
     __Vdly__SoC__DOT__cpu__DOT__memory__DOT__state = VL_RAND_RESET_I(5);
     __Vdly__SoC__DOT__cpu__DOT__memory_tag = VL_RAND_RESET_I(4);
-    __Vdly__SoC__DOT__cpu__DOT__memory_inst_rd = VL_RAND_RESET_I(5);
-    __Vdly__SoC__DOT__cpu__DOT__memory_rd = VL_RAND_RESET_I(32);
-    __Vdly__SoC__DOT__cpu__DOT__memory_pc_next = VL_RAND_RESET_I(32);
+    __Vdly__SoC__DOT__cpu__DOT__bus_pb_request = VL_RAND_RESET_I(1);
     __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache_rdata = VL_RAND_RESET_I(32);
-    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__state = VL_RAND_RESET_I(8);
-    VL_RAND_RESET_W(256, __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__valid);
-    VL_RAND_RESET_W(256, __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__dirty);
-    __Vdly__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache_rw = VL_RAND_RESET_I(1);
-    __Vdlyvdim0__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 0;
-    __Vdlyvval__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = VL_RAND_RESET_Q(64);
-    __Vdlyvset__SoC__DOT__cpu__DOT__memory__DOT__dcache__DOT__cache__DOT__data__v0 = 0;
     __Vdly__SoC__DOT__cpu__DOT__writeback_tag = VL_RAND_RESET_I(4);
+    __Vdly__SoC__DOT__cpu__DOT__writeback_pc_next = VL_RAND_RESET_I(32);
     __VinpClk__TOP__SoC__DOT__reset = VL_RAND_RESET_I(1);
     __Vchglast__TOP__SoC__DOT__reset = VL_RAND_RESET_I(1);
     { int __Vi0=0; for (; __Vi0<5; ++__Vi0) {
