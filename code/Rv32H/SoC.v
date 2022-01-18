@@ -233,6 +233,7 @@ module SoC(
 	wire vram_select;
 	wire [31:0] vram_address;
 	wire vram_ready;
+	wire vram_fifo_full;
 	VideoBus video_bus(
 		.i_clock(clock),
 		
@@ -242,7 +243,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		.i_video_request(vga_enable),
-		.i_video_address(vga_address),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
 		.o_video_rdata(HDMI_TX_D),
 		
 		.o_mem_request(video_sram_request),
@@ -250,12 +252,15 @@ module SoC(
 		.o_mem_address(video_sram_address),
 		.o_mem_wdata(video_sram_wdata),
 		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready)
+		.i_mem_ready(video_sram_ready),
+		
+		.o_fifo_full(vram_fifo_full)
 	);
   
 	// Video signal generator
 	wire vga_enable;
-	wire [15:0] vga_address;
+	wire [8:0] vga_pos_x;
+	wire [8:0] vga_pos_y;
 	VGA #(
 		.PRESCALE(`FREQUENCY / 25000000)
 	) vga(
@@ -263,7 +268,8 @@ module SoC(
 		.o_hsync(HDMI_TX_HS),
 		.o_vsync(HDMI_TX_VS),
 		.o_data_enable(vga_enable),
-		.o_vga_address(vga_address),
+		.o_pos_x(vga_pos_x),
+		.o_pos_y(vga_pos_y),
 		.o_vga_clock(HDMI_TX_CLK)
 	);
 	
@@ -648,7 +654,7 @@ module SoC(
 
 `ifndef __VERILATOR__
 	// 7:0
-	assign LEDG = { soft_reset_n, global_reset_n, start_n };
+	assign LEDG = { vram_fifo_full, 1'b0, 1'b0 };
 `endif
 
 endmodule

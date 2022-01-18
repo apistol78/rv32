@@ -137,6 +137,8 @@ module SoC(
       output             UART_TX
 );
 
+`define FREQUENCY 100000000
+
 `define SOC_ENABLE_SDRAM
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
@@ -244,7 +246,7 @@ module SoC(
 	wire vga_enable;
 	wire [15:0] vga_address;
 	VGA #(
-		.PRESCALE(100000000 / 25000000)
+		.PRESCALE(`FREQUENCY / 25000000)
 	) vga(
 		.i_clock(clock),
 		.o_hsync(HDMI_TX_HS),
@@ -340,8 +342,7 @@ module SoC(
 	wire [31:0] uart_rdata;
 	wire uart_ready;
 	UART #(
-		//.PRESCALE(50000000 / (115200 * 8))
-		.PRESCALE(100000000 / (115200 * 8))
+		.PRESCALE(`FREQUENCY / (115200 * 8))
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -420,7 +421,7 @@ module SoC(
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	Timer #(
-		.FREQUENCY(100000000)
+		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -581,7 +582,7 @@ module SoC(
 		timer_select ? timer_rdata :
 		32'h00000000;
 		
-	assign cpu_ready =
+	assign bus_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 `ifdef SOC_ENABLE_SDRAM

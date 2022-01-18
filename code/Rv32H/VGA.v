@@ -9,7 +9,8 @@ module VGA #(
 	output reg o_hsync,
 	output reg o_vsync,
 	output reg o_data_enable,
-	output reg [15:0] o_vga_address,
+	output reg [8:0] o_pos_x,
+	output reg [8:0] o_pos_y,
 	output reg o_vga_clock
 );
 
@@ -22,7 +23,8 @@ module VGA #(
 	initial begin
 		o_hsync = 1;
 		o_vsync = 1;
-		o_vga_address = 0;
+		o_pos_x = 0;
+		o_pos_y = 0;
 		o_data_enable = 0;
 		o_vga_clock = 0;
 	end
@@ -70,7 +72,9 @@ module VGA #(
 
 	always @(posedge i_clock) begin
 		if (vga_h < 640 && vga_v < 400) begin
-			o_vga_address <= { 7'b0, vga_h[9:1] + vga_v[9:1] * 16'd320 };
+			//o_vga_address <= { 7'b0, vga_h[9:1] + vga_v[9:1] * 16'd320 };
+			o_pos_x <= vga_h[9:1];
+			o_pos_y <= vga_v[9:1];
 			o_data_enable <= 1;
 		end
 		else

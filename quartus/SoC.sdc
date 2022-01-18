@@ -54,3 +54,11 @@ set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0
 
 #set_multicycle_path -from {Avalon_bus_RW_Test:fpga_lpddr2_Verify|avl_address*} -to {Avalon_bus_RW_Test:fpga_lpddr2_Verify|avl_writedata*} -hold -end 6
 #set_multicycle_path -from {Avalon_bus_RW_Test:fpga_lpddr2_Verify|cal_data*} -to {Avalon_bus_RW_Test:fpga_lpddr2_Verify|avl_writedata*} -hold -end 6
+
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Decode:decode|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_rd*]} -setup -end 1
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Execute:execute|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_rd*]} -setup -end 1
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Memory:memory|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_rd*]} -setup -end 1
+
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Decode:decode|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_pc_next*]} -setup -end 1
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Memory:memory|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_pc_next*]} -setup -end 1
+#set_multicycle_path -from {CPU_v2:cpu|CPU_Execute:execute|o_inst_rd*} -to {CPU_v2:cpu|CPU_Execute:execute|o_pc_next*]} -setup -end 1
