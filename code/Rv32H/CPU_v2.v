@@ -26,7 +26,9 @@ module CPU_v2 (
 	// Debug
 	output reg [31:0] o_retire_count,
 	output wire [31:0] o_icache_hit_count,
-	output wire [31:0] o_icache_miss_count
+	output wire [31:0] o_icache_miss_count,
+	output wire [31:0] o_dcache_hit_count,
+	output wire [31:0] o_dcache_miss_count
 );
 
 	//====================================================
@@ -75,8 +77,8 @@ module CPU_v2 (
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Input
-		.i_tag(writeback_tag),
-		.i_pc_next(writeback_pc_next),
+		.i_tag(execute_tag), //writeback_tag),
+		.i_pc_next(execute_pc_next), //writeback_pc_next),
 
 		// Output
 		.o_tag(fetch_tag),
@@ -261,7 +263,11 @@ module CPU_v2 (
 		.o_inst_rd(memory_inst_rd),
 		.o_rd(memory_rd),
 		.o_pc_next(memory_pc_next),
-		.o_stall(memory_stall)
+		.o_stall(memory_stall),
+
+		// Debug
+		.o_dcache_hit_count(o_dcache_hit_count),
+		.o_dcache_miss_count(o_dcache_miss_count)
 	);
 
 	//====================================================

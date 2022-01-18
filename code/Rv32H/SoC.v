@@ -460,7 +460,9 @@ module SoC(
 		// Debug
 		.i_retire_count(cpu_retire_count),
 		.i_icache_hit_count(cpu_icache_hit_count),
-		.i_icache_miss_count(cpu_icache_miss_count)
+		.i_icache_miss_count(cpu_icache_miss_count),
+		.i_dcache_hit_count(cpu_dcache_hit_count),
+		.i_dcache_miss_count(cpu_dcache_miss_count)
 	);
 	
 	//====================================================
@@ -526,6 +528,8 @@ module SoC(
 	wire [31:0] cpu_retire_count;
 	wire [31:0] cpu_icache_hit_count;
 	wire [31:0] cpu_icache_miss_count;
+	wire [31:0] cpu_dcache_hit_count;
+	wire [31:0] cpu_dcache_miss_count;
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -547,7 +551,9 @@ module SoC(
 		// Debug
 		.o_retire_count(cpu_retire_count),
 		.o_icache_hit_count(cpu_icache_hit_count),
-		.o_icache_miss_count(cpu_icache_miss_count)	
+		.o_icache_miss_count(cpu_icache_miss_count),
+		.o_dcache_hit_count(cpu_dcache_hit_count),
+		.o_dcache_miss_count(cpu_dcache_miss_count)	
 	);
 	
 	//=====================================

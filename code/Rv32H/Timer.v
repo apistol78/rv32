@@ -17,7 +17,9 @@ module Timer#(
 	// Debug
 	input wire [31:0] i_retire_count,
 	input wire [31:0] i_icache_hit_count,
-	input wire [31:0] i_icache_miss_count
+	input wire [31:0] i_icache_miss_count,
+	input wire [31:0] i_dcache_hit_count,
+	input wire [31:0] i_dcache_miss_count
 );
 
 	localparam PRESCALE = FREQUENCY / 1000;
@@ -68,6 +70,12 @@ module Timer#(
 			end
 			else if (i_address == 3'h4) begin
 				o_rdata <= i_icache_miss_count;
+			end
+			else if (i_address == 3'h5) begin
+				o_rdata <= i_dcache_hit_count;
+			end
+			else if (i_address == 3'h6) begin
+				o_rdata <= i_dcache_miss_count;
 			end
 			else
 				o_rdata <= i_address;

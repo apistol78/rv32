@@ -122,6 +122,15 @@ module VideoBus(
 					o_video_rdata <= i_mem_rdata;
 					o_mem_request <= 1'b0;
 					state <= 0;
+					
+					if (i_video_request && i_video_address[0] != last_video_address) begin
+						o_mem_request <= 1'b1;
+						o_mem_rw <= 1'b0;
+						o_mem_address <= { i_video_address, 2'b0 };
+						last_video_address <= i_video_address[0];
+						state <= 3;
+					end
+					
 				end
 			end
 		endcase

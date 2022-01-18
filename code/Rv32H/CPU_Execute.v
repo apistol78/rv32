@@ -160,8 +160,6 @@ module CPU_Execute (
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
-				$display("execute");
-			
 				o_pc_next <= next_target;
 				o_inst_rd <= i_inst_rd;
 

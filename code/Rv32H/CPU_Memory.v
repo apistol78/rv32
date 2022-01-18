@@ -30,7 +30,11 @@ module CPU_Memory(
 	output reg [4:0] o_inst_rd,
 	output reg [31:0] o_rd,
 	output reg [31:0] o_pc_next,
-	output wire o_stall
+	output wire o_stall,
+
+	// Debug
+	output wire [31:0] o_dcache_hit_count,
+	output wire [31:0] o_dcache_miss_count
 );
 
 	localparam STATE_RMW_READ			= 1;
@@ -62,7 +66,10 @@ module CPU_Memory(
 		.o_ready(dcache_ready),
 		.i_address(dcache_address),
 		.o_rdata(dcache_rdata),
-		.i_wdata(dcache_wdata)
+		.i_wdata(dcache_wdata),
+
+		.o_dcache_hit_count(o_dcache_hit_count),
+		.o_dcache_miss_count(o_dcache_miss_count)
 	);
 
 	initial begin

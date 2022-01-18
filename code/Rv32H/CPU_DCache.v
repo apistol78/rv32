@@ -23,7 +23,11 @@ module CPU_DCache(
 	output reg o_ready,
 	input wire [31:0] i_address,
 	output reg [31:0] o_rdata,
-	input wire [31:0] i_wdata
+	input wire [31:0] i_wdata,
+
+	// Debug
+	output wire [31:0] o_dcache_hit_count,
+	output wire [31:0] o_dcache_miss_count	
 );
 
 	localparam SIZE	= 8;
@@ -39,7 +43,13 @@ module CPU_DCache(
 	reg [7:0] state;
 	reg [RANGE - 1:0] valid;
 	reg [RANGE - 1:0] dirty;
+	reg [31:0] hit_count;
+	reg [31:0] miss_count;
 
+	assign o_dcache_hit_count = hit_count;
+	assign o_dcache_miss_count = miss_count;
+
+	// Cache memory.
 	reg cache_rw;
 	wire [SIZE - 1:0] cache_label = i_address[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
@@ -69,11 +79,16 @@ module CPU_DCache(
 		o_bus_address = 0;
 		o_bus_wdata = 0;
 		o_rdata = 0;
+		
 		state = ST_IDLE;
 		valid = { RANGE{ 1'b0 } };
 		dirty = { RANGE{ 1'b0 } };
+
 		cache_rw = 0;
 		cache_wdata = 0;
+
+		hit_count = 0;
+		miss_count = 0;
 	end
 
 	always @(*) begin
@@ -87,11 +102,16 @@ module CPU_DCache(
 			o_bus_address <= 0;
 			o_bus_wdata <= 0;
 			o_rdata <= 0;
+			
 			state <= ST_IDLE;
 			valid <= { RANGE{ 1'b0 } };
 			dirty <= { RANGE{ 1'b0 } };
+
 			cache_rw <= 0;
-			cache_wdata <= 0;			
+			cache_wdata <= 0;
+
+			hit_count <= 0;
+			miss_count <= 0;		
 		end
 		else begin
 			case (state)
@@ -101,11 +121,13 @@ module CPU_DCache(
 							if (is_cacheable) begin
 								if (valid[cache_label] && cache_rdata[31:0] == i_address) begin
 									// Cache read hit.
+									hit_count <= hit_count + 1;
 									o_rdata <= cache_rdata[63:32];
 									state <= ST_WAIT_END;
 								end
 								else begin
 									// Cache read miss.
+									miss_count <= miss_count + 1;
 									if (valid[cache_label] && dirty[cache_label]) begin
 										// Write back current cache line before
 										// reading requested value.

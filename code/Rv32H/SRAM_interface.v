@@ -21,7 +21,7 @@ module SRAM_interface(
 );
 	// Number of cycles for entire transaction, must to be multiple of 2.
 	// 50 MHz -> 8
-	localparam CYCLES = 6;
+	localparam CYCLES = 8;
 
 	reg [15:0] count;
 	reg [15:0] wdata;
@@ -55,8 +55,8 @@ module SRAM_interface(
 			else
 				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
 		end
-		else
-			SRAM_A = 32'h0;
+		//else
+		//	SRAM_A = 32'h0;
 	end
 
 	// Output SRAM write enable, memory is stored on positive edge.
@@ -67,8 +67,8 @@ module SRAM_interface(
 			else
 				SRAM_WE_n = 1;
 		end
-		else
-			SRAM_WE_n = 1;
+		//else
+		//	SRAM_WE_n = 1;
 	end
 
 	// Output 16-bit SRAM data, first low the high part.
@@ -79,8 +79,8 @@ module SRAM_interface(
 			else
 				wdata = i_wdata[31:16];
 		end
-		else
-			wdata = 32'h0;
+		//else
+		//	wdata = 32'h0;
 	end
 
 	// Increment counter, store data read from SRAM.
