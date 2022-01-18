@@ -130,6 +130,17 @@ module VideoBus(
 						
 						state <= 3;
 					end
+					
+					// Interleave with updating from CPU.
+					else if (i_video_pos_x <= prefetched_quad_pos_x - 2) begin
+					
+						o_mem_request <= 1'b0;
+						if (!fifo_empty) begin
+							fifo_read <= 1'b1;
+							state <= 1;
+						end					
+					
+					end
 				end
 			end
 
