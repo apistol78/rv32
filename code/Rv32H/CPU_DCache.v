@@ -30,7 +30,7 @@ module CPU_DCache(
 	output wire [31:0] o_dcache_miss_count	
 );
 
-	localparam SIZE	= 8;
+	localparam SIZE	= 12;
 	localparam RANGE = 1 << SIZE;
 
 	localparam ST_IDLE = 0;
@@ -41,8 +41,6 @@ module CPU_DCache(
 	localparam ST_WAIT_END = 5;
 
 	reg [7:0] state;
-	reg [RANGE - 1:0] valid;
-	reg [RANGE - 1:0] dirty;
 	reg [31:0] hit_count;
 	reg [31:0] miss_count;
 
@@ -50,28 +48,35 @@ module CPU_DCache(
 	assign o_dcache_miss_count = miss_count;
 
 	// Cache memory.
+	wire cache_initialized;
 	reg cache_rw;
-	wire [SIZE - 1:0] cache_label = i_address[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
+	wire [SIZE - 1:0] cache_address = i_address[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 
 	// One cycle latency, important since
 	// we rely on address only.
-	BRAM #(
+	BRAM_clear #(
 		.WIDTH(64),
 		.SIZE(RANGE),
 		.ADDR_LSH(0)
 	) cache(
 		.i_clock(i_clock),
+		.o_initialized(cache_initialized),
 		.i_request(1'b1),
 		.i_rw(cache_rw),
-		.i_address(cache_label),
+		.i_address(cache_address),
 		.i_wdata(cache_wdata),
 		.o_rdata(cache_rdata),
 		.o_ready()
 	);
 
 	wire is_cacheable = i_address < 32'h40000000;
+	
+	wire cache_entry_valid = cache_rdata[0];
+	wire cache_entry_dirty = cache_rdata[1];
+	wire [31:0] cache_entry_address = { cache_rdata[31:2], 2'b00 };
+	wire [31:0] cache_entry_data = cache_rdata[63:32];
 
 	initial begin
 		o_bus_rw = 0;
@@ -81,8 +86,6 @@ module CPU_DCache(
 		o_rdata = 0;
 		
 		state = ST_IDLE;
-		valid = { RANGE{ 1'b0 } };
-		dirty = { RANGE{ 1'b0 } };
 
 		cache_rw = 0;
 		cache_wdata = 0;
@@ -104,8 +107,6 @@ module CPU_DCache(
 			o_rdata <= 0;
 			
 			state <= ST_IDLE;
-			valid <= { RANGE{ 1'b0 } };
-			dirty <= { RANGE{ 1'b0 } };
 
 			cache_rw <= 0;
 			cache_wdata <= 0;
@@ -118,23 +119,23 @@ module CPU_DCache(
 				ST_IDLE: begin
 					if (i_request) begin
 						if (!i_rw) begin
-							if (is_cacheable) begin
-								if (valid[cache_label] && cache_rdata[31:0] == i_address) begin
+							if (cache_initialized && is_cacheable) begin
+								if (cache_entry_valid && cache_entry_address == i_address) begin
 									// Cache read hit.
 									hit_count <= hit_count + 1;
-									o_rdata <= cache_rdata[63:32];
+									o_rdata <= cache_entry_data;
 									state <= ST_WAIT_END;
 								end
 								else begin
 									// Cache read miss.
 									miss_count <= miss_count + 1;
-									if (valid[cache_label] && dirty[cache_label]) begin
+									if (cache_entry_valid && cache_entry_dirty) begin
 										// Write back current cache line before
 										// reading requested value.
 										o_bus_rw <= 1;
 										o_bus_request <= 1;
-										o_bus_address <= cache_rdata[31:0];
-										o_bus_wdata <= cache_rdata[63:32];
+										o_bus_address <= cache_entry_address;
+										o_bus_wdata <= cache_entry_data;
 										state <= ST_RD_BUS_WB;
 									end
 									else begin
@@ -156,24 +157,22 @@ module CPU_DCache(
 							end
 						end
 						else begin
-							if (is_cacheable) begin
+							if (cache_initialized && is_cacheable) begin
 								// Write to cache.
 								cache_rw <= 1;
-								cache_wdata <= { i_wdata, i_address };
-								valid[cache_label] <= 1;
-								dirty[cache_label] <= 1;
+								cache_wdata <= { i_wdata, i_address[31:2], 2'b11 };
 
-								if (!valid[cache_label] || cache_rdata[31:0] == i_address) begin
-									// No need to flush cache line, same address or unused.
-									state <= ST_WAIT_END;
-								end
-								else if (valid[cache_label] && dirty[cache_label]) begin
+								if (cache_entry_valid && cache_entry_dirty && cache_entry_address != i_address) begin
 									// Cache line need to be written to memory.
 									o_bus_rw <= 1;
 									o_bus_request <= 1;
-									o_bus_address <= cache_rdata[31:0];
-									o_bus_wdata <= cache_rdata[63:32];
+									o_bus_address <= cache_entry_address;
+									o_bus_wdata <= cache_entry_data;
 									state <= ST_WR_BUS;
+								end
+								else begin
+									// No need to flush cache line, same address or unused.
+									state <= ST_WAIT_END;
 								end
 							end
 							else begin
@@ -192,12 +191,10 @@ module CPU_DCache(
 
 				ST_RD_BUS: begin
 					if (i_bus_ready) begin
-						valid[cache_label] <= 1;
-						dirty[cache_label] <= 0;
 						o_bus_request <= 0;
 						o_rdata <= i_bus_rdata;
 						cache_rw <= 1;
-						cache_wdata <= { i_bus_rdata, i_address };
+						cache_wdata <= { i_bus_rdata, i_address[31:2], 2'b01 };
 						state <= ST_WAIT_END;
 					end
 				end
@@ -239,7 +236,7 @@ module CPU_DCache(
 						state <= ST_IDLE;
 					end
 				end
-
+				
 			endcase
 		end
 	end

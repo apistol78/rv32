@@ -14,6 +14,7 @@
 `include "CPU_Writeback.v"
 
 `include "BRAM.v"
+`include "BRAM_clear.v"
 `include "BROM.v"
 `include "ClockDivider.v"
 `include "GPIO.v"
