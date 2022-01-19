@@ -6,6 +6,7 @@
 `include "CPU_Divide.v"
 `include "CPU_Execute.v"
 `include "CPU_Fetch.v"
+`include "CPU_Hazard.v"
 `include "CPU_ICache.v"
 `include "CPU_Memory.v"
 `include "CPU_Multiply.v"
@@ -44,23 +45,6 @@ module SoC_v2_tb(
     reg reset = 1'b1;
 	reg clock = 1'b0;
 `endif
-
-	// VGA signal generator
-	wire vga_hsync;
-	wire vga_vsync;
-	wire vga_data_enable;
-	wire [15:0] vga_address;
-	wire vga_clock;
-	VGA #(
-		.PRESCALE(100000000 / 25000000)
-	) vga(
-		.i_clock(clock),
-		.o_hsync(vga_hsync),
-		.o_vsync(vga_vsync),
-		.o_data_enable(vga_data_enable),
-		.o_vga_address(vga_address),
-		.o_vga_clock(vga_clock)
-	);
 
 	// ROM
 	wire rom_select;
