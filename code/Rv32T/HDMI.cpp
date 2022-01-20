@@ -49,14 +49,18 @@ void HDMI::eval(VSoC* soc)
 
     if (!m_clk && clk)
     {
-        uint8_t r = (d >> 16) & 255;
-        uint8_t g = (d >> 8) & 255;
-        uint8_t b = d & 255;
+        int32_t x = m_hpos - 199;
+        int32_t y = m_vpos - 34;
+        if (x >= 0 && x < 640 && y >= 0 && y < 480)
+        {
+            uint8_t r = (d >> 16) & 255;
+            uint8_t g = (d >> 8) & 255;
+            uint8_t b = d & 255;
 
-        m_image->setPixel(m_hpos, m_vpos, Color4f::fromColor4ub(
-            Color4ub(r, g, b)
-        ));
-
+            m_image->setPixel(x, y, Color4f::fromColor4ub(
+                Color4ub(r, g, b)
+            ));
+        }
         m_hpos++;
     }
     m_clk = (bool)clk;

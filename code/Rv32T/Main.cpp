@@ -1,8 +1,20 @@
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+#	include <sys/types.h>
+#	include <sys/stat.h>
+#	include <signal.h>
+#	include <stdio.h>
+#	include <stdlib.h>
+#	include <fcntl.h>
+#	include <errno.h>
+#	include <unistd.h>
+#	include <syslog.h>
+#	include <string.h>
+#endif
 #include <Core/Io/DynamicMemoryStream.h>
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/StreamCopy.h>
-
 #include <Core/Log/Log.h>
+#include <Core/Misc/CommandLine.h>
 #include <Core/Misc/SafeDestroy.h>
 #include <Core/Misc/String.h>
 #include <Ui/Application.h>
@@ -20,12 +32,24 @@
 #include "Rv32T/ELF.h"
 #include "Rv32T/HDMI.h"
 #include "Rv32T/LEDR.h"
+#include "Rv32T/SD.h"
 #include "Rv32T/UART_TX.h"
 
 // Verilated SoC
+#include "verilated.h"
+#include "verilated_vcd_c.h"
 #include "SoC/VSoC.h"
 
 using namespace traktor;
+
+bool g_going = true;
+
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+void abortHandler(int s)
+{
+	g_going = false;
+}
+#endif
 
 bool loadELF(VSoC* soc, const std::wstring& fileName)
 {
@@ -95,17 +119,16 @@ bool loadELF(VSoC* soc, const std::wstring& fileName)
 		}
 	}
 
-	// if (start != -1)
-	// {
-	// 	soc->SoC__DOT__cpu__DOT__fetch_pc = start;
-	// 	soc->SoC__DOT__cpu__DOT__writeback_pc_next = start;
-	// }
+	if (start != -1)
+		soc->SoC__DOT__cpu__DOT__fetch__DOT__pc = start;
 
 	return true;
 }
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
+	CommandLine cmdLine(argc, argv);
+
 #if defined(_WIN32)
 	ui::Application::getInstance()->initialize(
 		new ui::WidgetFactoryWin32(),
@@ -123,6 +146,20 @@ int main(int argc, char **argv)
 	);
 #endif
 
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+	{
+		struct sigaction sa = { SIG_IGN };
+		sigaction(SIGPIPE, &sa, nullptr);
+	}
+	{
+		struct sigaction sa;
+		sa.sa_handler = abortHandler;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sigaction(SIGINT, &sa, nullptr);
+	}
+#endif
+
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
 	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
@@ -137,44 +174,76 @@ int main(int argc, char **argv)
 
 	// Create SoC simulation.
 	VSoC* soc = new VSoC();
-
-	//log::info << L"PC: " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch_pc) << Endl;
-
-	loadELF(soc, L"build/rv32/ReleaseStatic/Bare");
-
 	soc->CPU_RESET_n = 1;
 	soc->CLOCK_125_p = 0;
 	soc->eval();
-	soc->CLOCK_125_p = 1;
-	soc->eval();
 
-	//log::info << L"PC: " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch_pc) << Endl;
+	if (cmdLine.hasOption(L'e', L"elf"))
+	{
+		std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
+		if (!loadELF(soc, fileName))
+			return 1;
+	}
+
+	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x0001fff0;
+
+	// Create signal trace.
+	VerilatedVcdC* tfp = nullptr;
+	if (cmdLine.hasOption(L't', L"trace"))
+	{
+		Verilated::traceEverOn(true);
+		tfp = new VerilatedVcdC;
+		soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
+		tfp->open("Rv32T.vcd"); // "simx.vcd");
+	}
 
 	HDMI hdmi;
 	LEDR ledr;
 	UART_TX uart_tx;
+	SD sd;
 
-	for (;;)
+	int32_t time = 0;
+	while (g_going)
 	{
 		if (!ui::Application::getInstance()->process())
 			break;
 
 		for (int32_t i = 0; i < 50000; ++i)
 		{
-			//log::info << L"PC: " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch_pc) << Endl;
-
+			++time;
 			soc->CLOCK_125_p = 0;
 			soc->eval();
+
+			if (tfp)
+				tfp->dump(time);
+
+			++time;
 			soc->CLOCK_125_p = 1;
 			soc->eval();
+
+			if (tfp)
+				tfp->dump(time);
 
 			hdmi.eval(soc);
 			ledr.eval(soc);
 			uart_tx.eval(soc);
+			sd.eval(soc);
 		}
 
 		framebuffer->copyImage(hdmi.getImage());
 		image->setImage(framebuffer);
+	}
+
+	log::info << Endl;
+	log::info << L"PC: " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
+	log::info << L"CYCLES: " << soc->SoC__DOT__timer__DOT__cycles << Endl;
+	log::info << L"RETIRE: " << soc->SoC__DOT__cpu_retire_count << Endl;
+	log::info << L"MS: " << soc->SoC__DOT__timer__DOT__ms << Endl;
+
+	if (tfp)
+	{
+		tfp->close();
+		delete tfp;
 	}
 
 	safeDestroy(form);
