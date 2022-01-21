@@ -7,9 +7,7 @@
 #define DOOMGENERIC_RESX 320
 #define DOOMGENERIC_RESY 200
 
-
-extern uint32_t* DG_ScreenBuffer;
-
+//extern uint32_t* DG_ScreenBuffer;
 
 void DG_Init();
 void DG_DrawFrame();

@@ -252,46 +252,59 @@ void I_UpdateNoBlit (void)
 
 void I_FinishUpdate (void)
 {
-    int y;
-    int x_offset, y_offset, x_offset_end;
-    unsigned char *line_in, *line_out;
+//     int y;
+//     int x_offset, y_offset, x_offset_end;
+//     unsigned char *line_in, *line_out;
 
-    /* Offsets in case FB is bigger than DOOM */
-    /* 600 = s_Fb heigt, 200 screenheight */
-    /* 600 = s_Fb heigt, 200 screenheight */
-    /* 2048 =s_Fb width, 320 screenwidth */
-    y_offset     = (((s_Fb.yres - (SCREENHEIGHT * fb_scaling)) * s_Fb.bits_per_pixel/8)) / 2;
-    x_offset     = (((s_Fb.xres - (SCREENWIDTH  * fb_scaling)) * s_Fb.bits_per_pixel/8)) / 2; // XXX: siglent FB hack: /4 instead of /2, since it seems to handle the resolution in a funny way
-    //x_offset     = 0;
-    x_offset_end = ((s_Fb.xres - (SCREENWIDTH  * fb_scaling)) * s_Fb.bits_per_pixel/8) - x_offset;
+//     /* Offsets in case FB is bigger than DOOM */
+//     /* 600 = s_Fb heigt, 200 screenheight */
+//     /* 600 = s_Fb heigt, 200 screenheight */
+//     /* 2048 =s_Fb width, 320 screenwidth */
+//     y_offset     = (((s_Fb.yres - (SCREENHEIGHT * fb_scaling)) * s_Fb.bits_per_pixel/8)) / 2;
+//     x_offset     = (((s_Fb.xres - (SCREENWIDTH  * fb_scaling)) * s_Fb.bits_per_pixel/8)) / 2; // XXX: siglent FB hack: /4 instead of /2, since it seems to handle the resolution in a funny way
+//     //x_offset     = 0;
+//     x_offset_end = ((s_Fb.xres - (SCREENWIDTH  * fb_scaling)) * s_Fb.bits_per_pixel/8) - x_offset;
 
-    /* DRAW SCREEN */
-    line_in  = (unsigned char *) I_VideoBuffer;
-    line_out = (unsigned char *) DG_ScreenBuffer;
+//     /* DRAW SCREEN */
+//     line_in  = (unsigned char *) I_VideoBuffer;
+//     line_out = (unsigned char *) DG_ScreenBuffer;
 
-    y = SCREENHEIGHT;
+//     y = SCREENHEIGHT;
 
-    while (y--)
-    {
-        int i;
-        for (i = 0; i < fb_scaling; i++) {
-            line_out += x_offset;
-#ifdef CMAP256
-            for (fb_scaling == 1) {
-                memcpy(line_out, line_in, SCREENWIDTH); /* fb_width is bigger than Doom SCREENWIDTH... */
-            } else {
-                //XXX FIXME fb_scaling support!
-            }
-#else
-            //cmap_to_rgb565((void*)line_out, (void*)line_in, SCREENWIDTH);
-            cmap_to_fb((void*)line_out, (void*)line_in, SCREENWIDTH);
-#endif
-            line_out += (SCREENWIDTH * fb_scaling * (s_Fb.bits_per_pixel/8)) + x_offset_end;
-        }
-        line_in += SCREENWIDTH;
-    }
+//     const int pitch = (SCREENWIDTH * fb_scaling * (s_Fb.bits_per_pixel/8)) + x_offset_end;
 
-	DG_DrawFrame();
+//     while (y--)
+//     {
+//         int i;
+//         for (i = 0; i < fb_scaling; i++) {
+//             line_out += x_offset;
+// // #ifdef CMAP256
+// //             for (fb_scaling == 1) {
+// //                 memcpy(line_out, line_in, SCREENWIDTH); /* fb_width is bigger than Doom SCREENWIDTH... */
+// //             } else {
+// //                 //XXX FIXME fb_scaling support!
+// //             }
+// // #else
+// //             //cmap_to_rgb565((void*)line_out, (void*)line_in, SCREENWIDTH);
+// //             cmap_to_fb((void*)line_out, (void*)line_in, SCREENWIDTH);
+// // #endif
+
+//             uint32_t* out = (uint32_t*)line_out;
+//             for (int x = 0; x < SCREENWIDTH; ++x)
+//             {
+//                 struct color c = colors[line_in[x]];  /* R:8 G:8 B:8 format! */    
+//                 *out++ = *(uint32_t*)&c;
+//             }
+
+//             line_out += pitch;
+//         }
+//         line_in += SCREENWIDTH;
+//     }
+
+// 	DG_DrawFrame();
+
+    extern void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors);
+    DG_DrawFrame2((const uint8_t*)I_VideoBuffer, (const uint32_t*)colors);
 }
 
 //
