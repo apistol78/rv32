@@ -421,6 +421,8 @@
 					</includePaths>
 					<definitions>
 						<item>_DEBUG</item>
+						<item>VL_PRINTF=printf</item>
+						<item>VM_TRACE=1</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
@@ -445,6 +447,8 @@
 					</includePaths>
 					<definitions>
 						<item>NDEBUG</item>
+						<item>VL_PRINTF=printf</item>
+						<item>VM_TRACE=1</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
@@ -470,6 +474,8 @@
 					<definitions>
 						<item>T_STATIC</item>
 						<item>_DEBUG</item>
+						<item>VL_PRINTF=printf</item>
+						<item>VM_TRACE=1</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
@@ -495,6 +501,8 @@
 					<definitions>
 						<item>T_STATIC</item>
 						<item>NDEBUG</item>
+						<item>VL_PRINTF=printf</item>
+						<item>VM_TRACE=1</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
@@ -574,7 +582,8 @@
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
 								<definitions>
-									<item/>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
 								<libraries/>
@@ -597,7 +606,8 @@
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
 								<definitions>
-									<item/>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
 								<libraries/>
@@ -619,7 +629,10 @@
 								<includePaths>
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
+								</definitions>
 								<libraryPaths/>
 								<libraries/>
 								<warningLevel>WlCompilerDefault</warningLevel>
@@ -640,7 +653,10 @@
 								<includePaths>
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
+								</definitions>
 								<libraryPaths/>
 								<libraries/>
 								<warningLevel>WlCompilerDefault</warningLevel>
