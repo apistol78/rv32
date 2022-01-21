@@ -21,6 +21,7 @@ module BRAM_clear #(
 
 	initial begin
         o_ready = 0;
+		o_rdata = 0;
         clear = 0;
     end
 

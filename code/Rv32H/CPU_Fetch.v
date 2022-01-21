@@ -20,19 +20,16 @@ module CPU_Fetch(
 	// Output
 	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
-	output reg [31:0] o_pc,
-
-	// Debug
-	output wire [31:0] o_icache_hit_count,
-	output wire [31:0] o_icache_miss_count
+	output reg [31:0] o_pc
 );
 
 	reg [2:0] state;
 	reg [31:0] pc;
 	
 	// ICache
-	wire [31:0] icache_output_pc;
 	wire [31:0] icache_rdata;
+	wire icache_ready;
+	reg icache_stall;
 
 	CPU_ICache icache(
 		.i_reset(i_reset),
@@ -40,20 +37,17 @@ module CPU_Fetch(
 
 		// Input
 		.i_input_pc(pc),
-		.o_output_pc(icache_output_pc),
 
 		// Output
 		.o_rdata(icache_rdata),
+		.o_ready(icache_ready),
+		.i_stall(icache_stall),
 
 		// Bus
 		.o_bus_request(o_bus_request),
 		.i_bus_ready(i_bus_ready),
 		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata),
-
-		// Debug
-		.o_icache_hit_count(o_icache_hit_count),
-		.o_icache_miss_count(o_icache_miss_count)		
+		.i_bus_rdata(i_bus_rdata)
 	);
 
 	// 
@@ -69,6 +63,10 @@ module CPU_Fetch(
 		o_pc = 0;
 	end
 
+	always @(*) begin
+		icache_stall = i_stall || !(state == 0);
+	end
+	
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= 0;
@@ -80,7 +78,7 @@ module CPU_Fetch(
 		else begin
 			case (state)
 				0: begin
-					if (!i_stall && icache_output_pc == pc) begin
+					if (!i_stall && icache_ready) begin
 						// Output to pipeline instruction and PC.
 						o_tag <= o_tag + 1;
 						o_instruction <= icache_rdata;

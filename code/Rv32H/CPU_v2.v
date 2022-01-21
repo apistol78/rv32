@@ -24,11 +24,7 @@ module CPU_v2 (
 	output wire [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
-	output reg [31:0] o_retire_count,
-	output wire [31:0] o_icache_hit_count,
-	output wire [31:0] o_icache_miss_count,
-	output wire [31:0] o_dcache_hit_count,
-	output wire [31:0] o_dcache_miss_count
+	output reg [31:0] o_retire_count
 );
 
 	//====================================================
@@ -83,11 +79,7 @@ module CPU_v2 (
 		// Output
 		.o_tag(fetch_tag),
 		.o_instruction(fetch_instruction),
-		.o_pc(fetch_pc),
-
-		// Debug
-		.o_icache_hit_count(o_icache_hit_count),
-		.o_icache_miss_count(o_icache_miss_count)
+		.o_pc(fetch_pc)
 	);
 
 	//====================================================
@@ -154,7 +146,7 @@ module CPU_v2 (
 	);
 
 	//====================================================
-	// HAZARD
+	// EXECUTE
 
 	// Forward register values from pipeline if already in flight.
 	wire [31:0] fwd_rs1 = 
@@ -171,34 +163,22 @@ module CPU_v2 (
 		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
 		rs2;
 
-	wire [`TAG_SIZE] hazard_tag;
-	wire [31:0] hazard_instruction;
-	wire [31:0] hazard_pc;
-	wire [31:0] hazard_rs1;
-	wire [31:0] hazard_rs2;
-	wire [4:0] hazard_inst_rd;
-	wire [31:0] hazard_imm;
+	wire [`TAG_SIZE] execute_tag;
+	wire [4:0] execute_inst_rd;
+	wire [31:0] execute_rd;
+	wire [31:0] execute_pc_next;
+	wire execute_mem_read;
+	wire execute_mem_write;
+	wire [2:0] execute_mem_width;
+	wire execute_mem_signed;
+	wire [31:0] execute_mem_address;
+	wire [31:0] execute_mem_wdata;
+	wire execute_stall;
 	
-	wire hazard_arithmetic;
-	wire hazard_compare;
-	wire hazard_jump;
-	wire hazard_jump_conditional;
-
-	wire [3:0] hazard_alu_operation;
-	wire [2:0] hazard_alu_operand1;
-	wire [2:0] hazard_alu_operand2;
-	
-	wire hazard_memory_read;
-	wire hazard_memory_write;
-	wire [2:0] hazard_memory_width;
-	wire hazard_memory_signed;
-
-	wire [4:0] hazard_op;
-
-	CPU_Hazard hazard(
+	CPU_Execute execute(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(memory_stall || execute_stall),
+		.i_stall(memory_stall),
 
 		// Input from decode.
 		.i_tag(decode_tag),
@@ -224,77 +204,6 @@ module CPU_v2 (
 		.i_memory_signed(decode_memory_signed),
 
 		.i_op(decode_op),
-
-		// Output from hazard.
-		.o_tag(hazard_tag),
-		.o_instruction(hazard_instruction),
-		.o_pc(hazard_pc),
-		.o_rs1(hazard_rs1),
-		.o_rs2(hazard_rs2),
-		.o_inst_rd(hazard_inst_rd),
-		.o_imm(hazard_imm),
-		
-		.o_arithmetic(hazard_arithmetic),
-		.o_compare(hazard_compare),
-		.o_jump(hazard_jump),
-		.o_jump_conditional(hazard_jump_conditional),
-
-		.o_alu_operation(hazard_alu_operation),
-		.o_alu_operand1(hazard_alu_operand1),
-		.o_alu_operand2(hazard_alu_operand2),
-		
-		.o_memory_read(hazard_memory_read),
-		.o_memory_write(hazard_memory_write),
-		.o_memory_width(hazard_memory_width),
-		.o_memory_signed(hazard_memory_signed),
-
-		.o_op(hazard_op)
-	);
-
-	//====================================================
-	// EXECUTE
-
-	wire [`TAG_SIZE] execute_tag;
-	wire [4:0] execute_inst_rd;
-	wire [31:0] execute_rd;
-	wire [31:0] execute_pc_next;
-	wire execute_mem_read;
-	wire execute_mem_write;
-	wire [2:0] execute_mem_width;
-	wire execute_mem_signed;
-	wire [31:0] execute_mem_address;
-	wire [31:0] execute_mem_wdata;
-	wire execute_stall;
-	
-	CPU_Execute execute(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.i_stall(memory_stall),
-
-		// Input from hazard.
-		.i_tag(hazard_tag),
-		.i_pc(hazard_pc),
-		.i_instruction(hazard_instruction),
-		.i_rs1(hazard_rs1),
-		.i_rs2(hazard_rs2),
-		.i_inst_rd(hazard_inst_rd),
-		.i_imm(hazard_imm),
-
-		.i_arithmetic(hazard_arithmetic),
-		.i_compare(hazard_compare),
-		.i_jump(hazard_jump),
-		.i_jump_conditional(hazard_jump_conditional),
-
-		.i_alu_operation(hazard_alu_operation),
-		.i_alu_operand1(hazard_alu_operand1),
-		.i_alu_operand2(hazard_alu_operand2),
-
-		.i_memory_read(hazard_memory_read),
-		.i_memory_write(hazard_memory_write),
-		.i_memory_width(hazard_memory_width),
-		.i_memory_signed(hazard_memory_signed),
-
-		.i_op(hazard_op),
 
 		// Output from execute.
 		.o_tag(execute_tag),
@@ -346,11 +255,7 @@ module CPU_v2 (
 		.o_inst_rd(memory_inst_rd),
 		.o_rd(memory_rd),
 		.o_pc_next(memory_pc_next),
-		.o_stall(memory_stall),
-
-		// Debug
-		.o_dcache_hit_count(o_dcache_hit_count),
-		.o_dcache_miss_count(o_dcache_miss_count)
+		.o_stall(memory_stall)
 	);
 
 	//====================================================

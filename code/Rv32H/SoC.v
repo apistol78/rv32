@@ -340,10 +340,11 @@ module SoC(
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
 	`else
-	BRAM #(
+	BRAM_latency #(
 		.WIDTH(32),
 		.SIZE(32'h08000000 / 4),
-		.ADDR_LSH(2)
+		.ADDR_LSH(2),
+		.LATENCY(10)
 	) sdram(
 		.i_clock(clock),
 		.i_request(sdram_select && bus_request),
@@ -464,11 +465,7 @@ module SoC(
 		.o_ready(timer_ready),
 		
 		// Debug
-		.i_retire_count(cpu_retire_count),
-		.i_icache_hit_count(cpu_icache_hit_count),
-		.i_icache_miss_count(cpu_icache_miss_count),
-		.i_dcache_hit_count(cpu_dcache_hit_count),
-		.i_dcache_miss_count(cpu_dcache_miss_count)
+		.i_retire_count(cpu_retire_count)
 	);
 	
 	//====================================================
@@ -555,11 +552,7 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_retire_count(cpu_retire_count),
-		.o_icache_hit_count(cpu_icache_hit_count),
-		.o_icache_miss_count(cpu_icache_miss_count),
-		.o_dcache_hit_count(cpu_dcache_hit_count),
-		.o_dcache_miss_count(cpu_dcache_miss_count)	
+		.o_retire_count(cpu_retire_count)
 	);
 	
 	//=====================================

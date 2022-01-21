@@ -6,7 +6,6 @@
 `include "CPU_Divide.v"
 `include "CPU_Execute.v"
 `include "CPU_Fetch.v"
-`include "CPU_Hazard.v"
 `include "CPU_ICache.v"
 `include "CPU_Memory.v"
 `include "CPU_Multiply.v"
