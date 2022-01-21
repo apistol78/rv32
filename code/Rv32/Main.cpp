@@ -104,6 +104,7 @@ int main(int argc, const char** argv)
 	Unknown gpio(L"GPIO", true);
 	Unknown i2c(L"I2C", true);
 	Unknown sd(L"SD", true);
+	Unknown tmr(L"TIMER", true);
 
 	Bus bus;
 	// bus.map(0x00000000, 0x00010000, &rom);
@@ -117,6 +118,7 @@ int main(int argc, const char** argv)
 	bus.map(0x50000020, 0x50000030, &gpio);
 	bus.map(0x50000030, 0x50000040, &i2c);
 	bus.map(0x50000040, 0x50000050, &sd);
+	bus.map(0x60000000, 0x60000100, &tmr);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
