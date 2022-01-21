@@ -1,6 +1,8 @@
 /build
 /.vs
 /code/Doom/doomgeneric/build
+/code/Rv32T/SoC
+/code/Verify/SoC
 /quartus/db
 /quartus/output_files
 /quartus/incremental*
@@ -8,3 +10,4 @@
 *.log
 *.bak
 *.vcd
+/quartus/SoC.qws
