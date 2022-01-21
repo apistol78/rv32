@@ -1152,6 +1152,35 @@ bool verify_ENDIAN(const char* trace)
 	return true;
 }
 
+bool verify_MEM_LOAD_HAZARD(const char* trace)
+{
+	{
+		auto tb = create_soc();
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
+
+		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a783; // lw		a5,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[2] = 0x00078413; // mv		s0,a5
+		tb->SoC__DOT__rom__DOT__data[3] = 0x00008067; // j		0
+
+		tb->SoC__DOT__sdram__DOT__data[0] = 0xcafebabe;
+
+		evaluate(tb, trace, 7);
+
+		//printf("S0 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+
+		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0xcafebabe)
+			return false;
+
+		delete tb;
+	}
+
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1169,6 +1198,8 @@ bool verify(bool (*fn)(const char* trace), const char* name)
 	// Re-run failed test with tracing enabled.
 	if (!result)
 	{
+		log::info << L"Verify failed, re-run with trace..." << Endl;
+
 		char fnf[256];
 		sprintf(fnf, "%s.vcd", name);
 		if (fn(fnf))
@@ -1231,6 +1262,7 @@ int main(int argc, char **argv)
 	CHECK(verify_XOR);
 	CHECK(verify_XORI);
 	CHECK(verify_ENDIAN);
+	CHECK(verify_MEM_LOAD_HAZARD);
 
 	if (success)
 		printf("SUCCESS!\n");
