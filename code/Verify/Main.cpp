@@ -791,7 +791,7 @@ bool verify_SB(const char* trace)
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0x12;
 	tb->SoC__DOT__rom__DOT__data[0] = 0x00010437; // lui	s0,0x10
 	tb->SoC__DOT__rom__DOT__data[1] = 0x00240413; // addi	s0,s0,2 # 10002 
-	tb->SoC__DOT__rom__DOT__data[2] = 0xfe940fa3; // sb	s1,-1(s0)
+	tb->SoC__DOT__rom__DOT__data[2] = 0xfe940fa3; // sb		s1,-1(s0)
 
 	evaluate(tb, trace, 3);
 
@@ -1181,6 +1181,83 @@ bool verify_MEM_LOAD_HAZARD(const char* trace)
 	return true;
 }
 
+bool verify_PIPELINE_MEMORY(const char* trace)
+{
+	{
+		auto tb = create_soc();
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
+
+		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a403; // lw		s0,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[2] = 0x0087a223; // sw		s0,4(a5)
+		tb->SoC__DOT__rom__DOT__data[3] = 0x0047a403; // lw		s0,4(a5)
+		tb->SoC__DOT__rom__DOT__data[4] = 0x0087a423; // sw		s0,8(a5)
+		tb->SoC__DOT__rom__DOT__data[5] = 0x0087a403; // lw		s0,8(a5)
+		tb->SoC__DOT__rom__DOT__data[6] = 0x0087a623; // sw		s0,12(a5)
+		tb->SoC__DOT__rom__DOT__data[7] = 0x00c7a403; // lw		s0,12(a5)
+		tb->SoC__DOT__rom__DOT__data[8] = 0xfe1ff06f; // j		0
+
+		tb->SoC__DOT__sdram__DOT__data[0] = 0x11111111;
+		tb->SoC__DOT__sdram__DOT__data[1] = 0x22222222;
+		tb->SoC__DOT__sdram__DOT__data[2] = 0x33333333;
+		tb->SoC__DOT__sdram__DOT__data[3] = 0x44444444;
+
+		evaluate(tb, trace, 8);
+
+		//printf("S0 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+
+		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0x11111111)
+			return false;
+
+		delete tb;
+	}
+
+	return true;
+}
+
+bool verify_PIPELINE_MEMORY_B(const char* trace)
+{
+	{
+		auto tb = create_soc();
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
+
+		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x00078403; // lb		s0,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[2] = 0x008780a3; // sb		s0,1(a5)
+		tb->SoC__DOT__rom__DOT__data[3] = 0x00178403; // lb		s0,1(a5)
+		tb->SoC__DOT__rom__DOT__data[4] = 0x00878123; // sb		s0,2(a5)
+		tb->SoC__DOT__rom__DOT__data[5] = 0x00278403; // lb		s0,2(a5)
+		tb->SoC__DOT__rom__DOT__data[6] = 0x008781a3; // sb		s0,3(a5)
+		tb->SoC__DOT__rom__DOT__data[7] = 0x00378403; // lb		s0,3(a5)
+		tb->SoC__DOT__rom__DOT__data[8] = 0xfe1ff06f; // j		0
+
+		tb->SoC__DOT__sdram__DOT__data[0] = 0x00000011;
+		tb->SoC__DOT__sdram__DOT__data[1] = 0x22222222;
+		tb->SoC__DOT__sdram__DOT__data[2] = 0x33333333;
+		tb->SoC__DOT__sdram__DOT__data[3] = 0x44444444;
+
+		evaluate(tb, trace, 8);
+
+		//printf("S0 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+		//printf("D[0] %08x\n", tb->SoC__DOT__sdram__DOT__data[0]);
+
+		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0x00000011)
+			return false;
+		// if (tb->SoC__DOT__sdram__DOT__data[0] != 0x11111111)
+		// 	return false;
+
+		delete tb;
+	}
+
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1217,52 +1294,54 @@ int main(int argc, char **argv)
 {
 	bool success = true;
 
-	CHECK(verify_ADD);
-	CHECK(verify_ADDI);
-	CHECK(verify_AND);
-	CHECK(verify_ANDI);
-	CHECK(verify_AUIPC);
-	CHECK(verify_BEQ);
-	CHECK(verify_BGE);
-	CHECK(verify_BGEU);
-	CHECK(verify_BLT);
-	CHECK(verify_BLTU);
-	CHECK(verify_BNE);
-	CHECK(verify_DIV);
-	CHECK(verify_UDIV);
-	CHECK(verify_JAL);
-	CHECK(verify_JALR);
+	// CHECK(verify_ADD);
+	// CHECK(verify_ADDI);
+	// CHECK(verify_AND);
+	// CHECK(verify_ANDI);
+	// CHECK(verify_AUIPC);
+	// CHECK(verify_BEQ);
+	// CHECK(verify_BGE);
+	// CHECK(verify_BGEU);
+	// CHECK(verify_BLT);
+	// CHECK(verify_BLTU);
+	// CHECK(verify_BNE);
+	// CHECK(verify_DIV);
+	// CHECK(verify_UDIV);
+	// CHECK(verify_JAL);
+	// CHECK(verify_JALR);
 	CHECK(verify_LB);
 	CHECK(verify_LBU);
 	CHECK(verify_LH);
 	CHECK(verify_LHU);
-	CHECK(verify_LUI);
-	CHECK(verify_LW);
-	CHECK(verify_MUL);
-	CHECK(verify_MULH);
-	CHECK(verify_MULHU);
-	CHECK(verify_OR);
-	CHECK(verify_ORI);
-	CHECK(verify_REM);
-	CHECK(verify_REMU);
+	// CHECK(verify_LUI);
+	// CHECK(verify_LW);
+	// CHECK(verify_MUL);
+	// CHECK(verify_MULH);
+	// CHECK(verify_MULHU);
+	// CHECK(verify_OR);
+	// CHECK(verify_ORI);
+	// CHECK(verify_REM);
+	// CHECK(verify_REMU);
 	CHECK(verify_SB);
 	CHECK(verify_SH);
-	CHECK(verify_SLL);
-	CHECK(verify_SLLI);
-	CHECK(verify_SLT);
-	CHECK(verify_SLTI);
-	CHECK(verify_SLTIU);
-	CHECK(verify_SLTU);
-	CHECK(verify_SRA);
-	CHECK(verify_SRAI);
-	CHECK(verify_SRL);
-	CHECK(verify_SRLI);
-	CHECK(verify_SUB);
-	CHECK(verify_SW);
-	CHECK(verify_XOR);
-	CHECK(verify_XORI);
+	// CHECK(verify_SLL);
+	// CHECK(verify_SLLI);
+	// CHECK(verify_SLT);
+	// CHECK(verify_SLTI);
+	// CHECK(verify_SLTIU);
+	// CHECK(verify_SLTU);
+	// CHECK(verify_SRA);
+	// CHECK(verify_SRAI);
+	// CHECK(verify_SRL);
+	// CHECK(verify_SRLI);
+	// CHECK(verify_SUB);
+	// CHECK(verify_SW);
+	// CHECK(verify_XOR);
+	// CHECK(verify_XORI);
 	CHECK(verify_ENDIAN);
 	CHECK(verify_MEM_LOAD_HAZARD);
+	CHECK(verify_PIPELINE_MEMORY);
+	CHECK(verify_PIPELINE_MEMORY_B);
 
 	if (success)
 		printf("SUCCESS!\n");
