@@ -29,13 +29,14 @@ module CPU_DCache(
 	localparam SIZE	= 12;
 	localparam RANGE = 1 << SIZE;
 
-	localparam ST_IDLE = 0;
-	localparam ST_RD_BUS = 1;
-	localparam ST_RD_BUS_WB = 2;
-	localparam ST_RD_BUS_UNCACHEABLE = 3;
-	localparam ST_WR_BUS = 4;
-	localparam ST_WAIT_END = 5;
+	// localparam ST_IDLE = 0;
+	// localparam ST_RD_BUS = 1;
+	// localparam ST_RD_BUS_WB = 2;
+	// localparam ST_RD_BUS_UNCACHEABLE = 3;
+	// localparam ST_WR_BUS = 4;
+	// localparam ST_WAIT_END = 5;
 
+	reg [7:0] next;
 	reg [7:0] state;
 
 	// Cache memory.
@@ -50,7 +51,8 @@ module CPU_DCache(
 	BRAM_clear #(
 		.WIDTH(64),
 		.SIZE(RANGE),
-		.ADDR_LSH(0)
+		.ADDR_LSH(0),
+		.CLEAR_VALUE(32'hffff_fff0)
 	) cache(
 		.i_clock(i_clock),
 		.o_initialized(cache_initialized),
@@ -76,12 +78,166 @@ module CPU_DCache(
 		o_bus_wdata = 0;
 		o_rdata = 0;
 		
-		state = ST_IDLE;
+		next = 0;
+		state = 0;
+
+		cache_rw = 0;
+	end
+
+	//assign o_bus_wdata = i_wdata;
+	//assign cache_wdata = { i_wdata, i_address[31:2], 2'b11 };;
+
+	always @(posedge i_clock) begin
+		state <= next;
+	end
+
+	always @(*) begin
+
+		next = state;
+
+		o_bus_rw = 0;
+		o_bus_address = 0;
+		o_bus_request = 0;
+		o_bus_wdata = 0;
+
+		o_rdata = 0;
+		o_ready = 0;
 
 		cache_rw = 0;
 		cache_wdata = 0;
+		
+		case (state)
+			0: begin
+				if (i_request) begin
+					if (cache_initialized && is_cacheable) begin
+						if (!i_rw)
+							next = 2;
+						else begin
+							next = 6;
+						end
+					end
+					else begin
+						o_bus_rw = i_rw;
+						o_bus_address = i_address;
+						o_bus_request = 1;
+						o_bus_wdata = i_wdata;
+						o_rdata = i_bus_rdata;
+						next = 1;
+					end
+				end
+			end
+
+			// ================
+			// NOT INITIALIZED
+			// ================
+
+			// Cache not initialized, pass through to bus.
+			1: begin
+				o_bus_rw = i_rw;
+				o_bus_address = i_address;
+				o_bus_request = i_request;
+				o_bus_wdata = i_wdata;
+				o_rdata = i_bus_rdata;
+				if (i_bus_ready) begin
+					o_ready = 1;
+				end
+				if (!i_request)
+					next = 0;
+			end
+
+			// ================
+			// WRITE
+			// ================
+
+			// Write, write back if necessary.
+			6: begin
+				if (cache_entry_valid && cache_entry_dirty && cache_entry_address != i_address) begin
+					o_bus_rw = 1;
+					o_bus_address = cache_entry_address;
+					o_bus_request = 1;
+					o_bus_wdata = cache_entry_data;
+					next = 7;
+				end
+				else begin
+					cache_rw = 1;
+					cache_wdata = { i_wdata, i_address[31:2], 2'b11 };
+					o_ready = 1;
+					next = 0;
+				end
+			end
+
+			// Wait until write back finish.
+			7: begin
+				o_bus_rw = 1;
+				o_bus_address = cache_entry_address;
+				o_bus_request = 1;
+				o_bus_wdata = cache_entry_data;
+				if (i_bus_ready) begin
+					cache_rw = 1;
+					cache_wdata = { i_wdata, i_address[31:2], 2'b11 };
+					o_ready = 1;
+					next = 0;
+				end			
+			end
+
+			// ================
+			// READ
+			// ================
+
+			// Check if cache entry valid, if not then read from bus.
+			2: begin
+				o_rdata = cache_entry_data;
+				if (cache_entry_valid && cache_entry_address == i_address) begin
+					o_ready = 1;
+					next = 0;
+				end
+				else begin
+					if (cache_entry_valid && cache_entry_dirty) begin
+						o_bus_rw = 1;
+						o_bus_address = cache_entry_address;
+						o_bus_request = 1;
+						o_bus_wdata = cache_entry_data;
+						next = 3;
+					end
+					else begin
+						o_bus_address = i_address;
+						o_bus_request = 1;
+						next = 4;
+					end
+				end
+			end
+
+			// Write previous entry back to bus.
+			3: begin
+				o_bus_rw = 1;
+				o_bus_address = cache_entry_address;
+				o_bus_request = 1;
+				o_bus_wdata = cache_entry_data;
+				if (i_bus_ready) begin
+					o_bus_rw = 0;
+					o_bus_address = i_address;
+					next = 4;
+				end			
+			end
+
+			// Wait until new data read from bus.
+			4: begin
+				o_bus_rw = 0;
+				o_bus_address = i_address;
+				o_bus_request = 1;
+				o_rdata = i_bus_rdata;
+				if (i_bus_ready) begin
+					cache_rw = 1;
+					cache_wdata = { i_bus_rdata, i_address[31:2], 2'b01 };
+					o_ready = 1;
+					next = 0;
+				end
+			end
+
+		endcase
 	end
 
+/*
 	always @(*) begin
 		o_ready = (i_request && state == ST_WAIT_END);
 	end
@@ -223,6 +379,6 @@ module CPU_DCache(
 			endcase
 		end
 	end
-
+*/
 
 endmodule
