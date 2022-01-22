@@ -19,9 +19,11 @@
 #include <Core/Misc/String.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
+#include <Ui/Button.h>
 #include <Ui/Image.h>
 #include <Ui/Form.h>
 #include <Ui/FloodLayout.h>
+#include <Ui/TableLayout.h>
 #if defined(_WIN32)
 #	include <Ui/Win32/WidgetFactoryWin32.h>
 #elif defined(__APPLE__)
@@ -160,9 +162,21 @@ int main(int argc, const char **argv)
 	}
 #endif
 
+	bool trace = false;
+
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
+	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
+
+	Ref< ui::Container > container = new ui::Container();
+	container->create(form, ui::WsNone, new ui::TableLayout(L"*", L"*", 0, 4));
+
+	Ref< ui::Button > buttonTrace = new ui::Button();
+	buttonTrace->create(container, L"Trace");
+	buttonTrace->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+		buttonTrace->setEnable(false);
+		trace = true;
+	});
 
 	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(320, 200);
 	
@@ -187,15 +201,14 @@ int main(int argc, const char **argv)
 
 	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x0001fff0;
 
+	uint32_t intercept = 0xffffffff;
+	if (cmdLine.hasOption(L"intercept"))
+		intercept = cmdLine.getOption(L"intercept").getInteger();
+
 	// Create signal trace.
 	VerilatedVcdC* tfp = nullptr;
 	if (cmdLine.hasOption(L't', L"trace"))
-	{
-		Verilated::traceEverOn(true);
-		tfp = new VerilatedVcdC;
-		soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
-		tfp->open("Rv32T.vcd"); // "simx.vcd");
-	}
+		trace = true;
 
 	HDMI hdmi;
 	LEDR ledr;
@@ -207,6 +220,15 @@ int main(int argc, const char **argv)
 	{
 		if (!ui::Application::getInstance()->process())
 			break;
+
+		if (trace)
+		{
+			Verilated::traceEverOn(true);
+			tfp = new VerilatedVcdC;
+			soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
+			tfp->open("Rv32T.vcd");
+			trace = false;	
+		}
 
 		for (int32_t i = 0; i < 50000; ++i)
 		{
@@ -228,6 +250,17 @@ int main(int argc, const char **argv)
 			ledr.eval(soc);
 			uart_tx.eval(soc);
 			sd.eval(soc);
+
+			// TODO
+			// Check output of each CPU pipeline stage
+			// are kept during entire output tag cycle.
+
+			if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc == intercept)
+			{
+				log::error << L"Intercepted at 0x" << str(L"%08x", intercept) << Endl;
+				g_going = false;
+				break;
+			}
 		}
 
 		framebuffer->copyImage(hdmi.getImage());
@@ -235,10 +268,11 @@ int main(int argc, const char **argv)
 	}
 
 	log::info << Endl;
-	log::info << L"PC: " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
-	log::info << L"CYCLES: " << soc->SoC__DOT__timer__DOT__cycles << Endl;
-	log::info << L"RETIRE: " << soc->SoC__DOT__cpu_retire_count << Endl;
-	log::info << L"MS: " << soc->SoC__DOT__timer__DOT__ms << Endl;
+	log::info << L"--- Terminated ---" << Endl;
+	log::info << L"PC     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
+	log::info << L"CYCLES : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
+	log::info << L"RETIRE : " << soc->SoC__DOT__cpu_retire_count << Endl;
+	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
 
 	if (tfp)
 	{

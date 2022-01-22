@@ -46,7 +46,15 @@ void UART_TX::eval(VSoC* soc)
 	case 3:
 		if (tx == 1)
 		{
-			log::info << (wchar_t)m_data;
+			if (!iscntrl(m_data))
+				log::info << (wchar_t)m_data;
+			else
+			{
+				log::info << L"<" << (int32_t)m_data << L">";
+				if (m_data == '\n')
+					log::info << Endl;
+			}
+
 			m_state = 0;
 		}
 		break;
