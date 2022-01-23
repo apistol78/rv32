@@ -12,8 +12,15 @@ module SD (
 	output reg o_ready,
 
     output wire SD_CLK,
-    inout wire SD_CMD,
-    inout wire [3:0] SD_DAT
+`ifndef __VERILATOR__
+      inout wire SD_CMD,
+      inout wire [3:0]  SD_DAT
+`else
+      input wire SD_CMD_in,
+      input wire [3:0]  SD_DAT_in,
+      output wire SD_CMD_out,
+      output wire [3:0] SD_DAT_out
+`endif
 );
 	localparam DIR_IN = 1'b0;
 	localparam DIR_OUT = 1'b1;
@@ -30,11 +37,20 @@ module SD (
 	initial o_rdata = 32'h0000_0000;
 
 	assign SD_CLK = clk;
+
+`ifndef __VERILATOR__
     assign SD_CMD = (cdir == DIR_OUT) ? cmd : 1'bZ;
 	assign SD_DAT = (ddir == DIR_OUT) ? dat : 4'bZ;
 	
 	wire cmd_in = SD_CMD;
 	wire [3:0] dat_in = SD_DAT;
+`else
+	assign SD_CMD_out = cmd;
+	assign SD_DAT_out = dat;
+
+	wire cmd_in = SD_CMD_in;
+	wire [3:0] dat_in = SD_DAT_in;
+`endif
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin

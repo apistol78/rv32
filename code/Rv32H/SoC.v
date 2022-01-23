@@ -114,8 +114,15 @@ module SoC(
 
       ///////// SD ///////// 3.3-V LVTTL ///////
       output             SD_CLK,
+`ifndef __VERILATOR__
       inout              SD_CMD,
       inout       [3:0]  SD_DAT,
+`else
+      input              SD_CMD_in,
+      input       [3:0]  SD_DAT_in,
+      output             SD_CMD_out,
+      output      [3:0]  SD_DAT_out,
+`endif
 
 `ifdef ENABLE_SMA
       ///////// SMA ///////// 1.5-V PCML ///////
@@ -444,8 +451,15 @@ module SoC(
 		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
+`ifndef __VERILATOR__
 		.SD_CMD(SD_CMD),
 		.SD_DAT(SD_DAT)
+`else
+		.SD_CMD_in(SD_CMD_in),
+		.SD_DAT_in(SD_DAT_in),
+		.SD_CMD_out(SD_CMD_out),
+		.SD_DAT_out(SD_DAT_out)
+`endif
 	);
 `endif
 

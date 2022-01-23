@@ -49,8 +49,8 @@ void HDMI::eval(VSoC* soc)
 
     if (!m_clk && clk)
     {
-        int32_t x = m_hpos - 199;
-        int32_t y = m_vpos - 34;
+        int32_t x = m_hpos - 144; // 199;
+        int32_t y = m_vpos; // - 34;
         if (x >= 0 && x < 640 && y >= 0 && y < 480)
         {
             uint8_t r = (d >> 16) & 255;

@@ -178,10 +178,13 @@ int main(int argc, const char **argv)
 		trace = true;
 	});
 
-	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(320, 200);
+	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(640, 480);
 	
+	Ref< ui::Container > containerImage = new ui::Container();
+	containerImage->create(form, ui::WsNone, new ui::FloodLayout());
+
 	Ref< ui::Image > image = new ui::Image();
-	image->create(form, framebuffer, ui::Image::WsScale);
+	image->create(containerImage, framebuffer, ui::Image::WsScale);
 
 	form->update();
 	form->show();
@@ -216,6 +219,9 @@ int main(int argc, const char **argv)
 	SD sd;
 
 	int32_t time = 0;
+	uint32_t lastCycles = 0;
+	uint32_t lastRetired = 0;
+
 	while (g_going)
 	{
 		if (!ui::Application::getInstance()->process())
@@ -234,6 +240,7 @@ int main(int argc, const char **argv)
 		{
 			++time;
 			soc->CLOCK_125_p = 0;
+
 			soc->eval();
 
 			if (tfp)
@@ -241,6 +248,7 @@ int main(int argc, const char **argv)
 
 			++time;
 			soc->CLOCK_125_p = 1;
+
 			soc->eval();
 
 			if (tfp)
@@ -265,6 +273,13 @@ int main(int argc, const char **argv)
 
 		framebuffer->copyImage(hdmi.getImage());
 		image->setImage(framebuffer);
+
+		uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+		uint32_t dr = soc->SoC__DOT__cpu_retire_count - lastRetired;
+		form->setText(str(L"RV32 - %.2f IPC", ((double)dr) / dc));
+
+		lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+		lastRetired = soc->SoC__DOT__cpu_retire_count;
 	}
 
 	log::info << Endl;
