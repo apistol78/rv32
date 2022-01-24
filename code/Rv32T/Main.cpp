@@ -221,6 +221,8 @@ int main(int argc, const char **argv)
 	int32_t time = 0;
 	uint32_t lastCycles = 0;
 	uint32_t lastRetired = 0;
+	uint32_t busActiveCount = 0;
+	uint32_t lastBusActiveCount = 0;
 
 	while (g_going)
 	{
@@ -236,7 +238,7 @@ int main(int argc, const char **argv)
 			trace = false;	
 		}
 
-		for (int32_t i = 0; i < 50000; ++i)
+		for (int32_t i = 0; i < 200000; ++i)
 		{
 			++time;
 			soc->CLOCK_125_p = 0;
@@ -269,6 +271,10 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;
 			}
+
+			// Count number of cycles bus is active.
+			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
+				++busActiveCount;
 		}
 
 		framebuffer->copyImage(hdmi.getImage());
@@ -276,10 +282,18 @@ int main(int argc, const char **argv)
 
 		uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 		uint32_t dr = soc->SoC__DOT__cpu_retire_count - lastRetired;
-		form->setText(str(L"RV32 - %.2f IPC", ((double)dr) / dc));
+		uint32_t db = busActiveCount - lastBusActiveCount;
+		form->setText(
+			str(
+				L"RV32 - %.2f IPC - %.2f%% BUS",
+				((double)dr) / dc,
+				((double)db * 100.0) / dc
+			)
+		);
 
 		lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 		lastRetired = soc->SoC__DOT__cpu_retire_count;
+		lastBusActiveCount = busActiveCount;
 	}
 
 	log::info << Endl;
@@ -287,6 +301,8 @@ int main(int argc, const char **argv)
 	log::info << L"PC     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
 	log::info << L"CYCLES : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
 	log::info << L"RETIRE : " << soc->SoC__DOT__cpu_retire_count << Endl;
+	log::info << L"BUS    : " << busActiveCount << L", " << (busActiveCount * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
+
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
 
 	if (tfp)
