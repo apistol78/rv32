@@ -221,10 +221,11 @@ module SoC(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 	`else
-	BRAM #(
+	BRAM_latency #(
 		.WIDTH(32),
-		.SIZE(320*200),
-		.ADDR_LSH(2)
+		.SIZE(320*200/4),
+		.ADDR_LSH(2),
+		.LATENCY(7)
 	) video_sram(
 		.i_clock(clock),
 		.i_request(video_sram_request),

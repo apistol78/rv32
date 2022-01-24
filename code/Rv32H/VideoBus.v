@@ -36,7 +36,7 @@ module VideoBus(
 	wire [63:0] fifo_rdata;
 
 	FIFO64 #(
-		.DEPTH(1024)
+		.DEPTH(4096)
 	) fifo(
 		.i_clock(i_clock),
 		.o_empty(fifo_empty),
@@ -49,10 +49,11 @@ module VideoBus(
 
 	reg [31:0] palette [0:255];
 	reg [2:0] state;
+	reg [2:0] next_state;
 
-	reg [8:0] prefetched_quad_pos_x;
-	reg [31:0] prefetched_quad;
 	reg [31:0] quad;
+	reg [31:0] next_quad;
+	reg [31:0] next_next_quad;
 	
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 
@@ -67,9 +68,12 @@ module VideoBus(
 
 		fifo_write = 1'b0;
 		fifo_read = 1'b0;
-		state = 0;
 		
-		prefetched_quad_pos_x = 0;
+		state = 0;
+		next_state = 0;
+		
+		quad = 0;
+		next_quad = 0;
 	end
 
 	always @(posedge i_clock) begin
@@ -94,87 +98,85 @@ module VideoBus(
 		o_fifo_full <= fifo_full;
 	end
 	
-	always @(posedge i_clock) begin
-		case (byte_index)
-		0: o_video_rdata <= palette[quad[7:0]];
-		1: o_video_rdata <= palette[quad[15:8]];
-		2: o_video_rdata <= palette[quad[23:16]];
-		3: o_video_rdata <= palette[quad[31:24]];
-		endcase
+	always @(*) begin
+		if (i_video_request) begin
+			case (byte_index)
+				0: o_video_rdata = palette[quad[7:0]];
+				1: o_video_rdata = palette[quad[15:8]];
+				2: o_video_rdata = palette[quad[23:16]];
+				3: o_video_rdata = palette[quad[31:24]];
+			endcase
+		end
+		else begin
+			o_video_rdata = 32'h0;
+		end
 	end
-
+	
+	always @(posedge i_clock) begin
+		state <= next_state;
+		next_quad <= next_next_quad;
+		
+		if ((i_video_pos_x & 3) == 0)
+			quad <= next_quad;
+	end
+	
 	// Transfer from FIFO to VRAM.
 	// Read VRAM during scan out.
-	always @(posedge i_clock) begin
+	always @(*) begin
+	
+		next_state = state;
+		next_next_quad = next_quad;
+		
+		o_mem_request = 0;
+		o_mem_rw = 0;
+		o_mem_address = 0;
+		o_mem_wdata = 0;
+		
+		fifo_read = 0;
+	
 		case (state)
 			// Wait until video request or until data in FIFO.
 			0: begin
 				if (!i_video_request) begin
-					o_mem_request <= 1'b0;
 					if (!fifo_empty) begin
-						fifo_read <= 1'b1;
-						state <= 1;
+						fifo_read = 1;
+						next_state = 1;
 					end
 				end
 				else begin
-					if (i_video_pos_x == prefetched_quad_pos_x) begin
-						quad <= prefetched_quad;
-					
-						o_mem_request <= 1'b1;
-						o_mem_rw <= 1'b0;
-						
-						if (prefetched_quad_pos_x < 316)
-							o_mem_address <= ((prefetched_quad_pos_x + 4) + i_video_pos_y * 320); // << 2;
-						else
-							o_mem_address <= (0 + i_video_pos_y * 320); // << 2;
-						
-						state <= 3;
-					end
-					
-					// Interleave with updating from CPU.
-					else if (i_video_pos_x <= prefetched_quad_pos_x - 2) begin
-					
-						o_mem_request <= 1'b0;
-						if (!fifo_empty) begin
-							fifo_read <= 1'b1;
-							state <= 1;
-						end					
-					
+					if (((i_video_pos_x + 2) & 3) == 0) begin
+						o_mem_request = 1;
+						o_mem_address = ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * 320);
+						next_state = 2;
 					end
 				end
 			end
 
 			// Copy FIFO to VRAM.
 			1: begin
-				fifo_read <= 1'b0;
-				o_mem_request <= 1'b1;
-				o_mem_rw <= 1'b1;
-				o_mem_address <= fifo_rdata[63:32];
-				o_mem_wdata <= fifo_rdata[31:0];
-				state <= 2;
+				o_mem_request = 1;
+				o_mem_rw = 1;
+				o_mem_address = fifo_rdata[63:32];
+				o_mem_wdata = fifo_rdata[31:0];
+				if (i_mem_ready) begin
+					o_mem_request = 0;
+					next_state = 0;
+				end
 			end
 
-			// Wait until VRAM finished.
 			2: begin
+				o_mem_request = 1;
+				o_mem_address = ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * 320);
 				if (i_mem_ready) begin
-					o_mem_request <= 1'b0;
-					state <= 0;
+					o_mem_request = 0;
+					next_next_quad = i_mem_rdata;
+					next_state = 3;
 				end
 			end
 			
 			3: begin
-				if (i_mem_ready) begin
-					o_mem_request <= 1'b0;
-					
-					prefetched_quad <= i_mem_rdata;
-					
-					if (prefetched_quad_pos_x < 316)
-						prefetched_quad_pos_x <= prefetched_quad_pos_x + 4;
-					else
-						prefetched_quad_pos_x <= 0;
-					
-					state <= 0;
-				end
+				if (((i_video_pos_x + 1) & 3) == 3)
+					next_state = 0;
 			end
 		endcase
 	end
