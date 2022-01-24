@@ -29,13 +29,6 @@ module CPU_DCache(
 	localparam SIZE	= 12;
 	localparam RANGE = 1 << SIZE;
 
-	// localparam ST_IDLE = 0;
-	// localparam ST_RD_BUS = 1;
-	// localparam ST_RD_BUS_WB = 2;
-	// localparam ST_RD_BUS_UNCACHEABLE = 3;
-	// localparam ST_WR_BUS = 4;
-	// localparam ST_WAIT_END = 5;
-
 	reg [7:0] next;
 	reg [7:0] state;
 
@@ -83,9 +76,6 @@ module CPU_DCache(
 
 		cache_rw = 0;
 	end
-
-	//assign o_bus_wdata = i_wdata;
-	//assign cache_wdata = { i_wdata, i_address[31:2], 2'b11 };;
 
 	always @(posedge i_clock) begin
 		state <= next;
@@ -236,149 +226,5 @@ module CPU_DCache(
 
 		endcase
 	end
-
-/*
-	always @(*) begin
-		o_ready = (i_request && state == ST_WAIT_END);
-	end
-
-	always @(posedge i_clock) begin
-		if (i_reset) begin
-			o_bus_rw <= 0;
-			o_bus_request <= 0;
-			o_bus_address <= 0;
-			o_bus_wdata <= 0;
-			o_rdata <= 0;
-			
-			state <= ST_IDLE;
-
-			cache_rw <= 0;
-			cache_wdata <= 0;
-		end
-		else begin
-			case (state)
-				ST_IDLE: begin
-					if (i_request) begin
-						if (!i_rw) begin
-							if (cache_initialized && is_cacheable) begin
-								if (cache_entry_valid && cache_entry_address == i_address) begin
-									// Cache read hit.
-									o_rdata <= cache_entry_data;
-									state <= ST_WAIT_END;
-								end
-								else begin
-									// Cache read miss.
-									if (cache_entry_valid && cache_entry_dirty) begin
-										// Write back current cache line before
-										// reading requested value.
-										o_bus_rw <= 1;
-										o_bus_request <= 1;
-										o_bus_address <= cache_entry_address;
-										o_bus_wdata <= cache_entry_data;
-										state <= ST_RD_BUS_WB;
-									end
-									else begin
-										// No valid, dirty, cache line entry; just read
-										// requested value directly.
-										o_bus_rw <= 0;
-										o_bus_request <= 1;
-										o_bus_address <= i_address;
-										state <= ST_RD_BUS;
-									end
-								end
-							end
-							else begin
-								// Read from uncacheable memory.
-								o_bus_rw <= 0;
-								o_bus_request <= 1;
-								o_bus_address <= i_address;
-								state <= ST_RD_BUS_UNCACHEABLE;
-							end
-						end
-						else begin
-							if (cache_initialized && is_cacheable) begin
-								// Write to cache.
-								cache_rw <= 1;
-								cache_wdata <= { i_wdata, i_address[31:2], 2'b11 };
-
-								if (cache_entry_valid && cache_entry_dirty && cache_entry_address != i_address) begin
-									// Cache line need to be written to memory.
-									o_bus_rw <= 1;
-									o_bus_request <= 1;
-									o_bus_address <= cache_entry_address;
-									o_bus_wdata <= cache_entry_data;
-									state <= ST_WR_BUS;
-								end
-								else begin
-									// No need to flush cache line, same address or unused.
-									state <= ST_WAIT_END;
-								end
-							end
-							else begin
-								// Write to uncacheable memory.
-								o_bus_rw <= 1;
-								o_bus_request <= 1;
-								o_bus_address <= i_address;
-								o_bus_wdata <= i_wdata;
-								state <= ST_WR_BUS;
-							end
-						end
-					end
-				end
-
-				// Read
-
-				ST_RD_BUS: begin
-					if (i_bus_ready) begin
-						o_bus_request <= 0;
-						o_rdata <= i_bus_rdata;
-						cache_rw <= 1;
-						cache_wdata <= { i_bus_rdata, i_address[31:2], 2'b01 };
-						state <= ST_WAIT_END;
-					end
-				end
-
-				ST_RD_BUS_WB: begin
-					if (i_bus_ready) begin
-						o_bus_rw <= 0;
-						o_bus_request <= 1;	// \note We're keeping bus requested for next read.
-						o_bus_address <= i_address;
-						state <= ST_RD_BUS;
-					end
-				end
-
-				ST_RD_BUS_UNCACHEABLE: begin
-					if (i_bus_ready) begin
-						o_bus_request <= 0;
-						o_rdata <= i_bus_rdata;
-						state <= ST_WAIT_END;
-					end					
-				end
-
-				// Write
-
-				ST_WR_BUS: begin
-					cache_rw <= 0;
-					if (i_bus_ready) begin
-						o_bus_rw <= 0;
-						o_bus_request <= 0;
-						state <= ST_WAIT_END;
-					end				
-				end
-
-				// Common
-
-				// Wait until request ends.
-				ST_WAIT_END: begin
-					cache_rw <= 0;
-					if (!i_request) begin
-						state <= ST_IDLE;
-					end
-				end
-				
-			endcase
-		end
-	end
-*/
 
 endmodule
