@@ -66,10 +66,10 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 {
 	//measure();
 
-	static uint32_t last_ms = 0;
-	uint32_t ms = timer_get_ms();
-	printf("%d fps\n", 1000 / (ms - last_ms));
-	last_ms = ms;
+	// static uint32_t last_ms = 0;
+	// uint32_t ms = timer_get_ms();
+	// printf("%d fps\n", 1000 / (ms - last_ms));
+	// last_ms = ms;
 
 	for (uint32_t i = 0; i < 256; ++i)
 		(VIDEO_PALETTE_BASE)[i] = colors[i];
