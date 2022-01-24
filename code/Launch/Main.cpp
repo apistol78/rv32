@@ -652,30 +652,42 @@ int main(int argc, const char** argv)
 		uint8_t keyCode = 0;
 		switch (event->getVirtualKey())
 		{
+		case ui::VkA:
 		case ui::VkLeft:
 			keyCode = 1;
 			break;
+		
+		case ui::VkD:
 		case ui::VkRight:
 			keyCode = 2;
 			break;
+
+		case ui::VkW:
 		case ui::VkUp:
 			keyCode = 3;
 			break;
+
+		case ui::VkS:
 		case ui::VkDown:
 			keyCode = 4;
 			break;
+			
 		case ui::VkShift:
 			keyCode = 5;
 			break;
+
 		case ui::VkControl:
 			keyCode = 6;
 			break;
+
 		case ui::VkEscape:
 			keyCode = 7;
 			break;
+
 		case ui::VkReturn:
 			keyCode = 8;
 			break;
+			
 		default:
 			break;
 		}
@@ -696,30 +708,42 @@ int main(int argc, const char** argv)
 		uint8_t keyCode = 0;
 		switch (event->getVirtualKey())
 		{
+		case ui::VkA:
 		case ui::VkLeft:
 			keyCode = 1;
 			break;
+		
+		case ui::VkD:
 		case ui::VkRight:
 			keyCode = 2;
 			break;
+
+		case ui::VkW:
 		case ui::VkUp:
 			keyCode = 3;
 			break;
+
+		case ui::VkS:
 		case ui::VkDown:
 			keyCode = 4;
 			break;
+			
 		case ui::VkShift:
 			keyCode = 5;
 			break;
+
 		case ui::VkControl:
 			keyCode = 6;
 			break;
+
 		case ui::VkEscape:
 			keyCode = 7;
 			break;
+
 		case ui::VkReturn:
 			keyCode = 8;
 			break;
+
 		default:
 			break;
 		}
