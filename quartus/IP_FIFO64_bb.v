@@ -39,8 +39,7 @@ module IP_FIFO64 (
 	wrreq,
 	empty,
 	full,
-	q,
-	usedw);
+	q);
 
 	input	  clock;
 	input	[63:0]  data;
@@ -49,7 +48,6 @@ module IP_FIFO64 (
 	output	  empty;
 	output	  full;
 	output	[63:0]  q;
-	output	[15:0]  usedw;
 
 endmodule
 
@@ -60,21 +58,21 @@ endmodule
 // Retrieval info: PRIVATE: AlmostEmptyThr NUMERIC "-1"
 // Retrieval info: PRIVATE: AlmostFull NUMERIC "0"
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
-// Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
+// Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "1"
 // Retrieval info: PRIVATE: Clock NUMERIC "0"
-// Retrieval info: PRIVATE: Depth NUMERIC "65536"
+// Retrieval info: PRIVATE: Depth NUMERIC "4096"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
 // Retrieval info: PRIVATE: LE_BasedFIFO NUMERIC "0"
 // Retrieval info: PRIVATE: LegacyRREQ NUMERIC "1"
 // Retrieval info: PRIVATE: MAX_DEPTH_BY_9 NUMERIC "0"
-// Retrieval info: PRIVATE: OVERFLOW_CHECKING NUMERIC "0"
+// Retrieval info: PRIVATE: OVERFLOW_CHECKING NUMERIC "1"
 // Retrieval info: PRIVATE: Optimize NUMERIC "0"
 // Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
 // Retrieval info: PRIVATE: SYNTH_WRAPPER_GEN_POSTFIX STRING "0"
-// Retrieval info: PRIVATE: UNDERFLOW_CHECKING NUMERIC "0"
-// Retrieval info: PRIVATE: UsedW NUMERIC "1"
+// Retrieval info: PRIVATE: UNDERFLOW_CHECKING NUMERIC "1"
+// Retrieval info: PRIVATE: UsedW NUMERIC "0"
 // Retrieval info: PRIVATE: Width NUMERIC "64"
 // Retrieval info: PRIVATE: dc_aclr NUMERIC "0"
 // Retrieval info: PRIVATE: diff_widths NUMERIC "0"
@@ -91,13 +89,13 @@ endmodule
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: ADD_RAM_OUTPUT_REGISTER STRING "OFF"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "65536"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "4096"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "scfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "64"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "16"
-// Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
-// Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "12"
+// Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "OFF"
+// Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "OFF"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT NODEFVAL "clock"
 // Retrieval info: USED_PORT: data 0 0 64 0 INPUT NODEFVAL "data[63..0]"
@@ -105,7 +103,6 @@ endmodule
 // Retrieval info: USED_PORT: full 0 0 0 0 OUTPUT NODEFVAL "full"
 // Retrieval info: USED_PORT: q 0 0 64 0 OUTPUT NODEFVAL "q[63..0]"
 // Retrieval info: USED_PORT: rdreq 0 0 0 0 INPUT NODEFVAL "rdreq"
-// Retrieval info: USED_PORT: usedw 0 0 16 0 OUTPUT NODEFVAL "usedw[15..0]"
 // Retrieval info: USED_PORT: wrreq 0 0 0 0 INPUT NODEFVAL "wrreq"
 // Retrieval info: CONNECT: @clock 0 0 0 0 clock 0 0 0 0
 // Retrieval info: CONNECT: @data 0 0 64 0 data 0 0 64 0
@@ -114,7 +111,6 @@ endmodule
 // Retrieval info: CONNECT: empty 0 0 0 0 @empty 0 0 0 0
 // Retrieval info: CONNECT: full 0 0 0 0 @full 0 0 0 0
 // Retrieval info: CONNECT: q 0 0 64 0 @q 0 0 64 0
-// Retrieval info: CONNECT: usedw 0 0 16 0 @usedw 0 0 16 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL IP_FIFO64.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL IP_FIFO64.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL IP_FIFO64.cmp FALSE
