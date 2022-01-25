@@ -464,6 +464,37 @@ module SoC(
 	);
 `endif
 
+	// DMA
+	wire dma_select;
+	wire [1:0] dma_address;
+	wire dma_ready;
+
+	wire dma_bus_rw;
+	wire dma_bus_request;
+	wire dma_bus_ready;
+	wire [31:0] dma_bus_address;
+	wire [31:0] dma_bus_rdata;
+	wire [31:0] dma_bus_wdata;
+
+	DMA dma(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// CPU
+		.i_request(dma_select && bus_request),
+		.i_address(dma_address),
+		.i_wdata(bus_wdata),
+		.o_ready(dma_ready),
+		
+		// Bus
+		.o_bus_rw(dma_bus_rw),
+		.o_bus_request(dma_bus_request),
+		.i_bus_ready(dma_bus_ready),
+		.o_bus_address(dma_bus_address),
+		.i_bus_rdata(dma_bus_rdata),
+		.o_bus_wdata(dma_bus_wdata)
+	);
+
 	// Timer
 	wire timer_select;
 	wire [2:0] timer_address;
@@ -529,7 +560,15 @@ module SoC(
 		.o_pb_ready(cpu_dbus_ready),
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
-		.i_pb_wdata(cpu_dbus_wdata)
+		.i_pb_wdata(cpu_dbus_wdata),
+
+		// Port C (DMA)
+		.i_pc_rw(dma_bus_rw),
+		.i_pc_request(dma_bus_request),
+		.o_pc_ready(dma_bus_ready),
+		.i_pc_address(dma_bus_address),
+		.o_pc_rdata(dma_bus_rdata),
+		.i_pc_wdata(dma_bus_wdata)
 	);
 
 	// CPU
@@ -608,7 +647,10 @@ module SoC(
 	assign sd_select = (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
 `endif
 
-	assign timer_select = bus_address >= 32'h60000000;
+	assign dma_select = bus_address >= 32'h70000000;
+	assign dma_address = bus_address[4:2];
+
+	assign timer_select = bus_address >= 32'h60000000 && bus_address < 32'h70000000;
 	assign timer_address = bus_address[4:2];
 
 	assign bus_rdata =
@@ -657,6 +699,7 @@ module SoC(
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_ready :
 `endif
+		dma_select ? dma_ready :
 		timer_select ? timer_ready :
 		1'b0;
 

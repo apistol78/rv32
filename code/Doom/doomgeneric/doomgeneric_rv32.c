@@ -2,6 +2,7 @@
 #include "doomgeneric.h"
 #include "doomkeys.h"
 #include "Runtime/HAL.h"
+#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
@@ -66,20 +67,19 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 {
 	//measure();
 
-	// static uint32_t last_ms = 0;
-	// uint32_t ms = timer_get_ms();
-	// printf("%d fps\n", 1000 / (ms - last_ms));
-	// last_ms = ms;
+	static uint32_t last_ms = 0;
+	uint32_t ms = timer_get_ms();
+	printf("%d fps\n", 1000 / (ms - last_ms));
+	last_ms = ms;
 
 	for (uint32_t i = 0; i < 256; ++i)
 		(VIDEO_PALETTE_BASE)[i] = colors[i];
 
-	const uint32_t* src = (const uint32_t*)frame;
-	for (uint32_t i = 0; i < 320 * 200 / 4; ++i)
-		(VIDEO_DATA_BASE)[i] = src[i];
-
-	// uint32_t en = timer_get_ms();
-	// printf("%d ms\n", en - st);
+	dma_copy(
+		VIDEO_DATA_BASE,
+		frame,
+		320 * 200 / 4
+	);
 }
 
 void DG_SleepMs(uint32_t ms)

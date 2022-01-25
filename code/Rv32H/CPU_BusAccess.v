@@ -25,7 +25,15 @@ module CPU_BusAccess(
 	output wire o_pb_ready,
 	input wire [31:0] i_pb_address,
 	output wire [31:0] o_pb_rdata,
-	input wire [31:0] i_pb_wdata
+	input wire [31:0] i_pb_wdata,
+
+	// Port C
+	input wire i_pc_rw,
+	input wire i_pc_request,
+	output wire o_pc_ready,
+	input wire [31:0] i_pc_address,
+	output wire [31:0] o_pc_rdata,
+	input wire [31:0] i_pc_wdata
 );
 
 	reg [1:0] state;
@@ -39,8 +47,12 @@ module CPU_BusAccess(
 
 	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
 	assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
+	assign o_pc_ready = i_pc_request && (state == 2'd3) ? i_bus_ready : 1'b0;
+
 	assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
 	assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
+	assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+
 	assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
 
 	always @(posedge i_clock) begin
@@ -55,7 +67,13 @@ module CPU_BusAccess(
 
 				// Wait for any request.
 				2'd0: begin
-					if (i_pb_request) begin
+					if (i_pc_request) begin
+						o_bus_rw <= i_pc_rw;
+						o_bus_address <= i_pc_address;
+						o_bus_wdata <= i_pc_wdata;
+						state <= 2'd3;
+					end
+					else if (i_pb_request) begin
 						o_bus_rw <= i_pb_rw;
 						o_bus_address <= i_pb_address;
 						o_bus_wdata <= i_pb_wdata;
@@ -69,7 +87,7 @@ module CPU_BusAccess(
 				end
 
 				// Wait until request has been processed.
-				2'd1, 2'd2: begin
+				2'd1, 2'd2, 2'd3: begin
 					if (i_bus_ready) begin
 						state <= 2'd0;
 					end
