@@ -467,6 +467,7 @@ module SoC(
 	// DMA
 	wire dma_select;
 	wire [1:0] dma_address;
+	wire [31:0] dma_rdata;
 	wire dma_ready;
 
 	wire dma_bus_rw;
@@ -482,9 +483,14 @@ module SoC(
 
 		// CPU
 		.i_request(dma_select && bus_request),
+		.i_rw(bus_rw),
 		.i_address(dma_address),
 		.i_wdata(bus_wdata),
+		.o_rdata(dma_rdata),
 		.o_ready(dma_ready),
+
+		// System
+		.i_stall(vram_fifo_full),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),
@@ -611,47 +617,49 @@ module SoC(
 	
 	//=====================================
 
-	assign rom_select = (bus_address < 32'h00010000);
-	assign rom_address = bus_address - 32'h00000000;
+	assign rom_select = bus_address[31:28] == 4'h0;
+	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	assign ram_select = (bus_address >= 32'h00010000 && bus_address < 32'h00020000);
-	assign ram_address = bus_address - 32'h00010000;
+	assign ram_select = bus_address[31:28] == 4'h1;
+	assign ram_address = { 4'h0, bus_address[27:0] };
 
 `ifdef SOC_ENABLE_SDRAM
-	assign sdram_select = (bus_address >= 32'h20000000 && bus_address < 32'h40000000);
-	assign sdram_address = bus_address - 32'h20000000;
+	assign sdram_select = bus_address[31:28] == 4'h2;
+	assign sdram_address = { 4'h0, bus_address[27:0] };
 `endif
 
 `ifdef SOC_ENABLE_VGA
-	assign vram_select = (bus_address >= 32'h40000000 && bus_address < 32'h50000000);
-	assign vram_address = bus_address - 32'h40000000;
+	assign vram_select = bus_address[31:28] == 4'h3;
+	assign vram_address = { 4'h0, bus_address[27:0] };
 `endif
 
-	assign led_select = (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
-	
+	assign led_select = bus_address[31:28] == 4'h4;
+
 `ifdef SOC_ENABLE_UART
-	assign uart_select = (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
+	assign uart_select = bus_address[31:28] == 4'h5;
 	assign uart_address = bus_address[3:2];
 `endif
 
 `ifdef SOC_ENABLE_GPIO
-	assign gpio_select = (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
+	assign gpio_select = bus_address[31:28] == 4'h6;
 	assign gpio_address = bus_address[3:2];
 `endif
-	
+
 `ifdef SOC_ENABLE_I2C
-	assign i2c_select = (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
+	assign i2c_select = bus_address[31:28] == 4'h7;
 `endif
 
 `ifdef SOC_ENABLE_SD
-	assign sd_select = (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
+	assign sd_select = bus_address[31:28] == 4'h8;
 `endif
 
-	assign dma_select = bus_address >= 32'h70000000;
+	assign dma_select = bus_address[31:28] == 4'h9;
 	assign dma_address = bus_address[4:2];
 
-	assign timer_select = bus_address >= 32'h60000000 && bus_address < 32'h70000000;
+	assign timer_select = bus_address[31:28] == 4'ha;
 	assign timer_address = bus_address[4:2];
+
+	//=====================================
 
 	assign bus_rdata =
 		rom_select ? rom_rdata :
@@ -668,12 +676,13 @@ module SoC(
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_rdata :
 `endif
-`ifdef SOC_ENABLE_SD
-		sd_select ? sd_rdata :
-`endif
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_rdata :
 `endif
+`ifdef SOC_ENABLE_SD
+		sd_select ? sd_rdata :
+`endif
+		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
 		32'h00000000;
 		
@@ -705,7 +714,7 @@ module SoC(
 
 `ifndef __VERILATOR__
 	// 7:0
-	assign LEDG = { vram_fifo_full, 1'b0, 1'b0 };
+	assign LEDG = { 1'b0, 1'b0, 1'b0 };
 `endif
 
 endmodule

@@ -4,10 +4,29 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef void (*call_fn_t)();
 
+#define LED_BASE     		(volatile uint32_t*)0x40000000
+
+#define UART_BASE    		(volatile uint32_t*)0x50000000
+#define UART_STATUS  		(volatile uint32_t*)0x50000004
+
+void uart_tx_u8(uint8_t data)
+{
+	*UART_BASE = (uint32_t)data;
+}
+
+uint32_t uart_rx_full()
+{
+	return (*(UART_STATUS) & 0x00000001) ? 1 : 0;
+}
+
+uint32_t uart_rx_empty()
+{
+	return (*(UART_STATUS) & 0x00000002) ? 1 : 0;
+}
+
 uint8_t uart_rx_u8()
 {
-	volatile uint32_t* uart = (volatile uint32_t*)0x50000010;
-	return (uint8_t)*uart;
+	return (uint8_t)*(UART_BASE);
 }
 
 uint32_t uart_rx_u32()
@@ -20,15 +39,9 @@ uint32_t uart_rx_u32()
 	return *(uint32_t*)tmp;
 }
 
-void uart_tx_u8(uint8_t data)
-{
-	volatile uint32_t* uart = (volatile uint32_t*)0x50000010;
-	*uart = (uint32_t)data;
-}
-
 void fatal_error(uint8_t error)
 {
-	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
+	volatile uint32_t* leds = LED_BASE;
 	for (;;)
 	{
 		*leds = 0x80 | error;
@@ -42,7 +55,7 @@ void fatal_error(uint8_t error)
 
 void main()
 {
-	volatile uint32_t* leds = (volatile uint32_t*)0x50000000;
+	volatile uint32_t* leds = LED_BASE;
 	*leds = 0x00000000;
 
 	// welcome

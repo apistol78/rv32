@@ -67,13 +67,7 @@ module CPU_BusAccess(
 
 				// Wait for any request.
 				2'd0: begin
-					if (i_pc_request) begin
-						o_bus_rw <= i_pc_rw;
-						o_bus_address <= i_pc_address;
-						o_bus_wdata <= i_pc_wdata;
-						state <= 2'd3;
-					end
-					else if (i_pb_request) begin
+					if (i_pb_request) begin
 						o_bus_rw <= i_pb_rw;
 						o_bus_address <= i_pb_address;
 						o_bus_wdata <= i_pb_wdata;
@@ -84,6 +78,12 @@ module CPU_BusAccess(
 						o_bus_address <= i_pa_address;
 						state <= 2'd1;		
 					end
+					else if (i_pc_request) begin
+						o_bus_rw <= i_pc_rw;
+						o_bus_address <= i_pc_address;
+						o_bus_wdata <= i_pc_wdata;
+						state <= 2'd3;
+					end					
 				end
 
 				// Wait until request has been processed.

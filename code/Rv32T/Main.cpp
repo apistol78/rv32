@@ -202,7 +202,7 @@ int main(int argc, const char **argv)
 			return 1;
 	}
 
-	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x0001fff0;
+	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
 
 	uint32_t intercept = 0xffffffff;
 	if (cmdLine.hasOption(L"intercept"))
