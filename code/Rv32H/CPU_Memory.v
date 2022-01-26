@@ -86,7 +86,7 @@ module CPU_Memory(
 	end
 
 	// Stall pipeline if we perform a memory access.
-	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write);
+	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write) && (state != 0);
 
 	assign dcache_address = { i_mem_address[31:2], 2'b00 };
 
