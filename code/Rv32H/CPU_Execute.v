@@ -141,7 +141,8 @@ module CPU_Execute (
 		cycle = 0;
 	end
 
-	assign o_stall = (i_tag != o_tag) && (cycle != 0);
+	wire is_complex = !i_arithmetic && !i_compare && !i_jump && !i_jump_conditional && !i_memory_read && !i_memory_write;
+	assign o_stall = (i_tag != o_tag) && is_complex;
 	
 	wire [31:0] jump_conditional_target = $signed(`PC) + $signed(`IMM);
 	wire [31:0] next_target = `PC + 4;
