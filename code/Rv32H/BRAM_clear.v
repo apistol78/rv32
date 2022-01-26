@@ -1,14 +1,18 @@
 
 `timescale 1ns/1ns
 
+`ifdef __VERILATOR__
+	`define INSTANT_CLEAR
+`endif
+
 module BRAM_clear #(
 	parameter WIDTH = 32,
 	parameter SIZE = 32'h400,
 	parameter ADDR_LSH = 2,
-    parameter CLEAR_VALUE = 32'h0
+	parameter CLEAR_VALUE = 32'h0
 )(
 	input wire i_clock,
-    output wire o_initialized,
+	output wire o_initialized,
 	input wire i_request,
 	input wire i_rw,
 	input wire [31:0] i_address,
@@ -18,36 +22,38 @@ module BRAM_clear #(
 );
 
 	reg [WIDTH - 1:0] data [0:SIZE - 1];
-    reg [31:0] clear;
+	reg [31:0] clear;
 
-    integer i;
+	integer i;
 	initial begin
-        o_ready = 0;
+		o_ready = 0;
 		o_rdata = 0;
-        clear = 0;
-/*
-        for (i = 0; i < SIZE; i = i + 1)
-            data[i] = CLEAR_VALUE;
-*/
-    end
+`ifdef INSTANT_CLEAR
+		clear = SIZE;
+		for (i = 0; i < SIZE; i = i + 1)
+			data[i] = CLEAR_VALUE;
+`else
+		clear = 0;
+`endif
+	end
 
-    assign o_initialized = clear >= SIZE;
+	assign o_initialized = clear >= SIZE;
 
 	always @(posedge i_clock) begin
-        if (clear < SIZE) begin
-            data[clear] <= CLEAR_VALUE;
-            clear <= clear + 1;
-        end
-        else begin
-            if (i_request) begin
-                if (!i_rw) begin
-                    o_rdata <= data[i_address >> ADDR_LSH];
-                end
-                else begin
-                    data[i_address >> ADDR_LSH] <= i_wdata;
-                end
-            end
-        end
+		if (clear < SIZE) begin
+			data[clear] <= CLEAR_VALUE;
+			clear <= clear + 1;
+		end 
+		else begin
+			if (i_request) begin
+				if (!i_rw) begin
+					o_rdata <= data[i_address >> ADDR_LSH];
+				end
+				else begin
+					data[i_address >> ADDR_LSH] <= i_wdata;
+				end
+			end
+		end
 	end
 
 	always @(posedge i_clock)
