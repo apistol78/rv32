@@ -390,12 +390,7 @@ local instructions = {
 				R_s(f.rd) = dividend / divisor;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				div_signed <= 1;
-				div_numerator <= `RS1;
-				div_denominator <= `RS2;
-			end
-			else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 				`RD <= div_result[31:0];
 				`EXECUTE_DONE;
 			end
@@ -417,12 +412,7 @@ local instructions = {
 				R_u(f.rd) = dividend / divisor;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				div_signed <= 0;
-				div_numerator <= `RS1;
-				div_denominator <= `RS2;
-			end
-			else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 				`RD <= div_result[31:0];
 				`EXECUTE_DONE;
 			end
@@ -827,12 +817,7 @@ local instructions = {
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				mul_signed <= 1;
-				mul_op1 <= `RS1;
-				mul_op2 <= `RS2;
-			end
-			else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[31:0];
 				`EXECUTE_DONE;
 			end
@@ -851,12 +836,7 @@ local instructions = {
 			R_s(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				mul_signed <= 1;
-				mul_op1 <= `RS1;
-				mul_op2 <= `RS2;
-			end
-			else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
@@ -875,12 +855,7 @@ local instructions = {
 			R(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				mul_signed <= 0;
-				mul_op1 <= `RS1;
-				mul_op2 <= `RS2;
-			end
-			else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+			if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 				`RD <= mul_result[63:32];
 				`EXECUTE_DONE;
 			end
@@ -952,12 +927,7 @@ local instructions = {
 				R_s(f.rd) = dividend % divisor;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				div_signed <= 1;
-				div_numerator <= `RS1;
-				div_denominator <= `RS2;
-			end
-			else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end
@@ -979,12 +949,7 @@ local instructions = {
 				R_u(f.rd) = dividend % divisor;
 		]],
 		verilog_text = [[
-			/* if (`CYCLE == 0) begin
-				div_signed <= 0;
-				div_numerator <= `RS1;
-				div_denominator <= `RS2;
-			end
-			else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+			if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 				`RD <= div_remainder[31:0];
 				`EXECUTE_DONE;
 			end

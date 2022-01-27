@@ -80,14 +80,12 @@ module SDRAM_interface(
 	
 	reg [3:0] state = 0;
 	reg [3:0] next_state = 0;
-	reg [7:0] count = 0;
 	
 	assign avl_burstbegin = avl_read_req || avl_write_req;
 	
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= 0;
-			count <= 0;
 		end
 		else begin
 			state <= next_state;
