@@ -76,13 +76,20 @@ module CPU_Fetch(
 	end
 
 	always @(posedge i_clock) begin
-		state <= next_state;
-
-		o_tag <= next_o_tag;
-		o_instruction <= next_o_instruction;
-		o_pc <= next_o_pc;
-
-		pc <= next_pc;
+		if (i_reset) begin
+			state <= 0;
+			pc <= 32'h00000000;
+			o_tag <= 0;
+			o_instruction <= 0;
+			o_pc <= 32'h00000000;
+		end
+		else begin
+			state <= next_state;
+			pc <= next_pc;
+			o_tag <= next_o_tag;
+			o_instruction <= next_o_instruction;
+			o_pc <= next_o_pc;
+		end
 	end
 	
 	always @(*) begin
