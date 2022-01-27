@@ -2,9 +2,6 @@
 
 `timescale 1ns/1ns
 
-// 5831 ALUT
-// 5178 DLR
-
 module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,					// CPU clock
@@ -73,8 +70,8 @@ module CPU_v2 (
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Input
-		.i_tag(execute_tag), //writeback_tag),
-		.i_pc_next(execute_pc_next), //writeback_pc_next),
+		.i_tag(execute_tag),
+		.i_pc_next(execute_pc_next),
 
 		// Output
 		.o_tag(fetch_tag),
@@ -146,22 +143,23 @@ module CPU_v2 (
 	);
 
 	//====================================================
-	// EXECUTE
+	// HAZARD
 
 	// Forward register values from pipeline if already in flight.
 	wire [31:0] fwd_rs1 = 
 		(decode_inst_rs1 == 0) ? 32'h0 :
 		(decode_inst_rs1 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs1 == memory_inst_rd) ? memory_rd :
-		(decode_inst_rs1 == writeback_inst_rd) ? writeback_rd :
 		rs1;
 
 	wire [31:0] fwd_rs2 =
 		(decode_inst_rs2 == 0) ? 32'h0 :
 		(decode_inst_rs2 == execute_inst_rd && execute_mem_read == 0) ? execute_rd :
 		(decode_inst_rs2 == memory_inst_rd) ? memory_rd :
-		(decode_inst_rs2 == writeback_inst_rd) ? writeback_rd :
 		rs2;
+
+	//====================================================
+	// EXECUTE
 
 	wire [`TAG_SIZE] execute_tag;
 	wire [4:0] execute_inst_rd;
