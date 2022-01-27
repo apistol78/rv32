@@ -79,9 +79,8 @@ module SDRAM_interface(
 	);
 	
 	reg [3:0] state = 0;
+	reg [3:0] next_state = 0;
 	reg [7:0] count = 0;
-	
-	initial o_ready = 0;
 	
 	assign avl_burstbegin = avl_read_req || avl_write_req;
 	
@@ -89,47 +88,51 @@ module SDRAM_interface(
 		if (i_reset) begin
 			state <= 0;
 			count <= 0;
-			o_ready <= 0;
 		end
 		else begin
-			if (i_request) begin
-				case (state)
-					0: begin
-						if (local_init_done) begin
-							if (!i_rw) begin
-								avl_read_req <= 1;
-							end
-							else begin
-								avl_write_req <= 1;
-							end
-							state <= 1;
-						end
-					end
-					
-					1: begin
-						if (avl_ready) begin
-							avl_read_req <= 0;
-							avl_write_req <= 0;
-							
-							if (i_rw || avl_rdata_valid)
-								o_ready <= 1;
-							
-							state <= 2;
-							count <= count + 1;
-						end
-					end
-					
-					2: begin
-						if (i_rw || avl_rdata_valid)
-							o_ready <= 1;
-					end
-				endcase
-			end
-			else begin
-				o_ready <= 0;
-				state <= 0;
-			end
+			state <= next_state;
 		end
+	end
+
+	always @(*) begin
+
+		next_state = state;
+
+		avl_read_req = 0;
+		avl_write_req = 0;
+
+		o_ready = 0;
+
+		case (state)
+			0: begin
+				if (i_request && local_init_done) begin
+					if (!i_rw)
+						avl_read_req = 1;
+					else
+						avl_write_req = 1;
+
+					next_state = 1;
+				end
+			end
+
+			1: begin
+				if (!i_rw)
+					avl_read_req = 1;
+				else
+					avl_write_req = 1;
+
+				if (avl_ready) begin
+					avl_read_req = 0;
+					avl_write_req = 0;
+
+					if (i_rw || avl_rdata_valid)
+						o_ready = 1;
+
+					if (!i_request)
+						next_state = 0;
+				end
+			end
+		endcase
 	end
 
 endmodule
