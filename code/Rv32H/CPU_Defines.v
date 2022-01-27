@@ -4,8 +4,13 @@
 `define TAG_SIZE                    3:0
 
 // Multiply and divide
-`define MUL_CYCLE_LATENCY           3+1
-`define DIV_CYCLE_LATENCY           15+1
+`ifndef __VERILATOR__
+	`define MUL_CYCLE_LATENCY       3 // 3+1
+	`define DIV_CYCLE_LATENCY       15 // 15+1
+`else
+	`define MUL_CYCLE_LATENCY       2
+	`define DIV_CYCLE_LATENCY       2
+`endif
 
 // ALU operations
 `define OP_SIGNED_ADD               1

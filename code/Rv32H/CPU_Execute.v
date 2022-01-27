@@ -103,28 +103,34 @@ module CPU_Execute (
 		.o_compare_result(alu_compare_result)
 	);
 
-	reg mul_signed;
-	reg [31:0] mul_op1;
-	reg [31:0] mul_op2;
+	wire mul_signed = 
+		(`EXECUTE_OP == OP_MUL) ||
+		(`EXECUTE_OP == OP_MULH);
+
+	//reg [31:0] mul_op1;
+	//reg [31:0] mul_op2;
 	wire [63:0] mul_result;
 	CPU_Multiply multiply(
 		.i_clock(i_clock),
 		.i_signed(mul_signed),
-		.i_op1(mul_op1),
-		.i_op2(mul_op2),
+		.i_op1(`RS1), //mul_op1),
+		.i_op2(`RS2), //mul_op2),
 		.o_result(mul_result)
 	);
 
-	reg div_signed;
-	reg [31:0] div_numerator;
-	reg [31:0] div_denominator;
+	wire div_signed =
+		(`EXECUTE_OP == OP_DIV) ||
+		(`EXECUTE_OP == OP_REM);
+
+	// reg [31:0] div_numerator;
+	// reg [31:0] div_denominator;
 	wire [31:0] div_result;
 	wire [31:0] div_remainder;
 	CPU_Divide divide(
 		.i_clock(i_clock),
 		.i_signed(div_signed),
-		.i_numerator(div_numerator),
-		.i_denominator(div_denominator),
+		.i_numerator(`RS1), //div_numerator),
+		.i_denominator(`RS2), //div_denominator),
 		.o_result(div_result),
 		.o_remainder(div_remainder)
 	);

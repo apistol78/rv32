@@ -3,12 +3,12 @@
 
 // DIV
 if (`EXECUTE_OP == OP_DIV) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		div_signed <= 1;
 		div_numerator <= `RS1;
 		div_denominator <= `RS2;
 	end
-	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
 	end
@@ -16,12 +16,12 @@ end
 
 // DIVU
 else if (`EXECUTE_OP == OP_DIVU) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		div_signed <= 0;
 		div_numerator <= `RS1;
 		div_denominator <= `RS2;
 	end
-	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_result[31:0];
 		`EXECUTE_DONE;
 	end
@@ -29,12 +29,12 @@ end
 
 // MUL
 else if (`EXECUTE_OP == OP_MUL) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		mul_signed <= 1;
 		mul_op1 <= `RS1;
 		mul_op2 <= `RS2;
 	end
-	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[31:0];
 		`EXECUTE_DONE;
 	end
@@ -42,12 +42,12 @@ end
 
 // MULH
 else if (`EXECUTE_OP == OP_MULH) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		mul_signed <= 1;
 		mul_op1 <= `RS1;
 		mul_op2 <= `RS2;
 	end
-	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
@@ -55,12 +55,12 @@ end
 
 // MULHU
 else if (`EXECUTE_OP == OP_MULHU) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		mul_signed <= 0;
 		mul_op1 <= `RS1;
 		mul_op2 <= `RS2;
 	end
-	else if (`CYCLE == `MUL_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `MUL_CYCLE_LATENCY) begin
 		`RD <= mul_result[63:32];
 		`EXECUTE_DONE;
 	end
@@ -68,12 +68,12 @@ end
 
 // REM
 else if (`EXECUTE_OP == OP_REM) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		div_signed <= 1;
 		div_numerator <= `RS1;
 		div_denominator <= `RS2;
 	end
-	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
@@ -81,12 +81,12 @@ end
 
 // REMU
 else if (`EXECUTE_OP == OP_REMU) begin
-	if (`CYCLE == 0) begin
+	/* if (`CYCLE == 0) begin
 		div_signed <= 0;
 		div_numerator <= `RS1;
 		div_denominator <= `RS2;
 	end
-	else if (`CYCLE == `DIV_CYCLE_LATENCY) begin
+	else */ if (`CYCLE == `DIV_CYCLE_LATENCY) begin
 		`RD <= div_remainder[31:0];
 		`EXECUTE_DONE;
 	end
