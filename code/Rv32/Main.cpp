@@ -104,21 +104,22 @@ int main(int argc, const char** argv)
 	Unknown gpio(L"GPIO", true);
 	Unknown i2c(L"I2C", true);
 	Unknown sd(L"SD", true);
+	Unknown dma(L"DMA", true);
 	Unknown tmr(L"TIMER", true);
 
 	Bus bus;
 	// bus.map(0x00000000, 0x00010000, &rom);
 	// bus.map(0x00010000, 0x00010400, &ram);
-	bus.map(0x00000000, 0x10000000, &ram);
-	bus.map(0x10000000, 0x10400000, &sram);
-	bus.map(0x20000000, 0x40000000, &sdram);
-	bus.map(0x40000000, 0x50000000, &video);
-	bus.map(0x50000000, 0x50000010, &led);
-	bus.map(0x50000010, 0x50000020, &uart);
-	bus.map(0x50000020, 0x50000030, &gpio);
-	bus.map(0x50000030, 0x50000040, &i2c);
-	bus.map(0x50000040, 0x50000050, &sd);
-	bus.map(0x60000000, 0x60000100, &tmr);
+	bus.map(0x00000000, 0x20000000, &ram);
+	bus.map(0x20000000, 0x30000000, &sdram);
+	bus.map(0x30000000, 0x40000000, &video);
+	bus.map(0x40000000, 0x50000000, &led);
+	bus.map(0x50000000, 0x60000000, &uart);
+	bus.map(0x60000000, 0x70000000, &gpio);
+	bus.map(0x70000000, 0x80000000, &i2c);
+	bus.map(0x80000000, 0x90000000, &sd);
+	bus.map(0x90000000, 0xa0000000, &dma);
+	bus.map(0xa0000000, 0xb0000000, &tmr);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
