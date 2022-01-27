@@ -122,7 +122,10 @@ bool loadELF(VSoC* soc, const std::wstring& fileName)
 	}
 
 	if (start != -1)
+	{
 		soc->SoC__DOT__cpu__DOT__fetch__DOT__pc = start;
+		soc->SoC__DOT__cpu__DOT__fetch__DOT__next_pc = start;
+	}
 
 	return true;
 }
