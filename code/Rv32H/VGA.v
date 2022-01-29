@@ -13,16 +13,16 @@ module VGA #(
 	output wire [8:0] o_pos_y,
 	output reg o_vga_clock
 );
-	parameter hori_line  = 800;
-	parameter hori_back  = 144;
-	parameter hori_front = 16;
+	localparam hori_line  = 800;
+	localparam hori_back  = 144;
+	localparam hori_front = 16;
 	
-	parameter vert_line  = 449;
-	parameter vert_back  = 36;
-	parameter vert_front = 13;
+	localparam vert_line  = 449;
+	localparam vert_back  = 36;
+	localparam vert_front = 13;
 	
-	parameter H_sync_cycle = 96;
-	parameter V_sync_cycle = 2;
+	localparam H_sync_cycle = 96;
+	localparam V_sync_cycle = 2;
 	
 	reg [3:0] prescale = 0;
 	reg [9:0] vga_h = 0;

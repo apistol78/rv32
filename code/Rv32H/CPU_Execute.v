@@ -37,7 +37,7 @@ module CPU_Execute (
 	input wire [4:0] i_op,
 	
 	// Output
-	output reg [`TAG_SIZE] o_tag,
+	output wire [`TAG_SIZE] o_tag,
 	output wire [4:0] o_inst_rd,
 	output wire [31:0] o_rd,
 	output wire [31:0] o_pc_next,
@@ -52,11 +52,18 @@ module CPU_Execute (
 	output wire o_stall
 );
 
-	// Request process.
-	initial o_tag = 0;
-	always @(posedge csr_ready or posedge ib_ready) begin
-		o_tag <= i_tag;
+	
+	reg [`TAG_SIZE] tag;
+
+	always @(posedge i_clock) begin
+		if (csr_ready || ib_ready) begin
+			tag <= i_tag;
+		end
 	end
+	
+	assign o_tag = (csr_ready || ib_ready) ? i_tag : tag;
+	
+	
 	wire request = !i_stall && (i_tag != o_tag);
 	
 

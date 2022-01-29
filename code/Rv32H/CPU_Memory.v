@@ -162,6 +162,7 @@ module CPU_Memory(
 						4: next_o_rd = dcache_rdata;
 						2: next_o_rd = { { 16{ i_mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
 						1: next_o_rd = { { 24{ i_mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
+						default: next_o_rd = 0;
 					endcase
 					next_o_inst_rd = i_inst_rd;
 

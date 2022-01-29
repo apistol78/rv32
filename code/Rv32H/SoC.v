@@ -658,7 +658,7 @@ module SoC(
 `endif
 
 	assign dma_select = bus_address[31:28] == 4'h9;
-	assign dma_address = bus_address[4:2];
+	assign dma_address = bus_address[3:2];
 
 	assign timer_select = bus_address[31:28] == 4'ha;
 	assign timer_address = bus_address[4:2];
