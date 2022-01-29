@@ -182,26 +182,38 @@ else if ((word & 0x0000707f) == 0x00001063)
 else if ((word & 0x0000707f) == 0x00003073)
 {
 	TRACE(L"	CSRRC");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			auto f = parseFormatCSR(word);
+			uint32_t data = readCSR(f.csr);
+			uint32_t tmp = R_u(f.rs1);
+			R_u(f.rd) = data;
+			writeCSR(f.csr, R_u(f.rd) & !tmp);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00007073)
 {
 	TRACE(L"	CSRRCI");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			log::info << L"CSRRCI" << Endl;
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00002073)
 {
 	TRACE(L"	CSRRS");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			auto f = parseFormatCSR(word);
+			uint32_t data = readCSR(f.csr);
+			uint32_t tmp = R_u(f.rs1);
+			R_u(f.rd) = data;
+			writeCSR(f.csr, R_u(f.rd) | tmp);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00006073)
 {
 	TRACE(L"	CSRRSI");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			log::info << L"CSRRSI" << Endl;
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00001073)
 {
@@ -215,8 +227,9 @@ else if ((word & 0x0000707f) == 0x00001073)
 else if ((word & 0x0000707f) == 0x00005073)
 {
 	TRACE(L"	CSRRWI");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			log::info << L"CSRRWI" << Endl;
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x02004033)
 {
@@ -628,8 +641,10 @@ else if ((word & 0xfe00707f) == 0x0200003b)
 else if ((word & 0xffffffff) == 0x30200073)
 {
 	TRACE(L"	MRET");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			PC_NEXT = readCSR(CSR::MEPC);
+			log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x00006033)
 {
@@ -909,8 +924,9 @@ else if ((word & 0xffffffff) == 0x00200073)
 else if ((word & 0xffffffff) == 0x10500073)
 {
 	TRACE(L"	WFI");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			m_waitForInterrupt = true;
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x00004033)
 {

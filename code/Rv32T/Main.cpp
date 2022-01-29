@@ -17,6 +17,7 @@
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/SafeDestroy.h>
 #include <Core/Misc/String.h>
+#include <Core/Timer/Timer.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
 #include <Ui/Button.h>
@@ -133,6 +134,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName)
 int main(int argc, const char **argv)
 {
 	CommandLine cmdLine(argc, argv);
+	Timer timer;
 
 #if defined(_WIN32)
 	ui::Application::getInstance()->initialize(
@@ -166,19 +168,33 @@ int main(int argc, const char **argv)
 #endif
 
 	bool trace = false;
+	bool key1 = false;
+	bool speed = true;
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
 	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
 
 	Ref< ui::Container > container = new ui::Container();
-	container->create(form, ui::WsNone, new ui::TableLayout(L"*", L"*", 0, 4));
+	container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*", L"*", 0, 4));
 
 	Ref< ui::Button > buttonTrace = new ui::Button();
 	buttonTrace->create(container, L"Trace");
 	buttonTrace->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
 		buttonTrace->setEnable(false);
 		trace = true;
+	});
+
+	Ref< ui::Button > buttonKey1 = new ui::Button();
+	buttonKey1->create(container, L"KEY1");
+	buttonKey1->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+		key1 = true;
+	});
+
+	Ref< ui::Button > buttonSpeed = new ui::Button();
+	buttonSpeed->create(container, L"Fast/Slow");
+	buttonSpeed->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+		speed = !speed;
 	});
 
 	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(640, 480);
@@ -227,6 +243,9 @@ int main(int argc, const char **argv)
 	uint32_t busActiveCount = 0;
 	uint32_t lastBusActiveCount = 0;
 
+	int32_t Tp = 0;
+
+	timer.reset();
 	while (g_going)
 	{
 		if (!ui::Application::getInstance()->process())
@@ -241,10 +260,15 @@ int main(int argc, const char **argv)
 			trace = false;	
 		}
 
-		for (int32_t i = 0; i < 200000; ++i)
+		int32_t Tc = (int32_t)(timer.getElapsedTime() * 10);
+		uint32_t count = !speed ? std::min< int32_t >(Tc - Tp, 100) : 200000;
+		Tp = Tc;
+		
+		for (int32_t i = 0; i < count; ++i)
 		{
 			++time;
 			soc->CLOCK_125_p = 0;
+			soc->KEY |= key1 ? 2 : 0;
 
 			soc->eval();
 
@@ -253,6 +277,7 @@ int main(int argc, const char **argv)
 
 			++time;
 			soc->CLOCK_125_p = 1;
+			soc->KEY |= key1 ? 2 : 0;
 
 			soc->eval();
 
@@ -278,25 +303,31 @@ int main(int argc, const char **argv)
 			// Count number of cycles bus is active.
 			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 				++busActiveCount;
+
+			key1 = false;
 		}
 
-		framebuffer->copyImage(hdmi.getImage());
-		image->setImage(framebuffer);
+		if ((Tc % 10) == 0)
+		{
+			framebuffer->copyImage(hdmi.getImage());
+			image->setImage(framebuffer);
 
-		uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-		uint32_t dr = soc->SoC__DOT__cpu_retire_count - lastRetired;
-		uint32_t db = busActiveCount - lastBusActiveCount;
-		form->setText(
-			str(
-				L"RV32 - %.2f IPC - %.2f%% BUS",
-				((double)dr) / dc,
-				((double)db * 100.0) / dc
-			)
-		);
+			uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+			uint32_t dr = soc->SoC__DOT__cpu_retire_count - lastRetired;
+			uint32_t db = busActiveCount - lastBusActiveCount;
+			form->setText(
+				str(
+					L"RV32 - %.2f IPC - %.2f%% BUS - %08x PC",
+					((double)dr) / dc,
+					((double)db * 100.0) / dc,
+					soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
+				)
+			);
 
-		lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-		lastRetired = soc->SoC__DOT__cpu_retire_count;
-		lastBusActiveCount = busActiveCount;
+			lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+			lastRetired = soc->SoC__DOT__cpu_retire_count;
+			lastBusActiveCount = busActiveCount;
+		}
 	}
 
 	log::info << Endl;

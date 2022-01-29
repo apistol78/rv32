@@ -2,42 +2,35 @@
 
 uint32_t timer_get_ms()
 {
-    return *TIMER_MS;
+	return *TIMER_MS;
 }
 
 void timer_wait_ms(uint32_t ms)
 {
-    uint32_t until = timer_get_ms() + ms;
-    while (timer_get_ms() < until)
-        ;
+	uint32_t until = timer_get_ms() + ms;
+	while (timer_get_ms() < until)
+		;
 }
 
-uint32_t timer_get_cycles()
+uint64_t timer_get_cycles()
 {
-    return *TIMER_CYCLES;
+	uint32_t mtimeh;
+	uint32_t mtimel;
+	do
+	{
+		mtimeh = *TIMER_CYCLES_H;
+		mtimel = *TIMER_CYCLES_L;
+	}
+	while (mtimeh != *TIMER_CYCLES_H);
+	return (uint64_t)(
+		(((uint64_t)mtimeh) << 32) | mtimel
+	);
 }
 
-uint32_t timer_get_retire()
+void timer_set_compare(uint64_t offset)
 {
-    return *TIMER_RETIRE;
-}
-
-uint32_t timer_get_icache_hit()
-{
-    return *TIMER_ICACHE_HIT;
-}
-
-uint32_t timer_get_icache_miss()
-{
-    return *TIMER_ICACHE_MISS;
-}
-
-uint32_t timer_get_dcache_hit()
-{
-    return *TIMER_DCACHE_HIT;
-}
-
-uint32_t timer_get_dcache_miss()
-{
-    return *TIMER_DCACHE_MISS;
+	uint64_t tc = timer_get_cycles() + offset;
+	*TIMER_COMPARE_H = 0xFFFFFFFF;
+	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
 }

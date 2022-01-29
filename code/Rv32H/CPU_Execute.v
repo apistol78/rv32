@@ -5,7 +5,10 @@
 module CPU_Execute (
 	input wire i_reset,
 	input wire i_clock,
+
+	// Control
 	input wire i_stall,
+	input wire i_interrupt,
 
 	// Input
 	input wire [`TAG_SIZE] i_tag,
@@ -20,6 +23,7 @@ module CPU_Execute (
 	input wire i_compare,
 	input wire i_jump,
 	input wire i_jump_conditional,
+	input wire i_csr,
 
 	input wire [3:0] i_alu_operation,
 	input wire [2:0] i_alu_operand1,
@@ -34,184 +38,131 @@ module CPU_Execute (
 	
 	// Output
 	output reg [`TAG_SIZE] o_tag,
-	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_rd,
-	output reg [31:0] o_pc_next,
-	output reg o_mem_read,
-	output reg o_mem_write,
-	output reg [2:0] o_mem_width,
-	output reg o_mem_signed,
-	output reg [31:0] o_mem_address,
+	output wire [4:0] o_inst_rd,
+	output wire [31:0] o_rd,
+	output wire [31:0] o_pc_next,
+	output wire o_mem_read,
+	output wire o_mem_write,
+	output wire [2:0] o_mem_width,
+	output wire o_mem_signed,
+	output wire [31:0] o_mem_address,
+	output wire o_branch,
+	output wire [31:0] o_branch_pc,
 
 	output wire o_stall
 );
 
-	`include "Instructions_ops.v"
-
-	// Alias symbols for generated code.
-	`undef PC
-	`undef RS1
-	`undef RS2
-	`undef PD
-	`undef IMM
-	`undef ZERO
-	`define PC		i_pc
-	`define RS1		i_rs1
-	`define RS2		i_rs2
-	`define RD		o_rd
-	`define IMM		i_imm
-	`define ZERO	0
-
-	`define GOTO(ADDR) 				\
-		o_pc_next <= ADDR;
-	
-	`define CYCLE					\
-		cycle
-
-	`define EXECUTE_OP				\
-		i_op
-
-	`define EXECUTE_DONE			\
-		o_tag <= i_tag;				\
-		cycle <= 0;
-
-	reg [4:0] cycle;
-	
-	wire [31:0] alu_operand1 =
-		(i_alu_operand1 == 3'd0) ? `ZERO :
-		(i_alu_operand1 == 3'd1) ? `RS1 :
-		(i_alu_operand1 == 3'd2) ? `RS2 :
-		(i_alu_operand1 == 3'd3) ? `PC  :
-		(i_alu_operand1 == 3'd4) ? `IMM :
-		32'd0;
-
-	wire [31:0] alu_operand2 =
-		(i_alu_operand2 == 3'd0) ? `ZERO :
-		(i_alu_operand2 == 3'd1) ? `RS1 :
-		(i_alu_operand2 == 3'd2) ? `RS2 :
-		(i_alu_operand2 == 3'd3) ? `PC  :
-		(i_alu_operand2 == 3'd4) ? `IMM :
-		32'd0;
-
-	wire [31:0] alu_result;
-	wire alu_compare_result;
-	CPU_ALU alu(
-		.i_op(i_alu_operation),
-		.i_op1(alu_operand1),
-		.i_op2(alu_operand2),
-		.o_result(alu_result),
-		.o_compare_result(alu_compare_result)
-	);
-
-	wire mul_signed = 
-		(`EXECUTE_OP == OP_MUL) ||
-		(`EXECUTE_OP == OP_MULH);
-
-	//reg [31:0] mul_op1;
-	//reg [31:0] mul_op2;
-	wire [63:0] mul_result;
-	CPU_Multiply multiply(
-		.i_clock(i_clock),
-		.i_signed(mul_signed),
-		.i_op1(`RS1), //mul_op1),
-		.i_op2(`RS2), //mul_op2),
-		.o_result(mul_result)
-	);
-
-	wire div_signed =
-		(`EXECUTE_OP == OP_DIV) ||
-		(`EXECUTE_OP == OP_REM);
-
-	// reg [31:0] div_numerator;
-	// reg [31:0] div_denominator;
-	wire [31:0] div_result;
-	wire [31:0] div_remainder;
-	CPU_Divide divide(
-		.i_clock(i_clock),
-		.i_signed(div_signed),
-		.i_numerator(`RS1), //div_numerator),
-		.i_denominator(`RS2), //div_denominator),
-		.o_result(div_result),
-		.o_remainder(div_remainder)
-	);
-
-	initial begin
-		o_inst_rd = 0;
-		o_pc_next = 0;
-		o_mem_read = 0;
-		o_mem_write = 0;
-		o_mem_width = 0;
-		o_mem_signed = 0;
-		o_mem_address = 0;
-		o_tag = 0;
-		cycle = 0;
+	// Request process.
+	initial o_tag = 0;
+	always @(posedge csr_ready or posedge ib_ready) begin
+		o_tag <= i_tag;
 	end
-
-	wire is_complex = !i_arithmetic && !i_compare && !i_jump && !i_jump_conditional && !i_memory_read && !i_memory_write;
-	assign o_stall = (i_tag != o_tag) && is_complex;
+	wire request = !i_stall && (i_tag != o_tag);
 	
-	wire [31:0] jump_conditional_target = $signed(`PC) + $signed(`IMM);
-	wire [31:0] next_target = `PC + 4;
 
-	always @(posedge i_clock) begin
-		if (i_reset) begin
-			o_inst_rd <= 0;
-			o_pc_next <= 0;
-			o_mem_read <= 0;
-			o_mem_write <= 0;
-			o_mem_width <= 0;
-			o_mem_signed <= 0;
-			o_mem_address <= 0;
-			o_tag <= 0;
-			cycle <= 0;
-		end
-		else begin
-			if (!i_stall && i_tag != o_tag) begin
-				o_pc_next <= next_target;
-				o_inst_rd <= i_inst_rd;
+	assign o_inst_rd = csr_csr ? csr_inst_rd : ib_inst_rd;
+	assign o_rd = csr_csr ? csr_rd : ib_rd;
+	assign o_pc_next = ib_pc_next;
+	assign o_mem_read = ib_mem_read;
+	assign o_mem_write = ib_mem_write;
+	assign o_mem_width = ib_mem_width;
+	assign o_mem_signed = ib_mem_signed;
+	assign o_mem_address = ib_mem_address;
+	assign o_branch = csr_branch;
+	assign o_branch_pc = csr_branch_pc;
+	assign o_stall = ib_stall;
 
-				o_mem_address <= alu_result;
-				o_mem_read <= i_memory_read;
-				o_mem_write <= i_memory_write;
-				o_mem_width <= i_memory_width;
-				o_mem_signed <= i_memory_signed;
+	// =============
+	// CSR
 
-				cycle <= cycle + 1;
+	wire csr_ready;
+	wire [4:0] csr_inst_rd;
+	wire [31:0] csr_rd;
+	wire csr_csr;
+	wire csr_branch;
+	wire [31:0] csr_branch_pc;
 
-				if (i_arithmetic) begin
-					`RD <= alu_result;
-					`EXECUTE_DONE;
-				end
-				else if (i_compare) begin
-					`RD <= { 31'b0, alu_compare_result };
-					`EXECUTE_DONE;
-				end
-				else if (i_jump) begin
-					`RD <= next_target;
-					`GOTO(alu_result);
-					`EXECUTE_DONE;
-				end
-				else if (i_jump_conditional) begin
-					if (alu_compare_result) begin
-						`GOTO(jump_conditional_target);
-					end
-					`EXECUTE_DONE;
-				end
-				else if (i_memory_read) begin
-					`EXECUTE_DONE;
-				end
-				else if (i_memory_write) begin
-					`RD <=`RS2;
-					`EXECUTE_DONE;
-				end
-				else begin
-					// Note, input values are only valid in first cycle so
-					// in case of multicycle operations the inputs must be
-					// stored in temporary registers.
-					`include "Instructions_execute_ops.v"
-				end
-			end
-		end
-	end
+	CPU_CSR csr(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+
+		// Control
+		.i_interrupt(i_interrupt),
+
+		// Input from decode.
+		.i_request(request),
+		.i_pc(i_pc),
+		.i_rs1(i_rs1),
+		.i_rs2(i_rs2),
+		.i_inst_rd(i_inst_rd),
+		.i_imm(i_imm),
+		.i_csr(i_csr),
+		.i_op(i_op),
+
+		// Output from CSR.
+		.o_ready(csr_ready),
+		.o_inst_rd(csr_inst_rd),
+		.o_rd(csr_rd),
+		.o_csr(csr_csr),
+		.o_branch(csr_branch),
+		.o_branch_pc(csr_branch_pc)
+	);
+
+	// =============
+	// INTEGER/BRANCH
+
+	wire ib_ready;
+	wire [4:0] ib_inst_rd;
+	wire [31:0] ib_rd;
+	wire [31:0] ib_pc_next;
+	wire ib_mem_read;
+	wire ib_mem_write;
+	wire [2:0] ib_mem_width;
+	wire ib_mem_signed;
+	wire [31:0] ib_mem_address;
+	wire [31:0] ib_mem_wdata;
+	wire ib_stall;
+	
+	CPU_IB execute(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+
+		// Input from decode.
+		.i_request(request && !i_csr),
+		.i_pc(i_pc),
+		.i_instruction(i_instruction),
+		.i_rs1(i_rs1),
+		.i_rs2(i_rs2),
+		.i_inst_rd(i_inst_rd),
+		.i_imm(i_imm),
+
+		.i_arithmetic(i_arithmetic),
+		.i_compare(i_compare),
+		.i_jump(i_jump),
+		.i_jump_conditional(i_jump_conditional),
+
+		.i_alu_operation(i_alu_operation),
+		.i_alu_operand1(i_alu_operand1),
+		.i_alu_operand2(i_alu_operand2),
+
+		.i_memory_read(i_memory_read),
+		.i_memory_write(i_memory_write),
+		.i_memory_width(i_memory_width),
+		.i_memory_signed(i_memory_signed),
+
+		.i_op(i_op),
+
+		// Output from execute.
+		.o_ready(ib_ready),
+		.o_inst_rd(ib_inst_rd),
+		.o_rd(ib_rd),
+		.o_pc_next(ib_pc_next),
+		.o_mem_read(ib_mem_read),
+		.o_mem_write(ib_mem_write),
+		.o_mem_width(ib_mem_width),
+		.o_mem_signed(ib_mem_signed),
+		.o_mem_address(ib_mem_address),
+		.o_stall(ib_stall)
+	);
 
 endmodule

@@ -25,6 +25,7 @@ module CPU_Decode(
 	output reg o_compare,
 	output reg o_jump,
 	output reg o_jump_conditional,
+	output reg o_csr,
 
 	output reg [3:0] o_alu_operation,
 	output reg [2:0] o_alu_operand1,
@@ -64,10 +65,11 @@ module CPU_Decode(
 	wire [31:0] inst_S_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:25], `INSTRUCTION[11:7] };
 	wire [31:0] inst_U_imm = { `INSTRUCTION[31:12], 12'b0 };
 	wire [31:0] inst_R_imm = { 26'b0, `INSTRUCTION[25:20] };
+	wire [31:0] inst_CSR_imm = { 20'b0, `INSTRUCTION[31:20] };
 	
-	wire have_RS1 = is_B | is_I | is_R | is_S;
+	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
 	wire have_RS2 = is_B | is_R | is_S;
-	wire have_RD  = is_I | is_J | is_R | is_U;
+	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
 	initial begin
 		o_tag = 0;
@@ -94,12 +96,14 @@ module CPU_Decode(
 					is_S ? inst_S_imm :
 					is_U ? inst_U_imm :
 					is_R ? inst_R_imm :
+					is_CSR ? inst_CSR_imm :
 					32'h0;
 				
 				o_arithmetic <= is_ARITHMETIC;
 				o_compare <= is_COMPARE;
 				o_jump <= is_JUMP;
 				o_jump_conditional <= is_JUMP_CONDITIONAL;
+				o_csr <= is_CSR;
 
 				o_alu_operation <= alu_operation;
 				o_alu_operand1 <= alu_operand1;

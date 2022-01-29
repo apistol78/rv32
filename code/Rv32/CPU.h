@@ -14,6 +14,13 @@ class Bus;
 class DCache;
 class ICache;
 
+enum CSR
+{
+    MTVEC = 0x305,
+    MEPC = 0x341,
+    MCAUSE = 0x342
+};
+
 class CPU : public traktor::Object
 {
     T_RTTI_CLASS;
@@ -25,7 +32,7 @@ public:
 
     void setSP(uint32_t sp);
 
-    bool tick();
+    bool tick(bool interrupt);
 
     uint32_t pc() const { return m_pc; }
 
@@ -39,6 +46,8 @@ private:
     uint32_t m_pc;
     uint32_t m_next;
     uint32_t m_registers[32];
+    uint32_t m_csr[4096];
+    bool m_waitForInterrupt;
 
     bool decode(uint32_t word);
 

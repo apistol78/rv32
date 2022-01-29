@@ -506,18 +506,19 @@ module SoC(
 	wire [2:0] timer_address;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
+	wire timer_interrupt;
 	Timer #(
 		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(timer_select && bus_request),
+		.i_rw(bus_rw),
 		.i_address(timer_address),
+		.i_wdata(bus_wdata),
 		.o_rdata(timer_rdata),
 		.o_ready(timer_ready),
-		
-		// Debug
-		.i_retire_count(cpu_retire_count)
+		.o_interrupt(timer_interrupt)
 	);
 	
 	//====================================================
@@ -596,6 +597,9 @@ module SoC(
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
+
+		// Control
+		.i_interrupt(timer_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),

@@ -6,6 +6,9 @@ module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,					// CPU clock
 
+	// Control
+	input wire i_interrupt,
+
 	// Instruction bus
 	output wire o_ibus_request,			// IO request.
 	input wire i_ibus_ready,			// IO request ready.
@@ -61,7 +64,11 @@ module CPU_v2 (
 	CPU_Fetch fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
+
+		// Control
 		.i_stall(memory_stall || execute_stall),
+		.i_csr_branch(execute_branch),
+		.i_csr_branch_pc(execute_branch_pc),
 
 		// Bus
 		.o_bus_request(o_ibus_request),
@@ -94,6 +101,7 @@ module CPU_v2 (
 	wire decode_compare;
 	wire decode_jump;
 	wire decode_jump_conditional;
+	wire decode_csr;
 
 	wire [3:0] decode_alu_operation;
 	wire [2:0] decode_alu_operand1;
@@ -129,6 +137,7 @@ module CPU_v2 (
 		.o_compare(decode_compare),
 		.o_jump(decode_jump),
 		.o_jump_conditional(decode_jump_conditional),
+		.o_csr(decode_csr),
 
 		.o_alu_operation(decode_alu_operation),
 		.o_alu_operand1(decode_alu_operand1),
@@ -171,12 +180,17 @@ module CPU_v2 (
 	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
 	wire [31:0] execute_mem_wdata;
+	wire execute_branch;
+	wire [31:0] execute_branch_pc;
 	wire execute_stall;
 	
 	CPU_Execute execute(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
+
+		// Control
 		.i_stall(memory_stall),
+		.i_interrupt(i_interrupt),
 
 		// Input from decode.
 		.i_tag(decode_tag),
@@ -191,6 +205,7 @@ module CPU_v2 (
 		.i_compare(decode_compare),
 		.i_jump(decode_jump),
 		.i_jump_conditional(decode_jump_conditional),
+		.i_csr(decode_csr),
 
 		.i_alu_operation(decode_alu_operation),
 		.i_alu_operand1(decode_alu_operand1),
@@ -213,6 +228,8 @@ module CPU_v2 (
 		.o_mem_width(execute_mem_width),
 		.o_mem_signed(execute_mem_signed),
 		.o_mem_address(execute_mem_address),
+		.o_branch(execute_branch),
+		.o_branch_pc(execute_branch_pc),
 		.o_stall(execute_stall)
 	);
 

@@ -20,11 +20,9 @@
 #define DMA_RUN			 	(volatile uint32_t*)0x9000000c
 
 #define TIMER_MS            (volatile uint32_t*)0xa0000000
-#define TIMER_CYCLES        (volatile uint32_t*)0xa0000004
-#define TIMER_RETIRE        (volatile uint32_t*)0xa0000008
-#define TIMER_ICACHE_HIT    (volatile uint32_t*)0xa000000c
-#define TIMER_ICACHE_MISS   (volatile uint32_t*)0xa0000010
-#define TIMER_DCACHE_HIT    (volatile uint32_t*)0xa0000014
-#define TIMER_DCACHE_MISS   (volatile uint32_t*)0xa0000018
+#define TIMER_CYCLES_L      (volatile uint32_t*)0xa0000004
+#define TIMER_CYCLES_H      (volatile uint32_t*)0xa0000008
+#define TIMER_COMPARE_L     (volatile uint32_t*)0xa000000c
+#define TIMER_COMPARE_H     (volatile uint32_t*)0xa0000010
 
 #define NO_OPTIMIZE __attribute__((optimize("O0")))

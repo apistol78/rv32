@@ -170,6 +170,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 ,	m_icache(new ICache(bus))
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
+,	m_waitForInterrupt(false)
 {
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
 		m_registers[i] = 0x00000000;
@@ -187,8 +188,26 @@ void CPU::setSP(uint32_t sp)
 	m_registers[2] = sp;
 }
 
-bool CPU::tick()
+bool CPU::tick(bool interrupt)
 {
+	// Check if CPU in low power mode and
+	// are waiting for interrupt.
+	if (m_waitForInterrupt && !interrupt)
+		return true;
+
+	if (interrupt)
+	{
+		log::info << str(L"%08x", m_pc) << Endl;
+
+		writeCSR(CSR::MEPC, m_pc);
+		writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
+
+		const uint32_t mtvec = readCSR(CSR::MTVEC);
+		m_pc = mtvec;
+
+		m_waitForInterrupt = false;
+	}
+
 	uint32_t word = m_icache->readU32(m_pc);
 
 	if (m_trace)
@@ -224,9 +243,12 @@ bool CPU::decode(uint32_t word)
 
 uint32_t CPU::readCSR(uint16_t csr) const
 {
-	return 0;
+	log::info << L"read CSR " << str(L"%03x", csr) << Endl;
+	return m_csr[csr];
 }
 
 void CPU::writeCSR(uint16_t csr, uint32_t value)
 {
+	log::info << L"write CSR " << str(L"%03x", csr) << L" <= " << str(L"%08x", value) << Endl;
+	m_csr[csr] = value;
 }

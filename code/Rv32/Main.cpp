@@ -201,11 +201,13 @@ int main(int argc, const char** argv)
 
 			for (int32_t i = 0; i < 10000; ++i)
 			{
+				bool interrupt = (i == 10000 - 1);
+
 				if (dbg_pc.full())
 					dbg_pc.pop_front();
 				dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
-				if (!cpu.tick())
+				if (!cpu.tick(interrupt))
 				{
 					g_going = false;
 					break;
@@ -231,7 +233,7 @@ int main(int argc, const char** argv)
 				dbg_pc.pop_front();
 			dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
-			if (!cpu.tick())
+			if (!cpu.tick(false))
 			{
 				g_going = false;
 				break;

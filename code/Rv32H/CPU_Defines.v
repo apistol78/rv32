@@ -28,3 +28,15 @@
 `define OP_NOT_EQUAL                13
 `define OP_SIGNED_GREATER_EQUAL     14
 `define OP_UNSIGNED_GREATER_EQUAL   15
+
+// CSR registers
+`define CSR_MIE			12'h304
+`define CSR_MTVEC		12'h305
+`define CSR_MEPC		12'h341
+`define CSR_MCAUSE		12'h342
+`define CSR_MIP			12'h343
+
+`define CSR_MVENDORID	12'hf11
+`define CSR_MARCHID		12'hf12
+`define CSR_MIMPID		12'hf13
+`define CSR_MHARTID		12'hf14
