@@ -52,21 +52,18 @@ module CPU_Execute (
 	output wire o_stall
 );
 
-	
+	// Process control.	
 	reg [`TAG_SIZE] tag;
-
 	always @(posedge i_clock) begin
 		if (csr_ready || ib_ready) begin
 			tag <= i_tag;
 		end
 	end
-	
 	assign o_tag = (csr_ready || ib_ready) ? i_tag : tag;
-	
-	
-	wire request = !i_stall && (i_tag != o_tag);
-	
 
+	wire request = !i_stall && (i_tag != o_tag);
+
+	// Output result from execute processes.
 	assign o_inst_rd = csr_csr ? csr_inst_rd : ib_inst_rd;
 	assign o_rd = csr_csr ? csr_rd : ib_rd;
 	assign o_pc_next = ib_pc_next;
