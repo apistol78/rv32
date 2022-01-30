@@ -2,6 +2,7 @@
 #include <Core/Io/IStream.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
+#include "Rv32T/CRC.h"
 #include "Rv32T/SD.h"
 
 // Verilated SoC
@@ -133,8 +134,7 @@ void SD::process()
 		m_response[0] = 8;
 		m_response[3] = m_cmd[3];
 		m_response[4] = m_cmd[4];
-		//m_response[5] = (crc) << 1;
-		m_response[5] |= 0x01;
+		m_response[5] = (crc7(0, m_response, 5) << 1) | 0x01;
 	}
 	else if (c == (0x40 | 55))    // cmd55
 	{
@@ -142,8 +142,7 @@ void SD::process()
 
 		// 6 bytes resp
 		m_response[0] = 55;
-		//m_response[5] = (crc) << 1;
-		m_response[5] |= 0x01;
+		m_response[5] = (crc7(0, m_response, 5) << 1) | 0x01;
 	}
 	else if (c == (0x40 | 41))    // acmd41
 	{

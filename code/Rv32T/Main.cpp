@@ -169,7 +169,10 @@ int main(int argc, const char **argv)
 
 	bool trace = false;
 	bool key1 = false;
-	bool speed = true;
+	bool slow = false;
+
+	if (cmdLine.hasOption(L"slow"))
+		slow = true;
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
@@ -194,7 +197,7 @@ int main(int argc, const char **argv)
 	Ref< ui::Button > buttonSpeed = new ui::Button();
 	buttonSpeed->create(container, L"Fast/Slow");
 	buttonSpeed->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		speed = !speed;
+		slow = !slow;
 	});
 
 	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(640, 480);
@@ -260,8 +263,8 @@ int main(int argc, const char **argv)
 			trace = false;	
 		}
 
-		int32_t Tc = (int32_t)(timer.getElapsedTime() * 10);
-		uint32_t count = !speed ? std::min< int32_t >(Tc - Tp, 100) : 200000;
+		int32_t Tc = (int32_t)(timer.getElapsedTime() * 1000);
+		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 200000;
 		Tp = Tc;
 		
 		for (int32_t i = 0; i < count; ++i)
@@ -307,26 +310,29 @@ int main(int argc, const char **argv)
 			key1 = false;
 		}
 
-		if ((Tc % 10) == 0)
+		if ((Tc % 1000) == 0)
 		{
 			framebuffer->copyImage(hdmi.getImage());
 			image->setImage(framebuffer);
 
 			uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-			uint32_t dr = soc->SoC__DOT__cpu_retire_count - lastRetired;
+			uint32_t dr = 0; // soc->SoC__DOT__cpu_retire_count - lastRetired;
 			uint32_t db = busActiveCount - lastBusActiveCount;
-			form->setText(
-				str(
-					L"RV32 - %.2f IPC - %.2f%% BUS - %08x PC",
-					((double)dr) / dc,
-					((double)db * 100.0) / dc,
-					soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
-				)
-			);
+			if (dc > 0)
+			{
+				form->setText(
+					str(
+						L"RV32 - %.2f IPC - %.2f%% BUS - %08x PC",
+						((double)dr) / dc,
+						((double)db * 100.0) / dc,
+						soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
+					)
+				);
 
-			lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-			lastRetired = soc->SoC__DOT__cpu_retire_count;
-			lastBusActiveCount = busActiveCount;
+				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+				lastRetired = 0; // soc->SoC__DOT__cpu_retire_count;
+				lastBusActiveCount = busActiveCount;
+			}
 		}
 	}
 
@@ -334,9 +340,8 @@ int main(int argc, const char **argv)
 	log::info << L"--- Terminated ---" << Endl;
 	log::info << L"PC     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
 	log::info << L"CYCLES : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
-	log::info << L"RETIRE : " << soc->SoC__DOT__cpu_retire_count << Endl;
+	// log::info << L"RETIRE : " << soc->SoC__DOT__cpu_retire_count << Endl;
 	log::info << L"BUS    : " << busActiveCount << L", " << (busActiveCount * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
-
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
 
 	if (tfp)
