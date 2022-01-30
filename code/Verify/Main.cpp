@@ -69,6 +69,7 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 #define S2 18
 #define S3 19
 #define A2 12
+#define RA 1
 
 int32_t rnd32()
 {
@@ -486,6 +487,29 @@ bool verify_JAL(const char* trace)
 
 bool verify_JALR(const char* trace)
 {
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x00c00413;	// li	s0,12
+	tb->SoC__DOT__rom__DOT__data[1] = 0x000400e7;	// jalr	s0
+	tb->SoC__DOT__rom__DOT__data[2] = 0x00100493;	// li	s1,1
+	tb->SoC__DOT__rom__DOT__data[3] = 0x00200493;	// li	s1,2
+
+	evaluate(tb, trace, 3);
+
+	// printf("RA %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[RA]);
+	// printf("S1 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1]);
+	// printf("PC %08x\n", tb->SoC__DOT__cpu__DOT__fetch_pc);
+
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[RA] != 0x00000008)
+		return false;	
+
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] != 2)
+		return false;	
+
+	if (tb->SoC__DOT__cpu__DOT__fetch_pc != 0x00000010)
+		return false;	
+
+	delete tb;
 	return true;
 }
 
@@ -1308,11 +1332,11 @@ int main(int argc, char **argv)
 	// CHECK(verify_DIV);
 	// CHECK(verify_UDIV);
 	// CHECK(verify_JAL);
-	// CHECK(verify_JALR);
-	CHECK(verify_LB);
-	CHECK(verify_LBU);
-	CHECK(verify_LH);
-	CHECK(verify_LHU);
+	CHECK(verify_JALR);
+	// CHECK(verify_LB);
+	// CHECK(verify_LBU);
+	// CHECK(verify_LH);
+	// CHECK(verify_LHU);
 	// CHECK(verify_LUI);
 	// CHECK(verify_LW);
 	// CHECK(verify_MUL);
@@ -1322,8 +1346,8 @@ int main(int argc, char **argv)
 	// CHECK(verify_ORI);
 	// CHECK(verify_REM);
 	// CHECK(verify_REMU);
-	CHECK(verify_SB);
-	CHECK(verify_SH);
+	// //CHECK(verify_SB);
+	// CHECK(verify_SH);
 	// CHECK(verify_SLL);
 	// CHECK(verify_SLLI);
 	// CHECK(verify_SLT);
@@ -1338,10 +1362,10 @@ int main(int argc, char **argv)
 	// CHECK(verify_SW);
 	// CHECK(verify_XOR);
 	// CHECK(verify_XORI);
-	CHECK(verify_ENDIAN);
-	CHECK(verify_MEM_LOAD_HAZARD);
-	CHECK(verify_PIPELINE_MEMORY);
-	CHECK(verify_PIPELINE_MEMORY_B);
+	// CHECK(verify_ENDIAN);
+	// CHECK(verify_MEM_LOAD_HAZARD);
+	// CHECK(verify_PIPELINE_MEMORY);
+	// CHECK(verify_PIPELINE_MEMORY_B);
 
 	if (success)
 		printf("SUCCESS!\n");
