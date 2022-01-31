@@ -3,25 +3,25 @@
 
 // CSRRC
 if (`EXECUTE_OP == OP_CSRRC) begin
-	`RD <= csr_rd;
-	csr_wr <= csr_rd & !`RS1;
-	csr_wr_en <= 1;
+	`RD <= i_csr_rdata;
+	o_csr_wdata <= i_csr_rdata & !`RS1;
+	o_csr_wdata_wr <= 1;
 	`EXECUTE_DONE;
 end
 
 // CSRRS
 else if (`EXECUTE_OP == OP_CSRRS) begin
-	`RD <= csr_rd;
-	csr_wr <= csr_rd | `RS1;
-	csr_wr_en <= 1;
+	`RD <= i_csr_rdata;
+	o_csr_wdata <= i_csr_rdata | `RS1;
+	o_csr_wdata_wr <= 1;
 	`EXECUTE_DONE;
 end
 
 // CSRRW
 else if (`EXECUTE_OP == OP_CSRRW) begin
-	`RD <= csr_rd;
-	csr_wr <= `RS1;
-	csr_wr_en <= 1;
+	`RD <= i_csr_rdata;
+	o_csr_wdata <= `RS1;
+	o_csr_wdata_wr <= 1;
 	`EXECUTE_DONE;
 end
 

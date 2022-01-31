@@ -39,10 +39,6 @@ module CPU_Memory(
 	localparam STATE_WRITE_RMW_1	= 4;
 	localparam STATE_FLUSH			= 5;
 
-	// localparam STATE_RMW_READ			= 1;
-	// localparam STATE_RMW_RST_REQUEST	= 2;
-	// localparam STATE_RMW_WAIT_WRITE		= 3;
-
 	reg [4:0] state;
 	reg [4:0] next;
 	

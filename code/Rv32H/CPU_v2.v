@@ -29,6 +29,35 @@ module CPU_v2 (
 );
 
 	//====================================================
+	// CSR
+
+	wire [11:0] csr_index;
+	wire [31:0] csr_rdata;
+	wire csr_wdata_wr;
+	wire [31:0] csr_wdata;
+	wire [31:0] csr_epc;
+	wire csr_irq_pending;
+	wire [31:0] csr_irq_pc;
+	wire csr_irq_dispatched;
+	wire [31:0] csr_irq_epc;
+
+	CPU_CSR csr(
+		.i_clock(i_clock),
+		.i_interrupt(i_interrupt),
+
+		.i_index(csr_index),
+		.o_rdata(csr_rdata),
+		.i_wdata_wr(csr_wdata_wr),
+		.i_wdata(csr_wdata),
+		.o_epc(csr_epc),
+
+		.o_irq_pending(csr_irq_pending),
+		.o_irq_pc(csr_irq_pc),
+		.i_irq_dispatched(csr_irq_dispatched),
+		.i_irq_epc(csr_irq_epc)
+	);
+
+	//====================================================
 	// REGISTERS
 
 	// RS1 and RS2 are read from file
@@ -70,8 +99,12 @@ module CPU_v2 (
 		.i_stall(memory_stall || execute_stall || decode_fault),
 		.i_jump(execute_jump),
 		.i_jump_pc(execute_jump_pc),
-		.i_irq(execute_irq),
-		.i_irq_pc(execute_irq_pc),
+
+		// Interrupt
+		.i_irq_pending(csr_irq_pending),
+		.i_irq_pc(csr_irq_pc),
+		.o_irq_dispatched(csr_irq_dispatched),
+		.o_irq_epc(csr_irq_epc),
 
 		// Bus
 		.o_bus_request(o_ibus_request),
@@ -188,8 +221,6 @@ module CPU_v2 (
 
 	wire execute_jump;
 	wire [31:0] execute_jump_pc;
-	wire execute_irq;
-	wire [31:0] execute_irq_pc;
 	wire execute_stall;
 	wire execute_fault;
 	
@@ -197,9 +228,15 @@ module CPU_v2 (
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
+		// CSR
+		.o_csr_index(csr_index),
+		.i_csr_rdata(csr_rdata),
+		.o_csr_wdata_wr(csr_wdata_wr),
+		.o_csr_wdata(csr_wdata),
+		.i_epc(csr_epc),
+
 		// Control
 		.i_stall(memory_stall),
-		.i_interrupt(i_interrupt),
 
 		// Input from decode.
 		.i_tag(decode_tag),
@@ -240,8 +277,6 @@ module CPU_v2 (
 
 		.o_jump(execute_jump),
 		.o_jump_pc(execute_jump_pc),
-		.o_irq(execute_irq),
-		.o_irq_pc(execute_irq_pc),
 		.o_stall(execute_stall),
 		.o_fault(execute_fault)
 	);

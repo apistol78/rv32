@@ -322,6 +322,7 @@ module SoC(
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
+
 	`ifndef __VERILATOR__
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
@@ -329,12 +330,12 @@ module SoC(
 		// ---
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
+		.i_request(l2cache_bus_request),
+		.i_rw(l2cache_bus_rw),
+		.i_address(l2cache_bus_address),
+		.i_wdata(l2cache_bus_wdata),
+		.o_rdata(l2cache_bus_rdata),
+		.o_ready(l2cache_bus_ready),
 		// ---
 		.DDR2LP_CA(DDR2LP_CA),
 		.DDR2LP_CKE(DDR2LP_CKE),
@@ -355,6 +356,32 @@ module SoC(
 		.LATENCY(10)
 	) sdram(
 		.i_clock(clock),
+		.i_request(l2cache_bus_request),
+		.i_rw(l2cache_bus_rw),
+		.i_address(l2cache_bus_address),
+		.i_wdata(l2cache_bus_wdata),
+		.o_rdata(l2cache_bus_rdata),
+		.o_ready(l2cache_bus_ready)
+	);
+	`endif
+
+	wire l2cache_bus_rw;
+	wire l2cache_bus_request;
+	wire l2cache_bus_ready;
+	wire [31:0] l2cache_bus_address;
+	wire [31:0] l2cache_bus_rdata;
+	wire [31:0] l2cache_bus_wdata;
+	CPU_L2_Cache l2cache(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(l2cache_bus_rw),
+		.o_bus_request(l2cache_bus_request),
+		.i_bus_ready(l2cache_bus_ready),
+		.o_bus_address(l2cache_bus_address),
+		.i_bus_rdata(l2cache_bus_rdata),
+		.o_bus_wdata(l2cache_bus_wdata),
+
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(sdram_address),
@@ -362,7 +389,6 @@ module SoC(
 		.o_rdata(sdram_rdata),
 		.o_ready(sdram_ready)
 	);
-	`endif
 `endif
 
 	// LEDS

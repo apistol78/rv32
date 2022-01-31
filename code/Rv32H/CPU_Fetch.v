@@ -10,8 +10,12 @@ module CPU_Fetch(
 	input wire i_stall,
 	input wire i_jump,
 	input wire [31:0] i_jump_pc,
-	input wire i_irq,
+
+	// Interrupt
+	input wire i_irq_pending,
 	input wire [31:0] i_irq_pc,
+	output reg o_irq_dispatched,
+	output reg [31:0] o_irq_epc,
 
 	// Bus
 	output wire o_bus_request,
@@ -103,42 +107,49 @@ module CPU_Fetch(
 
 		next_pc = pc;
 
-		// if (i_irq) begin
-		// 	next_pc = i_irq_pc;
-		// 	next_state = 0;
-		// end
+		o_irq_dispatched = 0;
+		o_irq_epc = 0;
 
-		case (state)
-			0: begin
-				if (!i_stall && icache_ready) begin
-					// Output to pipeline instruction and PC.
-					next_o_tag = o_tag + 1;
-					next_o_instruction = icache_rdata;
-					next_o_pc = pc;
+		// Jump to interrupt if interrupt are pending.
+		if (i_irq_pending) begin
+			o_irq_dispatched = 1;
+			o_irq_epc = pc;
+			next_pc = i_irq_pc;
+			next_state = 0;
+		end
+		else begin
+			case (state)
+				0: begin
+					if (!i_stall && icache_ready) begin
+						// Output to pipeline instruction and PC.
+						next_o_tag = o_tag + 1;
+						next_o_instruction = icache_rdata;
+						next_o_pc = pc;
 
-					if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
-						// Branch instruction, need to wait
-						// for an explicit "goto" signal before
-						// we can continue feeding the pipeline.
-						next_state = 1;
-					end
-					else begin
-						// Move PC to next instruction, will
-						// enable to icache to start loading
-						// next instruction.
-						next_pc = pc + 4;
+						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
+							// Branch instruction, need to wait
+							// for an explicit "goto" signal before
+							// we can continue feeding the pipeline.
+							next_state = 1;
+						end
+						else begin
+							// Move PC to next instruction, will
+							// enable to icache to start loading
+							// next instruction.
+							next_pc = pc + 4;
+						end
 					end
 				end
-			end
 
-			1: begin
-				// Wait for "goto" signal.
-				if (i_jump) begin
-					next_pc = i_jump_pc;
-					next_state = 0;
-				end				
-			end
-		endcase
+				1: begin
+					// Wait for "goto" signal.
+					if (i_jump) begin
+						next_pc = i_jump_pc;
+						next_state = 0;
+					end				
+				end
+			endcase
+		end
 	end
 
 endmodule

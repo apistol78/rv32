@@ -349,9 +349,9 @@ local instructions = {
 			writeCSR(f.csr, R_u(f.rd) & !tmp);
 		]],
 		verilog_text = [[
-			`RD <= csr_rd;
-			csr_wr <= csr_rd & !`RS1;
-			csr_wr_en <= 1;
+			`RD <= i_csr_rdata;
+			o_csr_wdata <= i_csr_rdata & !`RS1;
+			o_csr_wdata_wr <= 1;
 			`EXECUTE_DONE;
 		]]
 	},
@@ -379,9 +379,9 @@ local instructions = {
 			writeCSR(f.csr, R_u(f.rd) | tmp);
 		]],
 		verilog_text = [[
-			`RD <= csr_rd;
-			csr_wr <= csr_rd | `RS1;
-			csr_wr_en <= 1;
+			`RD <= i_csr_rdata;
+			o_csr_wdata <= i_csr_rdata | `RS1;
+			o_csr_wdata_wr <= 1;
 			`EXECUTE_DONE;
 		]]
 	},
@@ -407,9 +407,9 @@ local instructions = {
 			writeCSR(f.csr, R_s(f.rs1));
 		]],
 		verilog_text = [[
-			`RD <= csr_rd;
-			csr_wr <= `RS1;
-			csr_wr_en <= 1;
+			`RD <= i_csr_rdata;
+			o_csr_wdata <= `RS1;
+			o_csr_wdata_wr <= 1;
 			`EXECUTE_DONE;
 		]]
 	},

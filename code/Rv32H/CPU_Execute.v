@@ -6,9 +6,15 @@ module CPU_Execute (
 	input wire i_reset,
 	input wire i_clock,
 
+	// CSR
+	output wire [11:0] o_csr_index,
+	input wire [31:0] i_csr_rdata,
+	output reg o_csr_wdata_wr,
+	output reg [31:0] o_csr_wdata,
+	input wire [31:0] i_epc,
+
 	// Control
 	input wire i_stall,
-	input wire i_interrupt,
 
 	// Input
 	input wire [`TAG_SIZE] i_tag,
@@ -49,8 +55,6 @@ module CPU_Execute (
 
 	output reg o_jump,
 	output reg [31:0] o_jump_pc,
-	output reg o_irq,
-	output reg [31:0] o_irq_pc,
 	output wire o_stall,
 	output reg o_fault
 );
@@ -71,30 +75,31 @@ module CPU_Execute (
 	`define IMM		i_imm
 	`define ZERO	0
 
-	// CSR registers
-	`define MTVEC	mtvec
-	`define MEPC	mepc
-	`define MCAUSE	mcause
-
 	`undef GOTO
-	`define GOTO(ADDR) 				\
-		o_jump <= 1'b1;				\
+	`define GOTO(ADDR) 		\
+		o_jump <= 1'b1;		\
 		o_jump_pc <= ADDR;
 	
-	`define CYCLE					\
+	`define CYCLE			\
 		cycle
 
-	`define EXECUTE_OP				\
+	`define EXECUTE_OP		\
 		i_op
 
 	`undef EXECUTE_DONE
-	`define EXECUTE_DONE			\
-		o_tag <= i_tag;				\
+	`define EXECUTE_DONE	\
+		o_tag <= i_tag;		\
 		cycle <= 0;
+
+	`define MEPC 			\
+		i_epc
 
 	// ====================
 	// CSR
 
+	assign o_csr_index = i_imm;
+
+/*
 	reg mie_mtie;
 	reg [31:0] mtvec;
 	reg [31:0] mepc;
@@ -139,7 +144,8 @@ module CPU_Execute (
 			else if (`IMM == `CSR_MTVEC)
 				mtvec <= csr_wr;
 		end
-	end	
+	end
+*/
 
 	// ====================
 	// ALU
@@ -208,16 +214,7 @@ module CPU_Execute (
 		o_mem_address = 0;
 		o_jump = 0;
 		o_jump_pc = 0;
-		o_irq = 0;
-		o_irq_pc = 0;
 		o_fault = 0;
-
-		mie_mtie = 0;
-		mtvec = 0;
-		mepc = 0;
-		mcause = 0;
-		mip_mtip = 0;		
-		csr_wr_en = 0;
 
 		cycle = 0;
 	end
@@ -238,25 +235,12 @@ module CPU_Execute (
 			o_mem_address <= 0;
 			o_jump <= 0;
 			o_jump_pc <= 0;
-			o_irq <= 0;
-			o_irq_pc <= 0;
 			o_fault <= 0;
-
-			mepc <= 0;
-			mcause <= 0;
-			mip_mtip <= 0;			
-			csr_wr_en <= 0;
 
 			cycle <= 0;
 		end
 		else begin
 			o_jump <= 0;
-		
-			// Set interrupt pending if interrupts are enabled.
-			if (i_interrupt) begin
-				if (mie_mtie)
-					mip_mtip <= 1;
-			end
 
 			if (!i_stall && i_tag != o_tag) begin
 				o_inst_rd <= i_inst_rd;
@@ -267,14 +251,6 @@ module CPU_Execute (
 				o_mem_flush <= 0;
 				o_mem_width <= i_memory_width;
 				o_mem_signed <= i_memory_signed;
-
-				// if (mip_mtip) begin
-				// 	mepc <= i_pc;
-				// 	mcause <= 32'h80000000 | (1 << 7);
-				// 	o_irq <= 1;
-				// 	o_irq_pc <= mtvec;
-				// 	mip_mtip <= 0;
-				// end
 
 				cycle <= cycle + 1;
 
