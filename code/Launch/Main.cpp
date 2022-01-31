@@ -168,6 +168,7 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 {
 	AlignedVector< uint8_t > elf;
 	uint32_t start = -1;
+	uint32_t last = 0;
 
 	// Read entire ELF into memory.
 	{
@@ -210,12 +211,13 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 
 				for (uint32_t j = 0; j < shdr[i].sh_size; j += 128)
 				{
-					log::info << L"TEXT " << str(L"%08x", addr + j) << L"..." << Endl;
-
 					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 128);
+					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
 					if (!sendLine(serial, addr + j, pbits + j, cnt))
 						return false;
 				}
+
+				last = std::max(last, addr + shdr[i].sh_size);
 			}
 		}
 		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
@@ -227,7 +229,6 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 				const char* name = strings + sym[j].st_name;
 				if (strcmp(name, "_start") == 0)
 				{
-					log::info << L"Entry found, " << str(L"0x%08x", sym[j].st_value) << Endl;
 					start = sym[j].st_value;
 					break;
 				}
@@ -235,8 +236,21 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 		}
 	}
 
+	// \hack Send a lot of dummys to ensure DCACHE is flushed
+	// and data is actually written to SDRAM.
+	// const uint32_t size = 65536;
+	// for (int32_t i = 0; i < 65536; i += 128)
+	// {
+	// 	log::info << L"Flushing DCACHE " << str(L"%08x", last + i) << Endl;
+
+	// 	uint8_t dummy[64] = {};
+	// 	if (!sendLine(serial, last + i, dummy, 128))
+	// 		return false;
+	// }
+
 	if (start != -1)
 	{
+		log::info << L"JUMP " << str(L"0x%08x", start) << Endl;
 		if (!sendJump(serial, start, sp))
 			return false;
 	}
@@ -625,8 +639,17 @@ int main(int argc, const char** argv)
 		running = false;
 
 		threadUpload = ThreadManager::getInstance().create([&]() {
-			if (uploadELF(serial, editFile->getText(), sp))
-				running = true;
+			Path fileName(editFile->getText());
+			if (compareIgnoreCase(fileName.getExtension(), L"hex") == 0)
+			{
+				if (uploadHEX(serial, editFile->getText(), sp))
+					running = true;
+			}
+			else
+			{
+				if (uploadELF(serial, editFile->getText(), sp))
+					running = true;
+			}
 		});
 		threadUpload->start();
 		
