@@ -8,18 +8,16 @@ module CPU_Fetch(
 
 	// Control
 	input wire i_stall,
-	input wire i_csr_branch,
-	input wire [31:0] i_csr_branch_pc,
+	input wire i_jump,
+	input wire [31:0] i_jump_pc,
+	input wire i_irq,
+	input wire [31:0] i_irq_pc,
 
 	// Bus
 	output wire o_bus_request,
 	input wire i_bus_ready,
 	output wire [31:0] o_bus_address,
 	input wire [31:0] i_bus_rdata,
-
-	// Input
-	input wire [`TAG_SIZE] i_tag,
-	input wire [31:0] i_pc_next,
 
 	// Output
 	output reg [`TAG_SIZE] o_tag,
@@ -105,55 +103,42 @@ module CPU_Fetch(
 
 		next_pc = pc;
 
-		if (i_csr_branch) begin
-			// CSR issued branch.
-			next_pc = i_csr_branch_pc;
-			next_state = 0;
-		end
-		else begin
+		// if (i_irq) begin
+		// 	next_pc = i_irq_pc;
+		// 	next_state = 0;
+		// end
 
-			case (state)
-				0: begin
-					if (!i_stall && icache_ready) begin
-						// Output to pipeline instruction and PC.
-						next_o_tag = o_tag + 1;
-						next_o_instruction = icache_rdata;
-						next_o_pc = pc;
+		case (state)
+			0: begin
+				if (!i_stall && icache_ready) begin
+					// Output to pipeline instruction and PC.
+					next_o_tag = o_tag + 1;
+					next_o_instruction = icache_rdata;
+					next_o_pc = pc;
 
-						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
-							// Branch instruction, need to wait
-							// for an explicit "goto" signal before
-							// we can continue feeding the pipeline.
-							next_state = 1;
-						end
-						else if (is_WFI) begin
-							// "Wait for interrupt" state, need to
-							// wait for an explicit "interrupt" signal.
-							next_state = 2;
-						end
-						else begin
-							// Move PC to next instruction, will
-							// enable to icache to start loading
-							// next instruction.
-							next_pc = pc + 4;
-						end
+					if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
+						// Branch instruction, need to wait
+						// for an explicit "goto" signal before
+						// we can continue feeding the pipeline.
+						next_state = 1;
+					end
+					else begin
+						// Move PC to next instruction, will
+						// enable to icache to start loading
+						// next instruction.
+						next_pc = pc + 4;
 					end
 				end
+			end
 
-				1: begin
-					// Wait for branch result.
-					if (i_tag == o_tag) begin
-						next_pc = i_pc_next;
-						next_state = 0;
-					end
-				end
-
-				2: begin
-					// Wait for interrupt.
-				end
-			endcase
-
-		end
+			1: begin
+				// Wait for "goto" signal.
+				if (i_jump) begin
+					next_pc = i_jump_pc;
+					next_state = 0;
+				end				
+			end
+		endcase
 	end
 
 endmodule

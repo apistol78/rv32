@@ -590,10 +590,8 @@ module SoC(
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
 	wire [31:0] cpu_retire_count;
-	wire [31:0] cpu_icache_hit_count;
-	wire [31:0] cpu_icache_miss_count;
-	wire [31:0] cpu_dcache_hit_count;
-	wire [31:0] cpu_dcache_miss_count;
+	wire cpu_fault;
+
 	CPU_v2 cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -616,7 +614,8 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_retire_count(cpu_retire_count)
+		.o_retire_count(cpu_retire_count),
+		.o_fault(cpu_fault)
 	);
 	
 	//=====================================
@@ -718,7 +717,7 @@ module SoC(
 
 `ifndef __VERILATOR__
 	// 7:0
-	assign LEDG = { 1'b0, 1'b0, 1'b0 };
+	assign LEDG = { 1'b0, 1'b0, cpu_fault };
 `endif
 
 endmodule

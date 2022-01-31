@@ -11,6 +11,7 @@ module BRAM_clear #(
 	parameter ADDR_LSH = 2,
 	parameter CLEAR_VALUE = 32'h0
 )(
+	input wire i_reset,
 	input wire i_clock,
 	output wire o_initialized,
 	input wire i_request,
@@ -40,9 +41,17 @@ module BRAM_clear #(
 	assign o_initialized = clear >= SIZE;
 
 	always @(posedge i_clock) begin
+		if (i_reset) begin
+			clear <= 0;
+		end
+		else if (clear < SIZE) begin
+			clear <= clear + 1;
+		end
+	end
+
+	always @(posedge i_clock) begin
 		if (clear < SIZE) begin
 			data[clear] <= CLEAR_VALUE;
-			clear <= clear + 1;
 		end 
 		else begin
 			if (i_request) begin

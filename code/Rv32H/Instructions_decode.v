@@ -19,6 +19,7 @@ wire is_DIV    = ((`INSTRUCTION & 32'hfe00707f) == 32'h02004033);
 wire is_DIVU   = ((`INSTRUCTION & 32'hfe00707f) == 32'h02005033);
 wire is_EBREAK = ((`INSTRUCTION & 32'hffffffff) == 32'h00100073);
 wire is_ECALL  = ((`INSTRUCTION & 32'hffffffff) == 32'h00000073);
+wire is_FENCE  = ((`INSTRUCTION & 32'h0000707f) == 32'h0000000f);
 wire is_JAL    = ((`INSTRUCTION & 32'h0000007f) == 32'h0000006f);
 wire is_JALR   = ((`INSTRUCTION & 32'h0000707f) == 32'h00000067);
 wire is_LB     = ((`INSTRUCTION & 32'h0000707f) == 32'h00000003);
@@ -54,7 +55,7 @@ wire is_XOR    = ((`INSTRUCTION & 32'hfe00707f) == 32'h00004033);
 wire is_XORI   = ((`INSTRUCTION & 32'h0000707f) == 32'h00004013);
 
 wire is_B = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
-wire is_I = is_ADDI | is_ANDI | is_JALR | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
+wire is_I = is_ADDI | is_ANDI | is_FENCE | is_JALR | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
 wire is_J = is_JAL;
 wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_MUL | is_MULH | is_MULHU | is_OR | is_REM | is_REMU | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
 wire is_S = is_SB | is_SH | is_SW;
@@ -63,7 +64,7 @@ wire is_CSR = is_CSRRC | is_CSRRS | is_CSRRW | is_MRET;
 
 wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR | is_XORI;
 wire is_COMPARE = is_SLT | is_SLTI | is_SLTIU | is_SLTU;
-wire is_COMPLEX = is_CSRRC | is_CSRRS | is_CSRRW | is_DIV | is_DIVU | is_EBREAK | is_ECALL | is_MUL | is_MULH | is_MULHU | is_MRET | is_REM | is_REMU | is_WFI;
+wire is_COMPLEX = is_CSRRC | is_CSRRS | is_CSRRW | is_DIV | is_DIVU | is_EBREAK | is_ECALL | is_FENCE | is_MUL | is_MULH | is_MULHU | is_MRET | is_REM | is_REMU | is_WFI;
 wire is_JUMP = is_JAL | is_JALR;
 wire is_JUMP_CONDITIONAL = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
 wire is_MEMORY = is_LB | is_LBU | is_LH | is_LHU | is_LW | is_SB | is_SH | is_SW;

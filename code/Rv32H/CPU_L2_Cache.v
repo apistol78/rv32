@@ -2,10 +2,7 @@
 
 `timescale 1ns/1ns
 
-// ALUT 809
-// DLR 679
-
-module CPU_DCache(
+module CPU_L2_Cache(
 	input wire i_reset,
 	input wire i_clock,
 
@@ -20,7 +17,6 @@ module CPU_DCache(
 	// Input
 	input wire i_rw,
 	input wire i_request,
-	input wire i_flush,
 	output reg o_ready,
 	input wire [31:0] i_address,
 	output reg [31:0] o_rdata,
@@ -33,13 +29,10 @@ module CPU_DCache(
 	reg [7:0] next;
 	reg [7:0] state;
 
-	reg [SIZE:0] next_flush_address;
-	reg [SIZE:0] flush_address;
-
 	// Cache memory.
 	wire cache_initialized;
 	reg cache_rw;
-	reg [SIZE - 1:0] cache_address;
+	wire [SIZE - 1:0] cache_address = i_address[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 
@@ -51,7 +44,6 @@ module CPU_DCache(
 		.ADDR_LSH(0),
 		.CLEAR_VALUE(32'hffff_fff0)
 	) cache(
-		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.o_initialized(cache_initialized),
 		.i_request(1'b1),
@@ -61,8 +53,6 @@ module CPU_DCache(
 		.o_rdata(cache_rdata),
 		.o_ready()
 	);
-
-	wire is_cacheable = i_address < 32'h40000000;
 	
 	wire cache_entry_valid = cache_rdata[0];
 	wire cache_entry_dirty = cache_rdata[1];
@@ -79,22 +69,16 @@ module CPU_DCache(
 		next = 0;
 		state = 0;
 
-		next_flush_address = 0;
-		flush_address = 0;
-
 		cache_rw = 0;
-		cache_address = 0;
 	end
 
 	always @(posedge i_clock) begin
 		state <= next;
-		flush_address <= next_flush_address;
 	end
 
 	always @(*) begin
 
 		next = state;
-		next_flush_address = flush_address;
 
 		o_bus_rw = 0;
 		o_bus_address = 0;
@@ -106,16 +90,11 @@ module CPU_DCache(
 
 		cache_rw = 0;
 		cache_wdata = 0;
-		cache_address = i_address[(SIZE - 1) + 2:2];
 		
 		case (state)
 			0: begin
 				if (i_request) begin
-					if (i_flush) begin
-						next_flush_address = 0;
-						next = 8;
-					end
-					else if (cache_initialized && is_cacheable) begin
+					if (cache_initialized) begin
 						if (!i_rw)
 							next = 2;
 						else begin
@@ -130,53 +109,6 @@ module CPU_DCache(
 						o_rdata = i_bus_rdata;
 						next = 1;
 					end
-				end
-			end
-
-			// ================
-			// FLUSH
-			// ================
-			8: begin
-				cache_address = flush_address;
-				if (flush_address < RANGE)
-					next = 9;
-				else begin
-					o_ready = 1;
-					next = 0;
-				end
-			end
-
-			9: begin
-				cache_address = flush_address;
-				if (cache_entry_valid && cache_entry_dirty) begin
-					o_bus_rw = 1;
-					o_bus_address = cache_entry_address;
-					o_bus_request = 1;
-					o_bus_wdata = cache_entry_data;
-
-					next = 10;
-				end
-				else begin
-					next_flush_address = flush_address + 1;
-					next = 8;
-				end
-			end
-
-			10: begin
-				cache_address = flush_address;
-
-				o_bus_rw = 1;
-				o_bus_address = cache_entry_address;
-				o_bus_request = 1;
-				o_bus_wdata = cache_entry_data;
-
-				if (i_bus_ready) begin
-
-					cache_rw = 1;
-					cache_wdata = { cache_entry_data, cache_entry_address[31:2], 2'b01 };
-
-					next_flush_address = flush_address + 1;
-					next = 8;
 				end
 			end
 

@@ -38,6 +38,7 @@ module CPU_ICache(
 		.SIZE(RANGE),
 		.ADDR_LSH(0)
 	) cache(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.o_initialized(cache_initialized),
 		.i_request(1'b1),

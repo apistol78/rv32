@@ -23,9 +23,9 @@ module CPU_Decode(
 
 	output reg o_arithmetic,
 	output reg o_compare,
+	output reg o_complex,
 	output reg o_jump,
 	output reg o_jump_conditional,
-	output reg o_csr,
 
 	output reg [3:0] o_alu_operation,
 	output reg [2:0] o_alu_operand1,
@@ -36,7 +36,9 @@ module CPU_Decode(
 	output reg [2:0] o_memory_width,
 	output reg o_memory_signed,
 
-	output reg [4:0] o_op
+	output reg [4:0] o_op,
+	
+	output reg o_fault
 );
 
 	`include "Instructions_ops.v"
@@ -73,12 +75,51 @@ module CPU_Decode(
 
 	initial begin
 		o_tag = 0;
+		o_instruction = 0;
+		o_pc = 0;
+		o_inst_rs1 = 0;
+		o_inst_rs2 = 0;
+		o_inst_rd = 0;
+		o_imm = 0;
+		o_arithmetic = 0;
+		o_compare = 0;
+		o_complex = 0;
+		o_jump = 0;
+		o_jump_conditional = 0;
+		o_alu_operation = 0;
+		o_alu_operand1 = 0;
+		o_alu_operand2 = 0;
+		o_memory_read = 0;
+		o_memory_write = 0;
+		o_memory_width = 0;
+		o_memory_signed = 0;
 		o_op = 0;
+		o_fault = 0;
 	end
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			o_tag <= 0;
+			o_instruction <= 0;
+			o_pc <= 0;
+			o_inst_rs1 <= 0;
+			o_inst_rs2 <= 0;
+			o_inst_rd <= 0;
+			o_imm <= 0;
+			o_arithmetic <= 0;
+			o_compare <= 0;
+			o_complex <= 0;
+			o_jump <= 0;
+			o_jump_conditional <= 0;
+			o_alu_operation <= 0;
+			o_alu_operand1 <= 0;
+			o_alu_operand2 <= 0;
+			o_memory_read <= 0;
+			o_memory_write <= 0;
+			o_memory_width <= 0;
+			o_memory_signed <= 0;
+			o_op <= 0;
+			o_fault <= 0;
 		end
 		else begin
 			if (!i_stall && i_tag != o_tag) begin
@@ -101,9 +142,9 @@ module CPU_Decode(
 				
 				o_arithmetic <= is_ARITHMETIC;
 				o_compare <= is_COMPARE;
+				o_complex <= is_COMPLEX;
 				o_jump <= is_JUMP;
 				o_jump_conditional <= is_JUMP_CONDITIONAL;
-				o_csr <= is_CSR;
 
 				o_alu_operation <= alu_operation;
 				o_alu_operand1 <= alu_operand1;
@@ -117,7 +158,13 @@ module CPU_Decode(
 				`define OP o_op
 				`include "Instructions_decode_ops.v"
 
-				o_tag <= i_tag;
+				if (is_ARITHMETIC || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
+					o_tag <= i_tag;
+				end
+				else begin
+					// Invalid or unsupported instructions end here.
+					o_fault <= 1;
+				end
 			end
 		end
 	end

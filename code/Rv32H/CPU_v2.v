@@ -24,6 +24,7 @@ module CPU_v2 (
 	output wire [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
+	output wire o_fault,
 	output reg [31:0] o_retire_count
 );
 
@@ -66,19 +67,17 @@ module CPU_v2 (
 		.i_clock(i_clock),
 
 		// Control
-		.i_stall(memory_stall || execute_stall),
-		.i_csr_branch(execute_branch),
-		.i_csr_branch_pc(execute_branch_pc),
+		.i_stall(memory_stall || execute_stall || decode_fault),
+		.i_jump(execute_jump),
+		.i_jump_pc(execute_jump_pc),
+		.i_irq(execute_irq),
+		.i_irq_pc(execute_irq_pc),
 
 		// Bus
 		.o_bus_request(o_ibus_request),
 		.i_bus_ready(i_ibus_ready),
 		.o_bus_address(o_ibus_address),
 		.i_bus_rdata(i_ibus_rdata),
-
-		// Input
-		.i_tag(execute_tag),
-		.i_pc_next(execute_pc_next),
 
 		// Output
 		.o_tag(fetch_tag),
@@ -99,9 +98,9 @@ module CPU_v2 (
 	
 	wire decode_arithmetic;
 	wire decode_compare;
+	wire decode_complex;
 	wire decode_jump;
 	wire decode_jump_conditional;
-	wire decode_csr;
 
 	wire [3:0] decode_alu_operation;
 	wire [2:0] decode_alu_operand1;
@@ -113,6 +112,8 @@ module CPU_v2 (
 	wire decode_memory_signed;
 
 	wire [4:0] decode_op;
+	
+	wire decode_fault;
 
 	CPU_Decode decode(
 		.i_reset(i_reset),
@@ -135,9 +136,9 @@ module CPU_v2 (
 		
 		.o_arithmetic(decode_arithmetic),
 		.o_compare(decode_compare),
+		.o_complex(decode_complex),
 		.o_jump(decode_jump),
 		.o_jump_conditional(decode_jump_conditional),
-		.o_csr(decode_csr),
 
 		.o_alu_operation(decode_alu_operation),
 		.o_alu_operand1(decode_alu_operand1),
@@ -148,7 +149,9 @@ module CPU_v2 (
 		.o_memory_width(decode_memory_width),
 		.o_memory_signed(decode_memory_signed),
 
-		.o_op(decode_op)
+		.o_op(decode_op),
+		
+		.o_fault(decode_fault)
 	);
 
 	//====================================================
@@ -175,16 +178,20 @@ module CPU_v2 (
 	wire [`TAG_SIZE] execute_tag;
 	wire [4:0] execute_inst_rd;
 	wire [31:0] execute_rd;
-	wire [31:0] execute_pc_next;
 	wire execute_mem_read;
 	wire execute_mem_write;
+	wire execute_mem_flush;
 	wire [2:0] execute_mem_width;
 	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
 	wire [31:0] execute_mem_wdata;
-	wire execute_branch;
-	wire [31:0] execute_branch_pc;
+
+	wire execute_jump;
+	wire [31:0] execute_jump_pc;
+	wire execute_irq;
+	wire [31:0] execute_irq_pc;
 	wire execute_stall;
+	wire execute_fault;
 	
 	CPU_Execute execute(
 		.i_reset(i_reset),
@@ -205,9 +212,9 @@ module CPU_v2 (
 
 		.i_arithmetic(decode_arithmetic),
 		.i_compare(decode_compare),
+		.i_complex(decode_complex),
 		.i_jump(decode_jump),
 		.i_jump_conditional(decode_jump_conditional),
-		.i_csr(decode_csr),
 
 		.i_alu_operation(decode_alu_operation),
 		.i_alu_operand1(decode_alu_operand1),
@@ -224,15 +231,19 @@ module CPU_v2 (
 		.o_tag(execute_tag),
 		.o_inst_rd(execute_inst_rd),
 		.o_rd(execute_rd),
-		.o_pc_next(execute_pc_next),
 		.o_mem_read(execute_mem_read),
 		.o_mem_write(execute_mem_write),
+		.o_mem_flush(execute_mem_flush),
 		.o_mem_width(execute_mem_width),
 		.o_mem_signed(execute_mem_signed),
 		.o_mem_address(execute_mem_address),
-		.o_branch(execute_branch),
-		.o_branch_pc(execute_branch_pc),
-		.o_stall(execute_stall)
+
+		.o_jump(execute_jump),
+		.o_jump_pc(execute_jump_pc),
+		.o_irq(execute_irq),
+		.o_irq_pc(execute_irq_pc),
+		.o_stall(execute_stall),
+		.o_fault(execute_fault)
 	);
 
 	//====================================================
@@ -241,7 +252,6 @@ module CPU_v2 (
 	wire [`TAG_SIZE] memory_tag;
 	wire [4:0] memory_inst_rd;
 	wire [31:0] memory_rd;
-	wire [31:0] memory_pc_next;
 	wire memory_stall;
 
 	CPU_Memory memory(
@@ -260,9 +270,9 @@ module CPU_v2 (
 		.i_tag(execute_tag),
 		.i_inst_rd(execute_inst_rd),
 		.i_rd(execute_rd),
-		.i_pc_next(execute_pc_next),
 		.i_mem_read(execute_mem_read),
 		.i_mem_write(execute_mem_write),
+		.i_mem_flush(execute_mem_flush),
 		.i_mem_width(execute_mem_width),
 		.i_mem_signed(execute_mem_signed),
 		.i_mem_address(execute_mem_address),
@@ -271,7 +281,6 @@ module CPU_v2 (
 		.o_tag(memory_tag),
 		.o_inst_rd(memory_inst_rd),
 		.o_rd(memory_rd),
-		.o_pc_next(memory_pc_next),
 		.o_stall(memory_stall)
 	);
 
@@ -281,7 +290,6 @@ module CPU_v2 (
 	wire [`TAG_SIZE] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
-	wire [31:0] writeback_pc_next;
 	
 	CPU_Writeback writeback(
 		.i_reset(i_reset),
@@ -291,17 +299,17 @@ module CPU_v2 (
 		.i_tag(memory_tag),
 		.i_inst_rd(memory_inst_rd),
 		.i_rd(memory_rd),
-		.i_pc_next(memory_pc_next),
 
 		// Output from writeback.
 		.o_tag(writeback_tag),
 		.o_inst_rd(writeback_inst_rd),
-		.o_rd(writeback_rd),
-		.o_pc_next(writeback_pc_next)
+		.o_rd(writeback_rd)
 	);
 
 	//====================================================
 	
+	assign o_fault = decode_fault || execute_fault;
+
 	reg [`TAG_SIZE] retire_tag = 0;
 
 	initial o_retire_count = 0;
@@ -312,9 +320,9 @@ module CPU_v2 (
 			o_retire_count <= 0;
 		end
 		else begin
-			if (memory_tag != retire_tag) begin
+			if (writeback_tag != retire_tag) begin
 				o_retire_count <= o_retire_count + 1;
-				retire_tag <= memory_tag;
+				retire_tag <= writeback_tag;
 			end
 		end
 	end

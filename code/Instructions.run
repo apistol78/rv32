@@ -557,7 +557,12 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x0000000f,
 		name = "FENCE",
-		format = ""
+		format = "I",
+		type = insttype.COMPLEX,
+		verilog_text = [[
+			o_mem_flush <= 1;
+			`EXECUTE_DONE;
+		]]
 	},
 	{
 		mask = 0x0000707f,
