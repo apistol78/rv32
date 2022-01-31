@@ -1,0 +1,178 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Mon Jan 31 15:11:19 2022
+[*]
+[dumpfile] "/home/apistol/private/rv32/Rv32T.vcd"
+[dumpfile_mtime] "Mon Jan 31 15:10:47 2022"
+[dumpfile_size] 2277968
+[savefile] "/home/apistol/private/rv32/Verify.gtkw"
+[timestart] 5460
+[size] 2292 1229
+[pos] -1427 3
+*-3.506796 5441 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.SoC.
+[treeopen] TOP.SoC.cpu.
+[treeopen] TOP.SoC.cpu.execute.
+[treeopen] TOP.SoC.cpu.fetch.
+[treeopen] TOP.SoC.cpu.fetch.icache.
+[treeopen] TOP.SoC.cpu.memory.dcache.
+[sst_width] 241
+[signals_width] 455
+[sst_expanded] 1
+[sst_vpaned_height] 499
+@200
+-
+-TIMER
+@28
+TOP.SoC.timer.i_request
+TOP.SoC.timer.i_rw
+@22
+TOP.SoC.timer.i_wdata[31:0]
+TOP.SoC.timer.o_rdata[31:0]
+@28
+TOP.SoC.timer.o_ready
+TOP.SoC.timer.o_interrupt
+@22
+TOP.SoC.timer.cycles[63:0]
+TOP.SoC.timer.compare[63:0]
+@200
+-
+-BUS
+@28
+TOP.SoC.bus.o_bus_request
+TOP.SoC.bus.o_bus_rw
+@22
+TOP.SoC.bus.o_bus_address[31:0]
+TOP.SoC.bus.o_bus_wdata[31:0]
+TOP.SoC.bus.i_bus_rdata[31:0]
+@28
+TOP.SoC.bus.i_bus_ready
+@200
+-
+-ICACHE
+@28
+TOP.SoC.cpu.fetch.icache.i_clock
+TOP.SoC.cpu.fetch.icache.i_stall
+@22
+TOP.SoC.cpu.fetch.icache.state[3:0]
+TOP.SoC.cpu.fetch.icache.i_input_pc[31:0]
+@28
+TOP.SoC.cpu.fetch.icache.cache_initialized
+@22
+TOP.SoC.cpu.fetch.icache.cache_rdata[63:0]
+@28
+TOP.SoC.cpu.fetch.icache.o_ready
+@22
+TOP.SoC.cpu.fetch.icache.o_rdata[31:0]
+TOP.SoC.cpu.fetch.icache.o_bus_address[31:0]
+@28
+TOP.SoC.cpu.fetch.icache.i_bus_ready
+TOP.SoC.cpu.fetch.icache.o_bus_request
+@200
+-
+-FETCH
+@28
+TOP.SoC.cpu.fetch.i_jump
+@22
+TOP.SoC.cpu.fetch.i_jump_pc[31:0]
+@28
+TOP.SoC.cpu.fetch.i_irq
+@22
+TOP.SoC.cpu.fetch.i_irq_pc[31:0]
+TOP.SoC.cpu.fetch.next_pc[31:0]
+TOP.SoC.cpu.fetch.pc[31:0]
+@28
+TOP.SoC.cpu.fetch.icache_ready
+@22
+TOP.SoC.cpu.fetch.icache_rdata[31:0]
+TOP.SoC.cpu.fetch.o_tag[3:0]
+TOP.SoC.cpu.fetch.o_instruction[31:0]
+@24
+TOP.SoC.cpu.fetch.state[2:0]
+@200
+-
+-DECODE
+@22
+TOP.SoC.cpu.decode.i_tag[3:0]
+TOP.SoC.cpu.decode.o_tag[3:0]
+TOP.SoC.cpu.decode.i_instruction[31:0]
+TOP.SoC.cpu.decode.i_pc[31:0]
+@28
+TOP.SoC.cpu.decode.o_arithmetic
+TOP.SoC.cpu.decode.o_jump
+TOP.SoC.cpu.decode.o_jump_conditional
+TOP.SoC.cpu.decode.o_memory_read
+TOP.SoC.cpu.decode.o_memory_write
+TOP.SoC.cpu.decode.o_fault
+@200
+-
+-EXECUTE
+@28
+TOP.SoC.cpu.execute.i_clock
+TOP.SoC.cpu.execute.i_interrupt
+@22
+TOP.SoC.cpu.execute.i_tag[3:0]
+TOP.SoC.cpu.execute.o_tag[3:0]
+TOP.SoC.cpu.execute.i_pc[31:0]
+TOP.SoC.cpu.execute.i_instruction[31:0]
+TOP.SoC.cpu.execute.i_rs1[31:0]
+TOP.SoC.cpu.execute.i_rs2[31:0]
+@420
+TOP.SoC.cpu.execute.i_imm[31:0]
+@22
+TOP.SoC.cpu.execute.o_rd[31:0]
+@28
+TOP.SoC.cpu.execute.o_stall
+TOP.SoC.cpu.execute.i_jump
+TOP.SoC.cpu.execute.i_jump_conditional
+TOP.SoC.cpu.execute.o_jump
+@22
+TOP.SoC.cpu.execute.o_jump_pc[31:0]
+@28
+TOP.SoC.cpu.execute.o_irq
+@22
+TOP.SoC.cpu.execute.o_irq_pc[31:0]
+@200
+-
+-MEMORY
+@22
+TOP.SoC.cpu.memory.i_tag[3:0]
+TOP.SoC.cpu.memory.o_tag[3:0]
+@28
+TOP.SoC.cpu.memory.i_clock
+TOP.SoC.cpu.memory.i_mem_read
+TOP.SoC.cpu.memory.i_mem_write
+@24
+TOP.SoC.cpu.memory.i_mem_width[2:0]
+@22
+TOP.SoC.cpu.memory.i_mem_address[31:0]
+TOP.SoC.cpu.memory.i_rd[31:0]
+TOP.SoC.cpu.memory.i_inst_rd[4:0]
+@24
+TOP.SoC.cpu.memory.state[4:0]
+@28
+TOP.SoC.cpu.memory.dcache_rw
+TOP.SoC.cpu.memory.dcache_request
+TOP.SoC.cpu.memory.dcache_ready
+@22
+TOP.SoC.cpu.memory.dcache_address[31:0]
+TOP.SoC.cpu.memory.dcache_rdata[31:0]
+TOP.SoC.cpu.memory.dcache_wdata[31:0]
+@28
+TOP.SoC.cpu.memory.o_stall
+@22
+TOP.SoC.cpu.memory.o_rd[31:0]
+TOP.SoC.cpu.memory.o_inst_rd[4:0]
+@200
+-
+-WRITEBACK
+@28
+TOP.SoC.cpu.writeback.i_clock
+@22
+TOP.SoC.cpu.writeback.i_tag[3:0]
+TOP.SoC.cpu.writeback.o_tag[3:0]
+@28
+TOP.SoC.cpu.fetch.icache.o_bus_request
+[pattern_trace] 1
+[pattern_trace] 0
