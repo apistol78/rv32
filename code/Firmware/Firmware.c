@@ -177,6 +177,9 @@ void main()
 			if (cs == uart_rx_u8())
 			{
 				uart_tx_u8(0x80);	// Ok
+
+				// Ensure all data is written to SDRAM before calling user program.
+				__asm__ volatile ("fence");
 				
 				if (sp != 0)
 				{
