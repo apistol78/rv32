@@ -99,54 +99,6 @@ module CPU_Execute (
 
 	assign o_csr_index = i_imm;
 
-/*
-	reg mie_mtie;
-	reg [31:0] mtvec;
-	reg [31:0] mepc;
-	reg [31:0] mcause;
-	reg mip_mtip;
-
-	wire [31:0] mie = { 24'b0, mie_mtie, 7'b0 };	
-	wire [31:0] mip = { 24'b0, mip_mtip, 7'b0 };
-
-	// Read CSR value referenced by instruction.
-	reg [31:0] csr_rd;
-	always @(*) begin
-		csr_rd = 0;
-		if (`IMM == `CSR_MIE)
-			csr_rd = mie;
-		else if (`IMM == `CSR_MTVEC)
-			csr_rd = mtvec;
-		else if (`IMM == `CSR_MEPC)
-			csr_rd = mepc;
-		else if (`IMM == `CSR_MCAUSE)
-			csr_rd = mcause;
-		else if (`IMM == `CSR_MIP)
-			csr_rd = mip;
-		else if (`IMM == `CSR_MVENDORID)
-			csr_rd = 0;
-		else if (`IMM == `CSR_MARCHID)
-			csr_rd = 0;
-		else if (`IMM == `CSR_MIMPID)
-			csr_rd = 0;
-		else if (`IMM == `CSR_MHARTID)
-			csr_rd = 0;
-	end
-
-	// Write CSR.
-	reg csr_wr_en;
-	reg [31:0] csr_wr;
-	always @(posedge i_clock) begin
-		if (csr_wr_en) begin
-			if (`IMM == `CSR_MIE) begin
-				mie_mtie <= csr_wr[7];
-			end
-			else if (`IMM == `CSR_MTVEC)
-				mtvec <= csr_wr;
-		end
-	end
-*/
-
 	// ====================
 	// ALU
 	
