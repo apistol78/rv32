@@ -3,6 +3,7 @@
 `timescale 1ns/1ns
 
 module CPU_CSR(
+	input wire i_reset,
 	input wire i_clock,
 
 	// External interrupt input.
@@ -35,6 +36,14 @@ module CPU_CSR(
 
 	assign o_epc = mepc;
 
+	initial begin
+		mie_mtie = 0;
+		mtvec = 0;
+		mepc = 0;
+		mcause = 0;
+		mip_mtip = 0;
+	end
+
 	// Read CSR value by index.
 	always @(*) begin
 		o_rdata = 0;
@@ -60,33 +69,44 @@ module CPU_CSR(
 
 	// Write CSR value by index.
 	always @(posedge i_clock) begin
-		if (i_wdata_wr) begin
-			if (i_index == `CSR_MIE) begin
-				mie_mtie <= i_wdata[7];
+		if (i_reset) begin
+			mtvec <= 0;
+			mie_mtie <= 0;
+		end
+		else begin
+			if (i_wdata_wr) begin
+				if (i_index == `CSR_MIE) begin
+					mie_mtie <= i_wdata[7];
+				end
+				else if (i_index == `CSR_MTVEC)
+					mtvec <= i_wdata;
 			end
-			else if (i_index == `CSR_MTVEC)
-				mtvec <= i_wdata;
 		end
 	end
 
 	always @(posedge i_clock) begin
+		if (i_reset) begin
+			mepc <= 0;
+			mcause <= 0;
+			mip_mtip <= 0;
+		end
+		else begin
+			if (i_interrupt) begin
+				// \todo We're assuming only external interrupt is the timer.
+				if (mie_mtie) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h80000000 | (1 << 7);
+					mip_mtip <= 1'b1;
+				end
+			end
 
-		if (i_interrupt) begin
-			// \todo We're assuming only external interrupt is the timer.
-			if (mie_mtie) begin
-				o_irq_pending <= 1;
-				o_irq_pc <= mtvec;
-				mcause <= 32'h80000000 | (1 << 7);
-				mip_mtip <= 1'b1;
+			if (i_irq_dispatched) begin
+				o_irq_pending <= 0;
+				mepc <= i_irq_epc;
+				mip_mtip <= 1'b0;
 			end
 		end
-
-		if (i_irq_dispatched) begin
-			o_irq_pending <= 0;
-			mepc <= i_irq_epc;
-			mip_mtip <= 1'b0;
-		end
-
 	end
 
 endmodule

@@ -42,6 +42,7 @@ module CPU_v2 (
 	wire [31:0] csr_irq_epc;
 
 	CPU_CSR csr(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.i_interrupt(i_interrupt),
 
