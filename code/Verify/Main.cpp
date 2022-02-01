@@ -1282,6 +1282,27 @@ bool verify_PIPELINE_MEMORY_B(const char* trace)
 	return true;
 }
 
+bool verify_ICACHE(const char* trace)
+{
+	auto tb = create_soc();
+
+	tb->SoC__DOT__rom__DOT__data[0] = 0x00000013; // nop
+	tb->SoC__DOT__rom__DOT__data[1] = 0x00000013; // nop
+	tb->SoC__DOT__rom__DOT__data[2] = 0x00000013; // nop
+	tb->SoC__DOT__rom__DOT__data[3] = 0x00000013; // nop
+	tb->SoC__DOT__rom__DOT__data[4] = 0xff1ff06f; // j		0
+
+	evaluate(tb, trace, 4 + 1 + 4 + 1 + 2);
+
+	printf("PC: %08x\n", tb->SoC__DOT__cpu__DOT__fetch_pc);
+
+	if (tb->SoC__DOT__cpu__DOT__fetch_pc != 0x0000000c)
+		return false;
+
+	delete tb;
+	return false;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1332,7 +1353,7 @@ int main(int argc, char **argv)
 	// CHECK(verify_DIV);
 	// CHECK(verify_UDIV);
 	// CHECK(verify_JAL);
-	CHECK(verify_JALR);
+	// CHECK(verify_JALR);
 	// CHECK(verify_LB);
 	// CHECK(verify_LBU);
 	// CHECK(verify_LH);
@@ -1366,6 +1387,7 @@ int main(int argc, char **argv)
 	// CHECK(verify_MEM_LOAD_HAZARD);
 	// CHECK(verify_PIPELINE_MEMORY);
 	// CHECK(verify_PIPELINE_MEMORY_B);
+	CHECK(verify_ICACHE);
 
 	if (success)
 		printf("SUCCESS!\n");
