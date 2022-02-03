@@ -5,15 +5,25 @@
 module CPU_Decode(
 	input wire i_reset,
 	input wire i_clock,
-	input wire i_stall,
+
+	// Control
+	input wire i_execute_busy,
+	input wire i_fetch_valid,
+
+	output reg o_busy,
+	output reg o_valid,
+
+	output reg o_fault,
+
+	// Debug
+	input wire [`TAG_SIZE] i_tag,
+	output reg [`TAG_SIZE] o_tag,
 
 	// Input
-	input wire [`TAG_SIZE] i_tag,
 	input wire [31:0] i_instruction,
 	input wire [31:0] i_pc,
 
 	// Output
-	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
 	output reg [31:0] o_pc,
 	output reg [4:0] o_inst_rs1,
@@ -36,9 +46,7 @@ module CPU_Decode(
 	output reg [2:0] o_memory_width,
 	output reg o_memory_signed,
 
-	output reg [4:0] o_op,
-	
-	output reg o_fault
+	output reg [4:0] o_op
 );
 
 	`include "Instructions_ops.v"
@@ -73,7 +81,10 @@ module CPU_Decode(
 	wire have_RS2 = is_B | is_R | is_S;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
+	reg busy = 0;
+
 	initial begin
+		o_valid = 0;
 		o_tag = 0;
 		o_instruction = 0;
 		o_pc = 0;
@@ -97,8 +108,13 @@ module CPU_Decode(
 		o_fault = 0;
 	end
 
+	always @(*) begin
+		o_busy = busy || i_execute_busy;
+	end
+
 	always @(posedge i_clock) begin
 		if (i_reset) begin
+			o_valid <= 0;
 			o_tag <= 0;
 			o_instruction <= 0;
 			o_pc <= 0;
@@ -120,9 +136,19 @@ module CPU_Decode(
 			o_memory_signed <= 0;
 			o_op <= 0;
 			o_fault <= 0;
+
+			busy <= 0;
 		end
 		else begin
-			if (!i_stall && i_tag != o_tag) begin
+
+			busy <= 0;
+			o_valid <= 0;
+
+			if (i_fetch_valid && !i_execute_busy) begin
+
+				busy <= 0;
+				o_valid <= 1;
+
 				o_instruction <= i_instruction;
 				o_pc <= i_pc;
 

@@ -7,9 +7,13 @@ module CPU_Fetch(
 	input wire i_clock,
 
 	// Control
-	input wire i_stall,
+	input wire i_decode_busy,
+	output reg o_valid,
 	input wire i_jump,
 	input wire [31:0] i_jump_pc,
+
+	// Debug
+	output reg [`TAG_SIZE] o_tag,
 
 	// Interrupt
 	input wire i_irq_pending,
@@ -24,20 +28,12 @@ module CPU_Fetch(
 	input wire [31:0] i_bus_rdata,
 
 	// Output
-	output reg [`TAG_SIZE] o_tag,
 	output reg [31:0] o_instruction,
 	output reg [31:0] o_pc
 );
 
 	reg [2:0] state;
-	reg [2:0] next_state;
-
 	reg [31:0] pc;
-	reg [31:0] next_pc;
-
-	reg [`TAG_SIZE] next_o_tag;
-	reg [31:0] next_o_instruction;
-	reg [31:0] next_o_pc;
 
 	// ICache
 	wire [31:0] icache_rdata;
@@ -70,73 +66,51 @@ module CPU_Fetch(
 
 	initial begin
 		state = 0;
-		next_state = 0;
 		pc = 32'h00000000;
+		o_valid = 0;
 		o_tag = 0;
 		o_instruction = 0;
 		o_pc = 0;
 	end
 
 	always @(*) begin
-		icache_stall = i_stall || !(state == 0);
+		icache_stall = /*i_decode_busy ||*/ !(state == 0);
 	end
 
 	always @(posedge i_clock) begin
-		if (i_reset) begin
-			state <= 0;
-			pc <= 32'h00000000;
-			o_tag <= 0;
-			o_instruction <= 0;
-			o_pc <= 32'h00000000;
-		end
-		else begin
-			state <= next_state;
-			pc <= next_pc;
-			o_tag <= next_o_tag;
-			o_instruction <= next_o_instruction;
-			o_pc <= next_o_pc;
-		end
-	end
-	
-	always @(*) begin
-		next_state = state;
+		o_valid <= 0;
 
-		next_o_tag = o_tag;
-		next_o_instruction = o_instruction;
-		next_o_pc = o_pc;
-
-		next_pc = pc;
-
-		o_irq_dispatched = 0;
-		o_irq_epc = 0;
+		o_irq_dispatched <= 0;
+		o_irq_epc <= 0;
 
 		// Jump to interrupt if interrupt are pending.
 		if (i_irq_pending) begin
-			o_irq_dispatched = 1;
-			o_irq_epc = pc;
-			next_pc = i_irq_pc;
-			next_state = 0;
+			o_irq_dispatched <= 1;
+			o_irq_epc <= pc;
+			pc <= i_irq_pc;
+			state <= 0;
 		end
 		else begin
 			case (state)
 				0: begin
-					if (!i_stall && icache_ready) begin
+					if (!i_decode_busy && icache_ready) begin
 						// Output to pipeline instruction and PC.
-						next_o_tag = o_tag + 1;
-						next_o_instruction = icache_rdata;
-						next_o_pc = pc;
+						o_valid <= 1;
+						o_tag <= o_tag + 1;
+						o_instruction <= icache_rdata;
+						o_pc <= pc;
 
 						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
 							// Branch instruction, need to wait
 							// for an explicit "goto" signal before
 							// we can continue feeding the pipeline.
-							next_state = 1;
+							state <= 1;
 						end
 						else begin
 							// Move PC to next instruction, will
 							// enable to icache to start loading
 							// next instruction.
-							next_pc = pc + 4;
+							pc <= pc + 4;
 						end
 					end
 				end
@@ -144,8 +118,8 @@ module CPU_Fetch(
 				1: begin
 					// Wait for "goto" signal.
 					if (i_jump) begin
-						next_pc = i_jump_pc;
-						next_state = 0;
+						pc <= i_jump_pc;
+						state <= 0;
 					end				
 				end
 			endcase

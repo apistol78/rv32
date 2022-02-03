@@ -2,6 +2,8 @@
 
 `timescale 1ns/1ns
 
+// https://zipcpu.com/blog/2017/08/14/strategies-for-pipelining.html
+
 module CPU_v2 (
 	input wire i_reset,
 	input wire i_clock,					// CPU clock
@@ -74,13 +76,13 @@ module CPU_v2 (
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
-		.i_read_tag(fetch_tag),
+		.i_read(fetch_valid),
 		.i_read_rs1_idx(fetch_inst_rs1),
 		.i_read_rs2_idx(fetch_inst_rs2),
 		.o_rs1(rs1),
 		.o_rs2(rs2),
 
-		.i_write_tag(memory_tag),
+		.i_write(memory_valid),
 		.i_write_rd_idx(memory_inst_rd),
 		.i_rd(memory_rd)
 	);
@@ -88,6 +90,7 @@ module CPU_v2 (
 	//====================================================
 	// FETCH
 
+	wire fetch_valid;
 	wire [`TAG_SIZE] fetch_tag;
 	wire [31:0] fetch_instruction;
 	wire [31:0] fetch_pc;
@@ -97,9 +100,13 @@ module CPU_v2 (
 		.i_clock(i_clock),
 
 		// Control
-		.i_stall(memory_stall || execute_stall || decode_fault),
+		.i_decode_busy(decode_busy),
+		.o_valid(fetch_valid),
 		.i_jump(execute_jump),
 		.i_jump_pc(execute_jump_pc),
+
+		// Debug
+		.o_tag(fetch_tag),
 
 		// Interrupt
 		.i_irq_pending(csr_irq_pending),
@@ -114,7 +121,6 @@ module CPU_v2 (
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Output
-		.o_tag(fetch_tag),
 		.o_instruction(fetch_instruction),
 		.o_pc(fetch_pc)
 	);
@@ -122,6 +128,9 @@ module CPU_v2 (
 	//====================================================
 	// DECODE
 
+	wire decode_busy;
+	wire decode_valid;
+	wire decode_fault;
 	wire [`TAG_SIZE] decode_tag;
 	wire [31:0] decode_instruction;
 	wire [31:0] decode_pc;
@@ -146,21 +155,27 @@ module CPU_v2 (
 	wire decode_memory_signed;
 
 	wire [4:0] decode_op;
-	
-	wire decode_fault;
 
 	CPU_Decode decode(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.i_stall(memory_stall || execute_stall),
-	
-		// Input
+
+		// Control
+		.i_execute_busy(execute_busy),
+		.i_fetch_valid(fetch_valid),
+		.o_busy(decode_busy),
+		.o_valid(decode_valid),
+		.o_fault(decode_fault),
+
+		// Debug
 		.i_tag(fetch_tag),
+		.o_tag(decode_tag),
+
+		// Input
 		.i_instruction(fetch_instruction),
 		.i_pc(fetch_pc),
 
 		// Output
-		.o_tag(decode_tag),
 		.o_instruction(decode_instruction),
 		.o_pc(decode_pc),
 		.o_inst_rs1(decode_inst_rs1),
@@ -183,9 +198,7 @@ module CPU_v2 (
 		.o_memory_width(decode_memory_width),
 		.o_memory_signed(decode_memory_signed),
 
-		.o_op(decode_op),
-		
-		.o_fault(decode_fault)
+		.o_op(decode_op)
 	);
 
 	//====================================================
@@ -209,6 +222,11 @@ module CPU_v2 (
 	//====================================================
 	// EXECUTE
 
+	wire execute_busy;
+	wire execute_valid;
+	wire execute_jump;
+	wire [31:0] execute_jump_pc;
+	wire execute_fault;
 	wire [`TAG_SIZE] execute_tag;
 	wire [4:0] execute_inst_rd;
 	wire [31:0] execute_rd;
@@ -219,11 +237,6 @@ module CPU_v2 (
 	wire execute_mem_signed;
 	wire [31:0] execute_mem_address;
 	wire [31:0] execute_mem_wdata;
-
-	wire execute_jump;
-	wire [31:0] execute_jump_pc;
-	wire execute_stall;
-	wire execute_fault;
 	
 	CPU_Execute execute(
 		.i_reset(i_reset),
@@ -237,36 +250,40 @@ module CPU_v2 (
 		.i_epc(csr_epc),
 
 		// Control
-		.i_stall(memory_stall),
+		.i_memory_busy(memory_busy),
+		.i_decode_valid(decode_valid),
+		.o_busy(execute_busy),
+		.o_valid(execute_valid),
+		.o_jump(execute_jump),
+		.o_jump_pc(execute_jump_pc),
+		.o_fault(execute_fault),
+
+		// Debug
+		.i_tag(decode_tag),
+		.o_tag(execute_tag),
 
 		// Input from decode.
-		.i_tag(decode_tag),
 		.i_pc(decode_pc),
 		.i_instruction(decode_instruction),
 		.i_rs1(fwd_rs1),
 		.i_rs2(fwd_rs2),
 		.i_inst_rd(decode_inst_rd),
 		.i_imm(decode_imm),
-
 		.i_arithmetic(decode_arithmetic),
 		.i_compare(decode_compare),
 		.i_complex(decode_complex),
 		.i_jump(decode_jump),
 		.i_jump_conditional(decode_jump_conditional),
-
 		.i_alu_operation(decode_alu_operation),
 		.i_alu_operand1(decode_alu_operand1),
 		.i_alu_operand2(decode_alu_operand2),
-
 		.i_memory_read(decode_memory_read),
 		.i_memory_write(decode_memory_write),
 		.i_memory_width(decode_memory_width),
 		.i_memory_signed(decode_memory_signed),
-
 		.i_op(decode_op),
 
 		// Output from execute.
-		.o_tag(execute_tag),
 		.o_inst_rd(execute_inst_rd),
 		.o_rd(execute_rd),
 		.o_mem_read(execute_mem_read),
@@ -274,21 +291,17 @@ module CPU_v2 (
 		.o_mem_flush(execute_mem_flush),
 		.o_mem_width(execute_mem_width),
 		.o_mem_signed(execute_mem_signed),
-		.o_mem_address(execute_mem_address),
-
-		.o_jump(execute_jump),
-		.o_jump_pc(execute_jump_pc),
-		.o_stall(execute_stall),
-		.o_fault(execute_fault)
+		.o_mem_address(execute_mem_address)
 	);
 
 	//====================================================
 	// MEMORY
 
+	wire memory_busy;
+	wire memory_valid;
 	wire [`TAG_SIZE] memory_tag;
 	wire [4:0] memory_inst_rd;
 	wire [31:0] memory_rd;
-	wire memory_stall;
 
 	CPU_Memory memory(
 		.i_reset(i_reset),
@@ -302,8 +315,17 @@ module CPU_v2 (
 		.i_bus_rdata(i_dbus_rdata),
 		.o_bus_wdata(o_dbus_wdata),
 
-		// Input from execute.
+		// Control
+		.i_writeback_busy(writeback_busy),
+		.i_execute_valid(execute_valid),
+		.o_busy(memory_busy),
+		.o_valid(memory_valid),
+
+		// Debug
 		.i_tag(execute_tag),
+		.o_tag(memory_tag),
+
+		// Input from execute.
 		.i_inst_rd(execute_inst_rd),
 		.i_rd(execute_rd),
 		.i_mem_read(execute_mem_read),
@@ -314,15 +336,15 @@ module CPU_v2 (
 		.i_mem_address(execute_mem_address),
 
 		// Output from memory.
-		.o_tag(memory_tag),
 		.o_inst_rd(memory_inst_rd),
-		.o_rd(memory_rd),
-		.o_stall(memory_stall)
+		.o_rd(memory_rd)
 	);
 
 	//====================================================
 	// WRITEBACK
 
+	wire writeback_busy;
+	wire writeback_valid;
 	wire [`TAG_SIZE] writeback_tag;
 	wire [4:0] writeback_inst_rd;
 	wire [31:0] writeback_rd;
@@ -330,14 +352,21 @@ module CPU_v2 (
 	CPU_Writeback writeback(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
+
+		// Control
+		.i_memory_valid(memory_valid),
+		.o_busy(writeback_busy),
+		.o_valid(writeback_valid),
+
+		// Debug
+		.i_tag(memory_tag),
+		.o_tag(writeback_tag),
 	
 		// Input from memory.
-		.i_tag(memory_tag),
 		.i_inst_rd(memory_inst_rd),
 		.i_rd(memory_rd),
 
 		// Output from writeback.
-		.o_tag(writeback_tag),
 		.o_inst_rd(writeback_inst_rd),
 		.o_rd(writeback_rd)
 	);

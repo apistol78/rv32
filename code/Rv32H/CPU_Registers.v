@@ -3,30 +3,27 @@
 `timescale 1ns/1ns
 
 module CPU_Registers (
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
-	input wire [`TAG_SIZE] i_read_tag,
-	input wire [4:0] i_read_rs1_idx,
-	input wire [4:0] i_read_rs2_idx,
-	output reg [31:0] o_rs1,
-	output reg [31:0] o_rs2,
+	input i_read,
+	input [4:0] i_read_rs1_idx,
+	input [4:0] i_read_rs2_idx,
+	output [31:0] o_rs1,
+	output [31:0] o_rs2,
 
-	input wire [`TAG_SIZE] i_write_tag,
-	input wire [4:0] i_write_rd_idx,
-	input wire [31:0] i_rd
+	input i_write,
+	input [4:0] i_write_rd_idx,
+	input [31:0] i_rd
 );
-	reg [`TAG_SIZE] read_tag;
-	reg [`TAG_SIZE] write_tag;
+	assign o_rs1 = rs1;
+	assign o_rs2 = rs2;
+
 	reg [31:0] r[31:0];
+	reg [31:0] rs1 = 0;
+	reg [31:0] rs2 = 0;
 
     initial begin
-		o_rs1 = 0;
-		o_rs2 = 0;
-
-		read_tag = 0;
-		write_tag = 0;
-
         r[ 0] = 32'h0000_0000;
         r[ 1] = 32'h0000_0000;
         r[ 2] = 32'h1000_0400 - 4;	// sp	
@@ -64,11 +61,8 @@ module CPU_Registers (
 	always @(posedge i_clock, posedge i_reset)
 	begin
 		if (i_reset) begin
-			o_rs1 <= 0;
-			o_rs2 <= 0;
-
-			read_tag <= 0;
-			write_tag <= 0;
+			rs1 <= 0;
+			rs2 <= 0;
 
 			r[ 0] <= 32'h0000_0000;
 			r[ 1] <= 32'h0000_0000;
@@ -102,17 +96,14 @@ module CPU_Registers (
 			r[29] <= 32'h0000_0000;
 			r[30] <= 32'h0000_0000;
 			r[31] <= 32'h0000_0000;
-		
 		end
 		else begin
-			if (i_read_tag != read_tag) begin
-                o_rs1 <= (i_read_rs1_idx != 0) ? r[i_read_rs1_idx] : 32'h0;
-                o_rs2 <= (i_read_rs2_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
-				read_tag <= i_read_tag;
+			if (i_read) begin
+                rs1 <= (i_read_rs1_idx != 0) ? r[i_read_rs1_idx] : 32'h0;
+                rs2 <= (i_read_rs2_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
 			end
-			if (i_write_tag != write_tag) begin
+			if (i_write) begin
 				r[i_write_rd_idx] <= i_rd;
-				write_tag <= i_write_tag;
 			end
 		end
 	end

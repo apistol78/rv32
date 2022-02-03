@@ -14,7 +14,13 @@ module CPU_Execute (
 	input wire [31:0] i_epc,
 
 	// Control
-	input wire i_stall,
+	input wire i_memory_busy,
+	input wire i_decode_valid,
+	output reg o_busy,
+	output reg o_valid,
+	output reg o_jump,
+	output reg [31:0] o_jump_pc,
+	output reg o_fault,
 
 	// Input
 	input wire [`TAG_SIZE] i_tag,
@@ -24,22 +30,18 @@ module CPU_Execute (
 	input wire [31:0] i_rs2,
 	input wire [4:0] i_inst_rd,
 	input wire [31:0] i_imm,
-
 	input wire i_arithmetic,
 	input wire i_compare,
 	input wire i_complex,
 	input wire i_jump,
 	input wire i_jump_conditional,
-
 	input wire [3:0] i_alu_operation,
 	input wire [2:0] i_alu_operand1,
 	input wire [2:0] i_alu_operand2,
-
 	input wire i_memory_read,
 	input wire i_memory_write,
 	input wire [2:0] i_memory_width,
 	input wire i_memory_signed,
-
 	input wire [4:0] i_op,
 	
 	// Output
@@ -51,12 +53,7 @@ module CPU_Execute (
 	output reg o_mem_flush,
 	output reg [2:0] o_mem_width,
 	output reg o_mem_signed,
-	output reg [31:0] o_mem_address,
-
-	output reg o_jump,
-	output reg [31:0] o_jump_pc,
-	output wire o_stall,
-	output reg o_fault
+	output reg [31:0] o_mem_address
 );
 
 	`include "Instructions_ops.v"
@@ -79,20 +76,20 @@ module CPU_Execute (
 	`define GOTO(ADDR) 		\
 		o_jump <= 1'b1;		\
 		o_jump_pc <= ADDR;
-	
+
+	`define MEPC 			\
+		i_epc
+
 	`define CYCLE			\
 		cycle
 
 	`define EXECUTE_OP		\
 		i_op
 
-	`undef EXECUTE_DONE
 	`define EXECUTE_DONE	\
-		o_tag <= i_tag;		\
+		busy <= 1;			\
+		o_valid <= 1;		\
 		cycle <= 0;
-
-	`define MEPC 			\
-		i_epc
 
 	// ====================
 	// CSR
@@ -155,7 +152,11 @@ module CPU_Execute (
 
 	// ====================
 
+	reg busy = 0;
+	reg [4:0] cycle = 0;
+
 	initial begin
+		o_valid = 0;
 		o_tag = 0;
 		o_inst_rd = 0;
 		o_mem_read = 0;
@@ -167,16 +168,15 @@ module CPU_Execute (
 		o_jump = 0;
 		o_jump_pc = 0;
 		o_fault = 0;
-
-		cycle = 0;
 	end
-
-	assign o_stall = (i_tag != o_tag) && i_complex;
 	
-	reg [4:0] cycle;
+	always @(*) begin
+		o_busy = busy || i_memory_busy;
+	end
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
+			o_valid <= 0;
 			o_tag <= 0;
 			o_inst_rd <= 0;
 			o_mem_read <= 0;
@@ -189,12 +189,20 @@ module CPU_Execute (
 			o_jump_pc <= 0;
 			o_fault <= 0;
 
+			busy <= 0;
 			cycle <= 0;
 		end
 		else begin
-			o_jump <= 0;
 
-			if (!i_stall && i_tag != o_tag) begin
+			busy <= 0;
+			o_valid <= 0;
+
+			if ((i_decode_valid && !i_memory_busy) || cycle > 0) begin
+				
+				o_valid <= 1;
+				o_jump <= 0;
+				o_tag <= i_tag;
+
 				o_inst_rd <= i_inst_rd;
 
 				o_mem_address <= alu_result;
@@ -204,20 +212,15 @@ module CPU_Execute (
 				o_mem_width <= i_memory_width;
 				o_mem_signed <= i_memory_signed;
 
-				cycle <= cycle + 1;
-
 				if (i_arithmetic) begin
 					`RD <= alu_result;
-					`EXECUTE_DONE;
 				end
 				else if (i_compare) begin
 					`RD <= { 31'b0, alu_compare_result };
-					`EXECUTE_DONE;
 				end
 				else if (i_jump) begin
 					`RD <= `PC + 4;
 					`GOTO(alu_result);
-					`EXECUTE_DONE;
 				end
 				else if (i_jump_conditional) begin
 					if (alu_compare_result) begin
@@ -226,16 +229,17 @@ module CPU_Execute (
 					else begin
 						`GOTO(`PC + 4);
 					end
-					`EXECUTE_DONE;
 				end
 				else if (i_memory_read) begin
-					`EXECUTE_DONE;
 				end
 				else if (i_memory_write) begin
 					`RD <=`RS2;
-					`EXECUTE_DONE;
 				end
 				else if (i_complex) begin
+					busy <= 1;
+					o_valid <= 0;
+					cycle <= cycle + 1;
+
 					// Note, input values are only valid in first cycle so
 					// in case of multicycle operations the inputs must be
 					// stored in temporary registers.

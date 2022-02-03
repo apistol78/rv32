@@ -14,8 +14,17 @@ module CPU_Memory(
 	input wire [31:0] i_bus_rdata,
 	output wire [31:0] o_bus_wdata,
 
-	// Input
+	// Control
+	input wire i_writeback_busy,
+	input wire i_execute_valid,
+	output reg o_busy,
+	output wire o_valid,
+
+	// Debug
 	input wire [`TAG_SIZE] i_tag,
+	output reg [`TAG_SIZE] o_tag,
+
+	// Input
 	input wire [4:0] i_inst_rd,
 	input wire [31:0] i_rd,
 	input wire i_mem_read,
@@ -26,10 +35,8 @@ module CPU_Memory(
 	input wire [31:0] i_mem_address,
 
 	// Output
-	output reg [`TAG_SIZE] o_tag,
 	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_rd,
-	output wire o_stall
+	output reg [31:0] o_rd
 );
 
 	localparam STATE_IDLE			= 0;
@@ -39,16 +46,13 @@ module CPU_Memory(
 	localparam STATE_WRITE_RMW_1	= 4;
 	localparam STATE_FLUSH			= 5;
 
-	reg [4:0] state;
-	reg [4:0] next;
-	
-	reg dcache_rw;
-	reg dcache_request;
-	reg dcache_flush;
+	reg dcache_rw = 0;
+	reg dcache_request = 0;
+	reg dcache_flush = 0;
 	wire dcache_ready;
 	wire [31:0] dcache_address;
 	wire [31:0] dcache_rdata;
-	reg [31:0] dcache_wdata;
+	reg [31:0] dcache_wdata = 0;
 
 	CPU_DCache dcache(
 		.i_reset(i_reset),
@@ -78,20 +82,10 @@ module CPU_Memory(
 	assign o_bus_wdata = dcache_wdata;
 */
 
-	initial begin
-		state = STATE_IDLE;
-		next = STATE_IDLE;
-		dcache_rw = 0;
-		dcache_request = 0;
-		dcache_flush = 0;
-		dcache_wdata = 0;
-		o_tag = 0;
-		o_inst_rd = 0;
-		o_rd = 0;
-	end
-
-	// Stall pipeline if we perform a memory access.
-	assign o_stall = (i_tag != o_tag) && (i_mem_read || i_mem_write || i_mem_flush);
+	// // Stall pipeline if we perform a memory access.
+	// assign o_stall =
+	// 	(state != STATE_IDLE) ||
+	// 	(i_run && (i_mem_read || i_mem_write || i_mem_flush));
 
 	assign dcache_address = { i_mem_address[31:2], 2'b00 };
 
@@ -99,20 +93,38 @@ module CPU_Memory(
 	wire [7:0] bus_rdata_byte = dcache_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = dcache_rdata >> (address_byte_index * 8);
 
-	reg [`TAG_SIZE] next_o_tag;
-	reg [31:0] next_o_rd;
-	reg [4:0] next_o_inst_rd;
-	reg [31:0] rmw_rdata;
-	reg [31:0] next_rmw_rdata;
+	reg [4:0] state = STATE_IDLE;
+	reg [4:0] next = STATE_IDLE;
+	reg next_o_valid = 0;
+	reg [`TAG_SIZE] next_o_tag = 0;
+	reg [31:0] next_o_rd = 0;
+	reg [4:0] next_o_inst_rd = 0;
+	reg [31:0] rmw_rdata = 0;
+	reg [31:0] next_rmw_rdata = 0;
+
+	reg busy = 0;
+
+	initial begin
+		o_valid = 0;
+		o_tag = 0;
+		o_inst_rd = 0;
+		o_rd = 0;
+	end
+
+	always @(*) begin
+		o_busy = busy || i_writeback_busy;
+	end
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= STATE_IDLE;
+			o_valid <= 0;
 			o_tag <= 0;
 			o_inst_rd <= 0;
 			o_rd <= 0;			
 		end
 		else begin
+			o_valid <= next_o_valid;
 			o_tag <= next_o_tag;
 			o_rd <= next_o_rd;
 			o_inst_rd <= next_o_inst_rd;	
@@ -125,6 +137,7 @@ module CPU_Memory(
 	always @(*) begin
 		next = state;
 
+		next_o_valid = 0; // o_valid;
 		next_o_tag = o_tag;
 		next_o_rd = o_rd;
 		next_o_inst_rd = o_inst_rd;
@@ -136,14 +149,18 @@ module CPU_Memory(
 		dcache_wdata = 0;
 		dcache_flush = 0;
 
+		busy = 0;
+
 		case (state)
 			STATE_IDLE: begin
-				if (i_tag != o_tag) begin
+				if (i_execute_valid && !i_writeback_busy) begin
 					if (i_mem_read) begin
+						busy = 1;
 						dcache_request = 1;
 						next = STATE_READ;
 					end
 					else if (i_mem_write) begin
+						busy = 1;
 						dcache_request = 1;
 						if (i_mem_width == 4) begin
 							dcache_rw = 1;
@@ -156,11 +173,13 @@ module CPU_Memory(
 						end
 					end
 					else if (i_mem_flush) begin
+						busy = 1;
 						dcache_request = 1;
 						dcache_flush = 1;
 						next = STATE_FLUSH;
 					end
 					else begin
+						next_o_valid = 1'b1;
 						next_o_tag = i_tag;
 						next_o_rd = i_rd;
 						next_o_inst_rd = i_inst_rd;
@@ -169,12 +188,14 @@ module CPU_Memory(
 			end
 
 			STATE_FLUSH: begin
+				busy = 1;
 				dcache_request = 1;
 				dcache_flush = 1;
 				if (dcache_ready) begin
 					//dcache_request = 0;
 					//dcache_flush = 0;
 
+					next_o_valid = 1'b1;
 					next_o_tag = i_tag;
 					next_o_rd = i_rd;
 					next_o_inst_rd = i_inst_rd;					
@@ -184,8 +205,10 @@ module CPU_Memory(
 			end
 
 			STATE_READ: begin
+				busy = 1;
 				dcache_request = 1;
 				if (dcache_ready) begin
+					next_o_valid = 1'b1;
 					next_o_tag = i_tag;
 
 					case (i_mem_width)
@@ -201,10 +224,12 @@ module CPU_Memory(
 			end
 
 			STATE_WRITE_WORD: begin
+				busy = 1;
 				dcache_request = 1;
 				dcache_rw = 1;
 				dcache_wdata = i_rd;
 				if (dcache_ready) begin
+					next_o_valid = 1'b1;
 					next_o_tag = i_tag;
 					next_o_rd = i_rd;
 					next_o_inst_rd = i_inst_rd;
@@ -213,6 +238,7 @@ module CPU_Memory(
 			end
 
 			STATE_WRITE_RMW_0: begin
+				busy = 1;
 				dcache_request = 1;
 				if (dcache_ready) begin
 					next_rmw_rdata = dcache_rdata;
@@ -221,6 +247,7 @@ module CPU_Memory(
 			end
 
 			STATE_WRITE_RMW_1: begin
+				busy = 1;
 				dcache_request = 1;
 				dcache_rw = 1;
 				if (i_mem_width == 1) begin
@@ -240,6 +267,7 @@ module CPU_Memory(
 					endcase						
 				end
 				if (dcache_ready) begin
+					next_o_valid = 1'b1;
 					next_o_tag = i_tag;
 					next_o_rd = i_rd;
 					next_o_inst_rd = i_inst_rd;
