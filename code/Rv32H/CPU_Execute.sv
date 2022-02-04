@@ -1,4 +1,4 @@
-`include "CPU_Defines.v"
+`include "CPU_Defines.sv"
 
 `timescale 1ns/1ns
 
@@ -56,7 +56,7 @@ module CPU_Execute (
 	output reg [31:0] o_mem_address
 );
 
-	`include "Instructions_ops.v"
+	`include "Instructions_ops.sv"
 
 	// Alias symbols for generated code.
 	`undef PC
@@ -243,7 +243,7 @@ module CPU_Execute (
 					// Note, input values are only valid in first cycle so
 					// in case of multicycle operations the inputs must be
 					// stored in temporary registers.
-					`include "Instructions_execute_ops.v"
+					`include "Instructions_execute_ops.sv"
 				end
 				else begin
 					// Invalid condition, should fault since it's

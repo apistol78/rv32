@@ -1,4 +1,4 @@
-`include "CPU_Defines.v"
+`include "CPU_Defines.sv"
 
 `timescale 1ns/1ns
 
@@ -49,11 +49,11 @@ module CPU_Decode(
 	output reg [4:0] o_op
 );
 
-	`include "Instructions_ops.v"
+	`include "Instructions_ops.sv"
 
 	`undef INSTRUCTION
 	`define INSTRUCTION i_instruction
-	`include "Instructions_decode.v"
+	`include "Instructions_decode.sv"
 	
 	`undef ZERO
 	`undef RS1
@@ -65,9 +65,9 @@ module CPU_Decode(
 	`define RS2 3'd2
 	`define PC	3'd3
 	`define IMM 3'd4
-	`include "Instructions_alu.v"
+	`include "Instructions_alu.sv"
 
-	`include "Instructions_memory.v"
+	`include "Instructions_memory.sv"
 
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
 	wire [31:0] inst_I_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:20] };
@@ -182,7 +182,7 @@ module CPU_Decode(
 				o_memory_signed <= memory_signed;
 				
 				`define OP o_op
-				`include "Instructions_decode_ops.v"
+				`include "Instructions_decode_ops.sv"
 
 				if (is_ARITHMETIC || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
 					o_tag <= i_tag;

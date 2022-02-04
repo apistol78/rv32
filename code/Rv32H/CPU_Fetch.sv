@@ -1,4 +1,4 @@
-`include "CPU_Defines.v"
+`include "CPU_Defines.sv"
 
 `timescale 1ns/1ns
 
@@ -62,7 +62,7 @@ module CPU_Fetch(
 	// 
 	`undef INSTRUCTION
 	`define INSTRUCTION icache_rdata
-	`include "Instructions_decode.v"
+	`include "Instructions_decode.sv"
 
 	initial begin
 		state = 0;
