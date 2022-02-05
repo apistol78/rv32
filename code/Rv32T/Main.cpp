@@ -25,6 +25,7 @@
 #include <Ui/Form.h>
 #include <Ui/FloodLayout.h>
 #include <Ui/TableLayout.h>
+#include <Ui/StatusBar/StatusBar.h>
 #if defined(_WIN32)
 #	include <Ui/Win32/WidgetFactoryWin32.h>
 #elif defined(__APPLE__)
@@ -176,7 +177,7 @@ int main(int argc, const char **argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
+	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4, 4));
 
 	Ref< ui::Container > container = new ui::Container();
 	container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*", L"*", 0, 4));
@@ -207,6 +208,12 @@ int main(int argc, const char **argv)
 
 	Ref< ui::Image > image = new ui::Image();
 	image->create(containerImage, framebuffer, ui::Image::WsScale);
+
+	Ref< ui::StatusBar > statusBar = new ui::StatusBar();
+	statusBar->create(form);
+	statusBar->addColumn(ui::dpi96(100));	// IPC
+	statusBar->addColumn(ui::dpi96(100));	// BUS
+	statusBar->addColumn(ui::dpi96(200));	// PC
 
 	form->update();
 	form->show();
@@ -310,27 +317,25 @@ int main(int argc, const char **argv)
 			key1 = false;
 		}
 
-		if ((Tc % 1000) == 0)
+		if (hdmi.shouldDraw())
 		{
 			framebuffer->copyImage(hdmi.getImage());
 			image->setImage(framebuffer);
+		}
 
+		if ((Tc % 30) == 0)
+		{
 			uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-			uint32_t dr = 0; // soc->SoC__DOT__cpu_retire_count - lastRetired;
+			uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 			uint32_t db = busActiveCount - lastBusActiveCount;
 			if (dc > 0)
 			{
-				form->setText(
-					str(
-						L"RV32 - %.2f IPC - %.2f%% BUS - %08x PC",
-						((double)dr) / dc,
-						((double)db * 100.0) / dc,
-						soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
-					)
-				);
+				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
+				statusBar->setText(1, str(L"%.2f%% BUS", ((double)db * 100.0) / dc));
+				statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-				lastRetired = 0; // soc->SoC__DOT__cpu_retire_count;
+				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 				lastBusActiveCount = busActiveCount;
 			}
 		}
@@ -340,7 +345,7 @@ int main(int argc, const char **argv)
 	log::info << L"--- Terminated ---" << Endl;
 	log::info << L"PC     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
 	log::info << L"CYCLES : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
-	// log::info << L"RETIRE : " << soc->SoC__DOT__cpu_retire_count << Endl;
+	log::info << L"RETIRE : " << soc->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
 	log::info << L"BUS    : " << busActiveCount << L", " << (busActiveCount * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
 

@@ -60,8 +60,16 @@ void HDMI::eval(VSoC* soc)
             m_image->setPixel(x, y, Color4f::fromColor4ub(
                 Color4ub(r, g, b)
             ));
+            m_dirty = true;
         }
         m_hpos++;
     }
     m_clk = (bool)clk;
+}
+
+bool HDMI::shouldDraw()
+{
+    bool dirty = m_dirty;
+    m_dirty = false;
+    return dirty;
 }

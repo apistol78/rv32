@@ -14,6 +14,8 @@ public:
 
     traktor::drawing::Image* getImage() { return m_image; }
 
+    bool shouldDraw();
+
 private:
     traktor::Ref< traktor::drawing::Image > m_image;
     bool m_vsync = false;
@@ -21,4 +23,5 @@ private:
     int32_t m_hpos = 0;
     int32_t m_vpos = 0;
     bool m_clk = false;
+    bool m_dirty = false;
 };
