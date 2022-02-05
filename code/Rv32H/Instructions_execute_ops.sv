@@ -43,7 +43,7 @@ end
 
 // FENCE
 else if (`EXECUTE_OP == OP_FENCE) begin
-	o_mem_flush <= 1;
+	`MEM_FLUSH <= 1;
 	`EXECUTE_DONE;
 end
 

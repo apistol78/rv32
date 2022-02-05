@@ -7,13 +7,8 @@ module CPU_Fetch(
 	input wire i_clock,
 
 	// Control
-	input wire i_decode_busy,
-	output reg o_valid,
 	input wire i_jump,
 	input wire [31:0] i_jump_pc,
-
-	// Debug
-	output reg [`TAG_SIZE] o_tag,
 
 	// Interrupt
 	input wire i_irq_pending,
@@ -28,12 +23,13 @@ module CPU_Fetch(
 	input wire [31:0] i_bus_rdata,
 
 	// Output
-	output reg [31:0] o_instruction,
-	output reg [31:0] o_pc
+	input wire i_decode_busy,
+	output fetch_data_t o_data
 );
-
-	reg [2:0] state;
-	reg [31:0] pc;
+	reg [2:0] state = 0;
+	reg [31:0] pc = 0;
+	fetch_data_t dataC = 0;
+	fetch_data_t dataN = 0;
 
 	// ICache
 	wire [31:0] icache_rdata;
@@ -64,22 +60,18 @@ module CPU_Fetch(
 	`define INSTRUCTION icache_rdata
 	`include "Instructions_decode.sv"
 
-	initial begin
-		state = 0;
-		pc = 32'h00000000;
-		o_valid = 0;
-		o_tag = 0;
-		o_instruction = 0;
-		o_pc = 0;
+	assign o_data = !i_decode_busy ? dataC : dataN;
+
+	always_comb begin
+		icache_stall = i_decode_busy || !(state == 0);
 	end
 
-	always @(*) begin
-		icache_stall = /*i_decode_busy ||*/ !(state == 0);
+	always_ff @(posedge i_clock) begin
+		if (!i_decode_busy)
+			dataN <= dataC;
 	end
 
-	always @(posedge i_clock) begin
-		o_valid <= 0;
-
+	always_ff @(posedge i_clock) begin
 		o_irq_dispatched <= 0;
 		o_irq_epc <= 0;
 
@@ -94,11 +86,10 @@ module CPU_Fetch(
 			case (state)
 				0: begin
 					if (!i_decode_busy && icache_ready) begin
-						// Output to pipeline instruction and PC.
-						o_valid <= 1;
-						o_tag <= o_tag + 1;
-						o_instruction <= icache_rdata;
-						o_pc <= pc;
+
+						dataC.tag <= dataC.tag + 1;
+						dataC.instruction <= icache_rdata;
+						dataC.pc <= pc;
 
 						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
 							// Branch instruction, need to wait

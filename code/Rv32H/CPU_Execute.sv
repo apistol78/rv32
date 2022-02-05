@@ -5,6 +5,7 @@
 module CPU_Execute (
 	input wire i_reset,
 	input wire i_clock,
+	output reg o_fault,
 
 	// CSR
 	output wire [11:0] o_csr_index,
@@ -14,46 +15,18 @@ module CPU_Execute (
 	input wire [31:0] i_epc,
 
 	// Control
-	input wire i_memory_busy,
-	input wire i_decode_valid,
-	output reg o_busy,
-	output reg o_valid,
 	output reg o_jump,
 	output reg [31:0] o_jump_pc,
-	output reg o_fault,
 
 	// Input
-	input wire [`TAG_SIZE] i_tag,
-	input wire [31:0] i_pc,
-	input wire [31:0] i_instruction,
+	output o_busy,
+	input decode_data_t i_data,
 	input wire [31:0] i_rs1,
 	input wire [31:0] i_rs2,
-	input wire [4:0] i_inst_rd,
-	input wire [31:0] i_imm,
-	input wire i_arithmetic,
-	input wire i_compare,
-	input wire i_complex,
-	input wire i_jump,
-	input wire i_jump_conditional,
-	input wire [3:0] i_alu_operation,
-	input wire [2:0] i_alu_operand1,
-	input wire [2:0] i_alu_operand2,
-	input wire i_memory_read,
-	input wire i_memory_write,
-	input wire [2:0] i_memory_width,
-	input wire i_memory_signed,
-	input wire [4:0] i_op,
 	
 	// Output
-	output reg [`TAG_SIZE] o_tag,
-	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_rd,
-	output reg o_mem_read,
-	output reg o_mem_write,
-	output reg o_mem_flush,
-	output reg [2:0] o_mem_width,
-	output reg o_mem_signed,
-	output reg [31:0] o_mem_address
+	input i_memory_busy,
+	output execute_data_t o_data
 );
 
 	`include "Instructions_ops.sv"
@@ -62,15 +35,18 @@ module CPU_Execute (
 	`undef PC
 	`undef RS1
 	`undef RS2
-	`undef RD
 	`undef IMM
 	`undef ZERO
-	`define PC		i_pc
-	`define RS1		i_rs1
-	`define RS2		i_rs2
-	`define RD		o_rd
-	`define IMM		i_imm
-	`define ZERO	0
+	`define PC			i_data.pc
+	`define RS1			i_rs1
+	`define RS2			i_rs2
+	`define IMM			i_data.imm
+	`define ZERO		0
+
+	`undef RD
+	`undef MEM_FLUSH
+	`define RD			dataC.rd
+	`define MEM_FLUSH	dataC.mem_flush
 
 	`undef GOTO
 	`define GOTO(ADDR) 		\
@@ -84,41 +60,41 @@ module CPU_Execute (
 		cycle
 
 	`define EXECUTE_OP		\
-		i_op
+		i_data.op
 
-	`define EXECUTE_DONE	\
-		busy <= 1;			\
-		o_valid <= 1;		\
+	`define EXECUTE_DONE			\
+		dataC.tag <= i_data.tag;	\
+		busy <= 0;					\
 		cycle <= 0;
 
 	// ====================
 	// CSR
 
-	assign o_csr_index = i_imm;
+	assign o_csr_index = i_data.imm;
 
 	// ====================
 	// ALU
 	
 	wire [31:0] alu_operand1 =
-		(i_alu_operand1 == 3'd0) ? `ZERO :
-		(i_alu_operand1 == 3'd1) ? `RS1 :
-		(i_alu_operand1 == 3'd2) ? `RS2 :
-		(i_alu_operand1 == 3'd3) ? `PC  :
-		(i_alu_operand1 == 3'd4) ? `IMM :
+		(i_data.alu_operand1 == 3'd0) ? `ZERO :
+		(i_data.alu_operand1 == 3'd1) ? `RS1 :
+		(i_data.alu_operand1 == 3'd2) ? `RS2 :
+		(i_data.alu_operand1 == 3'd3) ? `PC  :
+		(i_data.alu_operand1 == 3'd4) ? `IMM :
 		32'd0;
 
 	wire [31:0] alu_operand2 =
-		(i_alu_operand2 == 3'd0) ? `ZERO :
-		(i_alu_operand2 == 3'd1) ? `RS1 :
-		(i_alu_operand2 == 3'd2) ? `RS2 :
-		(i_alu_operand2 == 3'd3) ? `PC  :
-		(i_alu_operand2 == 3'd4) ? `IMM :
+		(i_data.alu_operand2 == 3'd0) ? `ZERO :
+		(i_data.alu_operand2 == 3'd1) ? `RS1 :
+		(i_data.alu_operand2 == 3'd2) ? `RS2 :
+		(i_data.alu_operand2 == 3'd3) ? `PC  :
+		(i_data.alu_operand2 == 3'd4) ? `IMM :
 		32'd0;
 
 	wire [31:0] alu_result;
 	wire alu_compare_result;
 	CPU_ALU alu(
-		.i_op(i_alu_operation),
+		.i_op(i_data.alu_operation),
 		.i_op1(alu_operand1),
 		.i_op2(alu_operand2),
 		.o_result(alu_result),
@@ -152,92 +128,82 @@ module CPU_Execute (
 
 	// ====================
 
-	reg busy = 0;
-	reg [4:0] cycle = 0;
+	logic busy = 0;
+	logic [4:0] cycle = 0;
+	execute_data_t dataC = 0;
+	execute_data_t dataN = 0;
 
+	assign o_busy = busy || i_memory_busy;
+	assign o_data = !i_memory_busy ? dataC : dataN;
+	
 	initial begin
-		o_valid = 0;
-		o_tag = 0;
-		o_inst_rd = 0;
-		o_mem_read = 0;
-		o_mem_write = 0;
-		o_mem_flush = 0;
-		o_mem_width = 0;
-		o_mem_signed = 0;
-		o_mem_address = 0;
+		o_csr_wdata_wr = 0;
+		o_csr_wdata = 0;
 		o_jump = 0;
 		o_jump_pc = 0;
 		o_fault = 0;
 	end
 	
-	always @(*) begin
-		o_busy = busy || i_memory_busy;
+	always_ff @(posedge i_clock) begin
+		if (!i_memory_busy)
+			dataN <= dataC;
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			o_valid <= 0;
-			o_tag <= 0;
-			o_inst_rd <= 0;
-			o_mem_read <= 0;
-			o_mem_write <= 0;
-			o_mem_flush <= 0;
-			o_mem_width <= 0;
-			o_mem_signed <= 0;
-			o_mem_address <= 0;
-			o_jump <= 0;
-			o_jump_pc <= 0;
-			o_fault <= 0;
-
 			busy <= 0;
 			cycle <= 0;
+			dataC <= 0;
+			dataN <= 0;
 		end
 		else begin
 
 			busy <= 0;
-			o_valid <= 0;
 
-			if ((i_decode_valid && !i_memory_busy) || cycle > 0) begin
+			if (i_data.tag != dataC.tag) begin
 				
-				o_valid <= 1;
 				o_jump <= 0;
-				o_tag <= i_tag;
 
-				o_inst_rd <= i_inst_rd;
+				dataC.inst_rd <= i_data.inst_rd;
 
-				o_mem_address <= alu_result;
-				o_mem_read <= i_memory_read;
-				o_mem_write <= i_memory_write;
-				o_mem_flush <= 0;
-				o_mem_width <= i_memory_width;
-				o_mem_signed <= i_memory_signed;
+				dataC.mem_address <= alu_result;
+				dataC.mem_read <= i_data.memory_read;
+				dataC.mem_write <= i_data.memory_write;
+				dataC.mem_flush <= 0;
+				dataC.mem_width <= i_data.memory_width;
+				dataC.mem_signed <= i_data.memory_signed;
 
-				if (i_arithmetic) begin
+				if (i_data.arithmetic) begin
 					`RD <= alu_result;
+					`EXECUTE_DONE;
 				end
-				else if (i_compare) begin
+				else if (i_data.compare) begin
 					`RD <= { 31'b0, alu_compare_result };
+					`EXECUTE_DONE;
 				end
-				else if (i_jump) begin
+				else if (i_data.jump) begin
 					`RD <= `PC + 4;
 					`GOTO(alu_result);
+					`EXECUTE_DONE;
 				end
-				else if (i_jump_conditional) begin
+				else if (i_data.jump_conditional) begin
 					if (alu_compare_result) begin
 						`GOTO($signed(`PC) + $signed(`IMM));
 					end
 					else begin
 						`GOTO(`PC + 4);
 					end
+					`EXECUTE_DONE;
 				end
-				else if (i_memory_read) begin
+				else if (i_data.memory_read) begin
+					`EXECUTE_DONE;
 				end
-				else if (i_memory_write) begin
+				else if (i_data.memory_write) begin
 					`RD <=`RS2;
+					`EXECUTE_DONE;
 				end
-				else if (i_complex) begin
+				else if (i_data.complx) begin
 					busy <= 1;
-					o_valid <= 0;
 					cycle <= cycle + 1;
 
 					// Note, input values are only valid in first cycle so

@@ -560,7 +560,7 @@ local instructions = {
 		format = "I",
 		type = insttype.COMPLEX,
 		verilog_text = [[
-			o_mem_flush <= 1;
+			`MEM_FLUSH <= 1;
 			`EXECUTE_DONE;
 		]]
 	},

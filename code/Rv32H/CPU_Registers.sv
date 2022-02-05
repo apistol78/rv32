@@ -1,4 +1,4 @@
-`include "CPU_Defines.sv"
+`include "CPU_Types.sv"
 
 `timescale 1ns/1ns
 
@@ -6,22 +6,24 @@ module CPU_Registers (
 	input i_reset,
 	input i_clock,
 
-	input i_read,
-	input [4:0] i_read_rs1_idx,
-	input [4:0] i_read_rs2_idx,
+	input fetch_data_t i_fetch_data,
 	output [31:0] o_rs1,
 	output [31:0] o_rs2,
 
-	input i_write,
-	input [4:0] i_write_rd_idx,
-	input [31:0] i_rd
+	input memory_data_t i_memory_data
 );
 	assign o_rs1 = rs1;
 	assign o_rs2 = rs2;
 
+	reg [`TAG_SIZE] read_tag = 0;
+	reg [`TAG_SIZE] write_tag = 0;
+
 	reg [31:0] r[31:0];
 	reg [31:0] rs1 = 0;
 	reg [31:0] rs2 = 0;
+
+	wire [4:0] inst_rs1 = i_fetch_data.instruction[19:15];
+	wire [4:0] inst_rs2 = i_fetch_data.instruction[24:20];
 
     initial begin
         r[ 0] = 32'h0000_0000;
@@ -64,6 +66,9 @@ module CPU_Registers (
 			rs1 <= 0;
 			rs2 <= 0;
 
+			read_tag <= 0;
+			write_tag <= 0;
+
 			r[ 0] <= 32'h0000_0000;
 			r[ 1] <= 32'h0000_0000;
 			r[ 2] <= 32'h1000_0400 - 4;	// sp	
@@ -98,12 +103,14 @@ module CPU_Registers (
 			r[31] <= 32'h0000_0000;
 		end
 		else begin
-			if (i_read) begin
-                rs1 <= (i_read_rs1_idx != 0) ? r[i_read_rs1_idx] : 32'h0;
-                rs2 <= (i_read_rs2_idx != 0) ? r[i_read_rs2_idx] : 32'h0;
+			if (i_fetch_data.tag != read_tag) begin
+                rs1 <= (inst_rs1 != 0) ? r[inst_rs1] : 32'h0;
+                rs2 <= (inst_rs2 != 0) ? r[inst_rs2] : 32'h0;
+				read_tag <= i_fetch_data.tag;
 			end
-			if (i_write) begin
-				r[i_write_rd_idx] <= i_rd;
+			if (i_memory_data.tag != write_tag) begin
+				r[i_memory_data.inst_rd] <= i_memory_data.rd;
+				write_tag <= i_memory_data.tag;
 			end
 		end
 	end

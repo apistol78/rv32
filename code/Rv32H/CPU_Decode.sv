@@ -5,56 +5,24 @@
 module CPU_Decode(
 	input wire i_reset,
 	input wire i_clock,
-
-	// Control
-	input wire i_execute_busy,
-	input wire i_fetch_valid,
-
-	output reg o_busy,
-	output reg o_valid,
-
 	output reg o_fault,
 
-	// Debug
-	input wire [`TAG_SIZE] i_tag,
-	output reg [`TAG_SIZE] o_tag,
-
 	// Input
-	input wire [31:0] i_instruction,
-	input wire [31:0] i_pc,
-
+	output o_busy,
+	input fetch_data_t i_data,
+	
 	// Output
-	output reg [31:0] o_instruction,
-	output reg [31:0] o_pc,
-	output reg [4:0] o_inst_rs1,
-	output reg [4:0] o_inst_rs2,
-	output reg [4:0] o_inst_rd,
-	output reg [31:0] o_imm,
-
-	output reg o_arithmetic,
-	output reg o_compare,
-	output reg o_complex,
-	output reg o_jump,
-	output reg o_jump_conditional,
-
-	output reg [3:0] o_alu_operation,
-	output reg [2:0] o_alu_operand1,
-	output reg [2:0] o_alu_operand2,
-
-	output reg o_memory_read,
-	output reg o_memory_write,
-	output reg [2:0] o_memory_width,
-	output reg o_memory_signed,
-
-	output reg [4:0] o_op
+	input i_execute_busy,
+	output decode_data_t o_data
 );
 
 	`include "Instructions_ops.sv"
 
 	`undef INSTRUCTION
-	`define INSTRUCTION i_instruction
+	`define INSTRUCTION i_data.instruction
 	`include "Instructions_decode.sv"
 	
+	// Alias symbols for generated code.
 	`undef ZERO
 	`undef RS1
 	`undef RS2
@@ -81,82 +49,39 @@ module CPU_Decode(
 	wire have_RS2 = is_B | is_R | is_S;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
-	reg busy = 0;
+	decode_data_t dataC = 0;
+	decode_data_t dataN = 0;
+
+	assign o_busy = i_execute_busy;
+	assign o_data = !i_execute_busy ? dataC : dataN;
 
 	initial begin
-		o_valid = 0;
-		o_tag = 0;
-		o_instruction = 0;
-		o_pc = 0;
-		o_inst_rs1 = 0;
-		o_inst_rs2 = 0;
-		o_inst_rd = 0;
-		o_imm = 0;
-		o_arithmetic = 0;
-		o_compare = 0;
-		o_complex = 0;
-		o_jump = 0;
-		o_jump_conditional = 0;
-		o_alu_operation = 0;
-		o_alu_operand1 = 0;
-		o_alu_operand2 = 0;
-		o_memory_read = 0;
-		o_memory_write = 0;
-		o_memory_width = 0;
-		o_memory_signed = 0;
-		o_op = 0;
 		o_fault = 0;
 	end
 
-	always @(*) begin
-		o_busy = busy || i_execute_busy;
+	always_ff @(posedge i_clock) begin
+		if (!i_execute_busy)
+			dataN <= dataC;
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			o_valid <= 0;
-			o_tag <= 0;
-			o_instruction <= 0;
-			o_pc <= 0;
-			o_inst_rs1 <= 0;
-			o_inst_rs2 <= 0;
-			o_inst_rd <= 0;
-			o_imm <= 0;
-			o_arithmetic <= 0;
-			o_compare <= 0;
-			o_complex <= 0;
-			o_jump <= 0;
-			o_jump_conditional <= 0;
-			o_alu_operation <= 0;
-			o_alu_operand1 <= 0;
-			o_alu_operand2 <= 0;
-			o_memory_read <= 0;
-			o_memory_write <= 0;
-			o_memory_width <= 0;
-			o_memory_signed <= 0;
-			o_op <= 0;
+			dataC <= 0;
+			dataN <= 0;
 			o_fault <= 0;
-
-			busy <= 0;
 		end
 		else begin
 
-			busy <= 0;
-			o_valid <= 0;
+			if (i_data.tag != dataC.tag) begin
 
-			if (i_fetch_valid && !i_execute_busy) begin
+				dataC.instruction <= i_data.instruction;
+				dataC.pc <= i_data.pc;
 
-				busy <= 0;
-				o_valid <= 1;
-
-				o_instruction <= i_instruction;
-				o_pc <= i_pc;
-
-				o_inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
-				o_inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
-				o_inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
+				dataC.inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
+				dataC.inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
+				dataC.inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
 				
-				o_imm <=
+				dataC.imm <=
 					is_B ? inst_B_imm :
 					is_I ? inst_I_imm :
 					is_J ? inst_J_imm :
@@ -166,26 +91,26 @@ module CPU_Decode(
 					is_CSR ? inst_CSR_imm :
 					32'h0;
 				
-				o_arithmetic <= is_ARITHMETIC;
-				o_compare <= is_COMPARE;
-				o_complex <= is_COMPLEX;
-				o_jump <= is_JUMP;
-				o_jump_conditional <= is_JUMP_CONDITIONAL;
+				dataC.arithmetic <= is_ARITHMETIC;
+				dataC.compare <= is_COMPARE;
+				dataC.complx <= is_COMPLEX;
+				dataC.jump <= is_JUMP;
+				dataC.jump_conditional <= is_JUMP_CONDITIONAL;
 
-				o_alu_operation <= alu_operation;
-				o_alu_operand1 <= alu_operand1;
-				o_alu_operand2 <= alu_operand2;
+				dataC.alu_operation <= alu_operation;
+				dataC.alu_operand1 <= alu_operand1;
+				dataC.alu_operand2 <= alu_operand2;
 
-				o_memory_read <= memory_read;
-				o_memory_write <= memory_write;
-				o_memory_width <= memory_width;
-				o_memory_signed <= memory_signed;
+				dataC.memory_read <= memory_read;
+				dataC.memory_write <= memory_write;
+				dataC.memory_width <= memory_width;
+				dataC.memory_signed <= memory_signed;
 				
-				`define OP o_op
+				`define OP dataC.op
 				`include "Instructions_decode_ops.sv"
 
 				if (is_ARITHMETIC || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
-					o_tag <= i_tag;
+					dataC.tag <= i_data.tag;
 				end
 				else begin
 					// Invalid or unsupported instructions end here.

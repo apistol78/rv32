@@ -1,3 +1,5 @@
+`ifndef _CPU_DEFINES_SV
+`define _CPU_DEFINES_SV
 
 // Tag size, wider is useful for debugging but no more than a
 // single bit should be necessary.
@@ -40,3 +42,5 @@
 `define CSR_MARCHID		12'hf12
 `define CSR_MIMPID		12'hf13
 `define CSR_MHARTID		12'hf14
+
+`endif	// _CPU_DEFINES_SV

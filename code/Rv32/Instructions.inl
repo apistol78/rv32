@@ -335,6 +335,11 @@ else if ((word & 0xfe00007f) == 0x1a000053)
 else if ((word & 0x0000707f) == 0x0000000f)
 {
 	TRACE(L"	FENCE");
+	{
+			auto f = parseFormatI(word);
+			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
+			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
+		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

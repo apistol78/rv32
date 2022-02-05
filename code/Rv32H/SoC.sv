@@ -1,3 +1,4 @@
+`include "CPU_Types.sv"
 
 `define ENABLE_DDR2LP
 //`define ENABLE_HSMC_XCVR

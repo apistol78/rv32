@@ -34,8 +34,8 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 
 	for (int32_t i = 0; i < steps; ++i)
 	{
-		const uint32_t from = tb->SoC__DOT__cpu__DOT__writeback_tag;
-		while (tb->SoC__DOT__cpu__DOT__writeback_tag == from)
+		const uint32_t from = tb->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+		while (tb->SoC__DOT__cpu__DOT__writeback__DOT__retired == from)
 		{
 			//contextp->timeInc(1);
 			++time;
@@ -498,7 +498,7 @@ bool verify_JALR(const char* trace)
 
 	// printf("RA %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[RA]);
 	// printf("S1 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1]);
-	// printf("PC %08x\n", tb->SoC__DOT__cpu__DOT__fetch_pc);
+	// printf("PC %08x\n", tb->SoC__DOT__cpu__DOT__fetch__DOT__pc);
 
 	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[RA] != 0x00000008)
 		return false;	
@@ -506,7 +506,7 @@ bool verify_JALR(const char* trace)
 	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] != 2)
 		return false;	
 
-	if (tb->SoC__DOT__cpu__DOT__fetch_pc != 0x00000010)
+	if (tb->SoC__DOT__cpu__DOT__fetch__DOT__pc != 0x00000010)
 		return false;	
 
 	delete tb;
@@ -1294,9 +1294,9 @@ bool verify_ICACHE(const char* trace)
 
 	evaluate(tb, trace, 4 + 1 + 4 + 1 + 2);
 
-	printf("PC: %08x\n", tb->SoC__DOT__cpu__DOT__fetch_pc);
+	printf("PC: %08x\n", tb->SoC__DOT__cpu__DOT__fetch__DOT__pc);
 
-	if (tb->SoC__DOT__cpu__DOT__fetch_pc != 0x0000000c)
+	if (tb->SoC__DOT__cpu__DOT__fetch__DOT__pc != 0x0000000c)
 		return false;
 
 	delete tb;
