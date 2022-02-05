@@ -60,20 +60,19 @@ module CPU_Decode(
 	end
 
 	always_ff @(posedge i_clock) begin
-		if (!i_execute_busy)
+		if (i_reset)
+			dataN <= 0;
+		else if (!i_execute_busy)
 			dataN <= dataC;
 	end
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			dataC <= 0;
-			dataN <= 0;
 			o_fault <= 0;
 		end
 		else begin
-
 			if (i_data.tag != dataC.tag) begin
-
 				dataC.instruction <= i_data.instruction;
 				dataC.pc <= i_data.pc;
 

@@ -145,7 +145,9 @@ module CPU_Execute (
 	end
 	
 	always_ff @(posedge i_clock) begin
-		if (!i_memory_busy)
+		if (i_reset)
+			dataN <= 0;
+		else if (!i_memory_busy)
 			dataN <= dataC;
 	end
 
@@ -154,14 +156,11 @@ module CPU_Execute (
 			busy <= 0;
 			cycle <= 0;
 			dataC <= 0;
-			dataN <= 0;
 		end
 		else begin
-
 			busy <= 0;
-
 			if (i_data.tag != dataC.tag) begin
-				
+	
 				o_jump <= 0;
 
 				dataC.inst_rd <= i_data.inst_rd;

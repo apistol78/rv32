@@ -67,7 +67,9 @@ module CPU_Fetch(
 	end
 
 	always_ff @(posedge i_clock) begin
-		if (!i_decode_busy)
+		if (i_reset)
+			dataN <= 0;
+		else if (!i_decode_busy)
 			dataN <= dataC;
 	end
 

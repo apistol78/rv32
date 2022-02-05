@@ -131,20 +131,21 @@ module CPU_v2 (
 	//====================================================
 	// HAZARD
 
-	// Forward register values from pipeline if already in flight.
-	wire [31:0] fwd_rs1 = 
-		(decode_data.inst_rs1 == 0) ? 32'h0 :
-		(decode_data.inst_rs1 == execute_data.inst_rd && execute_data.mem_read == 0) ? execute_data.rd :
-		(decode_data.inst_rs1 == memory_data.inst_rd) ? memory_data.rd :
-		(decode_data.inst_rs1 == writeback_data.inst_rd) ? writeback_data.rd :
-		rs1;
+	wire [31:0] forward_rs1;
+	wire [31:0] forward_rs2;
 
-	wire [31:0] fwd_rs2 =
-		(decode_data.inst_rs2 == 0) ? 32'h0 :
-		(decode_data.inst_rs2 == execute_data.inst_rd && execute_data.mem_read == 0) ? execute_data.rd :
-		(decode_data.inst_rs2 == memory_data.inst_rd) ? memory_data.rd :
-		(decode_data.inst_rs2 == writeback_data.inst_rd) ? writeback_data.rd :
-		rs2;
+	CPU_Forward forward(
+		.i_decode_data(decode_data),
+		.i_execute_data(execute_data),
+		.i_memory_data(memory_data),
+		.i_writeback_data(writeback_data),
+
+		.i_rs1(rs1),
+		.i_rs2(rs2),
+
+		.o_rs1(forward_rs1),
+		.o_rs2(forward_rs2)
+	);
 
 	//====================================================
 	// EXECUTE
@@ -174,8 +175,8 @@ module CPU_v2 (
 		// Input
 		.o_busy(execute_busy),
 		.i_data(decode_data),
-		.i_rs1(fwd_rs1),
-		.i_rs2(fwd_rs2),
+		.i_rs1(forward_rs1),
+		.i_rs2(forward_rs2),
 	
 		// Output
 		.i_memory_busy(memory_busy),
