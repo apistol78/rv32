@@ -19,7 +19,7 @@ module BRAM #(
 
 	initial o_ready = 0;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_request) begin
 			if (!i_rw) begin
 				o_rdata <= data[i_address >> ADDR_LSH];
@@ -30,7 +30,7 @@ module BRAM #(
 		end
 	end
 
-	always @(posedge i_clock)
+	always_ff @(posedge i_clock)
 		o_ready <= i_request;
 
 endmodule

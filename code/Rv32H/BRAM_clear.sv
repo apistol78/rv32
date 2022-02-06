@@ -40,7 +40,7 @@ module BRAM_clear #(
 
 	assign o_initialized = clear >= SIZE;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			clear <= 0;
 		end
@@ -49,7 +49,7 @@ module BRAM_clear #(
 		end
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (clear < SIZE) begin
 			data[clear] <= CLEAR_VALUE;
 		end 
@@ -65,7 +65,7 @@ module BRAM_clear #(
 		end
 	end
 
-	always @(posedge i_clock)
+	always_ff @(posedge i_clock)
 		o_ready <= i_request;
 
 endmodule

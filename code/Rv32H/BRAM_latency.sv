@@ -21,7 +21,11 @@ module BRAM_latency #(
 
 	initial o_ready = 0;
 
-	always @(posedge i_clock) begin
+	always_comb begin
+		o_ready = i_request && (counter >= LATENCY);
+	end
+
+	always_ff @(posedge i_clock) begin
 		if (i_request) begin
 			if (!i_rw) begin
 				o_rdata <= data[i_address >> ADDR_LSH];
@@ -31,13 +35,9 @@ module BRAM_latency #(
 			end
 
 			counter <= counter + 1;
-			if (counter >= LATENCY) begin
-				o_ready <= 1'b1;
-			end
 		end
 		else begin
 			counter <= 0;
-			o_ready <= 1'b0;
 		end
 	end
 
