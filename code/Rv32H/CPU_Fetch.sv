@@ -74,48 +74,55 @@ module CPU_Fetch(
 	end
 
 	always_ff @(posedge i_clock) begin
-		o_irq_dispatched <= 0;
-		o_irq_epc <= 0;
-
-		// Jump to interrupt if interrupt are pending.
-		if (i_irq_pending) begin
-			o_irq_dispatched <= 1;
-			o_irq_epc <= pc;
-			pc <= i_irq_pc;
+		if (i_reset) begin
 			state <= 0;
+			pc <= 0;
+			dataC <= 0;
 		end
 		else begin
-			case (state)
-				0: begin
-					if (!i_decode_busy && icache_ready) begin
+			o_irq_dispatched <= 0;
+			o_irq_epc <= 0;
 
-						dataC.tag <= dataC.tag + 1;
-						dataC.instruction <= icache_rdata;
-						dataC.pc <= pc;
+			// Jump to interrupt if interrupt are pending.
+			if (i_irq_pending) begin
+				o_irq_dispatched <= 1;
+				o_irq_epc <= pc;
+				pc <= i_irq_pc;
+				state <= 0;
+			end
+			else begin
+				case (state)
+					0: begin
+						if (!i_decode_busy && icache_ready) begin
 
-						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
-							// Branch instruction, need to wait
-							// for an explicit "goto" signal before
-							// we can continue feeding the pipeline.
-							state <= 1;
-						end
-						else begin
-							// Move PC to next instruction, will
-							// enable to icache to start loading
-							// next instruction.
-							pc <= pc + 4;
+							dataC.tag <= dataC.tag + 1;
+							dataC.instruction <= icache_rdata;
+							dataC.pc <= pc;
+
+							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET || is_WFI) begin
+								// Branch instruction, need to wait
+								// for an explicit "goto" signal before
+								// we can continue feeding the pipeline.
+								state <= 1;
+							end
+							else begin
+								// Move PC to next instruction, will
+								// enable to icache to start loading
+								// next instruction.
+								pc <= pc + 4;
+							end
 						end
 					end
-				end
 
-				1: begin
-					// Wait for "goto" signal.
-					if (i_jump) begin
-						pc <= i_jump_pc;
-						state <= 0;
-					end				
-				end
-			endcase
+					1: begin
+						// Wait for "goto" signal.
+						if (i_jump) begin
+							pc <= i_jump_pc;
+							state <= 0;
+						end				
+					end
+				endcase
+			end
 		end
 	end
 

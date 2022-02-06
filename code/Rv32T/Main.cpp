@@ -169,6 +169,7 @@ int main(int argc, const char **argv)
 #endif
 
 	bool trace = false;
+	bool reset = false;
 	bool key1 = false;
 	bool slow = false;
 
@@ -180,7 +181,7 @@ int main(int argc, const char **argv)
 	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4, 4));
 
 	Ref< ui::Container > container = new ui::Container();
-	container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*", L"*", 0, 4));
+	container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*,*", L"*", 0, 4));
 
 	Ref< ui::Button > buttonTrace = new ui::Button();
 	buttonTrace->create(container, L"Trace");
@@ -188,6 +189,12 @@ int main(int argc, const char **argv)
 		buttonTrace->setEnable(false);
 		trace = true;
 	});
+
+	Ref< ui::Button > buttonReset = new ui::Button();
+	buttonReset->create(container, L"Reset");
+	buttonReset->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+		reset = true;
+	});	
 
 	Ref< ui::Button > buttonKey1 = new ui::Button();
 	buttonKey1->create(container, L"KEY1");
@@ -279,6 +286,7 @@ int main(int argc, const char **argv)
 			++time;
 			soc->CLOCK_125_p = 0;
 			soc->KEY |= key1 ? 2 : 0;
+			soc->CPU_RESET_n = reset ? 0 : 1;
 
 			soc->eval();
 
@@ -288,6 +296,7 @@ int main(int argc, const char **argv)
 			++time;
 			soc->CLOCK_125_p = 1;
 			soc->KEY |= key1 ? 2 : 0;
+			soc->CPU_RESET_n = reset ? 0 : 1;
 
 			soc->eval();
 
@@ -315,6 +324,7 @@ int main(int argc, const char **argv)
 				++busActiveCount;
 
 			key1 = false;
+			reset = false;
 		}
 
 		if (hdmi.shouldDraw())

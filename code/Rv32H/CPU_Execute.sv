@@ -45,8 +45,8 @@ module CPU_Execute (
 
 	`undef RD
 	`undef MEM_FLUSH
-	`define RD			dataC.rd
-	`define MEM_FLUSH	dataC.mem_flush
+	`define RD			data.rd
+	`define MEM_FLUSH	data.mem_flush
 
 	`undef GOTO
 	`define GOTO(ADDR) 		\
@@ -62,15 +62,9 @@ module CPU_Execute (
 	`define EXECUTE_OP		\
 		i_data.op
 
-	`define EXECUTE_DONE			\
-		dataC.tag <= i_data.tag;	\
-		busy <= 0;					\
+	`define EXECUTE_DONE		\
+		data.tag <= i_data.tag;	\
 		cycle <= 0;
-
-	// ====================
-	// CSR
-
-	assign o_csr_index = i_data.imm;
 
 	// ====================
 	// ALU
@@ -128,14 +122,14 @@ module CPU_Execute (
 
 	// ====================
 
-	logic busy = 0;
-	logic [4:0] cycle = 0;
-	execute_data_t dataC = 0;
-	execute_data_t dataN = 0;
-
 	assign o_busy = busy || i_memory_busy;
-	assign o_data = !i_memory_busy ? dataC : dataN;
-	
+	assign o_csr_index = i_data.imm;
+	assign o_data = data;
+
+	logic busy;
+	logic [4:0] cycle = 0;
+	execute_data_t data = 0;
+
 	initial begin
 		o_csr_wdata_wr = 0;
 		o_csr_wdata = 0;
@@ -144,33 +138,32 @@ module CPU_Execute (
 		o_fault = 0;
 	end
 	
-	always_ff @(posedge i_clock) begin
-		if (i_reset)
-			dataN <= 0;
-		else if (!i_memory_busy)
-			dataN <= dataC;
+	always_comb begin
+		busy = (i_data.tag != data.tag) && i_data.complx;
 	end
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			busy <= 0;
 			cycle <= 0;
-			dataC <= 0;
+			data <= 0;
+			o_csr_wdata_wr <= 0;
+			o_csr_wdata <= 0;
+			o_jump <= 0;
+			o_jump_pc <= 0;
+			o_fault <= 0;			
 		end
 		else begin
-			busy <= 0;
-			if (i_data.tag != dataC.tag) begin
+			if (i_data.tag != data.tag) begin
 	
 				o_jump <= 0;
 
-				dataC.inst_rd <= i_data.inst_rd;
-
-				dataC.mem_address <= alu_result;
-				dataC.mem_read <= i_data.memory_read;
-				dataC.mem_write <= i_data.memory_write;
-				dataC.mem_flush <= 0;
-				dataC.mem_width <= i_data.memory_width;
-				dataC.mem_signed <= i_data.memory_signed;
+				data.inst_rd <= i_data.inst_rd;
+				data.mem_address <= alu_result;
+				data.mem_read <= i_data.memory_read;
+				data.mem_write <= i_data.memory_write;
+				data.mem_flush <= 0;
+				data.mem_width <= i_data.memory_width;
+				data.mem_signed <= i_data.memory_signed;
 
 				if (i_data.arithmetic) begin
 					`RD <= alu_result;
@@ -202,7 +195,6 @@ module CPU_Execute (
 					`EXECUTE_DONE;
 				end
 				else if (i_data.complx) begin
-					busy <= 1;
 					cycle <= cycle + 1;
 
 					// Note, input values are only valid in first cycle so

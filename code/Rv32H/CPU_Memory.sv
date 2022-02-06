@@ -73,19 +73,16 @@ module CPU_Memory(
 	wire [7:0] bus_rdata_byte = dcache_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = dcache_rdata >> (address_byte_index * 8);
 
-	logic busy = 0;
-
+	logic busy;
 	memory_data_t data = 0;
 	memory_data_t next_data = 0;
-
 	logic [4:0] state = STATE_IDLE;
 	logic [4:0] next_state = STATE_IDLE;
-
 	logic [31:0] rmw_rdata = 0;
 	logic [31:0] next_rmw_rdata = 0;
 
 	always_comb begin
-		busy = (state != STATE_IDLE);
+		busy = (i_data.tag != data.tag) && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
 	end
 
 	always_ff @(posedge i_clock) begin

@@ -49,38 +49,30 @@ module CPU_Decode(
 	wire have_RS2 = is_B | is_R | is_S;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
-	decode_data_t dataC = 0;
-	decode_data_t dataN = 0;
-
 	assign o_busy = i_execute_busy;
-	assign o_data = !i_execute_busy ? dataC : dataN;
+	assign o_data = data;
+
+	decode_data_t data = 0;
 
 	initial begin
 		o_fault = 0;
 	end
 
 	always_ff @(posedge i_clock) begin
-		if (i_reset)
-			dataN <= 0;
-		else if (!i_execute_busy)
-			dataN <= dataC;
-	end
-
-	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			dataC <= 0;
+			data <= 0;
 			o_fault <= 0;
 		end
 		else begin
-			if (i_data.tag != dataC.tag) begin
-				dataC.instruction <= i_data.instruction;
-				dataC.pc <= i_data.pc;
+			if (i_data.tag != data.tag) begin
+				data.instruction <= i_data.instruction;
+				data.pc <= i_data.pc;
 
-				dataC.inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
-				dataC.inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
-				dataC.inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
+				data.inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
+				data.inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
+				data.inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
 				
-				dataC.imm <=
+				data.imm <=
 					is_B ? inst_B_imm :
 					is_I ? inst_I_imm :
 					is_J ? inst_J_imm :
@@ -90,26 +82,26 @@ module CPU_Decode(
 					is_CSR ? inst_CSR_imm :
 					32'h0;
 				
-				dataC.arithmetic <= is_ARITHMETIC;
-				dataC.compare <= is_COMPARE;
-				dataC.complx <= is_COMPLEX;
-				dataC.jump <= is_JUMP;
-				dataC.jump_conditional <= is_JUMP_CONDITIONAL;
+				data.arithmetic <= is_ARITHMETIC;
+				data.compare <= is_COMPARE;
+				data.complx <= is_COMPLEX;
+				data.jump <= is_JUMP;
+				data.jump_conditional <= is_JUMP_CONDITIONAL;
 
-				dataC.alu_operation <= alu_operation;
-				dataC.alu_operand1 <= alu_operand1;
-				dataC.alu_operand2 <= alu_operand2;
+				data.alu_operation <= alu_operation;
+				data.alu_operand1 <= alu_operand1;
+				data.alu_operand2 <= alu_operand2;
 
-				dataC.memory_read <= memory_read;
-				dataC.memory_write <= memory_write;
-				dataC.memory_width <= memory_width;
-				dataC.memory_signed <= memory_signed;
+				data.memory_read <= memory_read;
+				data.memory_write <= memory_write;
+				data.memory_width <= memory_width;
+				data.memory_signed <= memory_signed;
 				
-				`define OP dataC.op
+				`define OP data.op
 				`include "Instructions_decode_ops.sv"
 
 				if (is_ARITHMETIC || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
-					dataC.tag <= i_data.tag;
+					data.tag <= i_data.tag;
 				end
 				else begin
 					// Invalid or unsupported instructions end here.
