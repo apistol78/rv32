@@ -12,7 +12,9 @@
 #endif
 #include <Core/Io/DynamicMemoryStream.h>
 #include <Core/Io/FileSystem.h>
+#include <Core/Io/FileOutputStream.h>
 #include <Core/Io/StreamCopy.h>
+#include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/SafeDestroy.h>
@@ -220,7 +222,7 @@ int main(int argc, const char **argv)
 	statusBar->create(form);
 	statusBar->addColumn(ui::dpi96(100));	// IPC
 	statusBar->addColumn(ui::dpi96(100));	// BUS
-	statusBar->addColumn(ui::dpi96(200));	// PC
+	statusBar->addColumn(ui::dpi96(400));	// PC
 
 	form->update();
 	form->show();
@@ -249,6 +251,18 @@ int main(int argc, const char **argv)
 	if (cmdLine.hasOption(L't', L"trace"))
 		trace = true;
 
+	Ref< FileOutputStream > fos;
+	if (cmdLine.hasOption(L"trace-pc"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.pc", File::FmWrite);
+		if (!f)
+		{
+			log::error << L"Unable to create PC trace." << Endl;
+			return 1;
+		}
+		fos = new FileOutputStream(f, new Utf8Encoding());
+	}
+
 	HDMI hdmi;
 	LEDR ledr;
 	UART_TX uart_tx;
@@ -259,8 +273,18 @@ int main(int argc, const char **argv)
 	uint32_t lastRetired = 0;
 	uint32_t busActiveCount = 0;
 	uint32_t lastBusActiveCount = 0;
-
+	uint32_t lastTracePC = -1;
 	int32_t Tp = 0;
+
+	uint32_t nreq_rom = 0;
+	uint32_t nreq_ram = 0;
+	uint32_t nreq_l2cache = 0;
+	uint32_t nreq_led = 0;
+	uint32_t nreq_uart = 0;
+	uint32_t nreq_i2c = 0;
+	uint32_t nreq_sd = 0;
+	uint32_t nreq_dma = 0;
+	uint32_t nreq_timer = 0;
 
 	timer.reset();
 	while (g_going)
@@ -278,7 +302,7 @@ int main(int argc, const char **argv)
 		}
 
 		int32_t Tc = (int32_t)(timer.getElapsedTime() * 1000);
-		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 200000;
+		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
 		
 		for (int32_t i = 0; i < count; ++i)
@@ -323,6 +347,46 @@ int main(int argc, const char **argv)
 			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 				++busActiveCount;
 
+			/*
+SoC__DOT____Vcellinp__rom__i_request;
+SoC__DOT____Vcellinp__ram__i_request;
+SoC__DOT____Vcellinp__l2cache__i_request;
+SoC__DOT____Vcellinp__led__i_request;
+SoC__DOT____Vcellinp__uart__i_request;
+SoC__DOT____Vcellinp__i2c__i_request;
+SoC__DOT____Vcellinp__sd__i_request;
+SoC__DOT____Vcellinp__dma__i_request;
+SoC__DOT____Vcellinp__timer__i_request;
+			*/
+
+			if (soc->SoC__DOT____Vcellinp__rom__i_request)
+				nreq_rom++;
+			if (soc->SoC__DOT____Vcellinp__ram__i_request)
+				nreq_ram++;
+			if (soc->SoC__DOT____Vcellinp__l2cache__i_request)
+				nreq_l2cache++;
+			if (soc->SoC__DOT____Vcellinp__led__i_request)
+				nreq_led++;
+			if (soc->SoC__DOT____Vcellinp__uart__i_request)
+				nreq_uart++;
+			if (soc->SoC__DOT____Vcellinp__i2c__i_request)
+				nreq_i2c++;
+			if (soc->SoC__DOT____Vcellinp__sd__i_request)
+				nreq_sd++;
+			if (soc->SoC__DOT____Vcellinp__dma__i_request)
+				nreq_dma++;
+			if (soc->SoC__DOT____Vcellinp__timer__i_request)
+				nreq_timer++;
+
+			if (fos)
+			{
+				if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc != lastTracePC)
+				{
+					*fos << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
+					lastTracePC = soc->SoC__DOT__cpu__DOT__fetch__DOT__pc;
+				}
+			}
+
 			key1 = false;
 			reset = false;
 		}
@@ -342,7 +406,26 @@ int main(int argc, const char **argv)
 			{
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				statusBar->setText(1, str(L"%.2f%% BUS", ((double)db * 100.0) / dc));
-				statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
+				
+				//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
+				
+				// statusBar->setText(2, str(L"%d / %d (%.2f)",
+				// 	soc->SoC__DOT__l2cache__DOT__hit,
+				// 	soc->SoC__DOT__l2cache__DOT__miss,
+				// 	(100.0f * soc->SoC__DOT__l2cache__DOT__hit) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss)
+				// ));
+
+				statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
+					nreq_rom,
+					nreq_ram,
+					nreq_l2cache,
+					nreq_led,
+					nreq_uart,
+					nreq_i2c,
+					nreq_sd,
+					nreq_dma,
+					nreq_timer
+				));
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
