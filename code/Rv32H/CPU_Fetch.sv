@@ -93,7 +93,7 @@ module CPU_Fetch(
 			else begin
 				case (state)
 					0: begin
-						if (!i_decode_busy && icache_ready) begin
+						if (icache_ready) begin
 
 							dataC.tag <= dataC.tag + 1;
 							dataC.instruction <= icache_rdata;
