@@ -60,7 +60,7 @@ module CPU_Registers (
         r[31] = 32'h0000_0000;       
     end
 
-	always @(posedge i_clock, posedge i_reset)
+	always_ff @(posedge i_clock, posedge i_reset)
 	begin
 		if (i_reset) begin
 			rs1 <= 0;

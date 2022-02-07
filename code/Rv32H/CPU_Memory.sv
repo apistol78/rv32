@@ -22,12 +22,15 @@ module CPU_Memory(
 	output memory_data_t o_data
 );
 
-	localparam STATE_IDLE			= 0;
-	localparam STATE_READ			= 1;
-	localparam STATE_WRITE_WORD		= 2;
-	localparam STATE_WRITE_RMW_0	= 3;
-	localparam STATE_WRITE_RMW_1	= 4;
-	localparam STATE_FLUSH			= 5;
+	typedef enum
+	{
+		IDLE,
+		READ,
+		WRITE_WORD,
+		WRITE_RMW_0,
+		WRITE_RMW_1,
+		FLUSH
+	} state_t;
 
 	reg dcache_rw = 0;
 	reg dcache_request = 0;
@@ -76,8 +79,8 @@ module CPU_Memory(
 	logic busy;
 	memory_data_t data = 0;
 	memory_data_t next_data = 0;
-	logic [4:0] state = STATE_IDLE;
-	logic [4:0] next_state = STATE_IDLE;
+	state_t state = IDLE;
+	state_t next_state = IDLE;
 	logic [31:0] rmw_rdata = 0;
 	logic [31:0] next_rmw_rdata = 0;
 
@@ -88,7 +91,7 @@ module CPU_Memory(
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			data <= 0;
-			state <= STATE_IDLE;
+			state <= IDLE;
 			rmw_rdata <= 0;
 		end
 		else begin
@@ -109,28 +112,28 @@ module CPU_Memory(
 		dcache_flush = 0;
 
 		case (state)
-			STATE_IDLE: begin
+			IDLE: begin
 				if (i_data.tag != data.tag) begin
 					if (i_data.mem_read) begin
 						dcache_request = 1;
-						next_state = STATE_READ;
+						next_state = READ;
 					end
 					else if (i_data.mem_write) begin
 						dcache_request = 1;
 						if (i_data.mem_width == 4) begin
 							dcache_rw = 1;
 							dcache_wdata = i_data.rd;
-							next_state = STATE_WRITE_WORD;
+							next_state = WRITE_WORD;
 						end
 						else begin
 							// Byte or half write, need to perform read-modify-write.
-							next_state = STATE_WRITE_RMW_0;
+							next_state = WRITE_RMW_0;
 						end
 					end
 					else if (i_data.mem_flush) begin
 						dcache_request = 1;
 						dcache_flush = 1;
-						next_state = STATE_FLUSH;
+						next_state = FLUSH;
 					end
 					else begin
 						next_data.tag = i_data.tag;
@@ -140,18 +143,18 @@ module CPU_Memory(
 				end
 			end
 
-			STATE_FLUSH: begin
+			FLUSH: begin
 				dcache_request = 1;
 				dcache_flush = 1;
 				if (dcache_ready) begin
 					next_data.tag = i_data.tag;
 					next_data.rd = i_data.rd;
 					next_data.inst_rd = i_data.inst_rd;				
-					next_state = STATE_IDLE;
+					next_state = IDLE;
 				end
 			end
 
-			STATE_READ: begin
+			READ: begin
 				dcache_request = 1;
 				if (dcache_ready) begin
 					next_data.tag = i_data.tag;
@@ -162,11 +165,11 @@ module CPU_Memory(
 						default: next_data.rd  = 0;
 					endcase
 					next_data.inst_rd = i_data.inst_rd;
-					next_state = STATE_IDLE;
+					next_state = IDLE;
 				end
 			end
 
-			STATE_WRITE_WORD: begin
+			WRITE_WORD: begin
 				dcache_request = 1;
 				dcache_rw = 1;
 				dcache_wdata = i_data.rd;
@@ -174,19 +177,19 @@ module CPU_Memory(
 					next_data.tag = i_data.tag;
 					next_data.rd = i_data.rd;
 					next_data.inst_rd = i_data.inst_rd;	
-					next_state = STATE_IDLE;
+					next_state = IDLE;
 				end
 			end
 
-			STATE_WRITE_RMW_0: begin
+			WRITE_RMW_0: begin
 				dcache_request = 1;
 				if (dcache_ready) begin
 					next_rmw_rdata = dcache_rdata;
-					next_state = STATE_WRITE_RMW_1;
+					next_state = WRITE_RMW_1;
 				end
 			end
 
-			STATE_WRITE_RMW_1: begin
+			WRITE_RMW_1: begin
 				dcache_request = 1;
 				dcache_rw = 1;
 				if (i_data.mem_width == 1) begin
@@ -209,7 +212,7 @@ module CPU_Memory(
 					next_data.tag = i_data.tag;
 					next_data.rd = i_data.rd;
 					next_data.inst_rd = i_data.inst_rd;	
-					next_state = STATE_IDLE;
+					next_state = IDLE;
 				end					
 			end
 

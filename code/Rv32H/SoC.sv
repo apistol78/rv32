@@ -151,6 +151,7 @@ module SoC(
 `define FREQUENCY 100000000
 
 `define SOC_ENABLE_SDRAM
+// `define SOC_ENABLE_SDRAM_L2CACHE
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
 `define SOC_ENABLE_I2C
@@ -372,6 +373,7 @@ module SoC(
 	wire [31:0] l2cache_bus_address;
 	wire [31:0] l2cache_bus_rdata;
 	wire [31:0] l2cache_bus_wdata;
+`ifdef SOC_ENABLE_SDRAM_L2CACHE
 	CPU_L2_Cache l2cache(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -390,6 +392,15 @@ module SoC(
 		.o_rdata(sdram_rdata),
 		.o_ready(sdram_ready)
 	);
+`else
+	assign l2cache_bus_request = sdram_select && bus_request;
+	assign l2cache_bus_rw = bus_rw;
+	assign sdram_ready = l2cache_bus_ready;
+	assign l2cache_bus_address = sdram_address;
+	assign sdram_rdata = l2cache_bus_rdata;
+	assign l2cache_bus_wdata = bus_wdata;
+`endif
+
 `endif
 
 	// LEDS
@@ -616,7 +627,6 @@ module SoC(
 	wire [31:0] cpu_dbus_address;
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
-	wire [31:0] cpu_retire_count;
 	wire cpu_fault;
 
 	CPU_v2 cpu(
@@ -641,7 +651,6 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_retire_count(cpu_retire_count),
 		.o_fault(cpu_fault)
 	);
 	

@@ -26,8 +26,7 @@ module CPU_v2 (
 	output wire [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
-	output wire o_fault,
-	output reg [31:0] o_retire_count
+	output wire o_fault
 );
 
 	//====================================================

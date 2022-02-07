@@ -55,7 +55,7 @@ module CPU_BusAccess(
 
 	assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= 2'd0;
 			o_bus_rw <= 1'b0;
