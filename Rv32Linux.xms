@@ -586,7 +586,9 @@
 									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -610,7 +612,9 @@
 									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -634,7 +638,9 @@
 									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -658,7 +664,9 @@
 									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -676,7 +684,7 @@
 								<items/>
 							</item>
 							<item type="File">
-								<fileName>verilated_vcd_c.cpp</fileName>
+								<fileName>verilated_fst_c.cpp</fileName>
 								<items/>
 							</item>
 						</items>
@@ -837,10 +845,13 @@
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
 								<definitions>
-									<item/>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -860,10 +871,13 @@
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
 								<definitions>
-									<item/>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
 								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -882,9 +896,14 @@
 								<includePaths>
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
+								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -903,9 +922,14 @@
 								<includePaths>
 									<item>/usr/share/verilator/include</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>VL_PRINTF=printf</item>
+									<item>VM_TRACE=1</item>
+								</definitions>
 								<libraryPaths/>
-								<libraries/>
+								<libraries>
+									<item>z</item>
+								</libraries>
 								<warningLevel>WlCompilerDefault</warningLevel>
 								<additionalCompilerOptions/>
 								<additionalLinkerOptions/>
@@ -920,6 +944,10 @@
 						<items>
 							<item type="File">
 								<fileName>verilated.cpp</fileName>
+								<items/>
+							</item>
+							<item type="File">
+								<fileName>verilated_fst_c.cpp</fileName>
 								<items/>
 							</item>
 						</items>
