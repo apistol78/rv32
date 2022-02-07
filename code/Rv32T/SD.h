@@ -18,6 +18,7 @@ private:
     int32_t m_bit = 0;
     int32_t m_data = 0;
     bool m_lstclk = true;
+    bool m_lstcmd = false;
     traktor::AlignedVector< uint8_t > m_cmd;
     uint8_t m_response[1024];
     int32_t m_send = 0;

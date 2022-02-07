@@ -102,9 +102,18 @@ void SD::eval(VSoC* soc)
 				}
 			}
 		}
-
-		m_lstclk = clk;
 	}
+	else
+	{
+		if (clk && m_lstcmd != cmd)
+		{
+			m_bit = 0;
+			m_data = 0;			
+		}
+	}
+
+	m_lstclk = clk;
+	m_lstcmd = cmd;
 
 	soc->KEY = m_mode;
 }
