@@ -54,18 +54,17 @@ module CPU_Execute (
 	`define FAULT		o_fault
 	`define ECALL		o_ecall
 
-	`undef GOTO
-	`define GOTO(ADDR) 		\
-		o_jump <= 1'b1;		\
+	`define GOTO(ADDR) 			\
+		o_jump <= 1'b1;			\
 		o_jump_pc <= ADDR;
 
-	`define MEPC 			\
+	`define MEPC 				\
 		i_epc
 
-	`define CYCLE			\
+	`define CYCLE				\
 		cycle
 
-	`define EXECUTE_OP		\
+	`define EXECUTE_OP			\
 		i_data.op
 
 	`define EXECUTE_DONE		\
@@ -128,11 +127,9 @@ module CPU_Execute (
 
 	// ====================
 
-	assign o_busy = busy || i_memory_busy;
 	assign o_csr_index = i_data.imm;
 	assign o_data = data;
 
-	logic busy;
 	logic [4:0] cycle = 0;
 	execute_data_t data = 0;
 
@@ -146,7 +143,7 @@ module CPU_Execute (
 	end
 	
 	always_comb begin
-		busy = i_memory_raw || ((i_data.tag != data.tag) && i_data.complx);
+		o_busy = i_memory_raw || i_memory_busy || ((i_data.tag != data.tag) && i_data.complx);
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -200,7 +197,7 @@ module CPU_Execute (
 					`EXECUTE_DONE;
 				end
 				else if (i_data.memory_write) begin
-					`RD <=`RS2;
+					`RD <= `RS2;
 					`EXECUTE_DONE;
 				end
 				else if (i_data.complx) begin

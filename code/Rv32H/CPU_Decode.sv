@@ -65,7 +65,6 @@ module CPU_Decode(
 		end
 		else begin
 			if (i_data.tag != data.tag) begin
-				data.instruction <= i_data.instruction;
 				data.pc <= i_data.pc;
 
 				data.inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
