@@ -43,7 +43,7 @@
 
 // Verilated SoC
 #include "verilated.h"
-#include "verilated_vcd_c.h"
+#include "verilated_fst_c.h"
 #include "SoC/VSoC.h"
 
 using namespace traktor;
@@ -139,22 +139,25 @@ int main(int argc, const char **argv)
 	CommandLine cmdLine(argc, argv);
 	Timer timer;
 
+	if (!cmdLine.hasOption(L'h', L"headless"))
+	{
 #if defined(_WIN32)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryWin32(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryWin32(),
+			nullptr
+		);
 #elif defined(__APPLE__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryCocoa(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryCocoa(),
+			nullptr
+		);
 #elif defined(__LINUX__) || defined(__RPI__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryX11(),
-		nullptr
-	);
+		ui::Application::getInstance()->initialize(
+			new ui::WidgetFactoryX11(),
+			nullptr
+		);
 #endif
+	}
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
 	{
@@ -179,53 +182,61 @@ int main(int argc, const char **argv)
 		slow = true;
 
 	// Create user interface.
-	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4, 4));
+	Ref< ui::Form > form;
+	Ref< ui::StatusBar > statusBar;
+	Ref< ui::Bitmap > framebuffer;
+	Ref< ui::Image > image;
 
-	Ref< ui::Container > container = new ui::Container();
-	container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*,*", L"*", 0, 4));
+	if (!cmdLine.hasOption(L'h', L"headless"))
+	{
+		form = new ui::Form();
+		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4, 4));
 
-	Ref< ui::Button > buttonTrace = new ui::Button();
-	buttonTrace->create(container, L"Trace");
-	buttonTrace->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		buttonTrace->setEnable(false);
-		trace = true;
-	});
+		Ref< ui::Container > container = new ui::Container();
+		container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*,*", L"*", 0, 4));
 
-	Ref< ui::Button > buttonReset = new ui::Button();
-	buttonReset->create(container, L"Reset");
-	buttonReset->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		reset = true;
-	});	
+		Ref< ui::Button > buttonTrace = new ui::Button();
+		buttonTrace->create(container, L"Trace");
+		buttonTrace->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+			buttonTrace->setEnable(false);
+			trace = true;
+		});
 
-	Ref< ui::Button > buttonKey1 = new ui::Button();
-	buttonKey1->create(container, L"KEY1");
-	buttonKey1->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		key1 = true;
-	});
+		Ref< ui::Button > buttonReset = new ui::Button();
+		buttonReset->create(container, L"Reset");
+		buttonReset->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+			reset = true;
+		});	
 
-	Ref< ui::Button > buttonSpeed = new ui::Button();
-	buttonSpeed->create(container, L"Fast/Slow");
-	buttonSpeed->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		slow = !slow;
-	});
+		Ref< ui::Button > buttonKey1 = new ui::Button();
+		buttonKey1->create(container, L"KEY1");
+		buttonKey1->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+			key1 = true;
+		});
 
-	Ref< ui::Bitmap > framebuffer = new ui::Bitmap(640, 480);
-	
-	Ref< ui::Container > containerImage = new ui::Container();
-	containerImage->create(form, ui::WsNone, new ui::FloodLayout());
+		Ref< ui::Button > buttonSpeed = new ui::Button();
+		buttonSpeed->create(container, L"Fast/Slow");
+		buttonSpeed->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
+			slow = !slow;
+		});
 
-	Ref< ui::Image > image = new ui::Image();
-	image->create(containerImage, framebuffer, ui::Image::WsScale);
+		framebuffer = new ui::Bitmap(640, 480);
+		
+		Ref< ui::Container > containerImage = new ui::Container();
+		containerImage->create(form, ui::WsNone, new ui::FloodLayout());
 
-	Ref< ui::StatusBar > statusBar = new ui::StatusBar();
-	statusBar->create(form);
-	statusBar->addColumn(ui::dpi96(100));	// IPC
-	statusBar->addColumn(ui::dpi96(100));	// BUS
-	statusBar->addColumn(ui::dpi96(400));	// PC
+		image = new ui::Image();
+		image->create(containerImage, framebuffer, ui::Image::WsScale);
 
-	form->update();
-	form->show();
+		statusBar = new ui::StatusBar();
+		statusBar->create(form);
+		statusBar->addColumn(ui::dpi96(100));	// IPC
+		statusBar->addColumn(ui::dpi96(100));	// BUS
+		statusBar->addColumn(ui::dpi96(400));	// PC
+
+		form->update();
+		form->show();
+	}
 
 	// Create SoC simulation.
 	VSoC* soc = new VSoC();
@@ -242,12 +253,8 @@ int main(int argc, const char **argv)
 
 	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
 
-	uint32_t intercept = 0xffffffff;
-	if (cmdLine.hasOption(L"intercept"))
-		intercept = cmdLine.getOption(L"intercept").getInteger();
-
 	// Create signal trace.
-	VerilatedVcdC* tfp = nullptr;
+	VerilatedFstC* tfp = nullptr;
 	if (cmdLine.hasOption(L't', L"trace"))
 		trace = true;
 
@@ -289,15 +296,18 @@ int main(int argc, const char **argv)
 	timer.reset();
 	while (g_going)
 	{
-		if (!ui::Application::getInstance()->process())
-			break;
+		if (form)
+		{
+			if (!ui::Application::getInstance()->process())
+				break;
+		}
 
 		if (trace)
 		{
 			Verilated::traceEverOn(true);
-			tfp = new VerilatedVcdC;
+			tfp = new VerilatedFstC;
 			soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
-			tfp->open("Rv32T.vcd");
+			tfp->open("Rv32T.fst");
 			trace = false;	
 		}
 
@@ -336,13 +346,6 @@ int main(int argc, const char **argv)
 			// Check output of each CPU pipeline stage
 			// are kept during entire output tag cycle.
 
-			if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc == intercept)
-			{
-				log::error << L"Intercepted at 0x" << str(L"%08x", intercept) << Endl;
-				g_going = false;
-				break;
-			}
-
 			// Count number of cycles bus is active.
 			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 				++busActiveCount;
@@ -363,8 +366,8 @@ SoC__DOT____Vcellinp__timer__i_request;
 				nreq_rom++;
 			if (soc->SoC__DOT____Vcellinp__ram__i_request)
 				nreq_ram++;
-			if (soc->SoC__DOT____Vcellinp__l2cache__i_request)
-				nreq_l2cache++;
+			// if (soc->SoC__DOT____Vcellinp__l2cache__i_request)
+			// 	nreq_l2cache++;
 			if (soc->SoC__DOT____Vcellinp__led__i_request)
 				nreq_led++;
 			if (soc->SoC__DOT____Vcellinp__uart__i_request)
@@ -391,45 +394,48 @@ SoC__DOT____Vcellinp__timer__i_request;
 			reset = false;
 		}
 
-		if (hdmi.shouldDraw())
+		if (form)
 		{
-			framebuffer->copyImage(hdmi.getImage());
-			image->setImage(framebuffer);
-		}
-
-		if ((Tc % 30) == 0)
-		{
-			uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-			uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-			uint32_t db = busActiveCount - lastBusActiveCount;
-			if (dc > 0)
+			if (hdmi.shouldDraw())
 			{
-				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
-				statusBar->setText(1, str(L"%.2f%% BUS", ((double)db * 100.0) / dc));
-				
-				//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
-				
-				// statusBar->setText(2, str(L"%d / %d (%.2f)",
-				// 	soc->SoC__DOT__l2cache__DOT__hit,
-				// 	soc->SoC__DOT__l2cache__DOT__miss,
-				// 	(100.0f * soc->SoC__DOT__l2cache__DOT__hit) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss)
-				// ));
+				framebuffer->copyImage(hdmi.getImage());
+				image->setImage(framebuffer);
+			}
 
-				statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
-					nreq_rom,
-					nreq_ram,
-					nreq_l2cache,
-					nreq_led,
-					nreq_uart,
-					nreq_i2c,
-					nreq_sd,
-					nreq_dma,
-					nreq_timer
-				));
+			if ((Tc % 30) == 0)
+			{
+				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+				uint32_t db = busActiveCount - lastBusActiveCount;
+				if (dc > 0)
+				{
+					statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
+					statusBar->setText(1, str(L"%.2f%% BUS", ((double)db * 100.0) / dc));
+					
+					//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
+					
+					// statusBar->setText(2, str(L"%d / %d (%.2f)",
+					// 	soc->SoC__DOT__l2cache__DOT__hit,
+					// 	soc->SoC__DOT__l2cache__DOT__miss,
+					// 	(100.0f * soc->SoC__DOT__l2cache__DOT__hit) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss)
+					// ));
 
-				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
-				lastBusActiveCount = busActiveCount;
+					statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
+						nreq_rom,
+						nreq_ram,
+						nreq_l2cache,
+						nreq_led,
+						nreq_uart,
+						nreq_i2c,
+						nreq_sd,
+						nreq_dma,
+						nreq_timer
+					));
+
+					lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+					lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+					lastBusActiveCount = busActiveCount;
+				}
 			}
 		}
 	}

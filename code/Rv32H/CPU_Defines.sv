@@ -3,7 +3,7 @@
 
 // Tag size, wider is useful for debugging but no more than a
 // single bit should be necessary.
-`define TAG_SIZE                    3:0
+`define TAG_SIZE                    1:0
 
 // Multiply and divide
 `ifndef __VERILATOR__

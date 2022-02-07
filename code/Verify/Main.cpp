@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <Core/Log/Log.h>
 #include "verilated.h"
-#include "verilated_vcd_c.h"
+#include "verilated_fst_c.h"
 #include "SoC/VSoC.h"
 
 using namespace traktor;
@@ -21,11 +21,11 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 {
 	//const std::unique_ptr< VerilatedContext > contextp{new VerilatedContext()};
 	
-	VerilatedVcdC* tfp = nullptr;
+	VerilatedFstC* tfp = nullptr;
 	if (trace)
 	{
 		Verilated::traceEverOn(true);
-		tfp = new VerilatedVcdC;
+		tfp = new VerilatedFstC;
 		tb->trace(tfp, 99);  // Trace 99 levels of hierarchy
 		tfp->open(trace); // "simx.vcd");
 	}

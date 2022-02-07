@@ -3,16 +3,16 @@
 `timescale 1ns/1ns
 
 module CPU_Execute (
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 	output reg o_fault,
 
 	// CSR
-	output wire [11:0] o_csr_index,
-	input wire [31:0] i_csr_rdata,
+	output [11:0] o_csr_index,
+	input [31:0] i_csr_rdata,
 	output reg o_csr_wdata_wr,
 	output reg [31:0] o_csr_wdata,
-	input wire [31:0] i_epc,
+	input [31:0] i_epc,
 
 	// Control
 	output reg o_jump,
@@ -20,9 +20,10 @@ module CPU_Execute (
 
 	// Input
 	output o_busy,
+	input i_memory_raw,
 	input decode_data_t i_data,
-	input wire [31:0] i_rs1,
-	input wire [31:0] i_rs2,
+	input [31:0] i_rs1,
+	input [31:0] i_rs2,
 	
 	// Output
 	input i_memory_busy,
@@ -139,7 +140,7 @@ module CPU_Execute (
 	end
 	
 	always_comb begin
-		busy = (i_data.tag != data.tag) && i_data.complx;
+		busy = i_memory_raw || ((i_data.tag != data.tag) && i_data.complx);
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -153,7 +154,7 @@ module CPU_Execute (
 			o_fault <= 0;			
 		end
 		else begin
-			if (i_data.tag != data.tag) begin
+			if (!i_memory_raw && i_data.tag != data.tag) begin
 	
 				o_jump <= 0;
 

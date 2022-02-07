@@ -133,6 +133,7 @@ module CPU_v2 (
 
 	wire [31:0] forward_rs1;
 	wire [31:0] forward_rs2;
+	wire forward_memory_raw;
 
 	CPU_Forward forward(
 		.i_decode_data(decode_data),
@@ -144,7 +145,9 @@ module CPU_v2 (
 		.i_rs2(rs2),
 
 		.o_rs1(forward_rs1),
-		.o_rs2(forward_rs2)
+		.o_rs2(forward_rs2),
+
+		.o_memory_raw(forward_memory_raw)
 	);
 
 	//====================================================
@@ -174,6 +177,7 @@ module CPU_v2 (
 
 		// Input
 		.o_busy(execute_busy),
+		.i_memory_raw(forward_memory_raw),
 		.i_data(decode_data),
 		.i_rs1(forward_rs1),
 		.i_rs2(forward_rs2),
