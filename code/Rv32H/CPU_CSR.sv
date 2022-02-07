@@ -3,46 +3,43 @@
 `timescale 1ns/1ns
 
 module CPU_CSR(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// External interrupt input.
-	input wire i_interrupt,
+	input i_interrupt,
+
+	// Software interrupt input.
+	input i_ecall,
 
 	// Instruction I/O access.
-	input wire [11:0] i_index,
+	input [11:0] i_index,
 	output reg [31:0] o_rdata,
-	input wire i_wdata_wr,
-	input wire [31:0] i_wdata,
+	input i_wdata_wr,
+	input [31:0] i_wdata,
 
 	// Direct read access.
-	output wire [31:0] o_epc,
+	output [31:0] o_epc,
 
 	// Pending interrupt output.
 	output reg o_irq_pending,
 	output reg [31:0] o_irq_pc,
-	input wire i_irq_dispatched,
-	input wire [31:0] i_irq_epc
+	input i_irq_dispatched,
+	input [31:0] i_irq_epc
 );
 
-	reg mie_mtie;
-	reg [31:0] mtvec;
-	reg [31:0] mepc;
-	reg [31:0] mcause;
-	reg mip_mtip;
+	reg mie_mtie = 0;
+	reg mie_msie = 0;
+	reg [31:0] mtvec = 0;
+	reg [31:0] mepc = 0;
+	reg [31:0] mcause = 0;
+	reg mip_mtip = 0;
+	reg mip_msip = 0;
 
-	wire [31:0] mie = { 24'b0, mie_mtie, 7'b0 };	
-	wire [31:0] mip = { 24'b0, mip_mtip, 7'b0 };
+	wire [31:0] mie = { 24'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
+	wire [31:0] mip = { 24'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
 	assign o_epc = mepc;
-
-	initial begin
-		mie_mtie = 0;
-		mtvec = 0;
-		mepc = 0;
-		mcause = 0;
-		mip_mtip = 0;
-	end
 
 	// Read CSR value by index.
 	always @(*) begin
@@ -72,11 +69,13 @@ module CPU_CSR(
 		if (i_reset) begin
 			mtvec <= 0;
 			mie_mtie <= 0;
+			mie_msie <= 0;
 		end
 		else begin
 			if (i_wdata_wr) begin
 				if (i_index == `CSR_MIE) begin
 					mie_mtie <= i_wdata[7];
+					mie_msie <= i_wdata[3];
 				end
 				else if (i_index == `CSR_MTVEC)
 					mtvec <= i_wdata;
@@ -98,6 +97,15 @@ module CPU_CSR(
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 7);
 					mip_mtip <= 1'b1;
+				end
+			end
+
+			if (i_ecall) begin
+				if (mie_msie) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h00000000 | (1 << 11);
+					mip_msip <= 1'b1;
 				end
 			end
 

@@ -484,24 +484,23 @@ local instructions = {
 		mask = 0xffffffff,
 		data = 0x00100073,
 		name = "EBREAK",
-		format = "",
 		type = insttype.COMPLEX,
 		cpp = [[
 			return false;
 		]],
-		verilog = [[
-			$finish;
+		verilog_text = [[
+			`FAULT <= 1'b1;
 		]]
 	},
 	{
 		mask = 0xffffffff,
 		data = 0x00000073,
 		name = "ECALL",
-		format = "",
 		type = insttype.COMPLEX,
 		cpp = [[
 		]],
-		verilog = [[
+		verilog_text = [[
+			`ECALL <= 1'b1;
 			`EXECUTE_DONE;
 		]]
 	},
@@ -1675,7 +1674,7 @@ function main(argv)
 		local t = {}
 		for _, inst in ipairs(vi) do
 			if inst.type == insttype.COMPLEX then
-				if formats == nil or formats[inst.format] == true then
+				if inst.format == nil or formats == nil or formats[inst.format] == true then
 					table.insert(t, inst)
 				end
 			end

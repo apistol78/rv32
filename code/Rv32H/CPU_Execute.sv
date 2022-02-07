@@ -17,6 +17,7 @@ module CPU_Execute (
 	// Control
 	output reg o_jump,
 	output reg [31:0] o_jump_pc,
+	output reg o_ecall,
 
 	// Input
 	output o_busy,
@@ -46,8 +47,12 @@ module CPU_Execute (
 
 	`undef RD
 	`undef MEM_FLUSH
+	`undef FAULT
+	`undef ECALL
 	`define RD			data.rd
 	`define MEM_FLUSH	data.mem_flush
+	`define FAULT		o_fault
+	`define ECALL		o_ecall
 
 	`undef GOTO
 	`define GOTO(ADDR) 		\
@@ -136,6 +141,7 @@ module CPU_Execute (
 		o_csr_wdata = 0;
 		o_jump = 0;
 		o_jump_pc = 0;
+		o_ecall = 0;
 		o_fault = 0;
 	end
 	
@@ -151,12 +157,14 @@ module CPU_Execute (
 			o_csr_wdata <= 0;
 			o_jump <= 0;
 			o_jump_pc <= 0;
+			o_ecall <= 0;
 			o_fault <= 0;			
 		end
 		else begin
 			if (!i_memory_raw && i_data.tag != data.tag) begin
 	
 				o_jump <= 0;
+				o_ecall <= 0;
 
 				data.inst_rd <= i_data.inst_rd;
 				data.mem_address <= alu_result;

@@ -11,6 +11,10 @@ else if (is_DIV)
 	`OP <= OP_DIV;
 else if (is_DIVU)
 	`OP <= OP_DIVU;
+else if (is_EBREAK)
+	`OP <= OP_EBREAK;
+else if (is_ECALL)
+	`OP <= OP_ECALL;
 else if (is_FENCE)
 	`OP <= OP_FENCE;
 else if (is_MUL)

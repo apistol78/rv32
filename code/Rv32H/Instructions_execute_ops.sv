@@ -41,6 +41,17 @@ else if (`EXECUTE_OP == OP_DIVU) begin
 	end
 end
 
+// EBREAK
+else if (`EXECUTE_OP == OP_EBREAK) begin
+	`FAULT <= 1'b1;
+end
+
+// ECALL
+else if (`EXECUTE_OP == OP_ECALL) begin
+	`ECALL <= 1'b1;
+	`EXECUTE_DONE;
+end
+
 // FENCE
 else if (`EXECUTE_OP == OP_FENCE) begin
 	`MEM_FLUSH <= 1;

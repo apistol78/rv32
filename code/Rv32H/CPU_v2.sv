@@ -45,7 +45,9 @@ module CPU_v2 (
 	CPU_CSR csr(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
+
 		.i_interrupt(i_interrupt),
+		.i_ecall(execute_ecall),
 
 		.i_index(csr_index),
 		.o_rdata(csr_rdata),
@@ -155,6 +157,7 @@ module CPU_v2 (
 	wire execute_fault;
 	wire execute_jump;
 	wire [31:0] execute_jump_pc;
+	wire execute_ecall;
 	wire execute_busy;
 	execute_data_t execute_data;
 	
@@ -173,6 +176,7 @@ module CPU_v2 (
 		// Control
 		.o_jump(execute_jump),
 		.o_jump_pc(execute_jump_pc),
+		.o_ecall(execute_ecall),
 
 		// Input
 		.o_busy(execute_busy),
