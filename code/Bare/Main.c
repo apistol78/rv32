@@ -126,29 +126,29 @@ const vec3_t vertices[] =
 
 const int32_t indices[] =
 {
-	//Top
-	2, 6, 7,
+	// Top
+	2, 7, 6,
 	2, 3, 7,
 
 	//Bottom
 	0, 4, 5,
-	0, 1, 5,
+	0, 5, 1,
 
 	//Left
 	0, 2, 6,
-	0, 4, 6,
+	0, 6, 4,
 
 	//Right
-	1, 3, 7,
+	1, 7, 3,
 	1, 5, 7,
 
 	//Front
-	0, 2, 3,
+	0, 3, 2,
 	0, 1, 3,
 
 	//Back
 	4, 6, 7,
-	4, 5, 7
+	4, 7, 5
 };
 
 
@@ -171,6 +171,7 @@ void main()
 	palette[1] = 0x00ffffff;
 
 	float head = 0.0f;
+	float pitch = 0.0f;
 	ivec2_t sv[8];
 
 	for (;;)
@@ -190,19 +191,26 @@ void main()
 		const float ca = cos(head);
 		const float sa = sin(head);
 
+		const float cp = cos(pitch);
+		const float sp = sin(pitch);
+
 		for (int32_t i = 0; i < 8; ++i)
 		{
-			float x = vertices[i].x * ca + vertices[i].z * sa;
-			float y = vertices[i].y;
-			float z = vertices[i].x * sa + vertices[i].z * ca;
+			float xa = vertices[i].x * ca + vertices[i].z * sa;
+			float ya = vertices[i].y;
+			float za = vertices[i].x * sa - vertices[i].z * ca;
 
-			z += 16.0f;
+			float x = xa;
+			float y = ya * cp + za * sp;
+			float z = ya * sp - za * cp;
 
-			float w = z * 0.25f;
-			float ndx = (x * 1.6f) / w;
+			z += 5.0f;
+
+			float w = z * 0.5f;
+			float ndx = x / w;
 			float ndy = y / w;
 
-			sv[i].x = (int32_t)((ndx * 160) + 160);
+			sv[i].x = (int32_t)((ndx * 100) + 160);
 			sv[i].y = (int32_t)((ndy * 100) + 100);
 		}
 		
@@ -214,8 +222,8 @@ void main()
 
 			triangle(
 				&sv[i0],
-				&sv[i1],
 				&sv[i2],
+				&sv[i1],
 				i + 1
 			);			
 		}
@@ -228,6 +236,7 @@ void main()
 		dma_wait();
 		
 
-		head += 0.01f;
+		head += 0.1f;
+		pitch += 0.165f;
 	}
 }
