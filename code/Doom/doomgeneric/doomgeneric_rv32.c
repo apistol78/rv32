@@ -39,7 +39,7 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 
 	dma_wait();
 
-	__asm__ volatile ("fence");
+	//__asm__ volatile ("fence");
 	
 	dma_copy(
 		VIDEO_DATA_BASE,
