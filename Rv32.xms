@@ -518,7 +518,9 @@
 						<item>_DEBUG</item>
 					</definitions>
 					<libraryPaths/>
-					<libraries/>
+					<libraries>
+						<item>m</item>
+					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
 					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
@@ -539,7 +541,9 @@
 						<item>NDEBUG</item>
 					</definitions>
 					<libraryPaths/>
-					<libraries/>
+					<libraries>
+						<item>m</item>
+					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
 					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>

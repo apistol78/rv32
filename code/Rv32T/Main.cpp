@@ -350,18 +350,6 @@ int main(int argc, const char **argv)
 			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 				++busActiveCount;
 
-			/*
-SoC__DOT____Vcellinp__rom__i_request;
-SoC__DOT____Vcellinp__ram__i_request;
-SoC__DOT____Vcellinp__l2cache__i_request;
-SoC__DOT____Vcellinp__led__i_request;
-SoC__DOT____Vcellinp__uart__i_request;
-SoC__DOT____Vcellinp__i2c__i_request;
-SoC__DOT____Vcellinp__sd__i_request;
-SoC__DOT____Vcellinp__dma__i_request;
-SoC__DOT____Vcellinp__timer__i_request;
-			*/
-
 			if (soc->SoC__DOT____Vcellinp__rom__i_request)
 				nreq_rom++;
 			if (soc->SoC__DOT____Vcellinp__ram__i_request)
@@ -447,6 +435,8 @@ SoC__DOT____Vcellinp__timer__i_request;
 	log::info << L"RETIRE : " << soc->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
 	log::info << L"BUS    : " << busActiveCount << L", " << (busActiveCount * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
+
+	hdmi.getImage()->save(L"Rv32T.png");
 
 	if (tfp)
 	{

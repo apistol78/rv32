@@ -1,101 +1,233 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "Runtime/HAL.h"
-#include "Runtime/HAL/Print.h"
+#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
-void measure()
+uint8_t* framebuffer = (uint8_t*)0x10010000;
+
+//
+
+typedef struct
 {
-	static uint32_t last_cycles = 0;
-	static uint32_t last_retire = 0;
-	static uint32_t last_hit = 0;
-	static uint32_t last_miss = 0;
-	static uint32_t last_dc_hit = 0;
-	static uint32_t last_dc_miss = 0;
-
-	uint32_t cycles = timer_get_cycles();
-	uint32_t retire = timer_get_retire();
-	uint32_t icache_hit = timer_get_icache_hit();
-	uint32_t icache_miss = timer_get_icache_miss();
-	uint32_t dcache_hit = timer_get_dcache_hit();
-	uint32_t dcache_miss = timer_get_dcache_miss();
-
-	{
-		uint32_t dc = cycles - last_cycles;
-		uint32_t dr = retire - last_retire;
-		uint32_t cpi = (dc * 100) / dr;
-		printf("%d cycles/inst\n", cpi);
-	}
-	{
-		uint32_t dh = icache_hit - last_hit;
-		uint32_t dm = icache_miss - last_miss;
-		uint32_t ratio = (dh * 100) / (dh + dm);
-		printf("%u icache hit\n", dh);
-		printf("%u icache miss\n", dm);
-		printf("%u %% icache ratio\n", ratio);
-	}
-	{
-		uint32_t dh = dcache_hit - last_dc_hit;
-		uint32_t dm = dcache_miss - last_dc_miss;
-		uint32_t ratio = (dh * 100) / (dh + dm);
-		printf("%u dcache hit\n", dh);
-		printf("%u dcache miss\n", dm);
-		printf("%u %% dcache ratio\n", ratio);
-	}
-
-	last_cycles = timer_get_cycles();
-	last_retire = timer_get_retire();
-	last_hit = timer_get_icache_hit();
-	last_miss = timer_get_icache_miss();
-	last_dc_hit = timer_get_dcache_hit();
-	last_dc_miss = timer_get_dcache_miss();
+	float x, y, z;
 }
+vec3_t;
+
+
+
+
+
+//
+
+typedef struct
+{
+	int32_t x, y;
+} ivec2_t;
+
+int32_t orient2d(const ivec2_t* a, const ivec2_t* b, const ivec2_t* c)
+{
+	return (b->x - a->x) * (c->y - a->y) - (b->y - a->y) * (c->x - a->x);
+}
+
+int32_t min3(int32_t a, int32_t b, int32_t c)
+{
+	int32_t t = a < b ? a : b;
+	return t < c ? t : c;
+}
+
+int32_t max3(int32_t a, int32_t b, int32_t c)
+{
+	int t = a > b ? a : b;
+	return t > c ? t : c;
+}
+
+int32_t min(int32_t a, int32_t b)
+{
+	return a < b ? a : b;
+}
+
+int32_t max(int32_t a, int32_t b)
+{
+	return a > b ? a : b;
+}
+
+void triangle(const ivec2_t* v0, const ivec2_t* v1, const ivec2_t* v2, uint8_t color)
+{
+	// Compute triangle bounding box
+	int32_t minX = min3(v0->x, v1->x, v2->x);
+	int32_t minY = min3(v0->y, v1->y, v2->y);
+	int32_t maxX = max3(v0->x, v1->x, v2->x);
+	int32_t maxY = max3(v0->y, v1->y, v2->y);
+
+	// Clip against screen bounds
+	minX = max(minX, 0);
+	minY = max(minY, 0);
+	maxX = min(maxX, 320 - 1);
+	maxY = min(maxY, 200 - 1);
+
+	// Triangle setup
+	int32_t A01 = v0->y - v1->y, B01 = v1->x - v0->x;
+	int32_t A12 = v1->y - v2->y, B12 = v2->x - v1->x;
+	int32_t A20 = v2->y - v0->y, B20 = v0->x - v2->x;
+
+	// Barycentric coordinates at minX/minY corner
+	ivec2_t p = { minX, minY };
+	int32_t w0_row = orient2d(v1, v2, &p);
+	int32_t w1_row = orient2d(v2, v0, &p);
+	int32_t w2_row = orient2d(v0, v1, &p);
+
+	// Rasterize
+	uint32_t offset = minY * 320;
+	for (p.y = minY; p.y <= maxY; p.y++)
+	{
+		// Barycentric coordinates at start of row
+		int32_t w0 = w0_row;
+		int32_t w1 = w1_row;
+		int32_t w2 = w2_row;
+
+		for (p.x = minX; p.x <= maxX; p.x++)
+		{
+			// If p is on or inside all edges, render pixel.
+			if (w0 >= 0 && w1 >= 0 && w2 >= 0)
+				framebuffer[p.x + offset] = color;
+
+			// One step to the right
+			w0 += A12;
+			w1 += A20;
+			w2 += A01;
+		}
+
+		// One row step
+		w0_row += B12;
+		w1_row += B20;
+		w2_row += B01;
+
+		offset += 320;
+	}	
+}
+
+// -------------------
+
+const vec3_t vertices[] =
+{
+	{ -1.0f, -1.0f,  1.0f },
+	{  1.0f, -1.0f,  1.0f },
+	{ -1.0f,  1.0f,  1.0f },
+	{  1.0f,  1.0f,  1.0f },
+	{ -1.0f, -1.0f, -1.0f },
+	{  1.0f, -1.0f, -1.0f },
+	{ -1.0f,  1.0f, -1.0f },
+	{  1.0f,  1.0f, -1.0f }
+};
+
+const int32_t indices[] =
+{
+	//Top
+	2, 6, 7,
+	2, 3, 7,
+
+	//Bottom
+	0, 4, 5,
+	0, 1, 5,
+
+	//Left
+	0, 2, 6,
+	0, 4, 6,
+
+	//Right
+	1, 3, 7,
+	1, 5, 7,
+
+	//Front
+	0, 2, 3,
+	0, 1, 3,
+
+	//Back
+	4, 6, 7,
+	4, 5, 7
+};
+
 
 void main()
 {
 	hal_init();
 
-	printf("STARFIELD\n");
-
-	int star[100][3];
-	for (int i = 0; i < 100; ++i)
-	{
-		star[i][0] = rand() % 320;
-		star[i][1] = rand() % 200;
-		star[i][2] = (rand() % 6) + 1;
-	}
-
-	printf("RANDOMIZED...\n");
-
 	volatile uint32_t* palette = VIDEO_PALETTE_BASE;
 	volatile uint32_t* video = VIDEO_DATA_BASE;
 
-		for (uint32_t i = 0; i < 256; ++i)
-		{
-			uint8_t r = (uint8_t)rand();
-			uint8_t g = (uint8_t)rand();
-			uint8_t b = (uint8_t)rand();
-			palette[i] = (r << 16) | (g << 8) | b;
-		}
+	for (uint32_t i = 0; i < 256; ++i)
+	{
+		uint8_t r = rand();
+		uint8_t g = rand();
+		uint8_t b = rand();
+		palette[i] = (r << 16) | (g << 8) | b;
+	}
 
-	palette[0] = 0x00ff0000;
-	palette[1] = 0x0000ff00;
-	palette[2] = 0x000000ff;
-	palette[3] = 0x00ffff00;
+	palette[0] = 0x00000000;
+	palette[1] = 0x00ffffff;
+
+	float head = 0.0f;
+	ivec2_t sv[8];
 
 	for (;;)
 	{
-
-		for (uint32_t i = 0; i < 320 * 200 / 4; ++i)
+		static int count = 0;
+		if (++count >= 60)
 		{
-			uint32_t a = (uint8_t)rand();
-			uint32_t b = (uint8_t)rand();
-			uint32_t c = (uint8_t)rand();
-			uint32_t d = (uint8_t)rand();
-			video[i] = (a << 24) | (b << 16) | (c << 8) | d;
+			static uint32_t last_ms = 0;
+			uint32_t ms = timer_get_ms();
+			printf("%d fps\n", (60 * 1000) / (ms - last_ms));
+			last_ms = ms;
+			count = 0;
 		}
 
-		measure();
+		memset(framebuffer, 0, 320 * 200);
+
+		const float ca = cos(head);
+		const float sa = sin(head);
+
+		for (int32_t i = 0; i < 8; ++i)
+		{
+			float x = vertices[i].x * ca + vertices[i].z * sa;
+			float y = vertices[i].y;
+			float z = vertices[i].x * sa + vertices[i].z * ca;
+
+			z += 16.0f;
+
+			float w = z * 0.25f;
+			float ndx = (x * 1.6f) / w;
+			float ndy = y / w;
+
+			sv[i].x = (int32_t)((ndx * 160) + 160);
+			sv[i].y = (int32_t)((ndy * 100) + 100);
+		}
+		
+		for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
+		{
+			int32_t i0 = indices[i * 3 + 0];
+			int32_t i1 = indices[i * 3 + 1];
+			int32_t i2 = indices[i * 3 + 2];
+
+			triangle(
+				&sv[i0],
+				&sv[i1],
+				&sv[i2],
+				i + 1
+			);			
+		}
+
+		dma_copy(
+			video,
+			framebuffer,
+			320 * 200 / 4
+		);
+		dma_wait();
+		
+
+		head += 0.01f;
 	}
 }
