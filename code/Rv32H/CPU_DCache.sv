@@ -62,7 +62,8 @@ module CPU_DCache(
 		.o_ready()
 	);
 
-	wire is_cacheable = i_address < 32'h40000000;
+	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
+	wire is_cacheable = i_address[31:28] == 4'h2;
 	
 	wire cache_entry_valid = cache_rdata[0];
 	wire cache_entry_dirty = cache_rdata[1];
