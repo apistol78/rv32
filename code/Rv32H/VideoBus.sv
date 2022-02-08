@@ -49,11 +49,8 @@ module VideoBus(
 
 	reg [31:0] palette [0:255];
 	reg [2:0] state;
-	//reg [2:0] next_state;
-
 	reg [31:0] quad;
 	reg [31:0] next_quad;
-	//reg [31:0] next_next_quad;
 	
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 
@@ -70,14 +67,12 @@ module VideoBus(
 		fifo_read = 1'b0;
 		
 		state = 0;
-		//next_state = 0;
 		
 		quad = 0;
 		next_quad = 0;
 	end
 
-
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_cpu_request && !o_cpu_ready) begin
 			if (i_cpu_address < 32'h01000000) begin
 				if (!fifo_full) begin
@@ -98,8 +93,7 @@ module VideoBus(
 		o_fifo_full <= fifo_full;
 	end
 
-	
-	always @(*) begin
+	always_comb begin
 		if (i_video_request) begin
 			case (byte_index)
 				0: o_video_rdata = palette[quad[7:0]];
@@ -113,21 +107,15 @@ module VideoBus(
 		end
 	end
 	
-	always @(posedge i_clock) begin
-	// 	state <= next_state;
-	// 	next_quad <= next_next_quad;
-		
+	always_ff @(posedge i_clock) begin
 	 	if ((i_video_pos_x & 3) == 0)
 	 		quad <= next_quad;
 	 end
 	
 	// Transfer from FIFO to VRAM.
 	// Read VRAM during scan out.
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 	
-		//next_state = state;
-		//next_next_quad = next_quad;
-		
 		o_mem_request <= 0;
 		o_mem_rw <= 0;
 		o_mem_address <= 0;
