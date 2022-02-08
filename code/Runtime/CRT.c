@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "Runtime/HAL/Common.h"
-#include "Runtime/HAL/File.h"
-#include "Runtime/HAL/Print.h"
+#include "Runtime/File.h"
 #include "Runtime/HAL/UART.h"
 
 extern int _end;
@@ -42,7 +40,6 @@ int _fstat(int file, struct stat* st)
 	{
 		int32_t fd = file - 100;
 		st->st_size = file_size(fd);
-		// printf("_fstat, file size %d byte(s)\n", st->st_size);
 	}
 	return 0;
 }
@@ -77,10 +74,6 @@ int _getpid(void)
 
 int _write(int file, char* ptr, int len)
 {
-	for (int i = 0; i < len; ++i)
-		uart_tx_u8(ptr[i]);
-	return len;
-/*
 	if (file >= 100)
 	{
 		int32_t fd = file - 100;
@@ -92,7 +85,6 @@ int _write(int file, char* ptr, int len)
 			uart_tx_u8(*ptr++);
 		return len;
 	}
-*/
 }
 
 int _read(int file, char* ptr, int len)

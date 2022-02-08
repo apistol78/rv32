@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "doomgeneric.h"
 #include "doomkeys.h"
-#include "Runtime/HAL.h"
+#include "Runtime/Runtime.h"
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
@@ -9,7 +9,7 @@
 
 void DG_Init()
 {
-	hal_init();
+	runtime_init();
 }
 
 void DG_DrawFrame()

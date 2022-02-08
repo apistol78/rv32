@@ -1,5 +1,5 @@
+#include <stdio.h>
 #include "Runtime/HAL/I2C.h"
-#include "Runtime/HAL/Print.h"
 #include "Runtime/HAL/Video.h"
 
 #define SLAVE_ADDR 0x72
@@ -70,17 +70,11 @@ int adv7513_chip_identify()
 
 	if (id0 == 0x11 && id1 == 0x75)
 	{
-		print("Identified ADV"); printHex(id1); printHex(id0); print(" rev: "); printHex(rev); printLn("");
-        return 1;
+		printf("ADV%02x%02x, rev %02x\n", id1, id0, rev);
+		return 1;
 	}
-	else
-	{
-		printLn("Unknown HDMI encoder chip.");
-		print("Chip revision: "); printHex(rev); printLn("");
-		print("Chip ID 0: "); printHex(id0); printLn("");
-		print("Chip ID 1: "); printHex(id1); printLn("");
-        return 0;
-	}
+
+	return 0;
 }
 
 void adv7513_kick_up()
@@ -92,15 +86,15 @@ void adv7513_kick_up()
 void adv7513_power_up()
 {
 	for (int i = 0; i < sizeof(defaultConfig) / sizeof(defaultConfig[0]); ++i)
-        i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
+		i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
 }
 
 int32_t video_init()
 {
 	if (adv7513_chip_identify())
-    {
-    	adv7513_kick_up();
-    	adv7513_power_up();
-    }
-    return 0;
+	{
+		adv7513_kick_up();
+		adv7513_power_up();
+	}
+	return 0;
 }

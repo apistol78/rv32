@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "Runtime/HAL.h"
+#include "Runtime/Runtime.h"
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
@@ -154,7 +154,7 @@ const int32_t indices[] =
 
 void main()
 {
-	hal_init();
+	runtime_init();
 
 	volatile uint32_t* palette = VIDEO_PALETTE_BASE;
 	volatile uint32_t* video = VIDEO_DATA_BASE;
@@ -172,6 +172,7 @@ void main()
 
 	float head = 0.0f;
 	float pitch = 0.0f;
+	float bank = 0.0f;
 	ivec2_t sv[8];
 
 	for (;;)
@@ -186,23 +187,26 @@ void main()
 			count = 0;
 		}
 
-		memset(framebuffer, 0, 320 * 200);
-
 		const float ca = cos(head);
 		const float sa = sin(head);
-
 		const float cp = cos(pitch);
 		const float sp = sin(pitch);
+		const float cb = cos(bank);
+		const float sb = sin(bank);
 
 		for (int32_t i = 0; i < 8; ++i)
 		{
-			float xa = vertices[i].x * ca + vertices[i].z * sa;
+			float xa = vertices[i].x * ca - vertices[i].z * sa;
 			float ya = vertices[i].y;
-			float za = vertices[i].x * sa - vertices[i].z * ca;
+			float za = vertices[i].x * sa + vertices[i].z * ca;
 
-			float x = xa;
-			float y = ya * cp + za * sp;
-			float z = ya * sp - za * cp;
+			float xb = xa;
+			float yb = ya * cp - za * sp;
+			float zb = ya * sp + za * cp;
+
+			float x = xb * cb - yb * sb;
+			float y = xb * sb + yb * cb;
+			float z = zb;
 
 			z += 5.0f;
 
@@ -213,7 +217,11 @@ void main()
 			sv[i].x = (int32_t)((ndx * 100) + 160);
 			sv[i].y = (int32_t)((ndy * 100) + 100);
 		}
-		
+
+		dma_wait();
+
+		memset(framebuffer, 0, 320 * 200);
+
 		for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
 		{
 			int32_t i0 = indices[i * 3 + 0];
@@ -233,10 +241,10 @@ void main()
 			framebuffer,
 			320 * 200 / 4
 		);
-		dma_wait();
 		
 
-		head += 0.1f;
-		pitch += 0.165f;
+		head += 0.043f;
+		pitch += 0.067f;
+		bank += 0.034f;
 	}
 }
