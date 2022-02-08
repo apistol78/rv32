@@ -78,7 +78,6 @@ module CPU_ICache(
 		
 		cache_rw = 0;
 		cache_wdata = 0;
-
 		cache_pc = i_input_pc;
 	
 		case (state)
@@ -113,6 +112,10 @@ module CPU_ICache(
 					o_rdata = cache_rdata[63:32];
 					cache_pc = i_input_pc + 4;
 					next = READ_PREFETCH;
+				end
+				else if (!i_stall) begin
+					o_bus_request = 1;
+					next = READ_BUS;
 				end
 				else begin
 					next = IDLE;
