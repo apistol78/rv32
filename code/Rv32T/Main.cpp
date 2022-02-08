@@ -297,6 +297,8 @@ int main(int argc, const char **argv)
 	uint32_t lastRetired = 0;
 	uint32_t busActiveCount = 0;
 	uint32_t lastBusActiveCount = 0;
+	uint32_t busCPUandDMA = 0;
+	uint32_t lastBusCPUandDMA = 0;
 	uint32_t lastTracePC = -1;
 	int32_t Tp = 0;
 
@@ -394,6 +396,9 @@ int main(int argc, const char **argv)
 			if (soc->SoC__DOT____Vcellinp__timer__i_request)
 				nreq_timer++;
 
+			if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
+				++busCPUandDMA;
+
 			if (fos)
 			{
 				if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc != lastTracePC)
@@ -447,6 +452,7 @@ int main(int argc, const char **argv)
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 				uint32_t db = busActiveCount - lastBusActiveCount;
+				uint32_t dcd = busCPUandDMA - lastBusCPUandDMA;
 				if (dc > 0)
 				{
 					statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
@@ -460,21 +466,24 @@ int main(int argc, const char **argv)
 					// 	(100.0f * soc->SoC__DOT__l2cache__DOT__hit) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss)
 					// ));
 
-					statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
-						nreq_rom,
-						nreq_ram,
-						nreq_l2cache,
-						nreq_led,
-						nreq_uart,
-						nreq_i2c,
-						nreq_sd,
-						nreq_dma,
-						nreq_timer
-					));
+					// statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
+					// 	nreq_rom,
+					// 	nreq_ram,
+					// 	nreq_l2cache,
+					// 	nreq_led,
+					// 	nreq_uart,
+					// 	nreq_i2c,
+					// 	nreq_sd,
+					// 	nreq_dma,
+					// 	nreq_timer
+					// ));
+
+					statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)dcd * 100.0) / dc));
 
 					lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 					lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 					lastBusActiveCount = busActiveCount;
+					lastBusCPUandDMA = busCPUandDMA;
 				}
 			}
 		}
