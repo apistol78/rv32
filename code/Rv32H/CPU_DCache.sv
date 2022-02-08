@@ -27,7 +27,7 @@ module CPU_DCache(
 	localparam SIZE	= 14;
 	localparam RANGE = 1 << SIZE;
 
-	typedef enum
+	typedef enum bit [3:0]
 	{
 		IDLE,
 		FLUSH_SETUP,
@@ -114,8 +114,12 @@ module CPU_DCache(
 			IDLE: begin
 				if (i_request) begin
 					if (i_flush) begin
-						next_flush_address = 0;
-						next = FLUSH_SETUP;
+						if (cache_initialized) begin
+							next_flush_address = 0;
+							next = FLUSH_SETUP;
+						end
+						else
+							o_ready = 1;
 					end
 					else if (cache_initialized && is_cacheable) begin
 						if (!i_rw)
@@ -150,7 +154,7 @@ module CPU_DCache(
 
 			FLUSH_CHECK: begin
 				cache_address = flush_address;
-				if (cache_entry_valid && cache_entry_dirty) begin
+				if (/*cache_entry_valid && */cache_entry_dirty) begin
 					o_bus_rw = 1;
 					o_bus_address = cache_entry_address;
 					o_bus_request = 1;
@@ -206,7 +210,7 @@ module CPU_DCache(
 
 			// Write, write back if necessary.
 			WRITE_SETUP: begin
-				if (cache_entry_valid && cache_entry_dirty && cache_entry_address != i_address) begin
+				if (/* cache_entry_valid && */ cache_entry_dirty && cache_entry_address != i_address) begin
 					o_bus_rw = 1;
 					o_bus_address = cache_entry_address;
 					o_bus_request = 1;
@@ -247,7 +251,7 @@ module CPU_DCache(
 					next = IDLE;
 				end
 				else begin
-					if (cache_entry_valid && cache_entry_dirty) begin
+					if (/* cache_entry_valid && */ cache_entry_dirty) begin
 						o_bus_rw = 1;
 						o_bus_address = cache_entry_address;
 						o_bus_request = 1;
@@ -288,6 +292,9 @@ module CPU_DCache(
 					next = IDLE;
 				end
 			end
+
+			default:
+				next = IDLE;
 
 		endcase
 	end

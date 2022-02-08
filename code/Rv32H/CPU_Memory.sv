@@ -22,7 +22,7 @@ module CPU_Memory(
 	output memory_data_t o_data
 );
 
-	typedef enum
+	typedef enum bit [2:0]
 	{
 		IDLE,
 		READ,
@@ -215,6 +215,9 @@ module CPU_Memory(
 					next_state = IDLE;
 				end					
 			end
+
+			default:
+				next_state = IDLE;
 
 		endcase
 	end

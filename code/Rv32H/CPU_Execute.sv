@@ -158,10 +158,11 @@ module CPU_Execute (
 			o_fault <= 0;			
 		end
 		else begin
-			if (!i_memory_raw && i_data.tag != data.tag) begin
-	
-				o_jump <= 0;
-				o_ecall <= 0;
+
+			o_jump <= 0;
+			o_ecall <= 0;
+
+			if (!i_memory_raw && !i_memory_busy && i_data.tag != data.tag) begin
 
 				data.inst_rd <= i_data.inst_rd;
 				data.mem_address <= alu_result;

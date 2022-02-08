@@ -21,10 +21,11 @@ module CPU_ICache(
 	localparam SIZE	= 12;
 	localparam RANGE = 1 << SIZE;
 
-	typedef enum
+	typedef enum bit [2:0]
 	{
 		IDLE,
 		READ_SETUP,
+		READ_PREFETCH,
 		READ_BUS
 	} state_t;
 
@@ -34,9 +35,11 @@ module CPU_ICache(
 	// Cache memory.
 	wire cache_initialized;
 	reg cache_rw = 0;
-	wire [SIZE - 1:0] cache_label = i_input_pc[(SIZE - 1):2];	// 2 lowest bits are always zero.
 	reg [63:0] cache_wdata = 0;
 	wire [63:0] cache_rdata;
+
+	reg [31:0] cache_pc;
+	wire [SIZE - 1:0] cache_label = cache_pc[(SIZE - 1):2];	// 2 lowest bits are always zero.
 
 	// One cycle latency, important since
 	// we rely on address only.
@@ -75,6 +78,8 @@ module CPU_ICache(
 		
 		cache_rw = 0;
 		cache_wdata = 0;
+
+		cache_pc = i_input_pc;
 	
 		case (state)
 			IDLE: begin
@@ -93,14 +98,27 @@ module CPU_ICache(
 				if (cache_rdata[31:0] == { i_input_pc[31:2], 1'b0, 1'b1 }) begin
 					o_ready = 1;
 					o_rdata = cache_rdata[63:32];
-					next = IDLE;
+					cache_pc = i_input_pc + 4;
+					next = READ_PREFETCH;
 				end
 				else begin
 					o_bus_request = 1;
 					next = READ_BUS;
 				end
 			end
-			
+
+			READ_PREFETCH: begin
+				if (!i_stall && cache_rdata[31:0] == { i_input_pc[31:2], 1'b0, 1'b1 }) begin
+					o_ready = 1;
+					o_rdata = cache_rdata[63:32];
+					cache_pc = i_input_pc + 4;
+					next = READ_PREFETCH;
+				end
+				else begin
+					next = IDLE;
+				end			
+			end
+
 			READ_BUS: begin
 				o_bus_request = 1;
 				if (i_bus_ready) begin
@@ -111,6 +129,9 @@ module CPU_ICache(
 					next = IDLE;
 				end
 			end
+
+			default:
+				next = IDLE;
 		endcase
 	end
 

@@ -26,7 +26,14 @@ module CPU_Fetch(
 	input wire i_decode_busy,
 	output fetch_data_t o_data
 );
-	reg [2:0] state = 0;
+
+	typedef enum bit [1:0]
+	{
+		WAIT_ICACHE,
+		WAIT_JUMP
+	} state_t;
+
+	state_t state = WAIT_ICACHE;
 	reg [31:0] pc = 0;
 	fetch_data_t dataC = 0;
 	fetch_data_t dataN = 0;
@@ -75,7 +82,7 @@ module CPU_Fetch(
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			state <= 0;
+			state <= WAIT_ICACHE;
 			pc <= 0;
 			dataC <= 0;
 		end
@@ -88,11 +95,11 @@ module CPU_Fetch(
 				o_irq_dispatched <= 1;
 				o_irq_epc <= pc;
 				pc <= i_irq_pc;
-				state <= 0;
+				state <= WAIT_ICACHE;
 			end
 			else begin
 				case (state)
-					0: begin
+					WAIT_ICACHE: begin
 						if (icache_ready) begin
 
 							dataC.tag <= dataC.tag + 1;
@@ -103,7 +110,7 @@ module CPU_Fetch(
 								// Branch instruction, need to wait
 								// for an explicit "goto" signal before
 								// we can continue feeding the pipeline.
-								state <= 1;
+								state <= WAIT_JUMP;
 							end
 							else begin
 								// Move PC to next instruction, will
@@ -114,13 +121,16 @@ module CPU_Fetch(
 						end
 					end
 
-					1: begin
+					WAIT_JUMP: begin
 						// Wait for "goto" signal.
 						if (i_jump) begin
 							pc <= i_jump_pc;
-							state <= 0;
+							state <= WAIT_ICACHE;
 						end				
 					end
+
+					default:
+						state <= WAIT_ICACHE;
 				endcase
 			end
 		end

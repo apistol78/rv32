@@ -270,6 +270,23 @@ int main(int argc, const char **argv)
 		fos = new FileOutputStream(f, new Utf8Encoding());
 	}
 
+	Ref< FileOutputStream > bus_os;
+	if (cmdLine.hasOption(L"trace-bus"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.bus", File::FmWrite);
+		if (!f)
+		{
+			log::error << L"Unable to create BUS trace." << Endl;
+			return 1;
+		}
+		bus_os = new FileOutputStream(f, new Utf8Encoding());
+	}
+
+	// Create from PC.
+	uint32_t traceFromPC = -1;
+	if (cmdLine.hasOption(L"trace-from"))
+		traceFromPC = cmdLine.getOption(L"trace-from").getInteger();
+
 	HDMI hdmi;
 	LEDR ledr;
 	UART_TX uart_tx;
@@ -302,21 +319,29 @@ int main(int argc, const char **argv)
 				break;
 		}
 
-		if (trace)
-		{
-			Verilated::traceEverOn(true);
-			tfp = new VerilatedFstC;
-			soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
-			tfp->open("Rv32T.fst");
-			trace = false;	
-		}
-
 		int32_t Tc = (int32_t)(timer.getElapsedTime() * 1000);
 		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
 		
 		for (int32_t i = 0; i < count; ++i)
 		{
+			// if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc == traceFromPC)
+			// {
+			// 	log::info << L"TRACE FROM BEGUN" << Endl;
+			// 	trace = true;
+			// 	traceFromPC = -1;
+			// }
+
+			if (trace)
+			{
+				Verilated::traceEverOn(true);
+				tfp = new VerilatedFstC;
+				soc->trace(tfp, 99);  // Trace 99 levels of hierarchy
+				tfp->open("Rv32T.fst");
+				trace = false;
+				log::info << L"TRACE CREATED" << Endl;
+			}
+
 			++time;
 			soc->CLOCK_125_p = 0;
 			soc->KEY |= key1 ? 2 : 0;
@@ -373,13 +398,40 @@ int main(int argc, const char **argv)
 			{
 				if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc != lastTracePC)
 				{
-					*fos << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
+					*fos << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc);
+
+					for (uint32_t i = 0; i < 32; ++i)
+						*fos << str(L", %08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[i]);
+					
+					*fos << Endl;
 					lastTracePC = soc->SoC__DOT__cpu__DOT__fetch__DOT__pc;
+				}
+			}
+
+			if (bus_os)
+			{
+				if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__cpu_dbus_ready)
+				{
+					*bus_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
+					*bus_os << (soc->SoC__DOT__cpu_dbus_rw ? L"W" : L"R") << L", ";
+					*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_address) << L", ";
+					if (soc->SoC__DOT__cpu_dbus_rw)
+						*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_wdata);
+					else
+						*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_rdata);
+					*bus_os << Endl;
 				}
 			}
 
 			key1 = false;
 			reset = false;
+
+			// if (time/2 >= (957224-1000) && !tfp)
+			// {
+			// 	trace = true;
+			// 	slow = true;
+			// 	log::info << L"TRACING!!" << Endl;
+			// }
 		}
 
 		if (form)
