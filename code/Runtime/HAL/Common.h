@@ -4,9 +4,6 @@
 
 #define LED_BASE     		(volatile uint32_t*)0x40000000
 
-#define UART_BASE    		(volatile uint32_t*)0x50000000
-#define UART_STATUS  		(volatile uint32_t*)0x50000004
-
 #define GPIO_CTRL    		(volatile uint32_t*)0x60000000
 #define GPIO_IO      		(volatile uint32_t*)0x60000004
 

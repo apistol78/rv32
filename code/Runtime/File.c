@@ -21,13 +21,16 @@ DSTATUS disk_status (BYTE pdrv)
 
 DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-	if (sd_read_block512(sector, buff, 512) == 512)
-		return RES_OK;
-	else
+	//printf("SD block read %d, %d count\n", sector, count);
+	for (UINT i = 0; i < count; ++i)
 	{
-		printf("SD block read failed!\n");
-		return RES_ERROR;
+		if (sd_read_block512(sector, buff + 512 * i, 512) != 512)
+		{
+			printf("SD block read failed!\n");
+			return RES_ERROR;
+		}
 	}
+	return RES_OK;
 }
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
@@ -37,6 +40,10 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
+	if (cmd == GET_SECTOR_SIZE)
+		*(WORD*)buff = 512;
+	else if (cmd == GET_BLOCK_SIZE)
+		*(DWORD*)buff = 512;
 	return RES_OK;
 }
 
@@ -49,24 +56,30 @@ uint32_t fpa = 0;
 
 static FIL* file_alloc()
 {
-	for (int32_t i = 0; i < 32; ++i)
-	{
-		if ((fpa & (1 << i)) == 0)
-		{
-			fpa |= (1 << i);
-			memset(&fps[i], 0, sizeof(FIL));
-			printf("allocated file %d\n", i);
-			return &fps[i];
-		}
-	}
-	return 0;
+	// for (int32_t i = 0; i < 32; ++i)
+	// {
+	// 	if ((fpa & (1 << i)) == 0)
+	// 	{
+	// 		fpa |= (1 << i);
+	// 		memset(&fps[i], 0, sizeof(FIL));
+	// 		printf("allocated file %d\n", i);
+	// 		return &fps[i];
+	// 	}
+	// }
+
+	uint32_t i = fpa++;
+	memset(&fps[i], 0, sizeof(FIL));
+	printf("allocated file %d\n", i);
+	return &fps[i];
+
+	// return 0;
 }
 
 static void file_free(FIL* fp)
 {
 	int32_t index = fp - fps;
 	printf("freed file %d\n", index);
-	fpa &= ~(1 << index);
+	// fpa &= ~(1 << index);
 }
 
 static int32_t file_index(FIL* fp)
@@ -110,8 +123,8 @@ int32_t file_open(const char* name)
 		{
 			printf("HACK, trying with file in root...\n");
 			
-			if (f_open(fp, "pak0.pak", FA_READ) == FR_OK)
-				return 1;
+			if (f_open(fp, "ID1/PAK0.PAK", FA_READ) == FR_OK)
+				return file_index(fp);
 
 			printf("failed also\n");
 		}
@@ -146,14 +159,28 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 		return 0;
 	}
 
-	printf("file_seek, fd: %d, offset: %d, from: %d\n", fd, offset, from);
+	// printf("file_seek, fd: %d, offset: %d, from: %d (%08x)\n", fd, offset, from, _sbrk(0));
 
 	if (from == 0)
 		result = f_lseek(fp, offset);
 	else if (from == 1)
-		result = f_lseek(fp, f_tell(fp) + offset);
+	{
+		int32_t pos = f_tell(fp) + offset;
+		if (pos < 0)
+			pos = 0;
+		else if (pos >= f_size(fp))
+			pos = f_size(fp) - 1;
+		result = f_lseek(fp, pos);
+	}
 	else if (from == 2)
-		result = f_lseek(fp, f_size(fp) + offset);
+	{
+		int32_t pos = f_size(fp) + offset;
+		if (pos < 0)
+			pos = 0;
+		else if (pos >= f_size(fp))
+			pos = f_size(fp) - 1;
+		result = f_lseek(fp, pos);
+	}
 
 	if (result != FR_OK)
 	{
@@ -166,7 +193,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 
 int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 {
-	UINT bw;
+	UINT bw = 0;
 	FIL* fp = file_from_index(fd);
 	if (f_write(fp, ptr, len, &bw) == FR_OK)
 		return (int32_t)bw;
@@ -176,7 +203,7 @@ int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 
 int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
-	UINT br;
+	UINT br = 0;
 	FIL* fp = file_from_index(fd);
 	if (f_read(fp, ptr, len, &br) == FR_OK)
 		return (int32_t)br;

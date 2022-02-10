@@ -7,15 +7,9 @@
 extern int _end;
 
 static uint8_t* heap = (uint8_t*)&_end;
-// static uint8_t* heap_end = (uint8_t*)0x14000000;
 
-void *_sbrk(int incr)
+void* _sbrk(int incr)
 {
-	// if (heap + incr >= heap_end)
-	// {
-	// 	printf("EOM!\n");
-	// 	for (;;);
-	// }
 	uint8_t* prev_heap = heap;
 	heap += incr;
 	return prev_heap;
@@ -46,6 +40,7 @@ int _fstat(int file, struct stat* st)
 	{
 		int32_t fd = file - 100;
 		st->st_size = file_size(fd);
+		//printf("### _fstat %d, st_size %d\n", file, st->st_size);
 	}
 	return 0;
 }
@@ -59,6 +54,7 @@ int _lseek(int file, int ptr, int dir)
 {
 	if (file >= 100)
 	{
+		//printf("### _lseek %d, ptr %d, dir d\n", file, ptr, dir);
 		int32_t fd = file - 100;
 		return file_seek(fd, ptr, dir);
 	}
@@ -91,13 +87,14 @@ int _write(int file, char* ptr, int len)
 	else
 	{
 		for (int i = 0; i < len; ++i)
-			uart_tx_u8(*ptr++);
+			uart_tx_u8(0, *ptr++);
 		return len;
 	}
 }
 
 int _read(int file, char* ptr, int len)
 {
+	//printf("### _read %d, len %d\n", file, len);
 	if (file >= 100)
 	{
 		int32_t fd = file - 100;
@@ -106,7 +103,7 @@ int _read(int file, char* ptr, int len)
 	else
 	{
 		for (int i = 0; i < len; ++i)
-			*ptr++ = uart_rx_u8();
+			*ptr++ = uart_rx_u8(0);
 		return len;
 	}
 }
