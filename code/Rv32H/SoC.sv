@@ -154,6 +154,7 @@ module SoC(
 // `define SOC_ENABLE_SDRAM_L2CACHE
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
+// `define SOC_ENABLE_GPIO
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
@@ -353,7 +354,7 @@ module SoC(
 	`else
 	BRAM_latency #(
 		.WIDTH(32),
-		.SIZE(32'h08000000 / 4),
+		.SIZE(32'h10000000 / 4),
 		.ADDR_LSH(2),
 		.LATENCY(10)
 	) sdram(
@@ -416,25 +417,46 @@ module SoC(
 	);
 	
 `ifdef SOC_ENABLE_UART
-	// UART
-	wire uart_select;
-	wire [1:0] uart_address;
-	wire [31:0] uart_rdata;
-	wire uart_ready;
+	// UART (USB)
+	wire uart_0_select;
+	wire [1:0] uart_0_address;
+	wire [31:0] uart_0_rdata;
+	wire uart_0_ready;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8))
-	) uart(
+	) uart_0(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(uart_select && bus_request),
+		.i_request(uart_0_select && bus_request),
 		.i_rw(bus_rw),
-		.i_address(uart_address),
+		.i_address(uart_0_address),
 		.i_wdata(bus_wdata),
-		.o_rdata(uart_rdata),
-		.o_ready(uart_ready),
+		.o_rdata(uart_0_rdata),
+		.o_ready(uart_0_ready),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
+	);
+
+	// UART (GPIO)
+	wire uart_1_select;
+	wire [1:0] uart_1_address;
+	wire [31:0] uart_1_rdata;
+	wire uart_1_ready;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_1(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_1_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(uart_1_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(uart_1_rdata),
+		.o_ready(uart_1_ready),
+		// ---
+		.UART_RX(GPIO[0]),
+		.UART_TX(GPIO[1])
 	);
 `endif
 	
@@ -676,8 +698,10 @@ module SoC(
 	assign led_select = bus_address[31:28] == 4'h4;
 
 `ifdef SOC_ENABLE_UART
-	assign uart_select = bus_address[31:28] == 4'h5;
-	assign uart_address = bus_address[3:2];
+	assign uart_0_select = bus_address[31:24] == 8'h50;
+	assign uart_0_address = bus_address[3:2];
+	assign uart_1_select = bus_address[31:24] == 8'h51;
+	assign uart_1_address = bus_address[3:2];
 `endif
 
 `ifdef SOC_ENABLE_GPIO
@@ -711,7 +735,8 @@ module SoC(
 		sdram_select ? sdram_rdata :
 `endif
 `ifdef SOC_ENABLE_UART
-		uart_select ? uart_rdata :
+		uart_0_select ? uart_0_rdata :
+		uart_1_select ? uart_1_rdata :
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_rdata :
@@ -737,7 +762,8 @@ module SoC(
 `endif
 		led_select ? led_ready :
 `ifdef SOC_ENABLE_UART
-		uart_select ? uart_ready :
+		uart_0_select ? uart_0_ready :
+		uart_1_select ? uart_0_ready :
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_ready :
