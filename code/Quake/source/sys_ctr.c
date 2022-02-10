@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdint.h>
 // #include "dualshock2.h"
 
-int __stacksize__ = 256 * 1024;
+// int __stacksize__ = 256 * 1024;
 
 
 #define TICKS_PER_SEC 268123480.0
@@ -375,10 +375,12 @@ int main (int argc, char **argv)
 
 	printf("quake will begin\n");
 
-	parms.memsize = 5.5*1024*1024;/*at minimum requirements, thus this is needed ai ram memory :( */
-	parms.membase = calloc (1,parms.memsize);
-	if(parms.membase==NULL)printf("allocation failed\n");
+	parms.memsize = 8*1024*1024;
+	parms.membase = calloc(1, parms.memsize);
+	if(parms.membase == NULL)
+		printf("allocation failed\n");
 	parms.basedir = ".";
+
 	printf("allocated\n");
 
 	COM_InitArgv (argc, argv);

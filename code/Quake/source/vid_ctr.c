@@ -22,7 +22,9 @@
 #include "quakedef.h"
 #include "d_local.h"
 
-#include "ctr.h"
+//#include "ctr.h"
+#include "Runtime/HAL/DMA.h"
+#include "Runtime/HAL/Video.h"
 
 extern
 viddef_t	vid;				// global video state
@@ -50,6 +52,8 @@ void	VID_SetPalette (unsigned char *palette)
     table[0] = ((r>>3)<<11)+((g>>2)<<5)+(b>>3);
     table++;
     pal += 3;
+
+    (VIDEO_PALETTE_BASE)[i] = (r << 16) | (g << 8) | b;
   }
 }
 
@@ -60,10 +64,12 @@ void	VID_ShiftPalette (unsigned char *palette)
 
 void	VID_Init (unsigned char *palette)
 {
-  baseheight = 240;
+  baseheight = 200;
   basewidth = 320;
 
-  vid_buffer = malloc(sizeof(byte) * basewidth * baseheight); //Left buffer
+  //vid_buffer = malloc(sizeof(byte) * basewidth * baseheight); //Left buffer
+  vid_buffer = (byte*)0x10010000;
+
   zbuffer = malloc(sizeof(short) * basewidth * baseheight);
 
   vid.maxwarpwidth = vid.width = vid.conwidth = basewidth;
@@ -86,7 +92,7 @@ void	VID_SetBuffer (int buffer)
 
 void	VID_Shutdown (void)
 {
-  free(vid_buffer);
+  // free(vid_buffer);
   free(zbuffer);
 }
 
@@ -123,6 +129,16 @@ void	VID_Update (vrect_t *rects){
   /*   } */
   /*   puts(buff); */
   /* } */
+
+	dma_wait();
+
+	__asm__ volatile ("fence");
+	
+	dma_copy(
+		VIDEO_DATA_BASE,
+		vid_buffer,
+		320 * 200 / 4
+	);
 }
 
 /*

@@ -1318,9 +1318,15 @@ void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
 
 	for (i=0 ; i<numframes ; i++)
 	{
+		printf("** Mod_LoadAliasGroup ** %d. interval %f\n", i, pin_intervals->interval);
+
 		*poutintervals = LittleFloat (pin_intervals->interval);
-		if (*poutintervals <= 0.0)
-			Sys_Error ("Mod_LoadAliasGroup: interval<=0");
+		if (*poutintervals <= 0.0f)
+		{
+			//Sys_Error ("Mod_LoadAliasGroup: interval<=0");
+			printf ("Mod_LoadAliasGroup: interval<=0");
+			*poutintervals = 0.05f;
+		}
 
 		poutintervals++;
 		pin_intervals++;
