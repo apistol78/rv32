@@ -252,7 +252,7 @@ int main(int argc, const char **argv)
 	}
 
 	//soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
-	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x21fffff0;
+	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x2ffffff0;
 
 	// Create signal trace.
 	VerilatedFstC* tfp = nullptr;
@@ -386,7 +386,9 @@ int main(int argc, const char **argv)
 			// 	nreq_l2cache++;
 			if (soc->SoC__DOT____Vcellinp__led__i_request)
 				nreq_led++;
-			if (soc->SoC__DOT____Vcellinp__uart__i_request)
+			if (soc->SoC__DOT____Vcellinp__uart_0__i_request)
+				nreq_uart++;
+			if (soc->SoC__DOT____Vcellinp__uart_1__i_request)
 				nreq_uart++;
 			if (soc->SoC__DOT____Vcellinp__i2c__i_request)
 				nreq_i2c++;
