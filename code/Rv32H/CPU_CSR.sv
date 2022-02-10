@@ -2,12 +2,18 @@
 
 `timescale 1ns/1ns
 
-module CPU_CSR(
+module CPU_CSR #(
+	parameter VENDORID,
+	parameter ARCHID,
+	parameter IMPID,
+	parameter HARTID
+)(
 	input i_reset,
 	input i_clock,
 
 	// External interrupt input.
-	input i_interrupt,
+	input i_timer_interrupt,
+	input i_external_interrupt,
 
 	// Software interrupt input.
 	input i_ecall,
@@ -28,16 +34,18 @@ module CPU_CSR(
 	input [31:0] i_irq_epc
 );
 
+	reg mie_meie = 0; 
 	reg mie_mtie = 0;
 	reg mie_msie = 0;
 	reg [31:0] mtvec = 0;
 	reg [31:0] mepc = 0;
 	reg [31:0] mcause = 0;
+	reg mip_meip = 0;
 	reg mip_mtip = 0;
 	reg mip_msip = 0;
 
-	wire [31:0] mie = { 24'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
-	wire [31:0] mip = { 24'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
+	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
+	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
 	assign o_epc = mepc;
 
@@ -55,48 +63,53 @@ module CPU_CSR(
 		else if (i_index == `CSR_MIP)
 			o_rdata = mip;
 		else if (i_index == `CSR_MVENDORID)
-			o_rdata = 0;
+			o_rdata = VENDORID;
 		else if (i_index == `CSR_MARCHID)
-			o_rdata = 0;
+			o_rdata = ARCHID;
 		else if (i_index == `CSR_MIMPID)
-			o_rdata = 0;
+			o_rdata = IMPID;
 		else if (i_index == `CSR_MHARTID)
-			o_rdata = 0;
+			o_rdata = HARTID;
 	end
 
-	// Write CSR value by index.
 	always @(posedge i_clock) begin
 		if (i_reset) begin
-			mtvec <= 0;
+			mie_meie <= 0;
 			mie_mtie <= 0;
 			mie_msie <= 0;
+			mtvec <= 0;
+			mepc <= 0;
+			mcause <= 0;
+			mip_meip <= 0;
+			mip_mtip <= 0;
+			mip_msip <= 0;
 		end
 		else begin
 			if (i_wdata_wr) begin
 				if (i_index == `CSR_MIE) begin
+					mie_meie <= i_wdata[11];
 					mie_mtie <= i_wdata[7];
 					mie_msie <= i_wdata[3];
 				end
 				else if (i_index == `CSR_MTVEC)
 					mtvec <= i_wdata;
 			end
-		end
-	end
 
-	always @(posedge i_clock) begin
-		if (i_reset) begin
-			mepc <= 0;
-			mcause <= 0;
-			mip_mtip <= 0;
-		end
-		else begin
-			if (i_interrupt) begin
-				// \todo We're assuming only external interrupt is the timer.
+			if (i_timer_interrupt) begin
 				if (mie_mtie) begin
 					o_irq_pending <= 1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 7);
 					mip_mtip <= 1'b1;
+				end
+			end
+
+			if (i_external_interrupt) begin
+				if (mie_meie) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h80000000 | (1 << 11);
+					mip_meip <= 1'b1;
 				end
 			end
 

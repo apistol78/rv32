@@ -4,29 +4,37 @@
 
 `timescale 1ns/1ns
 
-module CPU_v2 (
-	input wire i_reset,
-	input wire i_clock,					// CPU clock
+module CPU_v2 #(
+	parameter RESET_VECTOR = 32'h00000000,
+	parameter STACK_POINTER = 32'h10000400,
+	parameter VENDORID = 32'h0,
+	parameter ARCHID = 32'h0,
+	parameter IMPID = 32'h0,
+	parameter HARTID = 32'h0	
+)(
+	input i_reset,
+	input i_clock,					// CPU clock
 
 	// Control
-	input wire i_interrupt,
+	input i_timer_interrupt,
+	input i_external_interrupt,
 
 	// Instruction bus
-	output wire o_ibus_request,			// IO request.
-	input wire i_ibus_ready,			// IO request ready.
-	output wire [31:0] o_ibus_address,	// Address
-	input wire [31:0] i_ibus_rdata,		// Read data
+	output o_ibus_request,			// IO request.
+	input i_ibus_ready,			// IO request ready.
+	output [31:0] o_ibus_address,	// Address
+	input [31:0] i_ibus_rdata,		// Read data
 	
 	// Data bus
-	output wire o_dbus_rw,				// Data read/write
-	output wire o_dbus_request,			// IO request.
-	input wire i_dbus_ready,			// IO request ready.
-	output wire [31:0] o_dbus_address,	// Address
-	input wire [31:0] i_dbus_rdata,		// Read data
-	output wire [31:0] o_dbus_wdata,	// Write data
+	output o_dbus_rw,				// Data read/write
+	output o_dbus_request,			// IO request.
+	input i_dbus_ready,			// IO request ready.
+	output [31:0] o_dbus_address,	// Address
+	input [31:0] i_dbus_rdata,		// Read data
+	output [31:0] o_dbus_wdata,	// Write data
 	
 	// Debug
-	output wire o_fault
+	output o_fault
 );
 
 	//====================================================
@@ -42,11 +50,17 @@ module CPU_v2 (
 	wire csr_irq_dispatched;
 	wire [31:0] csr_irq_epc;
 
-	CPU_CSR csr(
+	CPU_CSR #(
+		.VENDORID(VENDORID),
+		.ARCHID(ARCHID),
+		.IMPID(IMPID),
+		.HARTID(HARTID)
+	) csr(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
-		.i_interrupt(i_interrupt),
+		.i_timer_interrupt(i_timer_interrupt),
+		.i_external_interrupt(i_external_interrupt),
 		.i_ecall(execute_ecall),
 
 		.i_index(csr_index),
@@ -67,7 +81,9 @@ module CPU_v2 (
 	wire [31:0] rs1;
 	wire [31:0] rs2;
 
-	CPU_Registers registers(
+	CPU_Registers #(
+		.STACK_POINTER(STACK_POINTER)
+	) registers(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
@@ -83,7 +99,9 @@ module CPU_v2 (
 
 	fetch_data_t fetch_data;
 	
-	CPU_Fetch fetch(
+	CPU_Fetch #(
+		.RESET_VECTOR(RESET_VECTOR)
+	) fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 

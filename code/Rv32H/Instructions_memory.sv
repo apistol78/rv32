@@ -7,13 +7,13 @@ wire memory_read =
 	is_LH   |
 	is_LHU  |
 	is_LW   |
-	0;
+	1'b0;
 
 wire memory_write = 
 	is_SB   |
 	is_SH   |
 	is_SW   |
-	0;
+	1'b0;
 
 wire [2:0] memory_width = 
 	is_LB   ? 3'd1 :
@@ -24,10 +24,10 @@ wire [2:0] memory_width =
 	is_SB   ? 3'd1 :
 	is_SH   ? 3'd2 :
 	is_SW   ? 3'd4 :
-	0;
+	3'd0;
 
 wire memory_signed = 
 	is_LB   |
 	is_LH   |
-	0;
+	1'b0;
 

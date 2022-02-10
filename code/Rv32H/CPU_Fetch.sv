@@ -2,7 +2,9 @@
 
 `timescale 1ns/1ns
 
-module CPU_Fetch(
+module CPU_Fetch #(
+	parameter RESET_VECTOR
+)(
 	input wire i_reset,
 	input wire i_clock,
 
@@ -34,7 +36,7 @@ module CPU_Fetch(
 	} state_t;
 
 	state_t state = WAIT_ICACHE;
-	reg [31:0] pc = 0;
+	reg [31:0] pc = RESET_VECTOR;
 	fetch_data_t dataC = 0;
 	fetch_data_t dataN = 0;
 
@@ -83,7 +85,7 @@ module CPU_Fetch(
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= WAIT_ICACHE;
-			pc <= 0;
+			pc <= RESET_VECTOR;
 			dataC <= 0;
 		end
 		else begin

@@ -2,7 +2,9 @@
 
 `timescale 1ns/1ns
 
-module CPU_Registers (
+module CPU_Registers #(
+	parameter STACK_POINTER
+)(
 	input i_reset,
 	input i_clock,
 
@@ -27,7 +29,7 @@ module CPU_Registers (
     initial begin
         r[ 0] = 32'h0000_0000;
         r[ 1] = 32'h0000_0000;
-        r[ 2] = 32'h1000_0400 - 4;	// sp	
+        r[ 2] = STACK_POINTER;
         r[ 3] = 32'h0000_0000;
         r[ 4] = 32'h0000_0000;
         r[ 5] = 32'h0000_0000;
@@ -69,7 +71,7 @@ module CPU_Registers (
 
 			r[ 0] <= 32'h0000_0000;
 			r[ 1] <= 32'h0000_0000;
-			r[ 2] <= 32'h1000_0400 - 4;	// sp	
+			r[ 2] <= STACK_POINTER;
 			r[ 3] <= 32'h0000_0000;
 			r[ 4] <= 32'h0000_0000;
 			r[ 5] <= 32'h0000_0000;

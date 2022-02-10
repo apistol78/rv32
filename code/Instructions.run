@@ -1524,21 +1524,21 @@ function main(argv)
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-26s", inst.verilog_alu.operation) .. " :")
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t4'd0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [2:0] alu_operand1 = ")
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand1) .. " :")
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t3'd0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [2:0] alu_operand2 = ")
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand2) .. " :")
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t3'd0;")
 		stdout:printLn("")
 
 	elseif language == "verilog_memory" then
@@ -1560,7 +1560,7 @@ function main(argv)
 				stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. "|")
 			end
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t1'b0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire memory_write = ")
@@ -1569,14 +1569,14 @@ function main(argv)
 				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
 			end
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t1'b0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [2:0] memory_width = ")
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " ? 3'd" .. inst.verilog_memory.width .. " :")
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t3'd0;")
 		stdout:printLn("")
 
 		stdout:printLn("wire memory_signed = ")
@@ -1585,7 +1585,7 @@ function main(argv)
 				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
 			end
 		end
-		stdout:printLn("\t0;")
+		stdout:printLn("\t1'b0;")
 		stdout:printLn("")
 
 	elseif language == "verilog_ops" then
