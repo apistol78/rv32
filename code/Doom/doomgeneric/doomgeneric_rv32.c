@@ -60,10 +60,10 @@ uint32_t DG_GetTicksMs()
 
 int DG_GetKey(int* pressed, unsigned char* doomKey)
 {
-	if (uart_rx_empty())
+	if (uart_rx_empty(0))
 		return 0;
 
-	uint8_t v = uart_rx_u8();
+	uint8_t v = uart_rx_u8(0);
 	switch (v & 0x7f)
 	{
 	case 1:	// Left
