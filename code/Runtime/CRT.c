@@ -7,9 +7,15 @@
 extern int _end;
 
 static uint8_t* heap = (uint8_t*)&_end;
+// static uint8_t* heap_end = (uint8_t*)0x14000000;
 
 void *_sbrk(int incr)
 {
+	// if (heap + incr >= heap_end)
+	// {
+	// 	printf("EOM!\n");
+	// 	for (;;);
+	// }
 	uint8_t* prev_heap = heap;
 	heap += incr;
 	return prev_heap;
@@ -52,7 +58,10 @@ int _isatty(int file)
 int _lseek(int file, int ptr, int dir)
 {
 	if (file >= 100)
-		return file_seek(file, ptr, dir);
+	{
+		int32_t fd = file - 100;
+		return file_seek(fd, ptr, dir);
+	}
 	else
 		return 0;
 }

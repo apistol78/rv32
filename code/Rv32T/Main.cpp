@@ -251,7 +251,8 @@ int main(int argc, const char **argv)
 			return 1;
 	}
 
-	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
+	//soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
+	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x21fffff0;
 
 	// Create signal trace.
 	VerilatedFstC* tfp = nullptr;
