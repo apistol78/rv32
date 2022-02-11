@@ -21,7 +21,8 @@ module CPU_DCache(
 	output reg o_ready,
 	input [31:0] i_address,
 	output reg [31:0] o_rdata,
-	input [31:0] i_wdata
+	input [31:0] i_wdata,
+	input i_cacheable
 );
 
 	localparam SIZE	= 14;
@@ -73,9 +74,6 @@ module CPU_DCache(
 		.o_ready()
 	);
 
-	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
-	wire is_cacheable = i_address[31:28] == 4'h2;
-	
 	wire cache_entry_valid = cache_rdata[0];
 	wire cache_entry_dirty = cache_rdata[1];
 	wire [31:0] cache_entry_address = { cache_rdata[31:2], 2'b00 };
@@ -121,7 +119,7 @@ module CPU_DCache(
 						else
 							o_ready = 1;
 					end
-					else if (cache_initialized && is_cacheable) begin
+					else if (cache_initialized && i_cacheable) begin
 						if (!i_rw)
 							next = READ_SETUP;
 						else begin

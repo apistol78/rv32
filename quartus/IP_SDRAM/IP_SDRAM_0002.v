@@ -25,7 +25,7 @@ module IP_SDRAM_0002 (
 		inout  wire [3:0]  mem_dqs_n,                  //                   .mem_dqs_n
 		output wire        avl_ready_0,                //              avl_0.waitrequest_n
 		input  wire        avl_burstbegin_0,           //                   .beginbursttransfer
-		input  wire [26:0] avl_addr_0,                 //                   .address
+		input  wire [23:0] avl_addr_0,                 //                   .address
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
@@ -292,11 +292,11 @@ module IP_SDRAM_0002 (
 		.CSR_ADDR_WIDTH                          (10),
 		.CSR_DATA_WIDTH                          (8),
 		.CSR_BE_WIDTH                            (1),
-		.AVL_ADDR_WIDTH                          (26),
+		.AVL_ADDR_WIDTH                          (23),
 		.AVL_DATA_WIDTH                          (64),
 		.AVL_SIZE_WIDTH                          (3),
 		.AVL_DATA_WIDTH_PORT_0                   (32),
-		.AVL_ADDR_WIDTH_PORT_0                   (27),
+		.AVL_ADDR_WIDTH_PORT_0                   (24),
 		.AVL_NUM_SYMBOLS_PORT_0                  (4),
 		.LSB_WFIFO_PORT_0                        (0),
 		.MSB_WFIFO_PORT_0                        (0),
@@ -421,16 +421,16 @@ module IP_SDRAM_0002 (
 		.ENUM_MASK_DBE_INTR                      ("DISABLED"),
 		.ENUM_MASK_SBE_INTR                      ("DISABLED"),
 		.ENUM_MEM_IF_AL                          ("AL_0"),
-		.ENUM_MEM_IF_BANKADDR_WIDTH              ("ADDR_WIDTH_3"),
+		.ENUM_MEM_IF_BANKADDR_WIDTH              ("ADDR_WIDTH_2"),
 		.ENUM_MEM_IF_BURSTLENGTH                 ("MEM_IF_BURSTLENGTH_8"),
-		.ENUM_MEM_IF_COLADDR_WIDTH               ("ADDR_WIDTH_10"),
+		.ENUM_MEM_IF_COLADDR_WIDTH               ("ADDR_WIDTH_9"),
 		.ENUM_MEM_IF_CS_PER_RANK                 ("MEM_IF_CS_PER_RANK_1"),
 		.ENUM_MEM_IF_CS_WIDTH                    ("MEM_IF_CS_WIDTH_1"),
 		.ENUM_MEM_IF_DQ_PER_CHIP                 ("MEM_IF_DQ_PER_CHIP_8"),
 		.ENUM_MEM_IF_DQS_WIDTH                   ("DQS_WIDTH_4"),
 		.ENUM_MEM_IF_DWIDTH                      ("MEM_IF_DWIDTH_32"),
 		.ENUM_MEM_IF_MEMTYPE                     ("LPDDR2_SDRAM"),
-		.ENUM_MEM_IF_ROWADDR_WIDTH               ("ADDR_WIDTH_14"),
+		.ENUM_MEM_IF_ROWADDR_WIDTH               ("ADDR_WIDTH_13"),
 		.ENUM_MEM_IF_SPEEDBIN                    ("DDR3_1066_6_6_6"),
 		.ENUM_MEM_IF_TCCD                        ("TCCD_2"),
 		.ENUM_MEM_IF_TCL                         ("TCL_7"),

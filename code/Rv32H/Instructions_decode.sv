@@ -62,7 +62,8 @@ wire is_S = is_SB | is_SH | is_SW;
 wire is_U = is_AUIPC | is_LUI;
 wire is_CSR = is_CSRRC | is_CSRRS | is_CSRRW | is_MRET;
 
-wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR | is_XORI;
+wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SUB | is_XOR | is_XORI;
+wire is_SHIFT = is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI;
 wire is_COMPARE = is_SLT | is_SLTI | is_SLTIU | is_SLTU;
 wire is_COMPLEX = is_CSRRC | is_CSRRS | is_CSRRW | is_DIV | is_DIVU | is_EBREAK | is_ECALL | is_FENCE | is_MUL | is_MULH | is_MULHU | is_MRET | is_REM | is_REMU | is_WFI;
 wire is_JUMP = is_JAL | is_JALR;

@@ -24,7 +24,7 @@ module IP_SDRAM (
 		inout  wire [3:0]  mem_dqs_n,                  //                   .mem_dqs_n
 		output wire        avl_ready_0,                //              avl_0.waitrequest_n
 		input  wire        avl_burstbegin_0,           //                   .beginbursttransfer
-		input  wire [26:0] avl_addr_0,                 //                   .address
+		input  wire [23:0] avl_addr_0,                 //                   .address
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata
@@ -131,17 +131,17 @@ endmodule
 //	needed under any third party's intellectual property, are provided herein.
 //-->
 // Retrieval info: <instance entity-name="altera_mem_if_lpddr2_emif" version="21.1" >
-// Retrieval info: 	<generic name="MEM_VENDOR" value="JEDEC" />
+// Retrieval info: 	<generic name="MEM_VENDOR" value="Micron" />
 // Retrieval info: 	<generic name="MEM_FORMAT" value="DISCRETE" />
 // Retrieval info: 	<generic name="DISCRETE_FLY_BY" value="true" />
 // Retrieval info: 	<generic name="DEVICE_DEPTH" value="1" />
 // Retrieval info: 	<generic name="MEM_MIRROR_ADDRESSING" value="0" />
 // Retrieval info: 	<generic name="MEM_CLK_FREQ_MAX" value="400.0" />
-// Retrieval info: 	<generic name="MEM_ROW_ADDR_WIDTH" value="14" />
-// Retrieval info: 	<generic name="MEM_COL_ADDR_WIDTH" value="10" />
+// Retrieval info: 	<generic name="MEM_ROW_ADDR_WIDTH" value="13" />
+// Retrieval info: 	<generic name="MEM_COL_ADDR_WIDTH" value="9" />
 // Retrieval info: 	<generic name="MEM_DQ_WIDTH" value="32" />
 // Retrieval info: 	<generic name="MEM_DQ_PER_DQS" value="8" />
-// Retrieval info: 	<generic name="MEM_BANKADDR_WIDTH" value="3" />
+// Retrieval info: 	<generic name="MEM_BANKADDR_WIDTH" value="2" />
 // Retrieval info: 	<generic name="MEM_IF_DM_PINS_EN" value="true" />
 // Retrieval info: 	<generic name="MEM_IF_DQSN_EN" value="true" />
 // Retrieval info: 	<generic name="MEM_NUMBER_OF_DIMMS" value="1" />

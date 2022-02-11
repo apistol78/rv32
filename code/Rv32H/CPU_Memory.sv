@@ -32,15 +32,15 @@ module CPU_Memory(
 		FLUSH
 	} state_t;
 
-	reg dcache_rw = 0;
-	reg dcache_request = 0;
-	reg dcache_flush = 0;
-	wire dcache_ready;
-	wire [31:0] dcache_address;
-	wire [31:0] dcache_rdata;
-	reg [31:0] dcache_wdata = 0;
+`ifdef USE_WBUFFER
+	wire wbuffer_rw;
+	wire wbuffer_request;
+	wire wbuffer_ready;
+	wire [31:0] wbuffer_address;
+	wire [31:0] wbuffer_rdata;
+	wire [31:0] wbuffer_wdata;
 
-	CPU_DCache dcache(
+	CPU_WriteBuffer wbuffer(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 	
@@ -51,13 +51,53 @@ module CPU_Memory(
 		.i_bus_rdata(i_bus_rdata),
 		.o_bus_wdata(o_bus_wdata),
 		
+		.i_rw(wbuffer_rw),
+		.i_request(wbuffer_request),
+		.o_ready(wbuffer_ready),
+		.i_address(wbuffer_address),
+		.o_rdata(wbuffer_rdata),
+		.i_wdata(wbuffer_wdata)		
+	);
+`endif
+
+	reg dcache_rw = 0;
+	reg dcache_request = 0;
+	reg dcache_flush = 0;
+	wire dcache_ready;
+	wire [31:0] dcache_address;
+	wire [31:0] dcache_rdata;
+	reg [31:0] dcache_wdata = 0;
+
+	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
+	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2);
+
+	CPU_DCache dcache(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+	
+`ifdef USE_WBUFFER
+		.o_bus_rw(wbuffer_rw),
+		.o_bus_request(wbuffer_request),
+		.i_bus_ready(wbuffer_ready),
+		.o_bus_address(wbuffer_address),
+		.i_bus_rdata(wbuffer_rdata),
+		.o_bus_wdata(wbuffer_wdata),
+`else
+		.o_bus_rw(o_bus_rw),
+		.o_bus_request(o_bus_request),
+		.i_bus_ready(i_bus_ready),
+		.o_bus_address(o_bus_address),
+		.i_bus_rdata(i_bus_rdata),
+		.o_bus_wdata(o_bus_wdata),
+`endif
 		.i_rw(dcache_rw),
 		.i_request(dcache_request),
 		.i_flush(dcache_flush),
 		.o_ready(dcache_ready),
 		.i_address(dcache_address),
 		.o_rdata(dcache_rdata),
-		.i_wdata(dcache_wdata)
+		.i_wdata(dcache_wdata),
+		.i_cacheable(dcache_cacheable)
 	);
 /*
 	assign o_bus_rw = dcache_rw;

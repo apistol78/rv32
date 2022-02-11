@@ -20,6 +20,7 @@ typedef struct packed
 	logic [4:0] inst_rd;		//!< Index destination register.
 	logic [31:0] imm;			//!< Immediate number.
 	logic arithmetic;			//!< Arithmetic instruction.
+	logic shift;				//!< Shift instruction.
 	logic compare;				//!< Compare instruction.
 	logic complx;				//!< Complex instruction.
 	logic jump;					//!< Jump instruction.

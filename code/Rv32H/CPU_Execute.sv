@@ -91,12 +91,14 @@ module CPU_Execute (
 		32'd0;
 
 	wire [31:0] alu_result;
+	wire [31:0] alu_shift_result;
 	wire alu_compare_result;
 	CPU_ALU alu(
 		.i_op(i_data.alu_operation),
 		.i_op1(alu_operand1),
 		.i_op2(alu_operand2),
 		.o_result(alu_result),
+		.o_shift_result(alu_shift_result),
 		.o_compare_result(alu_compare_result)
 	);
 
@@ -174,6 +176,10 @@ module CPU_Execute (
 
 				if (i_data.arithmetic) begin
 					`RD <= alu_result;
+					`EXECUTE_DONE;
+				end
+				else if (i_data.shift) begin
+					`RD <= alu_shift_result;
 					`EXECUTE_DONE;
 				end
 				else if (i_data.compare) begin

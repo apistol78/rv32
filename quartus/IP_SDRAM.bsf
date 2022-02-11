@@ -55,8 +55,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 392)
 		(input)
-		(text "avl_addr_0[26..0]" (rect 0 0 70 12)(font "Arial" (font_size 8)))
-		(text "avl_addr_0[26..0]" (rect 4 381 106 392)(font "Arial" (font_size 8)))
+		(text "avl_addr_0[23..0]" (rect 0 0 70 12)(font "Arial" (font_size 8)))
+		(text "avl_addr_0[23..0]" (rect 4 381 106 392)(font "Arial" (font_size 8)))
 		(line (pt 0 392)(pt 160 392)(line_width 3))
 	)
 	(port

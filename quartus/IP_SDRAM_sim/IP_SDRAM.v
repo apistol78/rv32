@@ -22,7 +22,7 @@ module IP_SDRAM (
 		inout  wire [3:0]  mem_dqs_n,                  //                   .mem_dqs_n
 		output wire        avl_ready_0,                //              avl_0.waitrequest_n
 		input  wire        avl_burstbegin_0,           //                   .beginbursttransfer
-		input  wire [26:0] avl_addr_0,                 //                   .address
+		input  wire [23:0] avl_addr_0,                 //                   .address
 		output wire        avl_rdata_valid_0,          //                   .readdatavalid
 		output wire [31:0] avl_rdata_0,                //                   .readdata
 		input  wire [31:0] avl_wdata_0,                //                   .writedata

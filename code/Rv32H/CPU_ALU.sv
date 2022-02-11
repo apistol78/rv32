@@ -9,6 +9,7 @@ module CPU_ALU(
 	input wire [31:0] i_op2,
 
 	output wire [31:0] o_result,
+	output wire [31:0] o_shift_result,
 	output wire o_compare_result
 );
 
@@ -36,6 +37,9 @@ module CPU_ALU(
 		i_op == `OP_AND ? and_result :
 		i_op == `OP_OR ? or_result :
 		i_op == `OP_XOR ? xor_result :
+		0;
+
+	assign o_shift_result =
 		i_op == `OP_SHIFT_LEFT ? shl_result :
 		i_op == `OP_SHIFT_RIGHT ? shr_result :
 		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :

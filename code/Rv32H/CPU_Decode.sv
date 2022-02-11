@@ -82,6 +82,7 @@ module CPU_Decode(
 					32'h0;
 				
 				data.arithmetic <= is_ARITHMETIC;
+				data.shift <= is_SHIFT;
 				data.compare <= is_COMPARE;
 				data.complx <= is_COMPLEX;
 				data.jump <= is_JUMP;
@@ -99,7 +100,7 @@ module CPU_Decode(
 				`define OP data.op
 				`include "Instructions_decode_ops.sv"
 
-				if (is_ARITHMETIC || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
+				if (is_ARITHMETIC || is_SHIFT || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
 					data.tag <= i_data.tag;
 				end
 				else begin
