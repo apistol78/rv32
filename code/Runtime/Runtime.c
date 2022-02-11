@@ -109,6 +109,16 @@ int32_t __attribute__((used)) runtime_init()
 {
 	crt_init();
 
+	uint32_t sp, gp;
+	__asm__ volatile (
+		"mv %0, sp\n"
+		"mv %1, gp\n"
+		: "=r" (sp), "=r" (gp)
+	);
+
+	printf("SP: 0x%x\n", sp);
+	printf("GP: 0x%x\n", gp);
+	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)
 		printf("Video init failed!\n");

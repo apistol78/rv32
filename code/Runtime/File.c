@@ -101,20 +101,16 @@ int32_t file_open(const char* name)
 {
 	FIL* fp = file_alloc();
 	if (!fp)
+	{
+		printf("Unable to open file %s, out of file handles!\n", name);
 		return 0;
+	}
 
 	if (f_open(fp, name, FA_READ) == FR_OK)
 		return file_index(fp);
 	else
 	{
-		// if (strcmp("./id1/pak0.pak", name) == 0)
-		// {
-		// 	printf("** HACK ** trying with file in root...\n");
-		// 	if (f_open(fp, "ID1/PAK0.PAK", FA_READ) == FR_OK)
-		// 		return file_index(fp);
-		// }
-
-		printf("Unable to open file %s!\n", name);
+		printf("Unable to open file %s, no such file!\n", name);
 		file_free(fp);
 		return 0;
 	}
