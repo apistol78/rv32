@@ -2,24 +2,11 @@
 https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/hb/external-memory/emi.pdf
 https://itectec.com/electrical/electronic-alteras-dram-controller-with-uniphy/
 
+https://mindchasers.com/dev/rv-getting-started
 
---- Memory map ---
+quake-k210
 
 
-ROM     h00000000   h00010000   // 64 KiB
-BRAM    h00010000   h00010400   // 1 KiB
-SRAM    h10000000   h10400000   // 512 KiB
-SDRAM   h20000000   h27FFFFFF   // 512 MB
-VIDEO   h40000000   h50000000   // 256 MB
-LED     h50000000   h50000010   // 16 B
-UART    h50000010   h50000020   // 16 B
-GPIO    h50000020   h50000030   // 16 B
-I2C     h50000030   h50000040   // 16 B
-SD      h50000040   h50000050   // 16 B
+../configure --prefix=/opt/rv32-imf --with-arch=rv32imf --with-abi=ilp32
 
-Startup
-    PC = h00000000
-    SP = h00010400
 
-Launch SP
-0x40000000
