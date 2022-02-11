@@ -40,7 +40,6 @@ int _fstat(int file, struct stat* st)
 	{
 		int32_t fd = file - 100;
 		st->st_size = file_size(fd);
-		//printf("### _fstat %d, st_size %d\n", file, st->st_size);
 	}
 	return 0;
 }
@@ -54,7 +53,6 @@ int _lseek(int file, int ptr, int dir)
 {
 	if (file >= 100)
 	{
-		//printf("### _lseek %d, ptr %d, dir d\n", file, ptr, dir);
 		int32_t fd = file - 100;
 		return file_seek(fd, ptr, dir);
 	}
@@ -94,7 +92,6 @@ int _write(int file, char* ptr, int len)
 
 int _read(int file, char* ptr, int len)
 {
-	//printf("### _read %d, len %d\n", file, len);
 	if (file >= 100)
 	{
 		int32_t fd = file - 100;
