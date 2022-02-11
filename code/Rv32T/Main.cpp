@@ -38,6 +38,7 @@
 #include "Rv32T/ELF.h"
 #include "Rv32T/HDMI.h"
 #include "Rv32T/LEDR.h"
+#include "Rv32T/Measure.h"
 #include "Rv32T/SD.h"
 #include "Rv32T/UART_TX.h"
 
@@ -296,22 +297,13 @@ int main(int argc, const char **argv)
 	int32_t time = 0;
 	uint32_t lastCycles = 0;
 	uint32_t lastRetired = 0;
-	uint32_t busActiveCount = 0;
-	uint32_t lastBusActiveCount = 0;
-	uint32_t busCPUandDMA = 0;
-	uint32_t lastBusCPUandDMA = 0;
+	Measure busActive;
+	Measure busCPUandDMA;
+	Measure stallExecute;
+	Measure stallMemory;
+
 	uint32_t lastTracePC = -1;
 	int32_t Tp = 0;
-
-	uint32_t nreq_rom = 0;
-	uint32_t nreq_ram = 0;
-	uint32_t nreq_l2cache = 0;
-	uint32_t nreq_led = 0;
-	uint32_t nreq_uart = 0;
-	uint32_t nreq_i2c = 0;
-	uint32_t nreq_sd = 0;
-	uint32_t nreq_dma = 0;
-	uint32_t nreq_timer = 0;
 
 	timer.reset();
 	while (g_going)
@@ -376,31 +368,13 @@ int main(int argc, const char **argv)
 
 			// Count number of cycles bus is active.
 			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
-				++busActiveCount;
-
-			if (soc->SoC__DOT____Vcellinp__rom__i_request)
-				nreq_rom++;
-			if (soc->SoC__DOT____Vcellinp__ram__i_request)
-				nreq_ram++;
-			// if (soc->SoC__DOT____Vcellinp__l2cache__i_request)
-			// 	nreq_l2cache++;
-			if (soc->SoC__DOT____Vcellinp__led__i_request)
-				nreq_led++;
-			if (soc->SoC__DOT____Vcellinp__uart_0__i_request)
-				nreq_uart++;
-			if (soc->SoC__DOT____Vcellinp__uart_1__i_request)
-				nreq_uart++;
-			if (soc->SoC__DOT____Vcellinp__i2c__i_request)
-				nreq_i2c++;
-			if (soc->SoC__DOT____Vcellinp__sd__i_request)
-				nreq_sd++;
-			if (soc->SoC__DOT____Vcellinp__dma__i_request)
-				nreq_dma++;
-			if (soc->SoC__DOT____Vcellinp__timer__i_request)
-				nreq_timer++;
-
+				busActive++;
 			if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
-				++busCPUandDMA;
+				busCPUandDMA++;
+			if (soc->SoC__DOT__cpu__DOT__execute_busy)
+				stallExecute++;
+			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
+				stallMemory++;
 
 			if (fos)
 			{
@@ -454,41 +428,43 @@ int main(int argc, const char **argv)
 			{
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-				uint32_t db = busActiveCount - lastBusActiveCount;
-				uint32_t dcd = busCPUandDMA - lastBusCPUandDMA;
-				if (dc > 0)
-				{
-					statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
-					statusBar->setText(1, str(L"%.2f%% BUS", ((double)db * 100.0) / dc));
-					
-					//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
-					
-					// statusBar->setText(2, str(L"%d / %d (%.2f)",
-					// 	soc->SoC__DOT__l2cache__DOT__hit,
-					// 	soc->SoC__DOT__l2cache__DOT__miss,
-					// 	(100.0f * soc->SoC__DOT__l2cache__DOT__hit) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss)
-					// ));
 
-					// statusBar->setText(2, str(L"%d | %d | %d | %d | %d | %d | %d | %d | %d",
-					// 	nreq_rom,
-					// 	nreq_ram,
-					// 	nreq_l2cache,
-					// 	nreq_led,
-					// 	nreq_uart,
-					// 	nreq_i2c,
-					// 	nreq_sd,
-					// 	nreq_dma,
-					// 	nreq_timer
-					// ));
+				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
+				statusBar->setText(1, str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc));
+				//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
+				statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
 
-					statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)dcd * 100.0) / dc));
+				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 
-					lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-					lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
-					lastBusActiveCount = busActiveCount;
-					lastBusCPUandDMA = busCPUandDMA;
-				}
+				busActive.snapshot();
+				busCPUandDMA.snapshot();
+				stallExecute.snapshot();
+				stallMemory.snapshot();					
 			}
+		}
+		else
+		{
+			if ((Tc % 600) == 0)
+			{
+				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+
+				log::info << L"### " <<
+					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
+					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
+					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
+					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L" ###" <<
+					Endl;
+
+				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
+				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+				
+				busActive.snapshot();
+				busCPUandDMA.snapshot();
+				stallExecute.snapshot();
+				stallMemory.snapshot();
+			}	
 		}
 	}
 
@@ -497,7 +473,7 @@ int main(int argc, const char **argv)
 	log::info << L"PC     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
 	log::info << L"CYCLES : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
 	log::info << L"RETIRE : " << soc->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
-	log::info << L"BUS    : " << busActiveCount << L", " << (busActiveCount * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
+	log::info << L"BUS    : " << busActive.value() << L", " << (busActive.value() * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
 
 	hdmi.getImage()->save(L"Rv32T.png");
