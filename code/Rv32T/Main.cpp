@@ -414,6 +414,19 @@ int main(int argc, const char **argv)
 			// 	slow = true;
 			// 	log::info << L"TRACING!!" << Endl;
 			// }
+
+			if (soc->SoC__DOT__cpu__DOT__decode_fault)
+			{
+				log::warning << L"DECODE fault, terminating." << Endl;
+				g_going = false;
+				break;
+			}
+			if (soc->SoC__DOT__cpu__DOT__execute_fault)
+			{
+				log::warning << L"EXECUTE fault, terminating." << Endl;
+				g_going = false;
+				break;
+			}
 		}
 
 		if (form)
