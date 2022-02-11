@@ -24,6 +24,7 @@
 
 //#include "ctr.h"
 #include "Runtime/HAL/DMA.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
 extern
@@ -129,6 +130,16 @@ void	VID_Update (vrect_t *rects){
   /*   } */
   /*   puts(buff); */
   /* } */
+
+	static int count = 0;
+	//if (++count >= 60)
+	{
+		static uint32_t last_ms = 0;
+		uint32_t ms = timer_get_ms();
+		printf("%d ms, %d fps\n", (ms - last_ms), (/* 60 * */ 1000) / (ms - last_ms));
+		last_ms = ms;
+		count = 0;
+	}
 
 	dma_wait();
 

@@ -373,22 +373,22 @@ int main (int argc, char **argv)
 
 	static quakeparms_t    parms;
 
-	printf("quake will begin\n");
+	//printf("quake will begin\n");
 
 	parms.memsize = 8*1024*1024;
 	parms.membase = calloc(1, parms.memsize);
 	if(parms.membase == NULL)
 		printf("allocation failed\n");
-	parms.basedir = ".";
+	parms.basedir = ""; //".";
 
-	printf("allocated\n");
+	//printf("allocated\n");
 
 	COM_InitArgv (argc, argv);
 
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 	Host_Init (&parms);
-	printf("host init end\n");
+	//printf("host init end\n");
 	Sys_Init();
 
 	oldtime = Sys_FloatTime() -0.1;

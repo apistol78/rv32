@@ -1278,7 +1278,7 @@ byte *COM_LoadFile (char *path, int usehunk)
 	Sys_FileRead (h, buf, len);
 	COM_CloseFile (h);
 	Draw_EndDisc ();
-	printf("%p\n",buf);
+	//printf("%p\n",buf);
 	return buf;
 }
 

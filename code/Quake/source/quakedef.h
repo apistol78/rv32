@@ -335,20 +335,3 @@ void Chase_Init (void);
 void Chase_Reset (void);
 void Chase_Update (void);
 
-FILE *myfopen(const char *filename,const char *atr);
-#define fopen myfopen
-
-size_t myfread(void *ptr,size_t s,size_t nm,FILE *f);
-#define fclose myfclose
-
-int myfclose(FILE *f);
-#define fread myfread
-
-int myfseek(FILE *f,long ofs,int whence);
-#define ftell myftell
-
-long myftell(FILE *f);
-#define fseek myfseek
-
-int mygetc(FILE *f);
-#define getc mygetc
