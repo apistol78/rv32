@@ -252,8 +252,12 @@ int main(int argc, const char **argv)
 			return 1;
 	}
 
-	//soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x1000fff0;
-	soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = 0x2ffffff0;
+	if (cmdLine.hasOption('s', L"stack"))
+	{
+		uint32_t sp = (uint32_t)cmdLine.getOption('s', L"stack").getInteger();
+		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
+		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
+	}
 
 	// Create signal trace.
 	VerilatedFstC* tfp = nullptr;
@@ -390,20 +394,20 @@ int main(int argc, const char **argv)
 				}
 			}
 
-			if (bus_os)
-			{
-				if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__cpu_dbus_ready)
-				{
-					*bus_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
-					*bus_os << (soc->SoC__DOT__cpu_dbus_rw ? L"W" : L"R") << L", ";
-					*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_address) << L", ";
-					if (soc->SoC__DOT__cpu_dbus_rw)
-						*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_wdata);
-					else
-						*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_rdata);
-					*bus_os << Endl;
-				}
-			}
+			// if (bus_os)
+			// {
+			// 	if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__cpu_dbus_ready)
+			// 	{
+			// 		*bus_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
+			// 		*bus_os << (soc->SoC__DOT__cpu_dbus_rw ? L"W" : L"R") << L", ";
+			// 		*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_address) << L", ";
+			// 		if (soc->SoC__DOT__cpu_dbus_rw)
+			// 			*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_wdata);
+			// 		else
+			// 			*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_rdata);
+			// 		*bus_os << Endl;
+			// 	}
+			// }
 
 			key1 = false;
 			reset = false;
@@ -427,6 +431,12 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;
 			}
+			if (soc->SoC__DOT__bus_fault)
+			{
+				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__bus_address) << L", terminating." << Endl;
+				g_going = false;
+				break;				
+			}
 		}
 
 		if (form)
@@ -445,7 +455,15 @@ int main(int argc, const char **argv)
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				statusBar->setText(1, str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc));
 				//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
-				statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
+				//statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
+
+				statusBar->setText(2, 
+					str(
+						L"%.2f%% / %.2f%% STALL X/M",
+						((double)stallExecute.delta() * 100.0) / dc,
+						((double)stallMemory.delta() * 100.0) / dc
+					)
+				);
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
