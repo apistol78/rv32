@@ -354,7 +354,7 @@ module SoC(
 	`else
 	BRAM_latency #(
 		.WIDTH(32),
-		.SIZE(32'h10000000 / 4),
+		.SIZE(32'h1000000 / 4),
 		.ADDR_LSH(2),
 		.LATENCY(10)
 	) sdram(
@@ -781,6 +781,39 @@ module SoC(
 `ifndef __VERILATOR__
 	// 7:0
 	assign LEDG = { 1'b0, 1'b0, cpu_fault };
+`else
+
+	wire bus_valid_select =
+		rom_select |
+		ram_select |
+`ifdef SOC_ENABLE_SDRAM
+		sdram_select |
+`endif
+`ifdef SOC_ENABLE_VGA
+		vram_select |
+`endif
+		led_select |
+`ifdef SOC_ENABLE_UART
+		uart_0_select |
+		uart_1_select |
+`endif
+`ifdef SOC_ENABLE_GPIO
+		gpio_select |
+`endif
+`ifdef SOC_ENABLE_SD
+		sd_select |
+`endif
+`ifdef SOC_ENABLE_I2C
+		i2c_select |
+`endif
+		dma_select |
+		timer_select;
+
+	reg bus_fault = 0;
+	always_comb begin
+		bus_fault = !bus_valid_select && bus_request;
+	end
+	
 `endif
 
 endmodule
