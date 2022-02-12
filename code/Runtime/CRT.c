@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "Runtime/File.h"
@@ -11,7 +12,8 @@ static uint8_t* heap = (uint8_t*)&_end;
 void* _sbrk(int incr)
 {
 	uint8_t* prev_heap = heap;
-	heap += incr;
+	if (incr > 0)
+		heap += (incr & ~3) + 4;
 	return prev_heap;
 }
 
@@ -30,6 +32,7 @@ int _close(int file)
 
 int _fstat(int file, struct stat* st)
 {
+	memset(st, 0, sizeof(struct stat));
 	if (file <= 100)
 	{
 		st->st_dev = 0;
@@ -39,6 +42,7 @@ int _fstat(int file, struct stat* st)
 	else
 	{
 		int32_t fd = file - 100;
+		st->st_mode = S_IFBLK;
 		st->st_size = file_size(fd);
 	}
 	return 0;
