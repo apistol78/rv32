@@ -45,3 +45,4 @@ popd
 # Generate useful dumps.
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > Bare.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > Doom.dump
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > Quake.dump
