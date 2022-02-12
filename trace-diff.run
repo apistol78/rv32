@@ -24,8 +24,8 @@ local cnames = {
 
 function main()
 
-    local fl = FileSystem.getInstance():open(Path("Trace.log"), File.FmRead)
-    local fr = FileSystem.getInstance():open(Path("trace_hw_2.txt"), File.FmRead)
+    local fl = FileSystem.getInstance():open(Path("Rv32T.bus_new"), File.FmRead)
+    local fr = FileSystem.getInstance():open(Path("Rv32T.bus"), File.FmRead)
 
     if fl == nil or fr == nil then return end
 
@@ -35,31 +35,51 @@ function main()
     local line = 1
     local prev = nil
 
+    stdout:printLn("Begin...")
+
     while true do
         local rl = srl:readLine()
         local rr = srr:readLine()
-        if rl == nil or rr == nil then break end
+        if rl == nil or rr == nil then
+            stdout:printLn("Finished, " .. line .. " lines compared")
+            break
+        end
 
         if rl ~= rr then
+            --[[
             stdout:printLn("Line " .. line)
 
             stdout:printLn(rl)
             stdout:printLn(rr)
             stdout:printLn()
+            ]]
 
             local tl = parse(rl)
             local tr = parse(rr)
 
+            local mm = false
+
             assert(#tl == #tr)
-            for i = 1, #tl do
-                if tl[i] ~= tr[i] then
-                    stdout:printLn("Column " .. i .. " mismatch (" .. cnames[i] .. ") ")
+            for i = 3, #tl do
+                if tl[i] ~= tr[i] and i ~= 3 then
+
+                    if mm == false then
+                        stdout:printLn("Line " .. line)
+                        stdout:printLn(rl)
+                        stdout:printLn(rr)
+                        stdout:printLn()
+                        mm = true                
+                    end
+
+                    stdout:printLn("Column " .. i .. " mismatch") -- (" .. cnames[i] .. ") ")
                     stdout:printLn("Left  \"" .. tl[i] .. "\"")
                     stdout:printLn("Right \"" .. tr[i] .. "\"")
                 end
             end
 
-            break
+            if mm then
+                break
+            end
         end
 
         line = line + 1
