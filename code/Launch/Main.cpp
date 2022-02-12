@@ -236,21 +236,13 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 		}
 	}
 
-	// \hack Send a lot of dummys to ensure DCACHE is flushed
-	// and data is actually written to SDRAM.
-	// const uint32_t size = 65536;
-	// for (int32_t i = 0; i < 65536; i += 128)
-	// {
-	// 	log::info << L"Flushing DCACHE " << str(L"%08x", last + i) << Endl;
-
-	// 	uint8_t dummy[64] = {};
-	// 	if (!sendLine(serial, last + i, dummy, 128))
-	// 		return false;
-	// }
-
 	if (start != -1)
 	{
-		log::info << L"JUMP " << str(L"0x%08x", start) << Endl;
+		if (sp)
+			log::info << L"JUMP " << str(L"0x%08x", start) << L", SP " << str(L"0x%08x", sp) << Endl;
+		else
+			log::info << L"JUMP " << str(L"0x%08x", start) << Endl;
+
 		if (!sendJump(serial, start, sp))
 			return false;
 	}
@@ -501,7 +493,7 @@ int main(int argc, const char** argv)
 		port = commandLine.getOption('p', L"port").getInteger();
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 115200; // 9600;
+	configuration.baudRate = 115200;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
@@ -512,64 +504,6 @@ int main(int argc, const char** argv)
 		log::error << L"Unable to open serial port " << port << L"." << Endl;
 		return 1;
 	}
-
-	uint32_t sp = 0;
-	if (commandLine.hasOption('s', L"stack"))
-		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
-/*
-	if (commandLine.hasOption('e', L"echocheck"))
-	{
-		for (;;)
-		{
-			uint8_t v[16];
-			uint8_t r[16];
-
-			for (int i = 0; i < 16; ++i)
-				v[i] = echoRnd();
-
-			write< uint8_t >(serial, v, 16);
-			read< uint8_t >(serial, r, 16);
-
-			if (memcmp(v, r, 16) == 0)
-				log::info << L"OK" << Endl;
-			else
-				log::info << L"ERROR" << Endl;
-		}
-	}
-
-	if (commandLine.hasOption('m', L"memcheck"))
-	{
-		bool result = true;
-		result &= memcheck(serial, 0x20000000, 0x28000000);
-		if (!result)
-			return 1;
-	}
-
-	if (commandLine.hasOption(L"image-file") && commandLine.hasOption(L"image-base"))
-	{
-		std::wstring fileName = commandLine.getOption(L"image-file").getString();
-		int32_t offset = commandLine.getOption(L"image-base").getInteger();
-		if (!uploadImage(serial, fileName, offset))
-			return 1;
-	}
-
-	if (commandLine.hasOption(L'e', L"elf"))
-	{
-		if (!uploadELF(serial, commandLine.getOption(L'e', L"elf").getString(), sp))
-			return 1;
-	}
-
-	if (commandLine.hasOption(L'h', L"hex"))
-	{
-		if (!uploadHEX(serial, commandLine.getOption(L'h', L"hex").getString(), sp))
-			return 1;
-	}
-
-	if (commandLine.hasOption('t', L"terminal"))
-	{
-		log::info << L"Terminal ready! Waiting for data..." << Endl;
-
-*/
 
 #if defined(_WIN32)
 	ui::Application::getInstance()->initialize(
@@ -599,13 +533,17 @@ int main(int argc, const char** argv)
 	ui::Application::getInstance()->setStyleSheet(styleSheet);
 
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"Launcher", 640, 480, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
+	form->create(L"Launcher", ui::dpi96(640), ui::dpi96(480), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
 
 	Ref< ui::Container > top = new ui::Container();
-	top->create(form, ui::WsNone, new ui::TableLayout(L"100%,*,*", L"*", 0, 4));
+	top->create(form, ui::WsNone, new ui::TableLayout(L"100%,*", L"*", 0, 4));
+
+	std::wstring elf = L"";
+	if (commandLine.hasOption('e', L"elf"))
+		elf = commandLine.getOption('e', L"elf").getString();
 
 	Ref< ui::Edit > editFile = new ui::Edit();
-	editFile->create(top, L"");
+	editFile->create(top, elf);
 
 	Ref< ui::Button > buttonBrowse = new ui::Button();
 	buttonBrowse->create(top, L"...");
@@ -623,6 +561,13 @@ int main(int argc, const char** argv)
 		fileDialog.destroy();
 	});
 
+	uint32_t sp = 0;
+	if (commandLine.hasOption('s', L"stack"))
+		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
+
+	Ref< ui::Edit > editStack = new ui::Edit();
+	editStack->create(top, str(L"0x%08x", sp));
+
 	Thread* threadUpload = nullptr;
 	bool running = false;
 
@@ -637,6 +582,8 @@ int main(int argc, const char** argv)
 		}
 
 		running = false;
+
+		uint32_t sp = parseString< uint32_t >(editStack->getText());
 
 		threadUpload = ThreadManager::getInstance().create([&]() {
 			Path fileName(editFile->getText());
