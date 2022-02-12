@@ -9,11 +9,6 @@ if ((word & 0xfe00707f) == 0x00000033)
 else if ((word & 0x0000707f) == 0x00000013)
 {
 	TRACE(L"	ADDI");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         
@@ -22,11 +17,6 @@ else if ((word & 0x0000707f) == 0x00000013)
 else if ((word & 0x0000707f) == 0x0000001b)
 {
 	TRACE(L"	ADDIW");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -107,11 +97,6 @@ else if ((word & 0xfe00707f) == 0x00007033)
 else if ((word & 0x0000707f) == 0x00007013)
 {
 	TRACE(L"	ANDI");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
         
@@ -335,11 +320,6 @@ else if ((word & 0xfe00007f) == 0x1a000053)
 else if ((word & 0x0000707f) == 0x0000000f)
 {
 	TRACE(L"	FENCE");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -358,11 +338,6 @@ else if ((word & 0xfe00707f) == 0xa2002053)
 else if ((word & 0x0000707f) == 0x00003007)
 {
 	TRACE(L"	FLD");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -381,11 +356,6 @@ else if ((word & 0xfe00707f) == 0xa2001053)
 else if ((word & 0x0000707f) == 0x00002007)
 {
 	TRACE(L"	FLW");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -434,10 +404,6 @@ else if ((word & 0x0600007f) == 0x0200004b)
 else if ((word & 0x0000707f) == 0x00003027)
 {
 	TRACE(L"	FSD");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -462,20 +428,12 @@ else if ((word & 0xfe00007f) == 0x0a000053)
 else if ((word & 0x0000707f) == 0x00002027)
 {
 	TRACE(L"	FSW");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000007f) == 0x0000006f)
 {
 	TRACE(L"	JAL");
-	{
-			auto f = parseFormatJ(word);
-			TRACE(str(L"\tJ: R(%d), imm %d", f.rd, f.imm));
-		}
 			auto f = parseFormatJ(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = PC + f.imm;
@@ -485,11 +443,6 @@ else if ((word & 0x0000007f) == 0x0000006f)
 else if ((word & 0x0000707f) == 0x00000067)
 {
 	TRACE(L"	JALR");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = R(f.rs1) + f.imm;
@@ -499,11 +452,6 @@ else if ((word & 0x0000707f) == 0x00000067)
 else if ((word & 0x0000707f) == 0x00000003)
 {
 	TRACE(L"	LB");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		
@@ -512,11 +460,6 @@ else if ((word & 0x0000707f) == 0x00000003)
 else if ((word & 0x0000707f) == 0x00004003)
 {
 	TRACE(L"	LBU");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		
@@ -525,22 +468,12 @@ else if ((word & 0x0000707f) == 0x00004003)
 else if ((word & 0x0000707f) == 0x00003003)
 {
 	TRACE(L"	LD");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00001003)
 {
 	TRACE(L"	LH");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		
@@ -549,11 +482,6 @@ else if ((word & 0x0000707f) == 0x00001003)
 else if ((word & 0x0000707f) == 0x00005003)
 {
 	TRACE(L"	LHU");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		
@@ -582,11 +510,6 @@ else if ((word & 0x0000007f) == 0x00000037)
 else if ((word & 0x0000707f) == 0x00002003)
 {
 	TRACE(L"	LW");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		
@@ -595,11 +518,6 @@ else if ((word & 0x0000707f) == 0x00002003)
 else if ((word & 0x0000707f) == 0x00006003)
 {
 	TRACE(L"	LWU");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -662,11 +580,6 @@ else if ((word & 0xfe00707f) == 0x00006033)
 else if ((word & 0x0000707f) == 0x00006013)
 {
 	TRACE(L"	ORI");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
 		
@@ -713,10 +626,6 @@ else if ((word & 0xfe00707f) == 0x0200603b)
 else if ((word & 0x0000707f) == 0x00000023)
 {
 	TRACE(L"	SB");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 			auto f = parseFormatS(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		
@@ -737,10 +646,6 @@ else if ((word & 0xf800707f) == 0x1800202f)
 else if ((word & 0x0000707f) == 0x00003023)
 {
 	TRACE(L"	SD");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -753,10 +658,6 @@ else if ((word & 0xfe007fff) == 0x12000073)
 else if ((word & 0x0000707f) == 0x00001023)
 {
 	TRACE(L"	SH");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 			auto f = parseFormatS(word);
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		
@@ -801,11 +702,6 @@ else if ((word & 0xfe00707f) == 0x00002033)
 else if ((word & 0x0000707f) == 0x00002013)
 {
 	TRACE(L"	SLTI");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		
@@ -814,11 +710,6 @@ else if ((word & 0x0000707f) == 0x00002013)
 else if ((word & 0x0000707f) == 0x00003013)
 {
 	TRACE(L"	SLTIU");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		
@@ -911,10 +802,6 @@ else if ((word & 0xfe00707f) == 0x4000003b)
 else if ((word & 0x0000707f) == 0x00002023)
 {
 	TRACE(L"	SW");
-	{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		
@@ -944,11 +831,6 @@ else if ((word & 0xfe00707f) == 0x00004033)
 else if ((word & 0x0000707f) == 0x00004013)
 {
 	TRACE(L"	XORI");
-	{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		

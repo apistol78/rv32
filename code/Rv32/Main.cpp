@@ -94,13 +94,14 @@ int main(int argc, const char** argv)
 #endif
 	}
 
-	//Memory rom(0x00010000);
+	Memory rom(0x00010000);
 	Memory ram(0x10000000);
 	Memory sram(0x00400000);
-	Memory sdram(0x20000000);
+	Memory sdram(0x10000000);
 	Video video;
 	Unknown led(L"LED", false);
-	UART uart;
+	UART uart1;
+	UART uart2;
 	Unknown gpio(L"GPIO", true);
 	Unknown i2c(L"I2C", true);
 	Unknown sd(L"SD", true);
@@ -108,13 +109,13 @@ int main(int argc, const char** argv)
 	Unknown tmr(L"TIMER", true);
 
 	Bus bus;
-	// bus.map(0x00000000, 0x00010000, &rom);
-	// bus.map(0x00010000, 0x00010400, &ram);
-	bus.map(0x00000000, 0x20000000, &ram);
+	bus.map(0x00000000, 0x00010000, &rom);
+	bus.map(0x10000000, 0x20000000, &ram);
 	bus.map(0x20000000, 0x30000000, &sdram);
 	bus.map(0x30000000, 0x40000000, &video);
 	bus.map(0x40000000, 0x50000000, &led);
-	bus.map(0x50000000, 0x60000000, &uart);
+	bus.map(0x50000000, 0x50000100, &uart1);
+	bus.map(0x51000000, 0x51000100, &uart2);
 	bus.map(0x60000000, 0x70000000, &gpio);
 	bus.map(0x70000000, 0x80000000, &i2c);
 	bus.map(0x80000000, 0x90000000, &sd);

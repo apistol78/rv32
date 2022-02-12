@@ -37,50 +37,6 @@ local operands = {
 	ZERO = "`ZERO"
 }
 
-local prefixes = {
-	I = {
-		cpp = [[{
-			auto f = parseFormatI(word);
-			TRACE(str(L"\tI: R(%d) = R(%d) op %d", f.rd, f.rs1, f.imm));
-			TRACE(str(L"\t   R(%d) = %08x", f.rs1, R_s(f.rs1)));
-		}]],
-		verilog = [[
-		]]
-	},
-	J = {
-		cpp = [[{
-			auto f = parseFormatJ(word);
-			TRACE(str(L"\tJ: R(%d), imm %d", f.rd, f.imm));
-		}]],
-		verilog = [[
-		]]
-	},	
-	R = {
-		verilog = [[
-		]]
-	},
-	U = {
-		verilog = [[
-		]]
-	},
-	B = {
-		verilog = [[
-		]]
-	},
-	S = {
-		cpp = [[{
-			auto f = parseFormatS(word);
-			TRACE(str(L"\tS: R(%d), R(%d), %d", f.rs1, f.rs2, f.imm));
-		}]],		
-		verilog = [[
-		]]
-	},
-	CSR = {
-		verilog = [[
-		]]
-	},
-}
-
 local instructions = {
 	{
 		mask = 0xfe00707f,
@@ -1431,10 +1387,6 @@ function main(argv)
 			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
 			stdout:printLn("{")
 			stdout:printLn("\tTRACE(L\"\t" .. inst.name .. "\");")
-			local pfx = prefixes[inst.format];
-			if pfx ~= nil and pfx.cpp ~= nil then
-				stdout:printLn("\t" .. trim(pfx.cpp))
-			end
 			if inst.cpp ~= nil then
 				stdout:printLn(inst.cpp)
 				stdout:printLn("\treturn true;")
