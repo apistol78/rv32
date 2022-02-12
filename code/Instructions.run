@@ -3,6 +3,7 @@
 
 local insttype = {
 	ARITHMETIC = "ARITHMETIC",
+	SHIFT = "SHIFT",
 	COMPARE = "COMPARE",
 	JUMP = "JUMP",
 	JUMP_CONDITIONAL = "JUMP_CONDITIONAL",
@@ -1102,7 +1103,7 @@ local instructions = {
 		data = 0x00001033,
 		name = "SLL",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
@@ -1118,7 +1119,7 @@ local instructions = {
 		data = 0x00001013,
 		name = "SLLI",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
@@ -1210,7 +1211,7 @@ local instructions = {
 		data = 0x40005033,
 		name = "SRA",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
@@ -1226,7 +1227,7 @@ local instructions = {
 		data = 0x40005013,
 		name = "SRAI",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
@@ -1260,7 +1261,7 @@ local instructions = {
 		data = 0x00005033,
 		name = "SRL",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
@@ -1276,7 +1277,7 @@ local instructions = {
 		data = 0x00005013,
 		name = "SRLI",
 		format = "R",
-		type = insttype.ARITHMETIC,
+		type = insttype.SHIFT,
 		cpp = [[
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
@@ -1493,7 +1494,7 @@ function main(argv)
 
 		-- Instruction type signals.
 
-		for _, it in pairs({ insttype.ARITHMETIC, insttype.COMPARE, insttype.COMPLEX, insttype.JUMP, insttype.JUMP_CONDITIONAL, insttype.MEMORY }) do
+		for _, it in pairs({ insttype.ARITHMETIC, insttype.SHIFT, insttype.COMPARE, insttype.COMPLEX, insttype.JUMP, insttype.JUMP_CONDITIONAL, insttype.MEMORY }) do
 			stdout:print("wire is_" .. it .. " =")
 			local count = 0
 			for _, inst in ipairs(vi) do
