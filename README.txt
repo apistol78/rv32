@@ -10,3 +10,12 @@ quake-k210
 ../configure --prefix=/opt/rv32-imf --with-arch=rv32imf --with-abi=ilp32
 
 
+SDRAM
+24 bit address
+32 bit word
+
+20000000 - 20FFFFFF
+
+16777215 words
+
+536870912 bytes => 512 MByte
