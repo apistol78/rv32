@@ -79,19 +79,21 @@ module CPU_FPU(
 	);
 
 	assign o_ready =
-		i_op == `FPU_OP_ADD ? fadd_ready :
-		i_op == `FPU_OP_SUB ? fsub_ready :
-		i_op == `FPU_OP_MUL ? fmul_ready :
-		i_op == `FPU_OP_DIV ? fdiv_ready :
-		i_op == `FPU_OP_INT ? fint_ready :
+		i_op == `FPU_OP_ADD ? fadd_ready	:
+		i_op == `FPU_OP_SUB ? fsub_ready	:
+		i_op == `FPU_OP_MUL ? fmul_ready	:
+		i_op == `FPU_OP_DIV ? fdiv_ready	:
+		i_op == `FPU_OP_INT ? fint_ready	:
+		i_op == `FPU_OP_MOV ? 1'b1			:
 		0;
 
 	assign o_result =
-		i_op == `FPU_OP_ADD ? fadd_result :
-		i_op == `FPU_OP_SUB ? fsub_result :
-		i_op == `FPU_OP_MUL ? fmul_result :
-		i_op == `FPU_OP_DIV ? fdiv_result :
-		i_op == `FPU_OP_INT ? fint_result :
+		i_op == `FPU_OP_ADD ? fadd_result	:
+		i_op == `FPU_OP_SUB ? fsub_result	:
+		i_op == `FPU_OP_MUL ? fmul_result	:
+		i_op == `FPU_OP_DIV ? fdiv_result	:
+		i_op == `FPU_OP_INT ? fint_result	:
+		i_op == `FPU_OP_MOV ? i_op1			:
 		0;
 
 endmodule

@@ -6,6 +6,8 @@ wire [3:0] fpu_operation =
 	is_FCVT_W ? `FPU_OP_INT :
 	is_FDIV   ? `FPU_OP_DIV :
 	is_FMUL   ? `FPU_OP_MUL :
+	is_FMV_X_W ? `FPU_OP_MOV :
+	is_FMV_W_X ? `FPU_OP_MOV :
 	is_FSUB   ? `FPU_OP_SUB :
 	4'd0;
 

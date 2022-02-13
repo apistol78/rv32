@@ -35,7 +35,8 @@ local fpu_operations = {
 	SUB = "`FPU_OP_SUB",
 	MUL = "`FPU_OP_MUL",
 	DIV = "`FPU_OP_DIV",
-	INT = "`FPU_OP_INT"
+	INT = "`FPU_OP_INT",
+	MOV = "`FPU_OP_MOV",
 }
 
 local operands = {
@@ -604,7 +605,18 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00002007,
 		name = "FLW",
-		format = "I"
+		format = "I",
+		type = insttype.MEMORY,
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "R",
+			width = 4,
+			signed = false
+		},
 	},
 	{
 		mask = 0x0600007f,
@@ -646,14 +658,22 @@ local instructions = {
 	{
 		mask = 0xfff0707f,
 		data = 0xe0000053,
-		name = "FMV.X.W",
-		format = "R"
+		name = "FMV_X_W",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MOV
+		}
 	},
 	{
 		mask = 0xfff0707f,
 		data = 0xf0000053,
-		name = "FMV.W.X",
-		format = "R"
+		name = "FMV_W_X",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MOV
+		}
 	},
 	{
 		mask = 0x0600007f,
@@ -702,7 +722,18 @@ local instructions = {
 		mask = 0x0000707f,
 		data = 0x00002027,
 		name = "FSW",
-		format = "S"
+		format = "S",
+		type = insttype.MEMORY,
+		verilog_alu = {
+			operation = operations.SIGNED_ADD,
+			operand1 = operands.RS1,
+			operand2 = operands.IMM
+		},
+		verilog_memory = {
+			direction = "W",
+			width = 4,
+			signed = false
+		},
 	},
 	{
 		mask = 0x0000007f,

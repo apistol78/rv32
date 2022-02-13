@@ -13,6 +13,8 @@ wire [3:0] alu_operation =
 	is_BLT   ? `OP_SIGNED_LESS_THAN       :
 	is_BLTU  ? `OP_UNSIGNED_LESS_THAN     :
 	is_BNE   ? `OP_NOT_EQUAL              :
+	is_FLW   ? `OP_SIGNED_ADD             :
+	is_FSW   ? `OP_SIGNED_ADD             :
 	is_JAL   ? `OP_SIGNED_ADD             :
 	is_JALR  ? `OP_SIGNED_ADD             :
 	is_LB    ? `OP_SIGNED_ADD             :
@@ -53,6 +55,8 @@ wire [2:0] alu_operand1 =
 	is_BLT   ? `RS1  :
 	is_BLTU  ? `RS1  :
 	is_BNE   ? `RS1  :
+	is_FLW   ? `RS1  :
+	is_FSW   ? `RS1  :
 	is_JAL   ? `PC   :
 	is_JALR  ? `RS1  :
 	is_LB    ? `RS1  :
@@ -93,6 +97,8 @@ wire [2:0] alu_operand2 =
 	is_BLT   ? `RS2  :
 	is_BLTU  ? `RS2  :
 	is_BNE   ? `RS2  :
+	is_FLW   ? `IMM  :
+	is_FSW   ? `IMM  :
 	is_JAL   ? `IMM  :
 	is_JALR  ? `IMM  :
 	is_LB    ? `IMM  :

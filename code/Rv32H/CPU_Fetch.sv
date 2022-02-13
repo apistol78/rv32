@@ -71,7 +71,7 @@ module CPU_Fetch #(
 
 	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
 	wire have_RS2 = is_B | is_R | is_S;
-	// wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
+	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
 	assign o_data = !i_decode_busy ? dataC : dataN;
 
@@ -112,11 +112,13 @@ module CPU_Fetch #(
 							dataC.instruction <= icache_rdata;
 							dataC.pc <= pc;
 
-							dataC.inst_rs1 <= have_RS1 ? { is_FPU, `INSTRUCTION[19:15] } : 0;
-							dataC.inst_rs2 <= have_RS2 ? { is_FPU, `INSTRUCTION[24:20] } : 0;
+							// Decode register indices here since we
+							// need those for fetching registers while
+							// we are decoding instruction.
+							dataC.inst_rs1 <= have_RS1 ? { is_FPU & ~is_FMV_X_W, `INSTRUCTION[19:15] } : 0;
+							dataC.inst_rs2 <= have_RS2 ? { is_FPU | is_FSW, `INSTRUCTION[24:20] } : 0;
 							dataC.inst_rs3 <= 0;
-
-							//dataC.fpu <= is_FPU;
+							dataC.inst_rd <= have_RD ? { (is_FPU & !is_FCVT_W) | is_FLW, `INSTRUCTION[ 11:7] } : 6'h0;
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait

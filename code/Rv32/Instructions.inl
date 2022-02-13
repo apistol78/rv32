@@ -409,13 +409,13 @@ else if ((word & 0xfff0707f) == 0xe2000053)
 }
 else if ((word & 0xfff0707f) == 0xe0000053)
 {
-	TRACE(L"	FMV.X.W");
+	TRACE(L"	FMV_X_W");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
-	TRACE(L"	FMV.W.X");
+	TRACE(L"	FMV_W_X");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
