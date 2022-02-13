@@ -1395,6 +1395,29 @@ bool verify_FDIV(const char* trace)
 	return true;
 }
 
+bool verify_FCVT(const char* trace)
+{
+	float v1 = 1.2f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__rom__DOT__data[0] = 0xc0007453; // fcvt.w.s	s0,ft0
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0];
+	
+	log::info << r << Endl;
+
+	if (r != 1)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1484,6 +1507,7 @@ int main(int argc, char **argv)
 	CHECK(verify_FSUB);
 	CHECK(verify_FMUL);
 	CHECK(verify_FDIV);
+	CHECK(verify_FCVT);
 
 	if (success)
 		printf("SUCCESS!\n");
