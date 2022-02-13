@@ -98,6 +98,11 @@ uint32_t urnd32()
 	return *(uint32_t*)b;
 }
 
+float rndf()
+{
+	return (2.0f * rand()) / 32767.0f - 1.0f;
+}
+
 bool verify_ADD(const char* trace)
 {
 	int32_t s1 = rnd32();
@@ -1308,8 +1313,8 @@ bool verify_ICACHE(const char* trace)
 
 bool verify_FADD(const char* trace)
 {
-	float v1 = 1.2f;
-	float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
@@ -1328,8 +1333,8 @@ bool verify_FADD(const char* trace)
 
 bool verify_FSUB(const char* trace)
 {
-	float v1 = 1.2f;
-	float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
@@ -1351,8 +1356,8 @@ bool verify_FSUB(const char* trace)
 
 bool verify_FMUL(const char* trace)
 {
-	float v1 = 1.2f;
-	float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
@@ -1374,8 +1379,8 @@ bool verify_FMUL(const char* trace)
 
 bool verify_FDIV(const char* trace)
 {
-	float v1 = 1.2f;
-	float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
@@ -1397,7 +1402,7 @@ bool verify_FDIV(const char* trace)
 
 bool verify_FCVT(const char* trace)
 {
-	float v1 = 1.2f;
+	const float v1 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
@@ -1406,11 +1411,11 @@ bool verify_FCVT(const char* trace)
 
 	evaluate(tb, trace, 1);
 
-	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0];
+	int32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0];
 	
-	log::info << r << Endl;
+	//printf("%f => %d\n", v1, r);
 
-	if (r != 1)
+	if (r != (int32_t)v1)
 		return false;
 
 	delete tb;
