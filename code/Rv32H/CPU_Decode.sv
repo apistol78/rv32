@@ -45,8 +45,8 @@ module CPU_Decode(
 	wire [31:0] inst_R_imm = { 26'b0, `INSTRUCTION[25:20] };
 	wire [31:0] inst_CSR_imm = { 20'b0, `INSTRUCTION[31:20] };
 	
-	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
-	wire have_RS2 = is_B | is_R | is_S;
+	// wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
+	// wire have_RS2 = is_B | is_R | is_S;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
 
 	assign o_busy = i_execute_busy;
@@ -67,9 +67,11 @@ module CPU_Decode(
 			if (i_data.tag != data.tag) begin
 				data.pc <= i_data.pc;
 
-				data.inst_rs1 <= have_RS1 ? { is_FPU, `INSTRUCTION[19:15] } : 6'h0;
-				data.inst_rs2 <= have_RS2 ? { is_FPU, `INSTRUCTION[24:20] } : 6'h0;
-				data.inst_rd  <= have_RD  ? { is_FPU, `INSTRUCTION[ 11:7] } : 6'h0;
+				data.inst_rs1 <= i_data.inst_rs1; // have_RS1 ? { is_FPU | is_FPU_CVT, `INSTRUCTION[19:15] } : 6'h0;
+				data.inst_rs2 <= i_data.inst_rs2; // have_RS2 ? { is_FPU | is_FPU_CVT, `INSTRUCTION[24:20] } : 6'h0;
+				data.inst_rs3 <= i_data.inst_rs3;
+
+				data.inst_rd  <= have_RD  ? { is_FPU & !is_FCVT_W, `INSTRUCTION[ 11:7] } : 6'h0;
 				
 				data.imm <=
 					is_B ? inst_B_imm :

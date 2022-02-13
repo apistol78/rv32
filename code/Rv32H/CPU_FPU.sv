@@ -67,11 +67,23 @@ module CPU_FPU(
 		.o_result(fdiv_result)
 	);
 
+	wire fint_ready;
+	wire [31:0] fint_result;
+	CPU_FPU_Int fint(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(i_request),
+		.i_op1(i_op1),
+		.o_ready(fint_ready),
+		.o_result(fint_result)		
+	);
+
 	assign o_ready =
 		i_op == `FPU_OP_ADD ? fadd_ready :
 		i_op == `FPU_OP_SUB ? fsub_ready :
 		i_op == `FPU_OP_MUL ? fmul_ready :
 		i_op == `FPU_OP_DIV ? fdiv_ready :
+		i_op == `FPU_OP_INT ? fint_ready :
 		0;
 
 	assign o_result =
@@ -79,6 +91,7 @@ module CPU_FPU(
 		i_op == `FPU_OP_SUB ? fsub_result :
 		i_op == `FPU_OP_MUL ? fmul_result :
 		i_op == `FPU_OP_DIV ? fdiv_result :
+		i_op == `FPU_OP_INT ? fint_result :
 		0;
 
 endmodule

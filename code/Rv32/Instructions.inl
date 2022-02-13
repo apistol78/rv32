@@ -317,6 +317,12 @@ else if ((word & 0xfff0007f) == 0xc2000053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0xfe00007f) == 0xc0000053)
+{
+	TRACE(L"	FCVT_W");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfe00007f) == 0x1a000053)
 {
 	TRACE(L"	FDIV.D");

@@ -9,7 +9,7 @@ local insttype = {
 	JUMP_CONDITIONAL = "JUMP_CONDITIONAL",
 	MEMORY = "MEMORY",
 	COMPLEX = "COMPLEX",
-	FPU = "FPU"
+	FPU = "FPU",
 }
 
 local operations = {
@@ -34,7 +34,8 @@ local fpu_operations = {
 	ADD = "`FPU_OP_ADD",
 	SUB = "`FPU_OP_SUB",
 	MUL = "`FPU_OP_MUL",
-	DIV = "`FPU_OP_DIV"
+	DIV = "`FPU_OP_DIV",
+	INT = "`FPU_OP_INT"
 }
 
 local operands = {
@@ -525,6 +526,20 @@ local instructions = {
 		name = "FCVT.W.D",
 		format = "R"
 	},
+
+	{
+		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0xfe00007f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
+		data = 0xc0000053,
+		name = "FCVT_W",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.INT
+		}
+	},
+
 	{
 		mask = 0xfe00007f,
 		data = 0x1a000053,
@@ -1506,7 +1521,6 @@ function main(argv)
 		stdout:printLn("")
 
 		-- Instruction type signals.
-
 		for _, it in pairs({
 			insttype.ARITHMETIC,
 			insttype.SHIFT,
@@ -1515,7 +1529,8 @@ function main(argv)
 			insttype.JUMP,
 			insttype.JUMP_CONDITIONAL,
 			insttype.MEMORY,
-			insttype.FPU
+			insttype.FPU,
+			insttype.FPU_CVT
 		}) do
 			stdout:print("wire is_" .. it .. " =")
 			local count = 0
@@ -1754,7 +1769,7 @@ function main(argv)
 
 		stdout:printLn("wire [3:0] fpu_operation = ")
 		for i, inst in ipairs(fpu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-26s", inst.verilog_fpu.operation) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-6s", inst.name) .. " ? " .. string.format("%-1s", inst.verilog_fpu.operation) .. " :")
 		end
 		stdout:printLn("\t4'd0;")
 		stdout:printLn("")

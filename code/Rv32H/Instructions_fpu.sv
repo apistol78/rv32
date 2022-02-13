@@ -2,9 +2,10 @@
 // ==================================================
 
 wire [3:0] fpu_operation = 
-	is_FADD  ? `FPU_OP_ADD                :
-	is_FDIV  ? `FPU_OP_DIV                :
-	is_FMUL  ? `FPU_OP_MUL                :
-	is_FSUB  ? `FPU_OP_SUB                :
+	is_FADD   ? `FPU_OP_ADD :
+	is_FCVT_W ? `FPU_OP_INT :
+	is_FDIV   ? `FPU_OP_DIV :
+	is_FMUL   ? `FPU_OP_MUL :
+	is_FSUB   ? `FPU_OP_SUB :
 	4'd0;
 

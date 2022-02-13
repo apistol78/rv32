@@ -14,7 +14,7 @@ module CPU_FPU_Div(
 	output [31:0] o_result
 );
 
-	typedef enum [3:0]
+	typedef enum // [3:0]
 	{
 		IDLE,
 		UNPACK,

@@ -39,11 +39,12 @@
 `define FPU_OP_SUB		2
 `define FPU_OP_MUL		3
 `define FPU_OP_DIV		4
-`define FPU_OP_SQRT		5
-`define FPU_OP_MIN		6
-`define FPU_OP_MAX		7
-`define FPU_OP_CMP		8
-`define FPU_OP_CLASS	9
+`define FPU_OP_INT		5
+// `define FPU_OP_SQRT		5
+// `define FPU_OP_MIN		6
+// `define FPU_OP_MAX		7
+// `define FPU_OP_CMP		8
+// `define FPU_OP_CLASS	9
 
 // CSR registers
 `define CSR_MIE			12'h304

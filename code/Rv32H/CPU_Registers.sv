@@ -26,9 +26,6 @@ module CPU_Registers #(
 	reg [31:0] rs2 = 0;
 	reg [31:0] rs3 = 0;
 
-	wire [`REG_ID_SIZE] inst_rs1 = { i_fetch_data.fpu, i_fetch_data.instruction[19:15] };
-	wire [`REG_ID_SIZE] inst_rs2 = { i_fetch_data.fpu, i_fetch_data.instruction[24:20] };
-
 	initial begin
 		// Integer registers.
 		r[ 0] = 32'h0000_0000;
@@ -114,8 +111,8 @@ module CPU_Registers #(
 		else begin
 
 			// Read first.
-			rs1 <= (inst_rs1 != 0) ? r[inst_rs1] : 32'h0;
-			rs2 <= (inst_rs2 != 0) ? r[inst_rs2] : 32'h0;
+			rs1 <= (i_fetch_data.inst_rs1 != 0) ? r[i_fetch_data.inst_rs1] : 32'h0;
+			rs2 <= (i_fetch_data.inst_rs2 != 0) ? r[i_fetch_data.inst_rs2] : 32'h0;
 			// \fixme
 
 			// Write later.

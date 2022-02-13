@@ -8,7 +8,10 @@ typedef struct packed
 	logic [`TAG_SIZE] tag;
 	logic [31:0] instruction;
 	logic [31:0] pc;
-	logic fpu;
+	logic [`REG_ID_SIZE] inst_rs1;
+	logic [`REG_ID_SIZE] inst_rs2;
+	logic [`REG_ID_SIZE] inst_rs3;
+	//logic fpu;
 }
 fetch_data_t;
 
@@ -28,6 +31,7 @@ typedef struct packed
 	logic jump;						//!< Jump instruction.
 	logic jump_conditional;			//!< Conditional jump instruction.
 	logic fpu;						//!< FPU instruction.
+	//logic fpu_cvt;					//!< FPU CONVERT instruction.
 	logic [3:0] alu_operation;		//!< ALU operation code.
 	logic [2:0] alu_operand1;		//!< ALU operand 1 index.
 	logic [2:0] alu_operand2;		//!< ALU operand 2 index.

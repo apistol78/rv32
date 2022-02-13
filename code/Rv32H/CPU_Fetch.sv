@@ -69,6 +69,10 @@ module CPU_Fetch #(
 	`define INSTRUCTION icache_rdata
 	`include "Instructions_decode.sv"
 
+	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
+	wire have_RS2 = is_B | is_R | is_S;
+	// wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
+
 	assign o_data = !i_decode_busy ? dataC : dataN;
 
 	always_comb begin
@@ -107,7 +111,12 @@ module CPU_Fetch #(
 							dataC.tag <= dataC.tag + 1;
 							dataC.instruction <= icache_rdata;
 							dataC.pc <= pc;
-							dataC.fpu <= is_FPU;
+
+							dataC.inst_rs1 <= have_RS1 ? { is_FPU, `INSTRUCTION[19:15] } : 0;
+							dataC.inst_rs2 <= have_RS2 ? { is_FPU, `INSTRUCTION[24:20] } : 0;
+							dataC.inst_rs3 <= 0;
+
+							//dataC.fpu <= is_FPU;
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait
