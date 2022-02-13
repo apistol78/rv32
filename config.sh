@@ -9,4 +9,4 @@ export GAME_HOME
 . "$GAME_HOME/../traktor/scripts/config.sh"
 
 # Add path to risc-v toolchain.
-export PATH=/opt/riscv32/bin:$PATH
+export PATH=/opt/riscv32-imf/bin:$PATH

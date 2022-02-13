@@ -5,6 +5,9 @@
 // single bit should be necessary.
 `define TAG_SIZE                    1:0
 
+// Size of register index.
+`define REG_ID_SIZE					5:0
+
 // Multiply and divide
 `ifndef __VERILATOR__
 	`define MUL_CYCLE_LATENCY       3 // 3+1
@@ -30,6 +33,17 @@
 `define OP_NOT_EQUAL                13
 `define OP_SIGNED_GREATER_EQUAL     14
 `define OP_UNSIGNED_GREATER_EQUAL   15
+
+// FPU operations
+`define FPU_OP_ADD		1
+`define FPU_OP_SUB		2
+`define FPU_OP_MUL		3
+`define FPU_OP_DIV		4
+`define FPU_OP_SQRT		5
+`define FPU_OP_MIN		6
+`define FPU_OP_MAX		7
+`define FPU_OP_CMP		8
+`define FPU_OP_CLASS	9
 
 // CSR registers
 `define CSR_MIE			12'h304

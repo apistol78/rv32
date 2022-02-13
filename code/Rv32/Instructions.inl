@@ -269,6 +269,12 @@ else if ((word & 0xffffffff) == 0x00000073)
 		
 	return true;
 }
+else if ((word & 0xfe00007f) == 0x00000053)
+{
+	TRACE(L"	FADD");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfe00007f) == 0x02000053)
 {
 	TRACE(L"	FADD.D");
@@ -314,6 +320,12 @@ else if ((word & 0xfff0007f) == 0xc2000053)
 else if ((word & 0xfe00007f) == 0x1a000053)
 {
 	TRACE(L"	FDIV.D");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00007f) == 0x18000053)
+{
+	TRACE(L"	FDIV");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -371,6 +383,12 @@ else if ((word & 0xfe00007f) == 0x12000053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0xfe00007f) == 0x10000053)
+{
+	TRACE(L"	FMUL");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfff0707f) == 0xf2000053)
 {
 	TRACE(L"	FMV.D.X");
@@ -416,6 +434,12 @@ else if ((word & 0xfe00707f) == 0x22000053)
 else if ((word & 0xfe00707f) == 0x22002053)
 {
 	TRACE(L"	FSGNJX.D");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00007f) == 0x08000053)
+{
+	TRACE(L"	FSUB");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

@@ -107,6 +107,7 @@ module CPU_Fetch #(
 							dataC.tag <= dataC.tag + 1;
 							dataC.instruction <= icache_rdata;
 							dataC.pc <= pc;
+							dataC.fpu <= is_FPU;
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait

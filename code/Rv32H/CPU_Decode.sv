@@ -34,7 +34,7 @@ module CPU_Decode(
 	`define PC	3'd3
 	`define IMM 3'd4
 	`include "Instructions_alu.sv"
-
+	`include "Instructions_fpu.sv"
 	`include "Instructions_memory.sv"
 
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
@@ -67,9 +67,9 @@ module CPU_Decode(
 			if (i_data.tag != data.tag) begin
 				data.pc <= i_data.pc;
 
-				data.inst_rs1 <= have_RS1 ? `INSTRUCTION[19:15] : 5'h0;
-				data.inst_rs2 <= have_RS2 ? `INSTRUCTION[24:20] : 5'h0;
-				data.inst_rd  <= have_RD  ? `INSTRUCTION[ 11:7] : 5'h0;
+				data.inst_rs1 <= have_RS1 ? { is_FPU, `INSTRUCTION[19:15] } : 6'h0;
+				data.inst_rs2 <= have_RS2 ? { is_FPU, `INSTRUCTION[24:20] } : 6'h0;
+				data.inst_rd  <= have_RD  ? { is_FPU, `INSTRUCTION[ 11:7] } : 6'h0;
 				
 				data.imm <=
 					is_B ? inst_B_imm :
@@ -87,6 +87,7 @@ module CPU_Decode(
 				data.complx <= is_COMPLEX;
 				data.jump <= is_JUMP;
 				data.jump_conditional <= is_JUMP_CONDITIONAL;
+				data.fpu <= is_FPU;
 
 				data.alu_operation <= alu_operation;
 				data.alu_operand1 <= alu_operand1;
@@ -97,10 +98,21 @@ module CPU_Decode(
 				data.memory_width <= memory_width;
 				data.memory_signed <= memory_signed;
 				
+				data.fpu_operation <= fpu_operation;
+
 				`define OP data.op
 				`include "Instructions_decode_ops.sv"
 
-				if (is_ARITHMETIC || is_SHIFT || is_COMPARE || is_COMPLEX || is_JUMP || is_JUMP_CONDITIONAL || is_MEMORY) begin
+				if (
+					is_ARITHMETIC ||
+					is_SHIFT ||
+					is_COMPARE ||
+					is_COMPLEX ||
+					is_JUMP ||
+					is_JUMP_CONDITIONAL ||
+					is_MEMORY ||
+					is_FPU
+				) begin
 					data.tag <= i_data.tag;
 				end
 				else begin
