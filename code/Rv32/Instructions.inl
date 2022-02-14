@@ -473,15 +473,21 @@ else if ((word & 0x0000707f) == 0x00003027)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00707f) == 0x22000053)
+else if ((word & 0xfe00707f) == 0x20000053)
 {
-	TRACE(L"	FSGNJ.D");
+	TRACE(L"	FSGNJ");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00707f) == 0x22002053)
+else if ((word & 0xfe00707f) == 0x20001053)
 {
-	TRACE(L"	FSGNJX.D");
+	TRACE(L"	FSGNJN");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00707f) == 0x20002053)
+{
+	TRACE(L"	FSGNJX");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

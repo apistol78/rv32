@@ -10,7 +10,7 @@ module CPU_FPU(
 
 	input i_request,
 
-	input [3:0] i_op,
+	input [4:0] i_op,
 	input [31:0] i_op1,
 	input [31:0] i_op2,
 	input [31:0] i_op3,
@@ -134,6 +134,10 @@ module CPU_FPU(
 	wire [31:0] fcmp_equal = { 31'h0, ((fsub_result & 32'h7fffffff) == 32'h0) };
 	wire [31:0] fcmp_less  = { 31'h0, fsub_result[31] };
 
+	wire [31:0] fsgnj_result = { i_op2[31], i_op1[30:0] };
+	wire [31:0] fsgnjn_result = { ~i_op2[31], i_op1[30:0] };
+	wire [31:0] fsgnjx_result = { i_op1[31] ^ i_op2[31], i_op1[30:0] };
+
 	assign o_ready =
 		i_op == `FPU_OP_ADD			? fadd_ready	:
 		i_op == `FPU_OP_SUB			? fsub_ready	:
@@ -148,6 +152,9 @@ module CPU_FPU(
 		i_op == `FPU_OP_CMP_EQUAL	? fcmp_ready	:
 		i_op == `FPU_OP_CMP_LESS	? fcmp_ready	:
 		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_ready	:
+		i_op == `FPU_OP_SGNJ		? 1'b1			:
+		i_op == `FPU_OP_SGNJN		? 1'b1			:
+		i_op == `FPU_OP_SGNJX		? 1'b1			:
 		0;
 
 	assign o_result =
@@ -164,6 +171,9 @@ module CPU_FPU(
 		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal				:
 		i_op == `FPU_OP_CMP_LESS	? fcmp_less					:
 		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_equal | fcmp_less	:
+		i_op == `FPU_OP_SGNJ		? fsgnj_result				:
+		i_op == `FPU_OP_SGNJN		? fsgnjn_result				:
+		i_op == `FPU_OP_SGNJX		? fsgnjx_result				:
 		0;
 
 endmodule

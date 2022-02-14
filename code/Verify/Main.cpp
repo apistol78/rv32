@@ -1677,6 +1677,75 @@ bool verify_FNMSUB(const char* trace)
 	return true;
 }
 
+bool verify_FSGNJ(const char* trace)
+{
+	const float v1 = 1.2f;
+	const float v2 = -2.3f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x20208053; // fsgnj.s	ft0,ft1,ft2
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	log::info << *(float*)&r << Endl;
+
+	if (*(float*)&r != -1.2f)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FSGNJN(const char* trace)
+{
+	const float v1 = 1.2f;
+	const float v2 = -2.3f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x20209053; // fsgnjn.s	ft0,ft1,ft2
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	log::info << *(float*)&r << Endl;
+
+	if (*(float*)&r != 1.2f)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FSGNJX(const char* trace)
+{
+	const float v1 = 1.2f;
+	const float v2 = -2.3f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x2020a053; // fsgnjx.s	ft0,ft1,ft2
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	log::info << *(float*)&r << Endl;
+
+	if (*(float*)&r != -1.2f)
+		return false;
+
+	delete tb;
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1777,6 +1846,9 @@ int main(int argc, char **argv)
 	CHECK(verify_FMSUB);
 	CHECK(verify_FNMADD);
 	CHECK(verify_FNMSUB);
+	CHECK(verify_FSGNJ);
+	CHECK(verify_FSGNJN);
+	CHECK(verify_FSGNJX);
 
 	if (success)
 		printf("SUCCESS!\n");

@@ -48,6 +48,9 @@
 `define FPU_OP_CMP_EQUAL	11
 `define FPU_OP_CMP_LESS		12
 `define FPU_OP_CMP_LEQUAL	13
+`define FPU_OP_SGNJ			14
+`define FPU_OP_SGNJN		15
+`define FPU_OP_SGNJX		16
 
 // CSR registers
 `define CSR_MIE			12'h304

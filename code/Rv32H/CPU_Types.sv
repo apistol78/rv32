@@ -39,7 +39,7 @@ typedef struct packed
 	logic [2:0] memory_width;		//!< Memory access width (1, 2, or 4) in bytes.
 	logic memory_signed;			//!< Signed extended memory access.
 	logic [4:0] op;					//!< Complex instruction operation code.
-	logic [2:0] fpu_operation;		//!< FPU operation code.
+	logic [4:0] fpu_operation;		//!< FPU operation code.
 }
 decode_data_t;
 

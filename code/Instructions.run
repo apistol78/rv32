@@ -41,9 +41,12 @@ local fpu_operations = {
 	NMSUB = "`FPU_OP_NMSUB",
 	INT = "`FPU_OP_INT",
 	MOV = "`FPU_OP_MOV",
-	CMP_EQUAL = "`FPU_OP_CMP_EQUAL";
-	CMP_LESS = "`FPU_OP_CMP_LESS";
-	CMP_LEQUAL = "`FPU_OP_CMP_LEQUAL";
+	CMP_EQUAL = "`FPU_OP_CMP_EQUAL",
+	CMP_LESS = "`FPU_OP_CMP_LESS",
+	CMP_LEQUAL = "`FPU_OP_CMP_LEQUAL",
+	SGNJ = "`FPU_OP_SGNJ",
+	SGNJN = "`FPU_OP_SGNJN",
+	SGNJX = "`FPU_OP_SGNJX",
 }
 
 local operands = {
@@ -833,17 +836,45 @@ local instructions = {
 		name = "FSD",
 		format = "S"
 	},
+
 	{
 		mask = 0xfe00707f,
-		data = 0x22000053,
-		name = "FSGNJ.D",
-		format = "R"
+		data = 0x20000053,	--0010 000x xxxx xxxx x000 xxxx x101 0011
+		name = "FSGNJ",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.SGNJ
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 	{
 		mask = 0xfe00707f,
-		data = 0x22002053,
-		name = "FSGNJX.D",
-		format = "R"
+		data = 0x20001053,
+		name = "FSGNJN",	--0010 000x xxxx xxxx x001 xxxx x101 0011
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.SGNJN
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
+	},
+	{
+		mask = 0xfe00707f,
+		data = 0x20002053,	--0010 000x xxxx xxxx x010 xxxx x101 0011
+		name = "FSGNJX",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.SGNJX
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 
 	{
@@ -1990,11 +2021,11 @@ function main(argv)
 			end
 		end
 
-		stdout:printLn("wire [3:0] fpu_operation = ")
+		stdout:printLn("wire [4:0] fpu_operation = ")
 		for i, inst in ipairs(fpu) do
 			stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? " .. string.format("%-1s", inst.verilog_fpu.operation) .. " :")
 		end
-		stdout:printLn("\t4'd0;")
+		stdout:printLn("\t5'd0;")
 		stdout:printLn("")
 
 	else
