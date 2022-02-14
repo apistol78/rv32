@@ -68,7 +68,7 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 	}
 }
 
-#define ITERATIONS 10
+#define ITERATIONS 100
 
 #define S0 8
 #define S1 9
@@ -103,7 +103,7 @@ uint32_t urnd32()
 
 float rndf()
 {
-	return (2.0f * rand()) / 32767.0f - 1.0f;
+	return (2.0f * (rand() % 32767)) / 32767.0f - 1.0f;
 }
 
 bool verify_ADD(const char* trace)
@@ -1371,7 +1371,7 @@ bool verify_FMUL(const char* trace)
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[34];
 	
-	log::info << *(float*)&r << Endl;
+	// printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
 	if (*(float*)&r != (v2 * v1))
 		return false;
@@ -1558,13 +1558,13 @@ bool verify_FLT(const char* trace)
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v3;
 	tb->SoC__DOT__rom__DOT__data[0] = 0xa0101453; // flt.s	s0,ft0,ft1
 	tb->SoC__DOT__rom__DOT__data[1] = 0xa02014d3; // flt.s	s1,ft0,ft2
-	tb->SoC__DOT__rom__DOT__data[1] = 0xa0011953; // flt.s	s2,ft2,ft0
+	tb->SoC__DOT__rom__DOT__data[2] = 0xa0011953; // flt.s	s2,ft2,ft0
 
 	evaluate(tb, trace, 3);
 
-	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
-	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1]);
-	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2]);
+	//printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+	//printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1]);
+	//printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2]);
 
 	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0)
 		return false;
@@ -1593,7 +1593,7 @@ bool verify_FMADD(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+	//printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
 	if (*(float*)&r != (v1 * v2 + v3))
 		return false;
@@ -1618,7 +1618,7 @@ bool verify_FMSUB(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+	//printf("%f * %f - %f = %f\n", v1, v2, v3, *(float*)&r);
 
 	if (*(float*)&r != (v1 * v2 - v3))
 		return false;
@@ -1643,7 +1643,7 @@ bool verify_FNMADD(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+	//printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
 	if (*(float*)&r != (-v1 * v2 + v3))
 		return false;
@@ -1668,7 +1668,7 @@ bool verify_FNMSUB(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+	//printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
 	if (*(float*)&r != (-v1 * v2 - v3))
 		return false;
@@ -1691,7 +1691,7 @@ bool verify_FSGNJ(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	log::info << *(float*)&r << Endl;
+	//log::info << *(float*)&r << Endl;
 
 	if (*(float*)&r != -1.2f)
 		return false;
@@ -1714,7 +1714,7 @@ bool verify_FSGNJN(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	log::info << *(float*)&r << Endl;
+	//log::info << *(float*)&r << Endl;
 
 	if (*(float*)&r != 1.2f)
 		return false;
@@ -1737,7 +1737,7 @@ bool verify_FSGNJX(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	log::info << *(float*)&r << Endl;
+	//log::info << *(float*)&r << Endl;
 
 	if (*(float*)&r != -1.2f)
 		return false;

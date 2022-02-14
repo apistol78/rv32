@@ -233,7 +233,8 @@ int main(int argc, const char **argv)
 		statusBar->create(form);
 		statusBar->addColumn(ui::dpi96(100));	// IPC
 		statusBar->addColumn(ui::dpi96(100));	// BUS
-		statusBar->addColumn(ui::dpi96(400));	// PC
+		statusBar->addColumn(ui::dpi96(240));	// STALL
+		statusBar->addColumn(ui::dpi96(200));	// PC
 
 		form->update();
 		form->show();
@@ -454,7 +455,6 @@ int main(int argc, const char **argv)
 
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				statusBar->setText(1, str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc));
-				//statusBar->setText(2, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
 				//statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
 
 				statusBar->setText(2, 
@@ -464,6 +464,8 @@ int main(int argc, const char **argv)
 						((double)stallMemory.delta() * 100.0) / dc
 					)
 				);
+
+				statusBar->setText(3, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;

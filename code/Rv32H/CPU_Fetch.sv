@@ -69,10 +69,10 @@ module CPU_Fetch #(
 	`define INSTRUCTION icache_rdata
 	`include "Instructions_decode.sv"
 
-	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR;
-	wire have_RS2 = is_B | is_R | is_S;
+	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR | is_R4;
+	wire have_RS2 = is_B | is_R | is_S | is_R4;
 	wire have_RS3 = is_R4;
-	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR;
+	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR | is_R4;
 
 	assign o_data = !i_decode_busy ? dataC : dataN;
 

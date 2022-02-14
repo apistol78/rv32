@@ -29,6 +29,8 @@ module CPU_FPU_MulAdd(
 		M_NORMALIZE_2,
 		M_ROUND,
 
+		A_UNPACK,
+
 		A_ALIGN,
 		A_ADD_0,
 		A_ADD_1,
@@ -45,9 +47,15 @@ module CPU_FPU_MulAdd(
 	state_t state = IDLE;
 
 	reg [31:0] a, b, c, t, z;
-	reg [23:0] a_m, b_m, c_m, t_m, z_m;
+	
+	reg [23:0] a_m, b_m;
+	reg [26:0] c_m, t_m;
+	reg [23:0] z_m;
+
 	reg [9:0] a_e, b_e, c_e, t_e, z_e;
+	
 	reg a_s, b_s, c_s, t_s, z_s;
+
 	reg guard, round_bit, sticky;
 	reg [47:0] product;
 	reg [27:0] sum;
@@ -69,10 +77,12 @@ module CPU_FPU_MulAdd(
 			UNPACK: begin
 				a_m <= a[22:0];
 				b_m <= b[22:0];
-				c_m <= c[22:0];
+				c_m <= { c[22:0], 3'd0 };
+
 				a_e <= a[30:23] - 127;
 				b_e <= b[30:23] - 127;
 				c_e <= c[30:23] - 127;
+				
 				a_s <= a[31];
 				b_s <= b[31];
 				c_s <= c[31];
@@ -97,12 +107,12 @@ module CPU_FPU_MulAdd(
 					z[30:23] <= 255;
 					z[22:0] <= 0;
 					// if b is zero return NaN
-					// if (($signed(b_e) == -127) && (b_m == 0)) begin
-					// 	z[31] <= 1;
-					// 	z[30:23] <= 255;
-					// 	z[22] <= 1;
-					// 	z[21:0] <= 0;
-					// end
+					if (($signed(b_e) == -127) && (b_m == 0)) begin
+						z[31] <= 1;
+						z[30:23] <= 255;
+						z[22] <= 1;
+						z[21:0] <= 0;
+					end
 					state <= PUT_Z;
 				// if b is inf return inf
 				end else if (b_e == 128) begin
@@ -110,12 +120,12 @@ module CPU_FPU_MulAdd(
 					z[30:23] <= 255;
 					z[22:0] <= 0;
 					// if a is zero return NaN
-					// if (($signed(a_e) == -127) && (a_m == 0)) begin
-					// 	z[31] <= 1;
-					// 	z[30:23] <= 255;
-					// 	z[22] <= 1;
-					// 	z[21:0] <= 0;
-					// end
+					if (($signed(a_e) == -127) && (a_m == 0)) begin
+						z[31] <= 1;
+						z[30:23] <= 255;
+						z[22] <= 1;
+						z[21:0] <= 0;
+					end
 					state <= PUT_Z;
 				// if c is inf return inf
 				end else if (c_e == 128) begin
@@ -130,18 +140,15 @@ module CPU_FPU_MulAdd(
 					// 	z[21:0] <= 0;
 					// end
 					state <= PUT_Z;
-				// if a is zero return zero
-				// end else if (($signed(a_e) == -127) && (a_m == 0)) begin
-				// 	z[31] <= a_s ^ b_s;
-				// 	z[30:23] <= 0;
-				// 	z[22:0] <= 0;
-				// 	state <= PUT_Z;
-				// // if b is zero return zero
-				// end else if (($signed(b_e) == -127) && (b_m == 0)) begin
-				// 	z[31] <= a_s ^ b_s;
-				// 	z[30:23] <= 0;
-				// 	z[22:0] <= 0;
-				// 	state <= PUT_Z;
+
+				// If a or b is zero we return add.
+				end else if (
+					(($signed(a_e) == -127) && (a_m == 0)) ||
+					(($signed(b_e) == -127) && (b_m == 0))
+				) begin
+					z <= c;
+					state <= PUT_Z;
+
 				end else begin
 					// Denormalised Number
 					if ($signed(a_e) == -127) begin
@@ -159,7 +166,7 @@ module CPU_FPU_MulAdd(
 					if ($signed(c_e) == -127) begin
 						c_e <= -126;
 					end else begin
-						c_m[23] <= 1;
+						c_m[26] <= 1;
 					end					
 					state <= M_NORMALIZE_A;
 				end
@@ -231,10 +238,15 @@ module CPU_FPU_MulAdd(
 						t_e <= t_e + 1;
 					end
 				end
-				state <= A_ALIGN;
+				state <= A_UNPACK;
 			end
 
 ///
+
+			A_UNPACK: begin
+				t_m <= t_m << 3;
+				state <= A_ALIGN;
+			end
 
 			A_ALIGN: begin
 				if ($signed(c_e) > $signed(t_e)) begin

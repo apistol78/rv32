@@ -43,14 +43,15 @@
 `define FPU_OP_MSUB			6
 `define FPU_OP_NMADD		7
 `define FPU_OP_NMSUB		8
-`define FPU_OP_INT			9
-`define FPU_OP_MOV			10
-`define FPU_OP_CMP_EQUAL	11
-`define FPU_OP_CMP_LESS		12
-`define FPU_OP_CMP_LEQUAL	13
-`define FPU_OP_SGNJ			14
-`define FPU_OP_SGNJN		15
-`define FPU_OP_SGNJX		16
+`define FPU_OP_F2I			9
+`define FPU_OP_I2F			10
+`define FPU_OP_MOV			11
+`define FPU_OP_CMP_EQUAL	12
+`define FPU_OP_CMP_LESS		13
+`define FPU_OP_CMP_LEQUAL	14
+`define FPU_OP_SGNJ			15
+`define FPU_OP_SGNJN		16
+`define FPU_OP_SGNJX		17
 
 // CSR registers
 `define CSR_MIE			12'h304

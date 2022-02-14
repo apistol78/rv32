@@ -55,10 +55,12 @@ module CPU_FPU_Add(
 			end
 
 			UNPACK: begin
-				a_m <= { a[22 : 0], 3'd0 };
-				b_m <= { b[22 : 0], 3'd0 };
-				a_e <= a[30 : 23] - 127;
-				b_e <= b[30 : 23] - 127;
+				a_m <= { a[22:0], 3'd0 };
+				b_m <= { b[22:0], 3'd0 };
+
+				a_e <= a[30:23] - 127;
+				b_e <= b[30:23] - 127;
+				
 				a_s <= a[31];
 				b_s <= b[31];
 				state <= SPECIAL_CASES;

@@ -317,9 +317,15 @@ else if ((word & 0xfff0007f) == 0xc2000053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00007f) == 0xc0000053)
+else if ((word & 0xfff0007f) == 0xc0000053)
 {
-	TRACE(L"	FCVT_W");
+	TRACE(L"	FCVT_W_S");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfff0007f) == 0xd0000053)
+{
+	TRACE(L"	FCVT_S_W");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

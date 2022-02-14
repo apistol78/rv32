@@ -39,7 +39,8 @@ local fpu_operations = {
 	MSUB = "`FPU_OP_MSUB",
 	NMADD = "`FPU_OP_NMADD",
 	NMSUB = "`FPU_OP_NMSUB",
-	INT = "`FPU_OP_INT",
+	F2I = "`FPU_OP_F2I",
+	I2F = "`FPU_OP_I2F",
 	MOV = "`FPU_OP_MOV",
 	CMP_EQUAL = "`FPU_OP_CMP_EQUAL",
 	CMP_LESS = "`FPU_OP_CMP_LESS",
@@ -542,18 +543,29 @@ local instructions = {
 	},
 
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0xc0000053,
-		name = "FCVT_W",
+		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
+		data = 0xc0000053,	-- 1100 0000 0000 xxxx xxxx xxxx x101 0011
+		name = "FCVT_W_S",
 		format = "R",
 		type = insttype.FPU,
 		verilog_fpu = {
-			operation = fpu_operations.INT
+			operation = fpu_operations.F2I
 		},
 		verilog_rd_bank = 0,
 		verilog_rs1_bank = 1
+	},
+
+	{
+		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
+		data = 0xd0000053,	-- 1101 0000 0000 xxxx xxxx xxxx x101 0011
+		name = "FCVT_S_W",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.I2F
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 0
 	},
 
 	{
@@ -648,10 +660,8 @@ local instructions = {
 	},
 
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00707f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0xa0001053,
+		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx x111 xxxx x111 1111
+		data = 0xa0001053,	-- 1010 000x xxxx xxxx x001 xxxx x101 0011
 		name = "FLT",
 		format = "R",
 		type = insttype.FPU,

@@ -3,7 +3,8 @@
 
 wire [4:0] fpu_operation = 
 	is_FADD    ? `FPU_OP_ADD :
-	is_FCVT_W  ? `FPU_OP_INT :
+	is_FCVT_W_S ? `FPU_OP_F2I :
+	is_FCVT_S_W ? `FPU_OP_I2F :
 	is_FDIV    ? `FPU_OP_DIV :
 	is_FEQ     ? `FPU_OP_CMP_EQUAL :
 	is_FLE     ? `FPU_OP_CMP_LEQUAL :
