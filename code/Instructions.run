@@ -37,6 +37,9 @@ local fpu_operations = {
 	DIV = "`FPU_OP_DIV",
 	INT = "`FPU_OP_INT",
 	MOV = "`FPU_OP_MOV",
+	CMP_EQUAL = "`FPU_OP_CMP_EQUAL";
+	CMP_LESS = "`FPU_OP_CMP_LESS";
+	CMP_LEQUAL = "`FPU_OP_CMP_LEQUAL";
 }
 
 local operands = {
@@ -577,17 +580,44 @@ local instructions = {
 		name = "FENCE.I",
 		format = ""
 	},
+
+	{
+		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0xfe00707f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
+		data = 0xa0002053,
+		name = "FEQ",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.CMP_EQUAL
+		}
+	},	
 	{
 		mask = 0xfe00707f,
 		data = 0xa2002053,
 		name = "FEQ.D",
 		format = ""
 	},
+
 	{
 		mask = 0x0000707f,
 		data = 0x00003007,
 		name = "FLD",
 		format = "I"
+	},
+
+	{
+		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0xfe00707f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
+		data = 0xa0000053,
+		name = "FLE",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.CMP_LEQUAL
+		}
 	},
 	{
 		mask = 0xfe00707f,
@@ -595,12 +625,26 @@ local instructions = {
 		name = "FLE.D",
 		format = "R"
 	},
+
+	{
+		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0xfe00707f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
+		data = 0xa0001053,
+		name = "FLT",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.CMP_LESS
+		}
+	},	
 	{
 		mask = 0xfe00707f,
 		data = 0xa2001053,
 		name = "FLT.D",
 		format = "R"
 	},
+
 	{
 		mask = 0x0000707f,
 		data = 0x00002007,
@@ -663,7 +707,8 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.MOV
-		}
+		},
+		description = "Move FP register into INT register."
 	},
 	{
 		mask = 0xfff0707f,
@@ -673,7 +718,8 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.MOV
-		}
+		},
+		description = "Move INT register into FP register."
 	},
 	{
 		mask = 0x0600007f,
@@ -1526,7 +1572,7 @@ function main(argv)
 
 		-- Instruction signals.
 		for _, inst in ipairs(vi) do
-			stdout:printLn("wire is_" .. string.format("%-6s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+			stdout:printLn("wire is_" .. string.format("%-7s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
 		end
 		stdout:printLn("")
 

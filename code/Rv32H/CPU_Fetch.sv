@@ -79,6 +79,15 @@ module CPU_Fetch #(
 		icache_stall = i_decode_busy || !(state == 0);
 	end
 
+	reg rs1_fpu_index;
+	reg rs2_fpu_index;
+	reg rd_fpu_index;
+	always_comb begin
+		rs1_fpu_index = is_FPU & ~is_FMV_X_W;
+		rs2_fpu_index = is_FPU | is_FSW;
+		rd_fpu_index  = (is_FPU & (!is_FCVT_W && !is_FEQ)) | is_FLW;
+	end
+
 	always_ff @(posedge i_clock) begin
 		if (i_reset)
 			dataN <= 0;
@@ -115,10 +124,10 @@ module CPU_Fetch #(
 							// Decode register indices here since we
 							// need those for fetching registers while
 							// we are decoding instruction.
-							dataC.inst_rs1 <= have_RS1 ? { is_FPU & ~is_FMV_X_W, `INSTRUCTION[19:15] } : 0;
-							dataC.inst_rs2 <= have_RS2 ? { is_FPU | is_FSW, `INSTRUCTION[24:20] } : 0;
-							dataC.inst_rs3 <= 0;
-							dataC.inst_rd <= have_RD ? { (is_FPU & !is_FCVT_W) | is_FLW, `INSTRUCTION[ 11:7] } : 6'h0;
+							dataC.inst_rs1 <= have_RS1 ? { rs1_fpu_index, `INSTRUCTION[19:15] } : 6'h0;
+							dataC.inst_rs2 <= have_RS2 ? { rs2_fpu_index, `INSTRUCTION[24:20] } : 6'h0;
+							dataC.inst_rs3 <= 6'h0;
+							dataC.inst_rd  <= have_RD  ? { rd_fpu_index , `INSTRUCTION[ 11:7] } : 6'h0;
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait

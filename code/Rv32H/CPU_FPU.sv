@@ -78,22 +78,32 @@ module CPU_FPU(
 		.o_result(fint_result)		
 	);
 
+	wire fcmp_ready = fsub_ready;
+	wire [31:0] fcmp_equal = { 31'h0, ((fsub_result & 32'h7fffffff) == 32'h0) };
+	wire [31:0] fcmp_less  = { 31'h0, fsub_result[31] };
+
 	assign o_ready =
-		i_op == `FPU_OP_ADD ? fadd_ready	:
-		i_op == `FPU_OP_SUB ? fsub_ready	:
-		i_op == `FPU_OP_MUL ? fmul_ready	:
-		i_op == `FPU_OP_DIV ? fdiv_ready	:
-		i_op == `FPU_OP_INT ? fint_ready	:
-		i_op == `FPU_OP_MOV ? 1'b1			:
+		i_op == `FPU_OP_ADD			? fadd_ready	:
+		i_op == `FPU_OP_SUB			? fsub_ready	:
+		i_op == `FPU_OP_MUL			? fmul_ready	:
+		i_op == `FPU_OP_DIV			? fdiv_ready	:
+		i_op == `FPU_OP_INT			? fint_ready	:
+		i_op == `FPU_OP_MOV			? 1'b1			:
+		i_op == `FPU_OP_CMP_EQUAL	? fcmp_ready	:
+		i_op == `FPU_OP_CMP_LESS	? fcmp_ready	:
+		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_ready	:
 		0;
 
 	assign o_result =
-		i_op == `FPU_OP_ADD ? fadd_result	:
-		i_op == `FPU_OP_SUB ? fsub_result	:
-		i_op == `FPU_OP_MUL ? fmul_result	:
-		i_op == `FPU_OP_DIV ? fdiv_result	:
-		i_op == `FPU_OP_INT ? fint_result	:
-		i_op == `FPU_OP_MOV ? i_op1			:
+		i_op == `FPU_OP_ADD			? fadd_result				:
+		i_op == `FPU_OP_SUB			? fsub_result				:
+		i_op == `FPU_OP_MUL			? fmul_result				:
+		i_op == `FPU_OP_DIV			? fdiv_result				:
+		i_op == `FPU_OP_INT			? fint_result				:
+		i_op == `FPU_OP_MOV			? i_op1						:
+		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal				:
+		i_op == `FPU_OP_CMP_LESS	? fcmp_less					:
+		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_equal | fcmp_less	:
 		0;
 
 endmodule

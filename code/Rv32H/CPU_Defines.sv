@@ -35,12 +35,15 @@
 `define OP_UNSIGNED_GREATER_EQUAL   15
 
 // FPU operations
-`define FPU_OP_ADD		1
-`define FPU_OP_SUB		2
-`define FPU_OP_MUL		3
-`define FPU_OP_DIV		4
-`define FPU_OP_INT		5
-`define FPU_OP_MOV		6
+`define FPU_OP_ADD			1
+`define FPU_OP_SUB			2
+`define FPU_OP_MUL			3
+`define FPU_OP_DIV			4
+`define FPU_OP_INT			5
+`define FPU_OP_MOV			6
+`define FPU_OP_CMP_EQUAL	7
+`define FPU_OP_CMP_LESS		8
+`define FPU_OP_CMP_LEQUAL	9
 
 // CSR registers
 `define CSR_MIE			12'h304

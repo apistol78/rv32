@@ -347,6 +347,12 @@ else if ((word & 0x0000707f) == 0x0000100f)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0xfe00707f) == 0xa0002053)
+{
+	TRACE(L"	FEQ");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfe00707f) == 0xa2002053)
 {
 	TRACE(L"	FEQ.D");
@@ -359,9 +365,21 @@ else if ((word & 0x0000707f) == 0x00003007)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0xfe00707f) == 0xa0000053)
+{
+	TRACE(L"	FLE");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfe00707f) == 0xa2000053)
 {
 	TRACE(L"	FLE.D");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00707f) == 0xa0001053)
+{
+	TRACE(L"	FLT");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

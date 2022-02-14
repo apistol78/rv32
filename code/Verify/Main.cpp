@@ -54,7 +54,10 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 				tfp->dump(time); //contextp->time());
 
 			if (time > 1000)
+			{
+				log::info << L"Unable to execute, seems stuck!" << Endl;
 				break;
+			}
 		}
 	}
 
@@ -1422,6 +1425,157 @@ bool verify_FCVT(const char* trace)
 	return true;
 }
 
+bool verify_FLW(const char* trace)
+{
+	const float v1 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__ram__DOT__data[0] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0x10000000;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x00042007; // flw	ft0,0(s0)
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	
+	//printf("%f => %d\n", v1, r);
+
+	if (*(float*)&r != v1)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FSW(const char* trace)
+{
+	const float v1 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__ram__DOT__data[0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0x10000000;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x00042027; // fsw	ft0,0(s0)
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__ram__DOT__data[0];
+	
+	//printf("%f => %d\n", v1, r);
+
+	if (*(float*)&r != v1)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FMV_X_W(const char* trace)
+{
+	const float v1 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__rom__DOT__data[0] = 0xe0000453; // fmv.x.w	s0,ft0
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0];
+	
+	//printf("%f => %d\n", v1, r);
+
+	if (r != *(uint32_t*)&v1)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FMV_W_X(const char* trace)
+{
+	const uint32_t v1 = urnd32();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__rom__DOT__data[0] = 0xf0040053; // fmv.w.x	ft0,s0
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	
+	//printf("%f => %d\n", v1, r);
+
+	if (r != v1)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FEQ(const char* trace)
+{
+	const float v1 = 1.234f;
+	const float v2 = 1.234f;
+	const float v3 = -1.234f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0UL;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0xa0102453; // feq.s	s0,ft0,ft1
+	tb->SoC__DOT__rom__DOT__data[1] = 0xa02024d3; // feq.s	feq.s	s1,ft0,ft2
+
+	evaluate(tb, trace, 2);
+
+	//printf("%f => %d\n", v1, r);
+
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 1)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] != 0)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FLT(const char* trace)
+{
+	const float v1 = 1.234f;
+	const float v2 = 1.234f;
+	const float v3 = -1.234f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0UL;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0xa0101453; // flt.s	s0,ft0,ft1
+	tb->SoC__DOT__rom__DOT__data[1] = 0xa02014d3; // flt.s	s1,ft0,ft2
+	tb->SoC__DOT__rom__DOT__data[1] = 0xa0011953; // flt.s	s2,ft2,ft0
+
+	evaluate(tb, trace, 3);
+
+	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1]);
+	printf("%d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2]);
+
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] != 0)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] != 1)
+		return false;
+
+	delete tb;
+	return true;
+}
 
 // ========================================================
 
@@ -1513,6 +1667,12 @@ int main(int argc, char **argv)
 	CHECK(verify_FMUL);
 	CHECK(verify_FDIV);
 	CHECK(verify_FCVT);
+	CHECK(verify_FLW);
+	CHECK(verify_FSW);
+	CHECK(verify_FMV_X_W);
+	CHECK(verify_FMV_W_X);
+	CHECK(verify_FEQ);
+	CHECK(verify_FLT);
 
 	if (success)
 		printf("SUCCESS!\n");
