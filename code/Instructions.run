@@ -35,6 +35,10 @@ local fpu_operations = {
 	SUB = "`FPU_OP_SUB",
 	MUL = "`FPU_OP_MUL",
 	DIV = "`FPU_OP_DIV",
+	MADD = "`FPU_OP_MADD",
+	MSUB = "`FPU_OP_MSUB",
+	NMADD = "`FPU_OP_NMADD",
+	NMSUB = "`FPU_OP_NMSUB",
 	INT = "`FPU_OP_INT",
 	MOV = "`FPU_OP_MOV",
 	CMP_EQUAL = "`FPU_OP_CMP_EQUAL";
@@ -485,7 +489,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.ADD
-		}
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 
 	{
@@ -541,7 +548,9 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.INT
-		}
+		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1
 	},
 
 	{
@@ -560,7 +569,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.DIV
-		}
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 
 	{
@@ -591,7 +603,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.CMP_EQUAL
-		}
+		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},	
 	{
 		mask = 0xfe00707f,
@@ -617,7 +632,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.CMP_LEQUAL
-		}
+		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 	{
 		mask = 0xfe00707f,
@@ -636,7 +654,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.CMP_LESS
-		}
+		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},	
 	{
 		mask = 0xfe00707f,
@@ -661,19 +682,85 @@ local instructions = {
 			width = 4,
 			signed = false
 		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 0,
+		verilog_rs2_bank = 0
+	},
+	
+	{
+		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0x0600007f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
+		data = 0x00000043,
+		name = "FMADD",
+		format = "R4",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MADD
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1,
+		verilog_rs3_bank = 1
 	},
 	{
 		mask = 0x0600007f,
 		data = 0x02000043,
 		name = "FMADD.D",
-		format = "R"
+		format = "R4"
+	},
+
+	{
+		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0x0600007f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x100 0111
+		data = 0x00000047,
+		name = "FMSUB",
+		format = "R4",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MSUB
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1,
+		verilog_rs3_bank = 1
+	},
+
+	{
+		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0x0600007f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x101 1111
+		data = 0x0000004f,
+		name = "FNMADD",
+		format = "R4",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.NMADD
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1,
+		verilog_rs3_bank = 1
 	},
 	{
-		mask = 0xfe00007f,
-		data = 0x12000053,
-		name = "FMUL.D",
-		format = "R"
+		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		mask = 0x0600007f,
+		-- xxxx x00x xxxx xxxx xxxx xxxx x100 1011
+		data = 0x0000004b,
+		name = "FNMSUB",
+		format = "R4",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.NMSUB
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1,
+		verilog_rs3_bank = 1
 	},
+
+
 	{
 		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
 		mask = 0xfe00007f,
@@ -684,7 +771,16 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.MUL
-		}
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
+	},
+	{
+		mask = 0xfe00007f,
+		data = 0x12000053,
+		name = "FMUL.D",
+		format = "R"
 	},
 
 	{
@@ -708,6 +804,8 @@ local instructions = {
 		verilog_fpu = {
 			operation = fpu_operations.MOV
 		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1,
 		description = "Move FP register into INT register."
 	},
 	{
@@ -719,6 +817,8 @@ local instructions = {
 		verilog_fpu = {
 			operation = fpu_operations.MOV
 		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 0,
 		description = "Move INT register into FP register."
 	},
 	{
@@ -756,7 +856,10 @@ local instructions = {
 		type = insttype.FPU,
 		verilog_fpu = {
 			operation = fpu_operations.SUB
-		}
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
 	},
 	{
 		mask = 0xfe00007f,
@@ -764,6 +867,7 @@ local instructions = {
 		name = "FSUB.D",
 		format = "R"
 	},
+
 	{
 		mask = 0x0000707f,
 		data = 0x00002027,
@@ -780,7 +884,11 @@ local instructions = {
 			width = 4,
 			signed = false
 		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 0,
+		verilog_rs2_bank = 1
 	},
+
 	{
 		mask = 0x0000007f,
 		data = 0x0000006f,
@@ -1555,8 +1663,8 @@ function main(argv)
 		stdout:printLn("\treturn false;")
 		stdout:printLn("}")
 
-	elseif language == "verilog_inst_wire" then
-		local P < const > = { "B", "I", "J", "R", "S", "U", "CSR" }
+	elseif language == "verilog_decode" then
+		local P < const > = { "B", "I", "J", "R", "R4", "S", "U", "CSR" }
 
 		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
 		stdout:printLn("// ==================================================")
@@ -1621,6 +1729,44 @@ function main(argv)
 			end
 			stdout:printLn(";")
 		end
+		stdout:printLn("")
+
+		-- Instruction register banks.
+		stdout:printLn("wire RD_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rd_bank ~= nil and inst.verilog_rd_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rd_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire RS1_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs1_bank ~= nil and inst.verilog_rs1_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs1_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire RS2_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs2_bank ~= nil and inst.verilog_rs2_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
+
+		stdout:printLn("wire RS3_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs3_bank ~= nil and inst.verilog_rs3_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
 
 	elseif language == "verilog_alu" then
 		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
@@ -1846,7 +1992,7 @@ function main(argv)
 
 		stdout:printLn("wire [3:0] fpu_operation = ")
 		for i, inst in ipairs(fpu) do
-			stdout:printLn("\tis_" .. string.format("%-6s", inst.name) .. " ? " .. string.format("%-1s", inst.verilog_fpu.operation) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? " .. string.format("%-1s", inst.verilog_fpu.operation) .. " :")
 		end
 		stdout:printLn("\t4'd0;")
 		stdout:printLn("")

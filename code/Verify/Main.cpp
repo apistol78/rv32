@@ -1577,6 +1577,106 @@ bool verify_FLT(const char* trace)
 	return true;
 }
 
+bool verify_FMADD(const char* trace)
+{
+	const float v1 = rndf();
+	const float v2 = rndf();
+	const float v3 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[35] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x1820f043; // fmadd.s	ft0,ft1,ft2,ft3
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+
+	if (*(float*)&r != (v1 * v2 + v3))
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FMSUB(const char* trace)
+{
+	const float v1 = rndf();
+	const float v2 = rndf();
+	const float v3 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[35] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x1820f047; // fmsub.s	ft0,ft1,ft2,ft3
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+
+	if (*(float*)&r != (v1 * v2 - v3))
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FNMADD(const char* trace)
+{
+	const float v1 = rndf();
+	const float v2 = rndf();
+	const float v3 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[35] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x1820f04f; // fnmadd.s	ft0,ft1,ft2,ft3
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+
+	if (*(float*)&r != (-v1 * v2 + v3))
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FNMSUB(const char* trace)
+{
+	const float v1 = rndf();
+	const float v2 = rndf();
+	const float v3 = rndf();
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[35] = *(uint32_t*)&v3;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x1820f04b; // fnmsub.s	ft0,ft1,ft2,ft3
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	printf("%f * %f = %f\n", v1, v2, *(float*)&r);
+
+	if (*(float*)&r != (-v1 * v2 - v3))
+		return false;
+
+	delete tb;
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name)
@@ -1597,7 +1697,7 @@ bool verify(bool (*fn)(const char* trace), const char* name)
 		log::info << L"Verify failed, re-run with trace..." << Endl;
 
 		char fnf[256];
-		sprintf(fnf, "%s.vcd", name);
+		sprintf(fnf, "%s.fst", name);
 		if (fn(fnf))
 			log::warning << L"Inconsistent verification." << Endl;
 	}
@@ -1673,6 +1773,10 @@ int main(int argc, char **argv)
 	CHECK(verify_FMV_W_X);
 	CHECK(verify_FEQ);
 	CHECK(verify_FLT);
+	CHECK(verify_FMADD);
+	CHECK(verify_FMSUB);
+	CHECK(verify_FNMADD);
+	CHECK(verify_FNMSUB);
 
 	if (success)
 		printf("SUCCESS!\n");

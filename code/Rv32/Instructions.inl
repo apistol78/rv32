@@ -395,21 +395,45 @@ else if ((word & 0x0000707f) == 0x00002007)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0x0600007f) == 0x00000043)
+{
+	TRACE(L"	FMADD");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0x0600007f) == 0x02000043)
 {
 	TRACE(L"	FMADD.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00007f) == 0x12000053)
+else if ((word & 0x0600007f) == 0x00000047)
 {
-	TRACE(L"	FMUL.D");
+	TRACE(L"	FMSUB");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0x0600007f) == 0x0000004f)
+{
+	TRACE(L"	FNMADD");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0x0600007f) == 0x0000004b)
+{
+	TRACE(L"	FNMSUB");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x10000053)
 {
 	TRACE(L"	FMUL");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00007f) == 0x12000053)
+{
+	TRACE(L"	FMUL.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

@@ -67,6 +67,58 @@ module CPU_FPU(
 		.o_result(fdiv_result)
 	);
 
+	wire fmadd_ready;
+	wire [31:0] fmadd_result;
+	CPU_FPU_MulAdd fmadd(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(i_request),
+		.i_op1(i_op1),
+		.i_op2(i_op2),
+		.i_op3(i_op3),
+		.o_ready(fmadd_ready),
+		.o_result(fmadd_result)
+	);
+
+	wire fmsub_ready;
+	wire [31:0] fmsub_result;
+	CPU_FPU_MulAdd fmsub(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(i_request),
+		.i_op1(i_op1),
+		.i_op2(i_op2),
+		.i_op3(32'h80000000 ^ i_op3),
+		.o_ready(fmadd_ready),
+		.o_result(fmadd_result)
+	);
+
+	wire fnmadd_ready;
+	wire [31:0] fnmadd_result;
+	CPU_FPU_MulAdd fnmadd(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(i_request),
+		.i_op1(32'h80000000 ^ i_op1),
+		.i_op2(i_op2),
+		.i_op3(i_op3),
+		.o_ready(fnmadd_ready),
+		.o_result(fnmadd_result)
+	);
+
+	wire fnmsub_ready;
+	wire [31:0] fnmsub_result;
+	CPU_FPU_MulAdd fnmsub(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(i_request),
+		.i_op1(32'h80000000 ^ i_op1),
+		.i_op2(i_op2),
+		.i_op3(32'h80000000 ^ i_op3),
+		.o_ready(fnmadd_ready),
+		.o_result(fnmadd_result)
+	);	
+
 	wire fint_ready;
 	wire [31:0] fint_result;
 	CPU_FPU_Int fint(
@@ -87,6 +139,10 @@ module CPU_FPU(
 		i_op == `FPU_OP_SUB			? fsub_ready	:
 		i_op == `FPU_OP_MUL			? fmul_ready	:
 		i_op == `FPU_OP_DIV			? fdiv_ready	:
+		i_op == `FPU_OP_MADD		? fmadd_ready	:
+		i_op == `FPU_OP_MSUB		? fmsub_ready	:
+		i_op == `FPU_OP_NMADD		? fnmadd_ready	:
+		i_op == `FPU_OP_NMSUB		? fnmsub_ready	:
 		i_op == `FPU_OP_INT			? fint_ready	:
 		i_op == `FPU_OP_MOV			? 1'b1			:
 		i_op == `FPU_OP_CMP_EQUAL	? fcmp_ready	:
@@ -99,6 +155,10 @@ module CPU_FPU(
 		i_op == `FPU_OP_SUB			? fsub_result				:
 		i_op == `FPU_OP_MUL			? fmul_result				:
 		i_op == `FPU_OP_DIV			? fdiv_result				:
+		i_op == `FPU_OP_MADD		? fmadd_result				:
+		i_op == `FPU_OP_MSUB		? fmsub_result				:
+		i_op == `FPU_OP_NMADD		? fnmadd_result				:
+		i_op == `FPU_OP_NMSUB		? fnmsub_result				:
 		i_op == `FPU_OP_INT			? fint_result				:
 		i_op == `FPU_OP_MOV			? i_op1						:
 		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal				:
