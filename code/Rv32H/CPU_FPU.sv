@@ -29,23 +29,12 @@ module CPU_FPU(
 		.i_op1(i_op1),
 		.i_op2(i_op2),
 		.o_ready(fadd_ready),
-		.o_result(fadd_result),
-		.o_a(),
-		.o_b()
+		.o_result(fadd_result)
 	);
 
-	wire fsub_request = (
-		i_op == `FPU_OP_SUB ||
-		i_op == `FPU_OP_CMP_EQUAL ||
-		i_op == `FPU_OP_CMP_LESS ||
-		i_op == `FPU_OP_CMP_LEQUAL ||
-		i_op == `FPU_OP_MIN ||
-		i_op == `FPU_OP_MAX
-	) && i_request; 
+	wire fsub_request = (i_op == `FPU_OP_SUB) && i_request; 
 	wire fsub_ready;
 	wire [31:0] fsub_result;
-	wire [31:0] fsub_a;
-	wire [31:0] fsub_b;
 	CPU_FPU_Add fsub(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -53,9 +42,7 @@ module CPU_FPU(
 		.i_op1(i_op1),
 		.i_op2(32'h80000000 ^ i_op2),
 		.o_ready(fsub_ready),
-		.o_result(fsub_result),
-		.o_a(fsub_a),
-		.o_b(fsub_b)
+		.o_result(fsub_result)
 	);
 
 	wire fmul_request = (i_op == `FPU_OP_MUL) && i_request; 
@@ -139,20 +126,25 @@ module CPU_FPU(
 		.o_result(i2f_result)		
 	);
 
-	wire fcmp_ready = fsub_ready;
-	wire [31:0] fcmp_equal = { 31'h0, ((fsub_result & 32'h7fffffff) == 32'h0) };
-	wire [31:0] fcmp_less  = { 31'h0, fsub_result[31] };
+	wire cmp_equal;
+	wire cmp_less;
+	CPU_FPU_Compare cmp(
+		.i_op1(i_op1),
+		.i_op2(i_op2),
+		.o_equal(cmp_equal),
+		.o_less(cmp_less)
+	);
+
+	wire [31:0] fcmp_equal = { 31'h0, cmp_equal };
+	wire [31:0] fcmp_less = { 31'h0, cmp_less };
+	wire [31:0] fcmp_lequal = { 31'h0, cmp_equal | cmp_less };
 
 	wire [31:0] fsgnj_result = { i_op2[31], i_op1[30:0] };
 	wire [31:0] fsgnjn_result = { ~i_op2[31], i_op1[30:0] };
 	wire [31:0] fsgnjx_result = { i_op1[31] ^ i_op2[31], i_op1[30:0] };
 
-	wire [31:0] fminmax_a = fsub_a;
-	wire [31:0] fminmax_b = 32'h80000000 ^ fsub_b;
-	wire fmin_ready = fsub_ready;
-	wire [31:0] fmin_result = fsub_result[31] ? fminmax_a : fminmax_b;
-	wire fmax_ready = fsub_ready;
-	wire [31:0] fmax_result = fsub_result[31] ? fminmax_b : fminmax_a;
+	wire [31:0] fmin_result = cmp_less ? i_op1 : i_op2;
+	wire [31:0] fmax_result = cmp_less ? i_op2 : i_op1;
 
 	assign o_ready =
 		i_request & (
@@ -168,38 +160,38 @@ module CPU_FPU(
 			i_op == `FPU_OP_I2F			? i2f_ready		:
 			i_op == `FPU_OP_UI2F		? i2f_ready		:
 			i_op == `FPU_OP_MOV			? 1'b1			:
-			i_op == `FPU_OP_CMP_EQUAL	? fcmp_ready	:
-			i_op == `FPU_OP_CMP_LESS	? fcmp_ready	:
-			i_op == `FPU_OP_CMP_LEQUAL	? fcmp_ready	:
+			i_op == `FPU_OP_CMP_EQUAL	? 1'b1			:
+			i_op == `FPU_OP_CMP_LESS	? 1'b1			:
+			i_op == `FPU_OP_CMP_LEQUAL	? 1'b1			:
 			i_op == `FPU_OP_SGNJ		? 1'b1			:
 			i_op == `FPU_OP_SGNJN		? 1'b1			:
 			i_op == `FPU_OP_SGNJX		? 1'b1			:
-			i_op == `FPU_OP_MIN			? fmin_ready	:
-			i_op == `FPU_OP_MAX			? fmax_ready	:
+			i_op == `FPU_OP_MIN			? 1'b1			:
+			i_op == `FPU_OP_MAX			? 1'b1			:
 			0
 		);
 
 	assign o_result =
-		i_op == `FPU_OP_ADD			? fadd_result				:
-		i_op == `FPU_OP_SUB			? fsub_result				:
-		i_op == `FPU_OP_MUL			? fmul_result				:
-		i_op == `FPU_OP_DIV			? fdiv_result				:
-		i_op == `FPU_OP_MADD		? fmadd_result				:
-		i_op == `FPU_OP_MSUB		? fmsub_result				:
-		i_op == `FPU_OP_NMADD		? fnmadd_result				:
-		i_op == `FPU_OP_NMSUB		? fnmsub_result				:
-		i_op == `FPU_OP_F2I			? f2i_result				:
-		i_op == `FPU_OP_I2F			? i2f_result				:
-		i_op == `FPU_OP_UI2F		? i2f_result				:
-		i_op == `FPU_OP_MOV			? i_op1						:
-		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal				:
-		i_op == `FPU_OP_CMP_LESS	? fcmp_less					:
-		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_equal | fcmp_less	:
-		i_op == `FPU_OP_SGNJ		? fsgnj_result				:
-		i_op == `FPU_OP_SGNJN		? fsgnjn_result				:
-		i_op == `FPU_OP_SGNJX		? fsgnjx_result				:
-		i_op == `FPU_OP_MIN			? fmin_result				:
-		i_op == `FPU_OP_MAX			? fmax_result				:
+		i_op == `FPU_OP_ADD			? fadd_result	:
+		i_op == `FPU_OP_SUB			? fsub_result	:
+		i_op == `FPU_OP_MUL			? fmul_result	:
+		i_op == `FPU_OP_DIV			? fdiv_result	:
+		i_op == `FPU_OP_MADD		? fmadd_result	:
+		i_op == `FPU_OP_MSUB		? fmsub_result	:
+		i_op == `FPU_OP_NMADD		? fnmadd_result	:
+		i_op == `FPU_OP_NMSUB		? fnmsub_result	:
+		i_op == `FPU_OP_F2I			? f2i_result	:
+		i_op == `FPU_OP_I2F			? i2f_result	:
+		i_op == `FPU_OP_UI2F		? i2f_result	:
+		i_op == `FPU_OP_MOV			? i_op1			:
+		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal	:
+		i_op == `FPU_OP_CMP_LESS	? fcmp_less		:
+		i_op == `FPU_OP_CMP_LEQUAL	? fcmp_lequal	:
+		i_op == `FPU_OP_SGNJ		? fsgnj_result	:
+		i_op == `FPU_OP_SGNJN		? fsgnjn_result	:
+		i_op == `FPU_OP_SGNJX		? fsgnjx_result	:
+		i_op == `FPU_OP_MIN			? fmin_result	:
+		i_op == `FPU_OP_MAX			? fmax_result	:
 		0;
 
 endmodule
