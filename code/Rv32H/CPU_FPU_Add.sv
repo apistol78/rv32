@@ -11,7 +11,9 @@ module CPU_FPU_Add(
 	input [31:0] i_op2,
 
 	output o_ready,
-	output [31:0] o_result
+	output [31:0] o_result,
+	output [31:0] o_a,
+	output [31:0] o_b
 );
 
 	typedef enum bit [3:0]
@@ -43,6 +45,8 @@ module CPU_FPU_Add(
 
 	assign o_ready = s_output_ready;
 	assign o_result = s_output_z;
+	assign o_a = a;
+	assign o_b = b;
 
 	always_ff @(posedge i_clock) begin
 		case(state)

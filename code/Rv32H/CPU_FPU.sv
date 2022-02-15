@@ -29,7 +29,9 @@ module CPU_FPU(
 		.i_op1(i_op1),
 		.i_op2(i_op2),
 		.o_ready(fadd_ready),
-		.o_result(fadd_result)
+		.o_result(fadd_result),
+		.o_a(),
+		.o_b()
 	);
 
 	wire fsub_request = (
@@ -42,6 +44,8 @@ module CPU_FPU(
 	) && i_request; 
 	wire fsub_ready;
 	wire [31:0] fsub_result;
+	wire [31:0] fsub_a;
+	wire [31:0] fsub_b;
 	CPU_FPU_Add fsub(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -49,7 +53,9 @@ module CPU_FPU(
 		.i_op1(i_op1),
 		.i_op2(32'h80000000 ^ i_op2),
 		.o_ready(fsub_ready),
-		.o_result(fsub_result)
+		.o_result(fsub_result),
+		.o_a(fsub_a),
+		.o_b(fsub_b)
 	);
 
 	wire fmul_request = (i_op == `FPU_OP_MUL) && i_request; 
@@ -141,11 +147,12 @@ module CPU_FPU(
 	wire [31:0] fsgnjn_result = { ~i_op2[31], i_op1[30:0] };
 	wire [31:0] fsgnjx_result = { i_op1[31] ^ i_op2[31], i_op1[30:0] };
 
+	wire [31:0] fminmax_a = fsub_a;
+	wire [31:0] fminmax_b = 32'h80000000 ^ fsub_b;
 	wire fmin_ready = fsub_ready;
-	wire [31:0] fmin_result = fsub_result[31] ? i_op1 : i_op2;
-
+	wire [31:0] fmin_result = fsub_result[31] ? fminmax_a : fminmax_b;
 	wire fmax_ready = fsub_ready;
-	wire [31:0] fmax_result = fsub_result[31] ? i_op2 : i_op1;
+	wire [31:0] fmax_result = fsub_result[31] ? fminmax_b : fminmax_a;
 
 	assign o_ready =
 		i_request & (
