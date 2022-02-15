@@ -76,9 +76,10 @@ module CPU_FPU(
 		.o_result(fdiv_result)
 	);
 
-	wire fmadd_request = (i_op == `FPU_OP_MADD) && i_request; 
+	wire fmadd_request = (i_op == `FPU_OP_MADD || i_op == `FPU_OP_NMADD) && i_request; 
 	wire fmadd_ready;
 	wire [31:0] fmadd_result;
+	wire [31:0] fnmadd_result = 32'h80000000 ^ fmadd_result;
 	CPU_FPU_MulAdd fmadd(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -90,9 +91,10 @@ module CPU_FPU(
 		.o_result(fmadd_result)
 	);
 
-	wire fmsub_request = (i_op == `FPU_OP_MSUB) && i_request; 
+	wire fmsub_request = (i_op == `FPU_OP_MSUB || i_op == `FPU_OP_NMSUB) && i_request; 
 	wire fmsub_ready;
 	wire [31:0] fmsub_result;
+	wire [31:0] fnmsub_result = 32'h80000000 ^ fmsub_result;
 	CPU_FPU_MulAdd fmsub(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -103,34 +105,6 @@ module CPU_FPU(
 		.o_ready(fmsub_ready),
 		.o_result(fmsub_result)
 	);
-
-	wire fnmadd_request = (i_op == `FPU_OP_NMADD) && i_request; 
-	wire fnmadd_ready;
-	wire [31:0] fnmadd_result;
-	CPU_FPU_MulAdd fnmadd(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.i_request(fnmadd_request),
-		.i_op1(32'h80000000 ^ i_op1),
-		.i_op2(i_op2),
-		.i_op3(i_op3),
-		.o_ready(fnmadd_ready),
-		.o_result(fnmadd_result)
-	);
-
-	wire fnmsub_request = (i_op == `FPU_OP_NMSUB) && i_request; 
-	wire fnmsub_ready;
-	wire [31:0] fnmsub_result;
-	CPU_FPU_MulAdd fnmsub(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.i_request(fnmsub_request),
-		.i_op1(32'h80000000 ^ i_op1),
-		.i_op2(i_op2),
-		.i_op3(32'h80000000 ^ i_op3),
-		.o_ready(fnmsub_ready),
-		.o_result(fnmsub_result)
-	);	
 
 	wire f2i_request = (i_op == `FPU_OP_F2I) && i_request; 
 	wire f2i_ready;
@@ -172,8 +146,8 @@ module CPU_FPU(
 			i_op == `FPU_OP_DIV			? fdiv_ready	:
 			i_op == `FPU_OP_MADD		? fmadd_ready	:
 			i_op == `FPU_OP_MSUB		? fmsub_ready	:
-			i_op == `FPU_OP_NMADD		? fnmadd_ready	:
-			i_op == `FPU_OP_NMSUB		? fnmsub_ready	:
+			i_op == `FPU_OP_NMADD		? fmadd_ready	:
+			i_op == `FPU_OP_NMSUB		? fmsub_ready	:
 			i_op == `FPU_OP_F2I			? f2i_ready		:
 			i_op == `FPU_OP_I2F			? i2f_ready		:
 			i_op == `FPU_OP_MOV			? 1'b1			:
