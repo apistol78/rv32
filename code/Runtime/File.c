@@ -69,7 +69,7 @@ static FIL* file_alloc()
 
 static void file_free(FIL* fp)
 {
-	int32_t index = fp - fps;
+	const int32_t index = fp - fps;
 	fpa &= ~(1 << index);
 }
 
@@ -78,9 +78,17 @@ static int32_t file_index(FIL* fp)
 	return (int32_t)(fp - fps) + 1;
 }
 
-static FIL* file_from_index(int32_t index)
+static int32_t file_is_open(int32_t index)
 {
 	if (index >= 1 && index <= 32)
+		return (fpa & (1 << (index - 1))) != 0;
+	else
+		return 0;
+}
+
+static FIL* file_from_index(int32_t index)
+{
+	if (file_is_open(index))
 		return &fps[index - 1];
 	else
 		return 0;
@@ -119,14 +127,25 @@ int32_t file_open(const char* name)
 void file_close(int32_t fd)
 {
 	FIL* fp = file_from_index(fd);
-	f_close(fp);
-	file_free(fp);
+	if (fp)
+	{
+		f_close(fp);
+		file_free(fp);
+	}
+	else
+		printf("File %d already closed.\n", fd);
 }
 
 int32_t file_size(int32_t fd)
 {
 	FIL* fp = file_from_index(fd);
-	return f_size(fp);
+	if (fp)
+		return f_size(fp);
+	else
+	{
+		printf("File %d not opened.\n", fd);
+		return -1;
+	}
 }
 
 int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
@@ -135,7 +154,10 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	
 	FIL* fp = file_from_index(fd);
 	if (!fp)
+	{
+		printf("File %d not opened.\n", fd);
 		return -1;
+	}
 
 	if (from == 0)
 		result = f_lseek(fp, offset);
@@ -176,8 +198,14 @@ int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 
 int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
-	UINT br = 0;
 	FIL* fp = file_from_index(fd);
+	if (!fp)
+	{
+		printf("File %d not opened.\n", fd);
+		return -1;
+	}
+
+	UINT br = 0;
 	if (f_read(fp, ptr, len, &br) == FR_OK)
 		return (int32_t)br;
 	else

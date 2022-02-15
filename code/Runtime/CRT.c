@@ -50,7 +50,7 @@ int _fstat(int file, struct stat* st)
 
 int _isatty(int file)
 {
-	return file <= 100 ? 1 : 0;
+	return file < 100 ? 1 : 0;
 }
 
 int _lseek(int file, int ptr, int dir)

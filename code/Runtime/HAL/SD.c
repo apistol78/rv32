@@ -513,10 +513,6 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 #endif  
 
 		buffer[i] = Data8;
-
-		// printf("%02x ", Data8);
-		// if ((i & 15) == 15)
-		// 	printf("\n");
 	}
 
 	return bufferLen;
