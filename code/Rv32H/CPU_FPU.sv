@@ -120,7 +120,7 @@ module CPU_FPU(
 		.o_result(f2i_result)		
 	);
 
-	wire i2f_request = (i_op == `FPU_OP_I2F) && i_request; 
+	wire i2f_request = (i_op == `FPU_OP_I2F || i_op == `FPU_OP_UI2F) && i_request; 
 	wire i2f_ready;
 	wire [31:0] i2f_result;
 	CPU_FPU_Float i2f(
@@ -128,6 +128,7 @@ module CPU_FPU(
 		.i_clock(i_clock),
 		.i_request(i2f_request),
 		.i_op1(i_op1),
+		.i_signed(i_op == `FPU_OP_I2F),
 		.o_ready(i2f_ready),
 		.o_result(i2f_result)		
 	);
@@ -158,6 +159,7 @@ module CPU_FPU(
 			i_op == `FPU_OP_NMSUB		? fmsub_ready	:
 			i_op == `FPU_OP_F2I			? f2i_ready		:
 			i_op == `FPU_OP_I2F			? i2f_ready		:
+			i_op == `FPU_OP_UI2F		? i2f_ready		:
 			i_op == `FPU_OP_MOV			? 1'b1			:
 			i_op == `FPU_OP_CMP_EQUAL	? fcmp_ready	:
 			i_op == `FPU_OP_CMP_LESS	? fcmp_ready	:
@@ -181,6 +183,7 @@ module CPU_FPU(
 		i_op == `FPU_OP_NMSUB		? fnmsub_result				:
 		i_op == `FPU_OP_F2I			? f2i_result				:
 		i_op == `FPU_OP_I2F			? i2f_result				:
+		i_op == `FPU_OP_UI2F		? i2f_result				:
 		i_op == `FPU_OP_MOV			? i_op1						:
 		i_op == `FPU_OP_CMP_EQUAL	? fcmp_equal				:
 		i_op == `FPU_OP_CMP_LESS	? fcmp_less					:

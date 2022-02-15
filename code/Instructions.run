@@ -41,6 +41,7 @@ local fpu_operations = {
 	NMSUB = "`FPU_OP_NMSUB",
 	F2I = "`FPU_OP_F2I",
 	I2F = "`FPU_OP_I2F",
+	UI2F = "`FPU_OP_UI2F",
 	MOV = "`FPU_OP_MOV",
 	CMP_EQUAL = "`FPU_OP_CMP_EQUAL",
 	CMP_LESS = "`FPU_OP_CMP_LESS",
@@ -521,6 +522,20 @@ local instructions = {
 		verilog_rd_bank = 1,
 		verilog_rs1_bank = 0
 	},
+
+	{
+		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
+		data = 0xd0100053,	-- 1101 0000 0001 xxxx xxxx xxxx x101 0011
+		name = "FCVT_S_WU",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.UI2F
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 0
+	},
+
 	{
 		mask = 0xfe00007f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
 		data = 0x18000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011

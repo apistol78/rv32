@@ -8,6 +8,7 @@ module CPU_FPU_Float(
 
 	input i_request,
 	input [31:0] i_op1,
+	input i_signed,
 
 	output o_ready,
 	output [31:0] o_result
@@ -54,8 +55,8 @@ module CPU_FPU_Float(
 					z_e <= -127;
 					state <= PACK;
 				end else begin
-					value <= a[31] ? -a : a;
-					z_s <= a[31];
+					value <= (i_signed & a[31]) ? -a : a;
+					z_s <= (i_signed & a[31]);
 					state <= CONVERT_1;
 				end
 			end
