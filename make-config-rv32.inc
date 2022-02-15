@@ -1,7 +1,7 @@
 # Configuration file
 
 C=riscv32-unknown-elf-gcc
-C_FLAGS_COMMON=-ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
+C_FLAGS_COMMON=-mbranch-cost=5 -mstrict-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
 C_FLAGS_DEBUG_SHARED=$(C_FLAGS_COMMON)
 C_FLAGS_RELEASE_SHARED=$(C_FLAGS_COMMON) -O2
 C_FLAGS_DEBUG_STATIC=$(C_FLAGS_COMMON)
@@ -11,7 +11,7 @@ C_FLAGS_RELEASE_EXECUTABLE=$(C_FLAGS_COMMON) -O2
 C_FLAG_OUTPUT=-o 
 
 CC=riscv32-unknown-elf-gcc
-CC_FLAGS_COMMON=-ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
+CC_FLAGS_COMMON=-mbranch-cost=5 -mstrict-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
 CC_FLAGS_DEBUG_SHARED=$(CC_FLAGS_COMMON)
 CC_FLAGS_RELEASE_SHARED=$(CC_FLAGS_COMMON) -O2
 CC_FLAGS_DEBUG_STATIC=$(CC_FLAGS_COMMON)
