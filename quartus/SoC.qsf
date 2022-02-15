@@ -769,56 +769,6 @@ set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_symbol
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_signal_integrity
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_boundary_scan
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Forward.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BRAM_clear.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/VideoBus.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/VGA.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART_TX.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART_RX.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/Timer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SRAM_interface.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SoC.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SDRAM_interface.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SD.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/LED.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/I2C.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/GPIO.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/FIFO64.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/FIFO.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/DMA.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Writeback.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_v2.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Types.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Registers.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Multiply.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Memory.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_L2_Cache.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_ICache.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Fetch.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Execute.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Divide.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Defines.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Decode.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_DCache.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_CSR.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_BusAccess.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_ALU.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BROM.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BRAM.sv
-set_global_assignment -name SDC_FILE SoC.sdc
-set_global_assignment -name SDC_FILE SRAM.sdc
-set_global_assignment -name QIP_FILE IP_Multiply.qip
-set_global_assignment -name QIP_FILE IP_Divide.qip
-set_global_assignment -name QIP_FILE IP_SDRAM.qip
-set_global_assignment -name SIP_FILE IP_SDRAM.sip
-set_global_assignment -name QIP_FILE IP_FIFO.qip
-set_global_assignment -name QIP_FILE IP_UnsignedDivide.qip
-set_global_assignment -name QIP_FILE IP_UnsignedMultiply.qip
-set_global_assignment -name QIP_FILE IP_PLL_Clk.qip
-set_global_assignment -name SIP_FILE IP_PLL_Clk.sip
-set_global_assignment -name SIGNALTAP_FILE SoC.stp
-set_global_assignment -name QIP_FILE IP_FIFO64.qip
 set_global_assignment -name SLD_NODE_CREATOR_ID 110 -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_ENTITY_NAME sld_signaltap -section_id auto_signaltap_0
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to "IP_PLL_Clk:pll_clk|outclk_0" -section_id auto_signaltap_0
@@ -1037,5 +987,63 @@ set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[29] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[30] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[31] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_global_assignment -name SLD_FILE db/SoC_auto_stripped.stp
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Float.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_MulAdd.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Compare.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Int.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Mul.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Div.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU_Add.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_FPU.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Forward.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BRAM_clear.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/VideoBus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/VGA.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART_TX.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART_RX.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/UART.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/Timer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SRAM_interface.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SoC.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SDRAM_interface.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/SD.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/LED.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/I2C.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/GPIO.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/FIFO64.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/FIFO.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/DMA.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Writeback.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_v2.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Types.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Registers.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Multiply.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Memory.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_L2_Cache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_ICache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Fetch.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Execute.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Divide.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Defines.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_Decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_DCache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_CSR.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_BusAccess.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/CPU_ALU.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BROM.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../code/Rv32H/BRAM.sv
+set_global_assignment -name SDC_FILE SoC.sdc
+set_global_assignment -name SDC_FILE SRAM.sdc
+set_global_assignment -name QIP_FILE IP_Multiply.qip
+set_global_assignment -name QIP_FILE IP_Divide.qip
+set_global_assignment -name QIP_FILE IP_SDRAM.qip
+set_global_assignment -name SIP_FILE IP_SDRAM.sip
+set_global_assignment -name QIP_FILE IP_FIFO.qip
+set_global_assignment -name QIP_FILE IP_UnsignedDivide.qip
+set_global_assignment -name QIP_FILE IP_UnsignedMultiply.qip
+set_global_assignment -name QIP_FILE IP_PLL_Clk.qip
+set_global_assignment -name SIP_FILE IP_PLL_Clk.sip
+set_global_assignment -name SIGNALTAP_FILE SoC.stp
+set_global_assignment -name QIP_FILE IP_FIFO64.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name SLD_FILE db/SoC_auto_stripped.stp
