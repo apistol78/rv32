@@ -17,9 +17,7 @@ module CPU_FPU_Float(
 	typedef enum bit [3:0]
 	{
 		IDLE,
-		CONVERT_0,
-		CONVERT_1,
-		CONVERT_2,
+		CONVERT,
 		ROUND,
 		PACK,
 		PUT_Z
@@ -29,12 +27,14 @@ module CPU_FPU_Float(
 	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a, z, value;
+	reg [31:0] z;
 	reg [23:0] z_m;
 	reg [7:0] z_r;
 	reg [7:0] z_e;
 	reg z_s;
 	reg guard, round_bit, sticky;
+
+	wire [31:0] value = (i_signed & i_op1[31]) ? -i_op1 : i_op1;
 
 	assign o_ready = s_output_ready;
 	assign o_result = s_output_z;
@@ -43,32 +43,24 @@ module CPU_FPU_Float(
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
-				a <= i_op1;
-				if (i_request)
-					state <= CONVERT_0;
-			end
-
-			CONVERT_0: begin
-				if (a == 0) begin
-					z_s <= 0;
-					z_m <= 0;
-					z_e <= -127;
-					state <= PACK;
-				end else begin
-					value <= (i_signed & a[31]) ? -a : a;
-					z_s <= (i_signed & a[31]);
-					state <= CONVERT_1;
+				if (i_request) begin
+					if (i_op1 != 0) begin
+						z_e <= 31;
+						z_m <= value[31:8];
+						z_r <= value[7:0];
+						z_s <= (i_signed & i_op1[31]);
+						state <= CONVERT;
+					end
+					else begin
+						z_s <= 0;
+						z_m <= 0;
+						z_e <= -127;
+						state <= PACK;
+					end
 				end
 			end
 
-			CONVERT_1: begin
-				z_e <= 31;
-				z_m <= value[31:8];
-				z_r <= value[7:0];
-				state <= CONVERT_2;
-			end
-
-			CONVERT_2: begin
+			CONVERT: begin
 				if (!z_m[23]) begin
 					z_e <= z_e - 1;
 					z_m <= z_m << 1;
