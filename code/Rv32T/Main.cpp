@@ -232,7 +232,7 @@ int main(int argc, const char **argv)
 		statusBar = new ui::StatusBar();
 		statusBar->create(form);
 		statusBar->addColumn(ui::dpi96(100));	// IPC
-		statusBar->addColumn(ui::dpi96(100));	// BUS
+		statusBar->addColumn(ui::dpi96(200));	// BUS
 		statusBar->addColumn(ui::dpi96(240));	// STALL
 		statusBar->addColumn(ui::dpi96(200));	// PC
 
@@ -304,6 +304,7 @@ int main(int argc, const char **argv)
 	uint32_t lastRetired = 0;
 	Measure busActive;
 	Measure busCPUandDMA;
+	Measure busSDRAM;
 	Measure stallExecute;
 	Measure stallMemory;
 
@@ -376,6 +377,9 @@ int main(int argc, const char **argv)
 				busActive++;
 			if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
 				busCPUandDMA++;
+			if (soc->SoC__DOT__l2cache_bus_request)
+				busSDRAM++;
+
 			if (soc->SoC__DOT__cpu__DOT__execute_busy)
 				stallExecute++;
 			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
@@ -454,7 +458,15 @@ int main(int argc, const char **argv)
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
-				statusBar->setText(1, str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc));
+				
+				statusBar->setText(1,
+					str(
+						L"%.2f%% (%.2f%%) BUS",
+						((double)busActive.delta() * 100.0) / dc,
+						((double)busSDRAM.delta() * 100.0) / dc
+					)
+				);
+
 				//statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
 
 				statusBar->setText(2, 
@@ -472,6 +484,7 @@ int main(int argc, const char **argv)
 
 				busActive.snapshot();
 				busCPUandDMA.snapshot();
+				busSDRAM.snapshot();
 				stallExecute.snapshot();
 				stallMemory.snapshot();					
 			}
