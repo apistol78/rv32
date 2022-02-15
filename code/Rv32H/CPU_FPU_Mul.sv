@@ -17,7 +17,6 @@ module CPU_FPU_Mul(
 	typedef enum bit [3:0]
 	{
 		IDLE,
-		UNPACK,
 		SPECIAL_CASES,
 		NORMALIZE_A,
 		NORMALIZE_B,
@@ -34,7 +33,7 @@ module CPU_FPU_Mul(
 	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a, b, z;
+	reg [31:0] z;
 	reg [23:0] a_m, b_m, z_m;
 	reg [9:0] a_e, b_e, z_e;
 	reg a_s, b_s, z_s;
@@ -48,20 +47,15 @@ module CPU_FPU_Mul(
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
-				a <= i_op1;
-				b <= i_op2;
-				if (i_request)
-					state <= UNPACK;
-			end
-
-			UNPACK: begin
-				a_m <= a[22:0];
-				b_m <= b[22:0];
-				a_e <= a[30:23] - 127;
-				b_e <= b[30:23] - 127;
-				a_s <= a[31];
-				b_s <= b[31];
-				state <= SPECIAL_CASES;
+				if (i_request) begin
+					a_m <= i_op1[22:0];
+					b_m <= i_op2[22:0];
+					a_e <= i_op1[30:23] - 127;
+					b_e <= i_op2[30:23] - 127;
+					a_s <= i_op1[31];
+					b_s <= i_op2[31];
+					state <= SPECIAL_CASES;
+				end
 			end
 
 			SPECIAL_CASES: begin

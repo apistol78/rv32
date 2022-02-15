@@ -16,7 +16,6 @@ module CPU_FPU_Int(
 	typedef enum bit [2:0]
 	{
 		IDLE,
-		UNPACK,
 		SPECIAL_CASES,
 		CONVERT,
 		PUT_Z
@@ -26,7 +25,7 @@ module CPU_FPU_Int(
 	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a_m, a, z;
+	reg [31:0] a_m, z;
 	reg [8:0] a_e;
 	reg a_s;
 
@@ -37,17 +36,13 @@ module CPU_FPU_Int(
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
-				a <= i_op1;
-				if (i_request)
-					state <= UNPACK;
-			end
-
-			UNPACK: begin
-				a_m[31:8] <= {1'b1, a[22 : 0]};
-				a_m[7:0] <= 0;
-				a_e <= a[30 : 23] - 127;
-				a_s <= a[31];
-				state <= SPECIAL_CASES;
+				if (i_request) begin
+					a_m[31:8] <= { 1'b1, i_op1[22 : 0] };
+					a_m[7:0] <= 0;
+					a_e <= i_op1[30 : 23] - 127;
+					a_s <= i_op1[31];
+					state <= SPECIAL_CASES;
+				end
 			end
 
 			SPECIAL_CASES: begin

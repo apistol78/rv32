@@ -17,7 +17,6 @@ module CPU_FPU_Add(
 	typedef enum bit [3:0]
 	{
 		IDLE,
-		UNPACK,
 		SPECIAL_CASES,
 		ALIGN,
 		ADD_0,
@@ -33,7 +32,7 @@ module CPU_FPU_Add(
 	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a, b, z;
+	reg [31:0] z;
 	reg [26:0] a_m, b_m;
 	reg [23:0] z_m;
 	reg [9:0] a_e, b_e, z_e;
@@ -48,22 +47,17 @@ module CPU_FPU_Add(
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
-				a <= i_op1;
-				b <= i_op2;
-				if (i_request)
-					state <= UNPACK;
-			end
+				if (i_request) begin
+					a_m <= { i_op1[22:0], 3'd0 };
+					b_m <= { i_op2[22:0], 3'd0 };
 
-			UNPACK: begin
-				a_m <= { a[22:0], 3'd0 };
-				b_m <= { b[22:0], 3'd0 };
-
-				a_e <= a[30:23] - 127;
-				b_e <= b[30:23] - 127;
-				
-				a_s <= a[31];
-				b_s <= b[31];
-				state <= SPECIAL_CASES;
+					a_e <= i_op1[30:23] - 127;
+					b_e <= i_op2[30:23] - 127;
+					
+					a_s <= i_op1[31];
+					b_s <= i_op2[31];
+					state <= SPECIAL_CASES;
+				end
 			end
 
 			SPECIAL_CASES: begin
