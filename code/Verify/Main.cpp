@@ -1645,7 +1645,7 @@ bool verify_FNMADD(const char* trace)
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
 	//printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
-	if (*(float*)&r != (-v1 * v2 + v3))
+	if (*(float*)&r != -(v1 * v2 + v3))
 		return false;
 
 	delete tb;
@@ -1670,7 +1670,7 @@ bool verify_FNMSUB(const char* trace)
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
 	//printf("%f * %f = %f\n", v1, v2, *(float*)&r);
 
-	if (*(float*)&r != (-v1 * v2 - v3))
+	if (*(float*)&r != -(v1 * v2 - v3))
 		return false;
 
 	delete tb;
@@ -1740,6 +1740,52 @@ bool verify_FSGNJX(const char* trace)
 	//log::info << *(float*)&r << Endl;
 
 	if (*(float*)&r != -1.2f)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FMIN(const char* trace)
+{
+	const float v1 = 1.2f;
+	const float v2 = 2.3f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x28208053; // fmin.s	ft0,ft1,ft2
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	// printf("%f\n", *(float*)&r);
+
+	if (*(float*)&r != 1.2f)
+		return false;
+
+	delete tb;
+	return true;
+}
+
+bool verify_FMAX(const char* trace)
+{
+	const float v1 = 1.2f;
+	const float v2 = 2.3f;
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v2;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x28209053; // fmax.s	ft0,ft1,ft2
+
+	evaluate(tb, trace, 1);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	// printf("%f\n", *(float*)&r);
+
+	if (*(float*)&r != 2.3f)
 		return false;
 
 	delete tb;
@@ -1849,6 +1895,8 @@ int main(int argc, char **argv)
 	CHECK(verify_FSGNJ);
 	CHECK(verify_FSGNJN);
 	CHECK(verify_FSGNJX);
+	CHECK(verify_FMIN);
+	CHECK(verify_FMAX);
 
 	if (success)
 		printf("SUCCESS!\n");

@@ -48,6 +48,8 @@ local fpu_operations = {
 	SGNJ = "`FPU_OP_SGNJ",
 	SGNJN = "`FPU_OP_SGNJN",
 	SGNJX = "`FPU_OP_SGNJX",
+	MIN = "`FPU_OP_MIN",
+	MAX = "`FPU_OP_MAX",
 }
 
 local operands = {
@@ -482,12 +484,9 @@ local instructions = {
 			`EXECUTE_DONE;
 		]]
 	},
-
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x1111111
-		mask = 0xfe00007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0x00000053,
+		mask = 0xfe00007f,	-- 1111 111x xxxx xxxx xxxx xxxx x1111111
+		data = 0x00000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FADD",
 		format = "R",
 		type = insttype.FPU,
@@ -498,50 +497,6 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},
-
-	{
-		mask = 0xfe00007f,
-		data = 0x02000053,
-		name = "FADD.D",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0xd2200053,
-		name = "FCVT.D.L",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0x42000053,
-		name = "FCVT.D.S",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0xd2000053,
-		name = "FCVT.D.W",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0xd2100053,
-		name = "FCVT.D.WU",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0x40100053,
-		name = "FCVT.S.D",
-		format = "R"
-	},
-	{
-		mask = 0xfff0007f,
-		data = 0xc2000053,
-		name = "FCVT.W.D",
-		format = "R"
-	},
-
 	{
 		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
 		data = 0xc0000053,	-- 1100 0000 0000 xxxx xxxx xxxx x101 0011
@@ -554,7 +509,6 @@ local instructions = {
 		verilog_rd_bank = 0,
 		verilog_rs1_bank = 1
 	},
-
 	{
 		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
 		data = 0xd0000053,	-- 1101 0000 0000 xxxx xxxx xxxx x101 0011
@@ -567,18 +521,9 @@ local instructions = {
 		verilog_rd_bank = 1,
 		verilog_rs1_bank = 0
 	},
-
 	{
-		mask = 0xfe00007f,
-		data = 0x1a000053,
-		name = "FDIV.D",
-		format = "R"
-	},
-	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0x18000053,
+		mask = 0xfe00007f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x18000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FDIV",
 		format = "R",
 		type = insttype.FPU,
@@ -589,7 +534,6 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},
-
 	{
 		mask = 0x0000707f,
 		data = 0x0000000f,
@@ -607,12 +551,9 @@ local instructions = {
 		name = "FENCE.I",
 		format = ""
 	},
-
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00707f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0xa0002053,
+		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		data = 0xa0002053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FEQ",
 		format = "R",
 		type = insttype.FPU,
@@ -624,24 +565,14 @@ local instructions = {
 		verilog_rs2_bank = 1
 	},	
 	{
-		mask = 0xfe00707f,
-		data = 0xa2002053,
-		name = "FEQ.D",
-		format = ""
-	},
-
-	{
 		mask = 0x0000707f,
 		data = 0x00003007,
 		name = "FLD",
 		format = "I"
 	},
-
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00707f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0xa0000053,
+		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		data = 0xa0000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FLE",
 		format = "R",
 		type = insttype.FPU,
@@ -652,13 +583,6 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},
-	{
-		mask = 0xfe00707f,
-		data = 0xa2000053,
-		name = "FLE.D",
-		format = "R"
-	},
-
 	{
 		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx x111 xxxx x111 1111
 		data = 0xa0001053,	-- 1010 000x xxxx xxxx x001 xxxx x101 0011
@@ -672,13 +596,6 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},	
-	{
-		mask = 0xfe00707f,
-		data = 0xa2001053,
-		name = "FLT.D",
-		format = "R"
-	},
-
 	{
 		mask = 0x0000707f,
 		data = 0x00002007,
@@ -699,12 +616,9 @@ local instructions = {
 		verilog_rs1_bank = 0,
 		verilog_rs2_bank = 0
 	},
-	
 	{
-		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0x0600007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0x00000043,
+		mask = 0x0600007f,	-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x00000043,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FMADD",
 		format = "R4",
 		type = insttype.FPU,
@@ -717,17 +631,8 @@ local instructions = {
 		verilog_rs3_bank = 1
 	},
 	{
-		mask = 0x0600007f,
-		data = 0x02000043,
-		name = "FMADD.D",
-		format = "R4"
-	},
-
-	{
-		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0x0600007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x100 0111
-		data = 0x00000047,
+		mask = 0x0600007f,	-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x00000047,	-- xxxx x00x xxxx xxxx xxxx xxxx x100 0111
 		name = "FMSUB",
 		format = "R4",
 		type = insttype.FPU,
@@ -739,12 +644,9 @@ local instructions = {
 		verilog_rs2_bank = 1,
 		verilog_rs3_bank = 1
 	},
-
 	{
-		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0x0600007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 1111
-		data = 0x0000004f,
+		mask = 0x0600007f,	-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x0000004f,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 1111
 		name = "FNMADD",
 		format = "R4",
 		type = insttype.FPU,
@@ -757,10 +659,8 @@ local instructions = {
 		verilog_rs3_bank = 1
 	},
 	{
-		-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0x0600007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x100 1011
-		data = 0x0000004b,
+		mask = 0x0600007f,	-- xxxx x11x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x0000004b,	-- xxxx x00x xxxx xxxx xxxx xxxx x100 1011
 		name = "FNMSUB",
 		format = "R4",
 		type = insttype.FPU,
@@ -772,13 +672,35 @@ local instructions = {
 		verilog_rs2_bank = 1,
 		verilog_rs3_bank = 1
 	},
-
-
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0x10000053,
+		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx x111 xxxx x111 1111
+		data = 0x28000053,	-- 0010 1000 0000 0000 0000 0000 0101 0011
+		name = "FMIN",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MIN
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
+	},
+	{
+		mask = 0xfe00707f,	-- 1111 111x xxxx xxxx x111 xxxx x111 1111
+		data = 0x28001053,	-- 0010 1000 0000 0000 0001 0000 0101 0011
+		name = "FMAX",
+		format = "R",
+		type = insttype.FPU,
+		verilog_fpu = {
+			operation = fpu_operations.MAX
+		},
+		verilog_rd_bank = 1,
+		verilog_rs1_bank = 1,
+		verilog_rs2_bank = 1
+	},
+	{
+		mask = 0xfe00007f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x10000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FMUL",
 		format = "R",
 		type = insttype.FPU,
@@ -788,25 +710,6 @@ local instructions = {
 		verilog_rd_bank = 1,
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
-	},
-	{
-		mask = 0xfe00007f,
-		data = 0x12000053,
-		name = "FMUL.D",
-		format = "R"
-	},
-
-	{
-		mask = 0xfff0707f,
-		data = 0xf2000053,
-		name = "FMV.D.X",
-		format = "R"
-	},
-	{
-		mask = 0xfff0707f,
-		data = 0xe2000053,
-		name = "FMV.X.D",
-		format = "R"
 	},
 	{
 		mask = 0xfff0707f,
@@ -835,18 +738,11 @@ local instructions = {
 		description = "Move INT register into FP register."
 	},
 	{
-		mask = 0x0600007f,
-		data = 0x0200004b,
-		name = "FNMSUB.D",
-		format = "R"
-	},
-	{
 		mask = 0x0000707f,
 		data = 0x00003027,
 		name = "FSD",
 		format = "S"
 	},
-
 	{
 		mask = 0xfe00707f,
 		data = 0x20000053,	--0010 000x xxxx xxxx x000 xxxx x101 0011
@@ -862,8 +758,8 @@ local instructions = {
 	},
 	{
 		mask = 0xfe00707f,
-		data = 0x20001053,
-		name = "FSGNJN",	--0010 000x xxxx xxxx x001 xxxx x101 0011
+		data = 0x20001053,	--0010 000x xxxx xxxx x001 xxxx x101 0011
+		name = "FSGNJN",
 		format = "R",
 		type = insttype.FPU,
 		verilog_fpu = {
@@ -886,12 +782,9 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},
-
 	{
-		-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
-		mask = 0xfe00007f,
-		-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
-		data = 0x08000053,
+		mask = 0xfe00007f,	-- 1111 111x xxxx xxxx xxxx xxxx x111 1111
+		data = 0x08000053,	-- xxxx x00x xxxx xxxx xxxx xxxx x101 0011
 		name = "FSUB",
 		format = "R",
 		type = insttype.FPU,
@@ -902,13 +795,6 @@ local instructions = {
 		verilog_rs1_bank = 1,
 		verilog_rs2_bank = 1
 	},
-	{
-		mask = 0xfe00007f,
-		data = 0x0a000053,
-		name = "FSUB.D",
-		format = "R"
-	},
-
 	{
 		mask = 0x0000707f,
 		data = 0x00002027,
@@ -929,7 +815,6 @@ local instructions = {
 		verilog_rs1_bank = 0,
 		verilog_rs2_bank = 1
 	},
-
 	{
 		mask = 0x0000007f,
 		data = 0x0000006f,

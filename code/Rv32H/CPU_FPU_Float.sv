@@ -13,7 +13,7 @@ module CPU_FPU_Float(
 	output [31:0] o_result
 );
 
-	typedef enum // [3:0]
+	typedef enum bit [3:0]
 	{
 		IDLE,
 		CONVERT_0,

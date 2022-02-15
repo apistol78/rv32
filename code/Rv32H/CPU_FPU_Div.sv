@@ -14,7 +14,7 @@ module CPU_FPU_Div(
 	output [31:0] o_result
 );
 
-	typedef enum // [3:0]
+	typedef enum bit [3:0]
 	{
 		IDLE,
 		UNPACK,
@@ -58,10 +58,10 @@ module CPU_FPU_Div(
 			end
 
 			UNPACK: begin
-				a_m <= a[22 : 0];
-				b_m <= b[22 : 0];
-				a_e <= a[30 : 23] - 127;
-				b_e <= b[30 : 23] - 127;
+				a_m <= a[22:0];
+				b_m <= b[22:0];
+				a_e <= a[30:23] - 127;
+				b_e <= b[30:23] - 127;
 				a_s <= a[31];
 				b_s <= b[31];
 				state <= SPECIAL_CASES;

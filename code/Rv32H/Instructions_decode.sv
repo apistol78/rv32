@@ -32,6 +32,8 @@ wire is_FMADD   = ((`INSTRUCTION & 32'h0600007f) == 32'h00000043);
 wire is_FMSUB   = ((`INSTRUCTION & 32'h0600007f) == 32'h00000047);
 wire is_FNMADD  = ((`INSTRUCTION & 32'h0600007f) == 32'h0000004f);
 wire is_FNMSUB  = ((`INSTRUCTION & 32'h0600007f) == 32'h0000004b);
+wire is_FMIN    = ((`INSTRUCTION & 32'hfe00707f) == 32'h28000053);
+wire is_FMAX    = ((`INSTRUCTION & 32'hfe00707f) == 32'h28001053);
 wire is_FMUL    = ((`INSTRUCTION & 32'hfe00007f) == 32'h10000053);
 wire is_FMV_X_W = ((`INSTRUCTION & 32'hfff0707f) == 32'he0000053);
 wire is_FMV_W_X = ((`INSTRUCTION & 32'hfff0707f) == 32'hf0000053);
@@ -77,7 +79,7 @@ wire is_XORI    = ((`INSTRUCTION & 32'h0000707f) == 32'h00004013);
 wire is_B = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
 wire is_I = is_ADDI | is_ANDI | is_FENCE | is_FLW | is_JALR | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
 wire is_J = is_JAL;
-wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB | is_MUL | is_MULH | is_MULHU | is_OR | is_REM | is_REMU | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
+wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMIN | is_FMAX | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB | is_MUL | is_MULH | is_MULHU | is_OR | is_REM | is_REMU | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
 wire is_R4 = is_FMADD | is_FMSUB | is_FNMADD | is_FNMSUB;
 wire is_S = is_FSW | is_SB | is_SH | is_SW;
 wire is_U = is_AUIPC | is_LUI;
@@ -90,7 +92,7 @@ wire is_COMPLEX = is_CSRRC | is_CSRRS | is_CSRRW | is_DIV | is_DIVU | is_EBREAK 
 wire is_JUMP = is_JAL | is_JALR;
 wire is_JUMP_CONDITIONAL = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
 wire is_MEMORY = is_FLW | is_FSW | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_SB | is_SH | is_SW;
-wire is_FPU = is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMADD | is_FMSUB | is_FNMADD | is_FNMSUB | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB;
+wire is_FPU = is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMADD | is_FMSUB | is_FNMADD | is_FNMSUB | is_FMIN | is_FMAX | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB;
 
 wire RD_bank =
 	is_FADD    ? 1'd1 :
@@ -101,6 +103,8 @@ wire RD_bank =
 	is_FMSUB   ? 1'd1 :
 	is_FNMADD  ? 1'd1 :
 	is_FNMSUB  ? 1'd1 :
+	is_FMIN    ? 1'd1 :
+	is_FMAX    ? 1'd1 :
 	is_FMUL    ? 1'd1 :
 	is_FMV_W_X ? 1'd1 :
 	is_FSGNJ   ? 1'd1 :
@@ -120,6 +124,8 @@ wire RS1_bank =
 	is_FMSUB   ? 1'd1 :
 	is_FNMADD  ? 1'd1 :
 	is_FNMSUB  ? 1'd1 :
+	is_FMIN    ? 1'd1 :
+	is_FMAX    ? 1'd1 :
 	is_FMUL    ? 1'd1 :
 	is_FMV_X_W ? 1'd1 :
 	is_FSGNJ   ? 1'd1 :
@@ -138,6 +144,8 @@ wire RS2_bank =
 	is_FMSUB   ? 1'd1 :
 	is_FNMADD  ? 1'd1 :
 	is_FNMSUB  ? 1'd1 :
+	is_FMIN    ? 1'd1 :
+	is_FMAX    ? 1'd1 :
 	is_FMUL    ? 1'd1 :
 	is_FSGNJ   ? 1'd1 :
 	is_FSGNJN  ? 1'd1 :

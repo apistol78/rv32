@@ -115,7 +115,7 @@ module CPU_Fetch #(
 
 							// Decode register indices here since we
 							// need those for fetching registers while
-							// we are decoding instruction.
+							// we are decoding rest of instruction.
 							dataC.inst_rs1 <= have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0;
 							dataC.inst_rs2 <= have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0;
 							dataC.inst_rs3 <= have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0;

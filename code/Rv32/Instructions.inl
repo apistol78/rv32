@@ -275,48 +275,6 @@ else if ((word & 0xfe00007f) == 0x00000053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00007f) == 0x02000053)
-{
-	TRACE(L"	FADD.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0xd2200053)
-{
-	TRACE(L"	FCVT.D.L");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0x42000053)
-{
-	TRACE(L"	FCVT.D.S");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0xd2000053)
-{
-	TRACE(L"	FCVT.D.W");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0xd2100053)
-{
-	TRACE(L"	FCVT.D.WU");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0x40100053)
-{
-	TRACE(L"	FCVT.S.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0007f) == 0xc2000053)
-{
-	TRACE(L"	FCVT.W.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfff0007f) == 0xc0000053)
 {
 	TRACE(L"	FCVT_W_S");
@@ -326,12 +284,6 @@ else if ((word & 0xfff0007f) == 0xc0000053)
 else if ((word & 0xfff0007f) == 0xd0000053)
 {
 	TRACE(L"	FCVT_S_W");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00007f) == 0x1a000053)
-{
-	TRACE(L"	FDIV.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -359,12 +311,6 @@ else if ((word & 0xfe00707f) == 0xa0002053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00707f) == 0xa2002053)
-{
-	TRACE(L"	FEQ.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
 else if ((word & 0x0000707f) == 0x00003007)
 {
 	TRACE(L"	FLD");
@@ -377,21 +323,9 @@ else if ((word & 0xfe00707f) == 0xa0000053)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
-else if ((word & 0xfe00707f) == 0xa2000053)
-{
-	TRACE(L"	FLE.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfe00707f) == 0xa0001053)
 {
 	TRACE(L"	FLT");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0xa2001053)
-{
-	TRACE(L"	FLT.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -404,12 +338,6 @@ else if ((word & 0x0000707f) == 0x00002007)
 else if ((word & 0x0600007f) == 0x00000043)
 {
 	TRACE(L"	FMADD");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0x0600007f) == 0x02000043)
-{
-	TRACE(L"	FMADD.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -431,27 +359,21 @@ else if ((word & 0x0600007f) == 0x0000004b)
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
+else if ((word & 0xfe00707f) == 0x28000053)
+{
+	TRACE(L"	FMIN");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
+else if ((word & 0xfe00707f) == 0x28001053)
+{
+	TRACE(L"	FMAX");
+	log::error << L"Not implemented." << Endl;
+	return false;
+}
 else if ((word & 0xfe00007f) == 0x10000053)
 {
 	TRACE(L"	FMUL");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00007f) == 0x12000053)
-{
-	TRACE(L"	FMUL.D");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0707f) == 0xf2000053)
-{
-	TRACE(L"	FMV.D.X");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfff0707f) == 0xe2000053)
-{
-	TRACE(L"	FMV.X.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -464,12 +386,6 @@ else if ((word & 0xfff0707f) == 0xe0000053)
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
 	TRACE(L"	FMV_W_X");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0x0600007f) == 0x0200004b)
-{
-	TRACE(L"	FNMSUB.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }
@@ -500,12 +416,6 @@ else if ((word & 0xfe00707f) == 0x20002053)
 else if ((word & 0xfe00007f) == 0x08000053)
 {
 	TRACE(L"	FSUB");
-	log::error << L"Not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00007f) == 0x0a000053)
-{
-	TRACE(L"	FSUB.D");
 	log::error << L"Not implemented." << Endl;
 	return false;
 }

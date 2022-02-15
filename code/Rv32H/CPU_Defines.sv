@@ -52,6 +52,8 @@
 `define FPU_OP_SGNJ			15
 `define FPU_OP_SGNJN		16
 `define FPU_OP_SGNJX		17
+`define FPU_OP_MIN			18
+`define FPU_OP_MAX			19
 
 // CSR registers
 `define CSR_MIE			12'h304

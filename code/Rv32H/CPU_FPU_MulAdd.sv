@@ -15,12 +15,11 @@ module CPU_FPU_MulAdd(
 	output [31:0] o_result
 );
 
-	typedef enum // [3:0]
+	typedef enum bit [4:0]
 	{
 		IDLE,
 		UNPACK,
 		SPECIAL_CASES,
-
 		M_NORMALIZE_A,
 		M_NORMALIZE_B,
 		M_MULTIPLY_0,
@@ -28,16 +27,13 @@ module CPU_FPU_MulAdd(
 		M_NORMALIZE_1,
 		M_NORMALIZE_2,
 		M_ROUND,
-
 		A_UNPACK,
-
 		A_ALIGN,
 		A_ADD_0,
 		A_ADD_1,
 		A_NORMALIZE_1,
 		A_NORMALIZE_2,
 		A_ROUND,
-
 		PACK,
 		PUT_Z
 	} state_t;

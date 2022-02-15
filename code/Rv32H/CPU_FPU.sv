@@ -36,7 +36,9 @@ module CPU_FPU(
 		i_op == `FPU_OP_SUB ||
 		i_op == `FPU_OP_CMP_EQUAL ||
 		i_op == `FPU_OP_CMP_LESS ||
-		i_op == `FPU_OP_CMP_LEQUAL
+		i_op == `FPU_OP_CMP_LEQUAL ||
+		i_op == `FPU_OP_MIN ||
+		i_op == `FPU_OP_MAX
 	) && i_request; 
 	wire fsub_ready;
 	wire [31:0] fsub_result;
@@ -138,6 +140,12 @@ module CPU_FPU(
 	wire [31:0] fsgnjn_result = { ~i_op2[31], i_op1[30:0] };
 	wire [31:0] fsgnjx_result = { i_op1[31] ^ i_op2[31], i_op1[30:0] };
 
+	wire fmin_ready = fsub_ready;
+	wire [31:0] fmin_result = fsub_result[31] ? i_op1 : i_op2;
+
+	wire fmax_ready = fsub_ready;
+	wire [31:0] fmax_result = fsub_result[31] ? i_op2 : i_op1;
+
 	assign o_ready =
 		i_request & (
 			i_op == `FPU_OP_ADD			? fadd_ready	:
@@ -157,6 +165,8 @@ module CPU_FPU(
 			i_op == `FPU_OP_SGNJ		? 1'b1			:
 			i_op == `FPU_OP_SGNJN		? 1'b1			:
 			i_op == `FPU_OP_SGNJX		? 1'b1			:
+			i_op == `FPU_OP_MIN			? fmin_ready	:
+			i_op == `FPU_OP_MAX			? fmax_ready	:
 			0
 		);
 
@@ -178,6 +188,8 @@ module CPU_FPU(
 		i_op == `FPU_OP_SGNJ		? fsgnj_result				:
 		i_op == `FPU_OP_SGNJN		? fsgnjn_result				:
 		i_op == `FPU_OP_SGNJX		? fsgnjx_result				:
+		i_op == `FPU_OP_MIN			? fmin_result				:
+		i_op == `FPU_OP_MAX			? fmax_result				:
 		0;
 
 endmodule
