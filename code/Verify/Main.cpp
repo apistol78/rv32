@@ -1748,8 +1748,8 @@ bool verify_FSGNJX(const char* trace)
 
 bool verify_FMIN(const char* trace)
 {
-	const float v1 = 1.2f;
-	const float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
@@ -1760,10 +1760,12 @@ bool verify_FMIN(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	// printf("%f\n", *(float*)&r);
-
-	if (*(float*)&r != 1.2f)
+	if (*(float*)&r != std::min< float >(v1, v2))
+	{
+		printf("min(%f, %f) = %f\n", v1, v2, *(float*)&r);
+		printf("--> %f\n", std::min< float >(v1, v2));
 		return false;
+	}
 
 	delete tb;
 	return true;
@@ -1771,8 +1773,8 @@ bool verify_FMIN(const char* trace)
 
 bool verify_FMAX(const char* trace)
 {
-	const float v1 = 1.2f;
-	const float v2 = 2.3f;
+	const float v1 = rndf();
+	const float v2 = rndf();
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
@@ -1783,11 +1785,12 @@ bool verify_FMAX(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	// printf("%f\n", *(float*)&r);
-
-	if (*(float*)&r != 2.3f)
+	if (*(float*)&r != std::max< float >(v1, v2))
+	{
+		printf("max(%f, %f) = %f\n", v1, v2, *(float*)&r);
+		printf("--> %f\n", std::min< float >(v1, v2));
 		return false;
-
+	}
 	delete tb;
 	return true;
 }
