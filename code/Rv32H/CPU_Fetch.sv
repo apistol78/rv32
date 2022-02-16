@@ -39,6 +39,7 @@ module CPU_Fetch #(
 	reg [31:0] pc = RESET_VECTOR;
 	fetch_data_t dataC = 0;
 	fetch_data_t dataN = 0;
+	reg [31:0] starve = 0;
 
 	// ICache
 	wire [31:0] icache_rdata;
@@ -134,6 +135,8 @@ module CPU_Fetch #(
 								pc <= pc + 4;
 							end
 						end
+						else if (!icache_stall)
+							starve <= starve + 1;
 					end
 
 					WAIT_JUMP: begin

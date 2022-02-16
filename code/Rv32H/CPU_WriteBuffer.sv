@@ -23,10 +23,15 @@ module CPU_WriteBuffer(
 	output reg [31:0] o_rdata,
 	input [31:0] i_wdata
 );
+	localparam DEPTH = 6;
 
-	reg [63:0] record;
-	reg pending = 0;
-	reg ready = 0;
+	logic [63:0] records [DEPTH - 1:0];
+	logic [$clog2(DEPTH) - 1:0] in = 0;
+	logic [$clog2(DEPTH) - 1:0] out = 0;
+	logic ready = 0;
+
+	wire empty = (in == out) ? 1'b1 : 1'b0;
+	wire full = (((in + 1) & (DEPTH - 1)) == out) ? 1'b1 : 1'b0;
 
 	initial begin
 		o_bus_rw = 0;
@@ -49,13 +54,14 @@ module CPU_WriteBuffer(
 		o_bus_request <= 0;
 		o_bus_rw <= 0;
 
-		if (!pending && i_request) begin
-			if (i_rw) begin
-				record <= { i_address, i_wdata };
-				pending <= 1;
+		//  Process requests from CPU.
+		if (i_request) begin
+			if (i_rw && !full) begin
+				records[in] <= { i_address, i_wdata };
+				in <= (in + 1) & (DEPTH - 1);
 				ready <= 1;
 			end
-			else if (!i_rw && !ready) begin
+			else if (!i_rw && !ready && empty) begin
 				o_bus_request <= 1;
 				o_bus_address <= i_address;
 				o_rdata <= i_bus_rdata;
@@ -66,15 +72,16 @@ module CPU_WriteBuffer(
 			end
 		end
 
-		if (pending) begin
+		// Process pending BUS write requests.
+		if (!empty) begin
 			o_bus_request <= 1;
 			o_bus_rw <= 1;
-			o_bus_address <= record[63:32];
-			o_bus_wdata <= record[31:0];
+			o_bus_address <= records[out][63:32];
+			o_bus_wdata <= records[out][31:0];
 			if (i_bus_ready) begin
 				o_bus_request <= 0;
 				o_bus_rw <= 0;
-				pending <= 0;
+				out <= (out + 1) & (DEPTH - 1);
 			end
 		end
 

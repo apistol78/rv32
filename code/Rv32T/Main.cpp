@@ -302,6 +302,7 @@ int main(int argc, const char **argv)
 	int32_t time = 0;
 	uint32_t lastCycles = 0;
 	uint32_t lastRetired = 0;
+	uint32_t lastStarve = 0;
 	Measure busActive;
 	Measure busCPUandDMA;
 	Measure busSDRAM;
@@ -373,10 +374,10 @@ int main(int argc, const char **argv)
 			// are kept during entire output tag cycle.
 
 			// Count number of cycles bus is active.
-			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
+			if (soc->SoC__DOT__cpu_ibus_request /* || soc->SoC__DOT__cpu_dbus_request*/)
 				busActive++;
-			if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
-				busCPUandDMA++;
+			// if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
+			// 	busCPUandDMA++;
 			if (soc->SoC__DOT__l2cache_bus_request)
 				busSDRAM++;
 
@@ -495,16 +496,24 @@ int main(int argc, const char **argv)
 			{
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+				uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
+
+				// double l2 = ((double)soc->SoC__DOT__l2cache__DOT__hit * 100.0) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss);
 
 				log::info << L"### " <<
 					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
-					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L" ###" <<
+					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
+					// str(L"%.2f%% L2", l2) << L", " <<
+					// str(L"%d", soc->SoC__DOT__l2cache__DOT__hit) << L", " <<
+					// str(L"%d", soc->SoC__DOT__l2cache__DOT__miss) << L", " <<
+					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+				lastStarve = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
 				
 				busActive.snapshot();
 				busCPUandDMA.snapshot();

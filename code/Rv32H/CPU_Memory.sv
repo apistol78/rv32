@@ -2,17 +2,20 @@
 
 `timescale 1ns/1ns
 
+`define ENABLE_DCACHE
+//`define ENABLE_WBUFFER
+
 module CPU_Memory(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Bus
-	output wire o_bus_rw,
-	output wire o_bus_request,
-	input wire i_bus_ready,
-	output wire [31:0] o_bus_address,
-	input wire [31:0] i_bus_rdata,
-	output wire [31:0] o_bus_wdata,
+	output o_bus_rw,
+	output o_bus_request,
+	input i_bus_ready,
+	output [31:0] o_bus_address,
+	input [31:0] i_bus_rdata,
+	output [31:0] o_bus_wdata,
 
 	// Input
 	output o_busy,
@@ -32,7 +35,7 @@ module CPU_Memory(
 		FLUSH
 	} state_t;
 
-`ifdef USE_WBUFFER
+`ifdef ENABLE_WBUFFER
 	wire wbuffer_rw;
 	wire wbuffer_request;
 	wire wbuffer_ready;
@@ -71,11 +74,12 @@ module CPU_Memory(
 	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
 	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2);
 
+`ifdef ENABLE_DCACHE
 	CPU_DCache dcache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 	
-`ifdef USE_WBUFFER
+`ifdef ENABLE_WBUFFER
 		.o_bus_rw(wbuffer_rw),
 		.o_bus_request(wbuffer_request),
 		.i_bus_ready(wbuffer_ready),
@@ -99,14 +103,14 @@ module CPU_Memory(
 		.i_wdata(dcache_wdata),
 		.i_cacheable(dcache_cacheable)
 	);
-/*
+`else	
 	assign o_bus_rw = dcache_rw;
 	assign o_bus_request = dcache_request;
 	assign dcache_ready = i_bus_ready;
 	assign o_bus_address = dcache_address;
 	assign dcache_rdata = i_bus_rdata;
 	assign o_bus_wdata = dcache_wdata;
-*/
+`endif
 
 	assign o_busy = busy;
 	assign o_data = data;

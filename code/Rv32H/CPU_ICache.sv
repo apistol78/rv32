@@ -2,6 +2,8 @@
 
 `timescale 1ns/1ns
 
+`define ENABLE_ICACHE
+
 module CPU_ICache(
 	input wire i_reset,
 	input wire i_clock,
@@ -18,7 +20,7 @@ module CPU_ICache(
 	input wire [31:0] i_bus_rdata
 );
 
-	localparam SIZE	= 12;
+	localparam SIZE	= 13;
 	localparam RANGE = 1 << SIZE;
 
 	typedef enum bit [2:0]
@@ -83,10 +85,13 @@ module CPU_ICache(
 		case (state)
 			IDLE: begin
 				if (!i_stall) begin
+`ifdef ENABLE_ICACHE				
 					if (cache_initialized) begin
 						next = READ_SETUP;
 					end
-					else begin
+					else
+`endif
+					begin
 						o_bus_request = 1;
 						next = READ_BUS;
 					end
@@ -94,7 +99,7 @@ module CPU_ICache(
 			end
 			
 			READ_SETUP: begin
-				if (cache_rdata[31:0] == { i_input_pc[31:2], 1'b0, 1'b1 }) begin
+				if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
 					o_ready = 1;
 					o_rdata = cache_rdata[63:32];
 					cache_pc = i_input_pc + 4;
@@ -107,11 +112,13 @@ module CPU_ICache(
 			end
 
 			READ_PREFETCH: begin
-				if (!i_stall && cache_rdata[31:0] == { i_input_pc[31:2], 1'b0, 1'b1 }) begin
-					o_ready = 1;
-					o_rdata = cache_rdata[63:32];
-					cache_pc = i_input_pc + 4;
-					next = READ_PREFETCH;
+				if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
+					if (!i_stall) begin
+						o_ready = 1;
+						o_rdata = cache_rdata[63:32];
+						cache_pc = i_input_pc + 4;
+						next = READ_PREFETCH;
+					end
 				end
 				else if (!i_stall) begin
 					o_bus_request = 1;

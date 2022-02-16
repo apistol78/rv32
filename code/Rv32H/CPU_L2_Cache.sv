@@ -26,6 +26,15 @@ module CPU_L2_Cache(
 	localparam SIZE	= 18;
 	localparam RANGE = 1 << SIZE;
 
+	typedef enum bit [2:0]
+	{
+		IDLE,
+		READ,
+		READ_BUS,
+		WRITE,
+		PASS_THROUGH
+	} state_t;
+
 	// Cache memory.
 	wire cache_initialized;
 	reg cache_rw;
@@ -52,14 +61,13 @@ module CPU_L2_Cache(
 		.o_ready()
 	);
 
-	logic [4:0] state = 0;
+	state_t state = IDLE;
 	logic [31:0] hit = 0;
 	logic [31:0] miss = 0;
 
 	always_ff @(posedge i_clock) begin
-		
 		case (state)
-			0: begin
+			IDLE: begin
 
 				cache_rw <= 0;
 				o_bus_rw <= 0;
@@ -70,7 +78,7 @@ module CPU_L2_Cache(
 					if (cache_initialized) begin
 						cache_address <= i_address[(SIZE - 1) + 2:2];
 						if (!i_rw) begin
-							state <= 1;
+							state <= READ;
 						end
 						else begin
 							cache_rw <= 1;
@@ -79,7 +87,7 @@ module CPU_L2_Cache(
 							o_bus_request <= 1;
 							o_bus_address <= i_address;
 							o_bus_wdata <= i_wdata;
-							state <= 3;
+							state <= WRITE;
 						end
 					end
 					else begin
@@ -87,27 +95,27 @@ module CPU_L2_Cache(
 						o_bus_request <= 1;
 						o_bus_address <= i_address;
 						o_bus_wdata <= i_wdata;
-						state <= 4;
+						state <= PASS_THROUGH;
 					end
 				end
 			end
 
-			1: begin
+			READ: begin
 				if (cache_rdata[31:0] == { i_address[31:2], 2'b01 } ) begin
 					o_rdata <= cache_rdata[63:32];
 					o_ready <= 1;
 					hit <= hit + 1;
-					state <= 0;
+					state <= IDLE;
 				end
 				else begin
 					o_bus_request <= 1;
 					o_bus_address <= i_address;
 					miss <= miss + 1;
-					state <= 2;
+					state <= READ_BUS;
 				end
 			end
 
-			2: begin
+			READ_BUS: begin
 				if (i_bus_ready) begin
 					cache_rw <= 1;
 					cache_address <= i_address[(SIZE - 1) + 2:2];
@@ -115,21 +123,21 @@ module CPU_L2_Cache(
 					o_rdata <= i_bus_rdata;
 					o_ready <= 1;
 					o_bus_request <= 0;
-					state <= 0;
+					state <= IDLE;
 				end
 			end
 
-			3: begin
+			WRITE: begin
 				if (i_bus_ready) begin
 					cache_rw <= 0;
 					o_bus_rw <= 0;
 					o_bus_request <= 0;
 					o_ready <= 1;
-					state <= 0;
+					state <= IDLE;
 				end
 			end
 
-			4: begin
+			PASS_THROUGH: begin
 				if (i_bus_ready) begin
 					if (!i_rw) begin
 						o_rdata <= i_bus_rdata;
@@ -137,12 +145,14 @@ module CPU_L2_Cache(
 					o_bus_rw <= 0;
 					o_bus_request <= 0;
 					o_ready <= 1;
-					state <= 0;
+					state <= IDLE;
 				end
 			end
 
-		endcase
+			default:
+				state <= IDLE;
 
+		endcase
 	end
 
 endmodule
