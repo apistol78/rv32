@@ -18,7 +18,6 @@ module CPU_FPU_MulAdd(
 	typedef enum bit [4:0]
 	{
 		IDLE,
-		UNPACK,
 		SPECIAL_CASES,
 		M_NORMALIZE_A,
 		M_NORMALIZE_B,
@@ -42,7 +41,7 @@ module CPU_FPU_MulAdd(
 	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a, b, c, t, z;
+	reg [31:0] t, z;
 	
 	reg [23:0] a_m, b_m;
 	reg [26:0] c_m, t_m;
@@ -63,26 +62,23 @@ module CPU_FPU_MulAdd(
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
-				a <= i_op1;
-				b <= i_op2;
-				c <= i_op3;
-				if (i_request)
-					state <= UNPACK;
-			end
+				if (i_request) begin
+					a_m <= i_op1[22:0];
+					b_m <= i_op2[22:0];
+					c_m <= { i_op3[22:0], 3'd0 };
 
-			UNPACK: begin
-				a_m <= a[22:0];
-				b_m <= b[22:0];
-				c_m <= { c[22:0], 3'd0 };
+					a_e <= i_op1[30:23] - 127;
+					b_e <= i_op2[30:23] - 127;
+					c_e <= i_op3[30:23] - 127;
+					
+					a_s <= i_op1[31];
+					b_s <= i_op2[31];
+					c_s <= i_op3[31];
 
-				a_e <= a[30:23] - 127;
-				b_e <= b[30:23] - 127;
-				c_e <= c[30:23] - 127;
-				
-				a_s <= a[31];
-				b_s <= b[31];
-				c_s <= c[31];
-				state <= SPECIAL_CASES;
+					t <= i_op3;
+
+					state <= SPECIAL_CASES;
+				end
 			end
 
 			SPECIAL_CASES: begin
@@ -142,7 +138,7 @@ module CPU_FPU_MulAdd(
 					(($signed(a_e) == -127) && (a_m == 0)) ||
 					(($signed(b_e) == -127) && (b_m == 0))
 				) begin
-					z <= c;
+					z <= t;
 					state <= PUT_Z;
 
 				end else begin
