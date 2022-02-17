@@ -1216,6 +1216,33 @@ bool verify_MEM_LOAD_HAZARD(const char* trace)
 	return true;
 }
 
+bool verify_PIPELINE(const char* trace)
+{
+	{
+		auto tb = create_soc();
+		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+
+		tb->SoC__DOT__rom__DOT__data[0] = 0x00100413; // li		s0,1
+		tb->SoC__DOT__rom__DOT__data[1] = 0x00840433; // add	s0,s0,s0	2=1+1
+		tb->SoC__DOT__rom__DOT__data[2] = 0x00840433; // add	s0,s0,s0	4=2+2
+		tb->SoC__DOT__rom__DOT__data[3] = 0x00840433; // add	s0,s0,s0	8=4+4
+		tb->SoC__DOT__rom__DOT__data[4] = 0x00840433; // add	s0,s0,s0	16=8+8
+		tb->SoC__DOT__rom__DOT__data[5] = 0x00840433; // add	s0,s0,s0	32=16+16
+		tb->SoC__DOT__rom__DOT__data[6] = 0x00008067; // j		0
+
+		evaluate(tb, trace, 7 + 6);
+
+		//printf("S0 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
+
+		// if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0x11111111)
+		// 	return false;
+
+		delete tb;
+	}
+
+	return false;
+}
+
 bool verify_PIPELINE_MEMORY(const char* trace)
 {
 	{
@@ -1877,29 +1904,30 @@ int main(int argc, char **argv)
 	// CHECK(verify_XORI);
 	// CHECK(verify_ENDIAN);
 	// CHECK(verify_MEM_LOAD_HAZARD);
+	CHECK(verify_PIPELINE);
 	// CHECK(verify_PIPELINE_MEMORY);
 	// CHECK(verify_PIPELINE_MEMORY_B);
 	// CHECK(verify_ICACHE);
-	CHECK(verify_FADD);
-	CHECK(verify_FSUB);
-	CHECK(verify_FMUL);
-	CHECK(verify_FDIV);
-	CHECK(verify_FCVT);
-	CHECK(verify_FLW);
-	CHECK(verify_FSW);
-	CHECK(verify_FMV_X_W);
-	CHECK(verify_FMV_W_X);
-	CHECK(verify_FEQ);
-	CHECK(verify_FLT);
-	CHECK(verify_FMADD);
-	CHECK(verify_FMSUB);
-	CHECK(verify_FNMADD);
-	CHECK(verify_FNMSUB);
-	CHECK(verify_FSGNJ);
-	CHECK(verify_FSGNJN);
-	CHECK(verify_FSGNJX);
-	CHECK(verify_FMIN);
-	CHECK(verify_FMAX);
+	// CHECK(verify_FADD);
+	// CHECK(verify_FSUB);
+	// CHECK(verify_FMUL);
+	// CHECK(verify_FDIV);
+	// CHECK(verify_FCVT);
+	// CHECK(verify_FLW);
+	// CHECK(verify_FSW);
+	// CHECK(verify_FMV_X_W);
+	// CHECK(verify_FMV_W_X);
+	// CHECK(verify_FEQ);
+	// CHECK(verify_FLT);
+	// CHECK(verify_FMADD);
+	// CHECK(verify_FMSUB);
+	// CHECK(verify_FNMADD);
+	// CHECK(verify_FNMSUB);
+	// CHECK(verify_FSGNJ);
+	// CHECK(verify_FSGNJN);
+	// CHECK(verify_FSGNJX);
+	// CHECK(verify_FMIN);
+	// CHECK(verify_FMAX);
 
 	if (success)
 		printf("SUCCESS!\n");
