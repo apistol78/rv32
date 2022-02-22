@@ -352,11 +352,17 @@ module SoC(
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
 	`else
+/*
 	BRAM_latency #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
 		.ADDR_LSH(2),
 		.LATENCY(10)
+*/
+	BRAM #(
+		.WIDTH(32),
+		.SIZE(32'h1000000 / 4),
+		.ADDR_LSH(2)
 	) sdram(
 		.i_clock(clock),
 		.i_request(l2cache_bus_request),

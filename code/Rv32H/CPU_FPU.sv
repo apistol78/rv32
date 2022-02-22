@@ -126,11 +126,23 @@ module CPU_FPU(
 		.o_result(i2f_result)		
 	);
 
+	wire cmp_request = (
+		i_op == `FPU_OP_CMP_EQUAL ||
+		i_op == `FPU_OP_CMP_LESS ||
+		i_op == `FPU_OP_CMP_LEQUAL ||
+		i_op == `FPU_OP_MIN ||
+		i_op == `FPU_OP_MAX
+	) && i_request;
+	wire cmp_ready;
 	wire cmp_equal;
 	wire cmp_less;
 	CPU_FPU_Compare cmp(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(cmp_request),
 		.i_op1(i_op1),
 		.i_op2(i_op2),
+		.o_ready(cmp_ready),
 		.o_equal(cmp_equal),
 		.o_less(cmp_less)
 	);
@@ -160,14 +172,14 @@ module CPU_FPU(
 			i_op == `FPU_OP_I2F			? i2f_ready		:
 			i_op == `FPU_OP_UI2F		? i2f_ready		:
 			i_op == `FPU_OP_MOV			? 1'b1			:
-			i_op == `FPU_OP_CMP_EQUAL	? 1'b1			:
-			i_op == `FPU_OP_CMP_LESS	? 1'b1			:
-			i_op == `FPU_OP_CMP_LEQUAL	? 1'b1			:
+			i_op == `FPU_OP_CMP_EQUAL	? cmp_ready		:
+			i_op == `FPU_OP_CMP_LESS	? cmp_ready		:
+			i_op == `FPU_OP_CMP_LEQUAL	? cmp_ready		:
 			i_op == `FPU_OP_SGNJ		? 1'b1			:
 			i_op == `FPU_OP_SGNJN		? 1'b1			:
 			i_op == `FPU_OP_SGNJX		? 1'b1			:
-			i_op == `FPU_OP_MIN			? 1'b1			:
-			i_op == `FPU_OP_MAX			? 1'b1			:
+			i_op == `FPU_OP_MIN			? cmp_ready		:
+			i_op == `FPU_OP_MAX			? cmp_ready		:
 			0
 		);
 

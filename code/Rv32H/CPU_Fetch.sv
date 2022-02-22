@@ -117,10 +117,10 @@ module CPU_Fetch #(
 							// Decode register indices here since we
 							// need those for fetching registers while
 							// we are decoding rest of instruction.
-							dataC.inst_rs1 <= have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0;
-							dataC.inst_rs2 <= have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0;
-							dataC.inst_rs3 <= have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0;
-							dataC.inst_rd  <= have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0;
+							dataC.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
+							dataC.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
+							dataC.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
+							dataC.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait

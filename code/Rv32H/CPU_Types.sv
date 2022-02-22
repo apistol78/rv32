@@ -3,15 +3,52 @@
 
 `include "CPU_Defines.sv"
 
+typedef enum bit [`REG_ID_SIZE]
+{
+	ZERO = 6'd0,
+	RA = 6'd1,
+	SP = 6'd2,
+	GP = 6'd3,
+	TP = 6'd4,
+	T0 = 6'd5,
+	T1 = 6'd6,
+	T2 = 6'd7,
+	S0 = 6'd8,
+	S1 = 6'd9,
+	A0 = 6'd10,
+	A1 = 6'd11,
+	A2 = 6'd12,
+	A3 = 6'd13,
+	A4 = 6'd14,
+	A5 = 6'd15,
+	A6 = 6'd16,
+	A7 = 6'd17,
+	S2 = 6'd18,
+	S3 = 6'd19,
+	S4 = 6'd20,
+	S5 = 6'd21,
+	S6 = 6'd22,
+	S7 = 6'd23,
+	S8 = 6'd24,
+	S9 = 6'd25,
+	S10 = 6'd26,
+	S11 = 6'd27,
+	T3 = 6'd28,
+	T4 = 6'd29,
+	T5 = 6'd30,
+	T6 = 6'd31
+}
+register_t;
+
 typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
 	logic [31:0] instruction;
 	logic [31:0] pc;
-	logic [`REG_ID_SIZE] inst_rs1;
-	logic [`REG_ID_SIZE] inst_rs2;
-	logic [`REG_ID_SIZE] inst_rs3;
-	logic [`REG_ID_SIZE] inst_rd;
+	register_t inst_rs1;
+	register_t inst_rs2;
+	register_t inst_rs3;
+	register_t inst_rd;
 }
 fetch_data_t;
 
@@ -19,10 +56,10 @@ typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
 	logic [31:0] pc;				//!< Program counter.
-	logic [`REG_ID_SIZE] inst_rs1;	//!< Index source register 1.
-	logic [`REG_ID_SIZE] inst_rs2;	//!< Index source register 2.
-	logic [`REG_ID_SIZE] inst_rs3;	//!< Index source register 3.
-	logic [`REG_ID_SIZE] inst_rd;	//!< Index destination register.
+	register_t inst_rs1;			//!< Index source register 1.
+	register_t inst_rs2;			//!< Index source register 2.
+	register_t inst_rs3;			//!< Index source register 3.
+	register_t inst_rd;				//!< Index destination register.
 	logic [31:0] imm;				//!< Immediate number.
 	logic arithmetic;				//!< Arithmetic instruction.
 	logic shift;					//!< Shift instruction.
@@ -46,7 +83,7 @@ decode_data_t;
 typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
-	logic [`REG_ID_SIZE] inst_rd;
+	register_t inst_rd;
 	logic [31:0] rd;
 	logic mem_read;
 	logic mem_write;
@@ -60,7 +97,7 @@ execute_data_t;
 typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
-	logic [`REG_ID_SIZE] inst_rd;
+	register_t inst_rd;
 	logic [31:0] rd;
 }
 memory_data_t;
@@ -68,7 +105,7 @@ memory_data_t;
 typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
-	logic [`REG_ID_SIZE] inst_rd;
+	register_t inst_rd;
 	logic [31:0] rd;
 }
 writeback_data_t;

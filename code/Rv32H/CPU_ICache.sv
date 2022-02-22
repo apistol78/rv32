@@ -112,13 +112,11 @@ module CPU_ICache(
 			end
 
 			READ_PREFETCH: begin
-				if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
-					if (!i_stall) begin
-						o_ready = 1;
-						o_rdata = cache_rdata[63:32];
-						cache_pc = i_input_pc + 4;
-						next = READ_PREFETCH;
-					end
+				if (!i_stall && cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
+					o_ready = 1;
+					o_rdata = cache_rdata[63:32];
+					cache_pc = i_input_pc + 4;
+					next = READ_PREFETCH;
 				end
 				else if (!i_stall) begin
 					o_bus_request = 1;
