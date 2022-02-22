@@ -1,0 +1,173 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Tue Feb 22 15:04:55 2022
+[*]
+[dumpfile] "/home/apistol/private/rv32/Rv32T.fst"
+[dumpfile_mtime] "Tue Feb 22 14:46:19 2022"
+[dumpfile_size] 911280
+[savefile] "/home/apistol/private/rv32/Setup.gtkw"
+[timestart] 44324
+[size] 2298 1153
+[pos] -85 -10
+*-3.000000 44349 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.SoC.
+[treeopen] TOP.SoC.cpu.
+[treeopen] TOP.SoC.cpu.decode.
+[treeopen] TOP.SoC.cpu.decode.i_data.
+[treeopen] TOP.SoC.cpu.decode.o_data.
+[treeopen] TOP.SoC.cpu.decode_data.
+[treeopen] TOP.SoC.cpu.execute.
+[treeopen] TOP.SoC.cpu.execute.i_data.
+[treeopen] TOP.SoC.cpu.execute.o_data.
+[treeopen] TOP.SoC.cpu.execute_data.
+[treeopen] TOP.SoC.cpu.execute_data_0.
+[treeopen] TOP.SoC.cpu.fetch.o_data.
+[treeopen] TOP.SoC.cpu.fetch_data.
+[treeopen] TOP.SoC.cpu.fetch_data_0.
+[treeopen] TOP.SoC.cpu.forward.
+[treeopen] TOP.SoC.cpu.forward.i_decode_data.
+[treeopen] TOP.SoC.cpu.forward.i_execute_data.
+[treeopen] TOP.SoC.cpu.forward.i_memory_data.
+[treeopen] TOP.SoC.cpu.forward.i_writeback_data.
+[treeopen] TOP.SoC.cpu.memory.
+[treeopen] TOP.SoC.cpu.memory.o_data.
+[treeopen] TOP.SoC.cpu.registers.
+[treeopen] TOP.SoC.cpu.writeback.
+[treeopen] TOP.SoC.cpu.writeback.o_data.
+[sst_width] 360
+[signals_width] 282
+[sst_expanded] 1
+[sst_vpaned_height] 635
+@28
+TOP.SoC.cpu.i_clock
+@200
+-
+-fetch
+@22
+[color] 3
+TOP.SoC.cpu.fetch.o_data.pc[31:0]
+@100000028
+TOP.SoC.cpu.fetch.state[1:0]
+@24
+[color] 2
+TOP.SoC.cpu.fetch_data.tag[1:0]
+@28
+TOP.SoC.cpu.fetch_skid.i_busy
+@200
+-
+-
+@28
+TOP.SoC.cpu.i_clock
+@200
+-
+-decode
+@24
+[color] 2
+TOP.SoC.cpu.decode.i_data.tag[1:0]
+@22
+[color] 3
+TOP.SoC.cpu.decode.o_data.pc[31:0]
+@24
+[color] 2
+TOP.SoC.cpu.decode_data.tag[1:0]
+@200
+-
+@800200
+-forward
+@200
+-forward
+@24
+[color] 2
+TOP.SoC.cpu.forward.i_decode_data.tag[1:0]
+@22
+[color] 3
+TOP.SoC.cpu.forward.i_decode_data.pc[31:0]
+@200
+-
+@100000028
+TOP.SoC.cpu.forward.i_decode_data.inst_rs1[5:0]
+@22
+TOP.SoC.cpu.forward.i_rs1[31:0]
+TOP.SoC.cpu.forward.o_rs1[31:0]
+@200
+-
+@100000028
+TOP.SoC.cpu.forward.i_decode_data.inst_rs2[5:0]
+@22
+TOP.SoC.cpu.forward.i_rs2[31:0]
+TOP.SoC.cpu.forward.o_rs2[31:0]
+@200
+-
+@100000028
+TOP.SoC.cpu.forward.i_decode_data.inst_rd[5:0]
+@200
+-
+-forward execute
+@24
+[color] 7
+TOP.SoC.cpu.forward.i_execute_data.tag[1:0]
+@100000028
+TOP.SoC.cpu.forward.i_execute_data.inst_rd[5:0]
+@22
+TOP.SoC.cpu.forward.i_execute_data.rd[31:0]
+@200
+-
+-forward memory
+@24
+[color] 7
+TOP.SoC.cpu.forward.i_memory_data.tag[1:0]
+@100000028
+TOP.SoC.cpu.forward.i_memory_data.inst_rd[5:0]
+@22
+TOP.SoC.cpu.forward.i_memory_data.rd[31:0]
+@200
+-
+-forward writeback
+@24
+[color] 7
+TOP.SoC.cpu.forward.i_writeback_data.tag[1:0]
+@100000028
+TOP.SoC.cpu.forward.i_writeback_data.inst_rd[5:0]
+@22
+TOP.SoC.cpu.forward.i_writeback_data.rd[31:0]
+@1000200
+-forward
+@200
+-
+-
+-execute
+@24
+[color] 2
+TOP.SoC.cpu.execute.i_data.tag[1:0]
+@100000028
+TOP.SoC.cpu.execute.i_data.inst_rs1[5:0]
+@24
+[color] 2
+TOP.SoC.cpu.execute_data.tag[1:0]
+@28
+TOP.SoC.cpu.execute_skid.i_busy
+TOP.SoC.cpu.execute.o_jump
+@22
+TOP.SoC.cpu.execute.o_jump_pc[31:0]
+@200
+-
+-
+-memory
+@24
+[color] 2
+TOP.SoC.cpu.memory.i_data.tag[1:0]
+@100000028
+[color] 3
+TOP.SoC.cpu.memory.state[2:0]
+@24
+[color] 2
+TOP.SoC.cpu.memory.o_data.tag[1:0]
+@200
+-
+-writeback
+@22
+[color] 2
+TOP.SoC.cpu.writeback_data.inst_rd[5:0]
+[pattern_trace] 1
+[pattern_trace] 0
