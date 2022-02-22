@@ -16,7 +16,7 @@ module BROM(
 `ifdef __TESTBENCH__
 	initial $readmemh("code/Firmware/Firmware.vmem", data);
 `else
-	initial $readmemh("../code/Firmware/Firmware.vmem", data);
+	initial $readmemh("../../code/Firmware/Firmware.vmem", data);
 `endif
 
 	always_ff @(posedge i_clock)

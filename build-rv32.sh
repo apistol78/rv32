@@ -4,26 +4,26 @@
 . "config.sh"
 
 # Generate instructions (Verilog).
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_alu > code/Rv32H/Instructions_alu.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_memory > code/Rv32H/Instructions_memory.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_ops > code/Rv32H/Instructions_ops.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode > code/Rv32H/Instructions_decode.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode_ops > code/Rv32H/Instructions_decode_ops.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_execute_ops I J R U B S CSR > code/Rv32H/Instructions_execute_ops.sv
-$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_fpu > code/Rv32H/Instructions_fpu.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_alu > rtl/cpu/private/generated/Instructions_alu.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_memory > rtl/cpu/private/generated/Instructions_memory.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_ops > rtl/cpu/private/generated/Instructions_ops.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode > rtl/cpu/private/generated/Instructions_decode.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode_ops > rtl/cpu/private/generated/Instructions_decode_ops.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_execute_ops I J R U B S CSR > rtl/cpu/private/generated/Instructions_execute_ops.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_fpu > rtl/cpu/private/generated/Instructions_fpu.sv
 
 # Generate instructions (Emulator).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp > code/Rv32/Instructions.inl
 
 # Generate verilated code.
 mkdir -p code/Verify/SoC
-verilator --trace-fst --trace-structs --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC code/Rv32H/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi
 
 mkdir -p code/Rv32T/SoC
-verilator --trace-fst --trace-structs --cc -Icode/Rv32H -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC code/Rv32H/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC board/rv32t/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi

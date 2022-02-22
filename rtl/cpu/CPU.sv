@@ -1,10 +1,10 @@
-`include "CPU_Defines.sv"
+`include "private/CPU_Types.sv"
 
 // https://zipcpu.com/blog/2017/08/14/strategies-for-pipelining.html
 
 `timescale 1ns/1ns
 
-module CPU_v2 #(
+module CPU #(
 	parameter RESET_VECTOR = 32'h00000000,
 	parameter STACK_POINTER = 32'h10000400,
 	parameter VENDORID = 32'h0,

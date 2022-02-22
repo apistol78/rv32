@@ -1,7 +1,7 @@
 
 `timescale 1ns/1ns
 
-module CPU_BusAccess(
+module BusAccess(
 	input wire i_reset,
 	input wire i_clock,
 

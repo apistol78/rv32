@@ -16,11 +16,11 @@ module CPU_Decode(
 	output decode_data_t o_data
 );
 
-	`include "Instructions_ops.sv"
+	`include "private/generated/Instructions_ops.sv"
 
 	`undef INSTRUCTION
 	`define INSTRUCTION i_data.instruction
-	`include "Instructions_decode.sv"
+	`include "private/generated/Instructions_decode.sv"
 	
 	// Alias symbols for generated code.
 	`undef ZERO
@@ -33,9 +33,9 @@ module CPU_Decode(
 	`define RS2 3'd2
 	`define PC	3'd3
 	`define IMM 3'd4
-	`include "Instructions_alu.sv"
-	`include "Instructions_fpu.sv"
-	`include "Instructions_memory.sv"
+	`include "private/generated/Instructions_alu.sv"
+	`include "private/generated/Instructions_fpu.sv"
+	`include "private/generated/Instructions_memory.sv"
 
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
 	wire [31:0] inst_I_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:20] };
@@ -98,7 +98,7 @@ module CPU_Decode(
 				data.fpu_operation <= fpu_operation;
 
 				`define OP data.op
-				`include "Instructions_decode_ops.sv"
+				`include "private/generated/Instructions_decode_ops.sv"
 
 				if (
 					is_ARITHMETIC ||

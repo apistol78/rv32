@@ -68,7 +68,7 @@ module CPU_Fetch #(
 	// 
 	`undef INSTRUCTION
 	`define INSTRUCTION icache_rdata
-	`include "Instructions_decode.sv"
+	`include "private/generated/Instructions_decode.sv"
 
 	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR | is_R4;
 	wire have_RS2 = is_B | is_R | is_S | is_R4;

@@ -32,7 +32,7 @@ module CPU_Execute (
 	output execute_data_t o_data
 );
 
-	`include "Instructions_ops.sv"
+	`include "private/generated/Instructions_ops.sv"
 
 	// Alias symbols for generated code.
 	`undef PC
@@ -248,7 +248,7 @@ module CPU_Execute (
 					// Note, input values are only valid in first cycle so
 					// in case of multicycle operations the inputs must be
 					// stored in temporary registers.
-					`include "Instructions_execute_ops.sv"
+					`include "private/generated/Instructions_execute_ops.sv"
 				end
 				else if (i_data.fpu) begin
 					if (fpu_ready) begin

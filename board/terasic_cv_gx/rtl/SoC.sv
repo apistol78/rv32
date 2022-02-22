@@ -1,8 +1,11 @@
+
 `define ENABLE_DDR2LP
 //`define ENABLE_HSMC_XCVR
 //`define ENABLE_SMA
 //`define ENABLE_REFCLK
 `define ENABLE_GPIO
+
+`timescale 1ns/1ns
 
 module SoC(
 
@@ -111,8 +114,15 @@ module SoC(
 
       ///////// SD ///////// 3.3-V LVTTL ///////
       output             SD_CLK,
+`ifndef __VERILATOR__
       inout              SD_CMD,
       inout       [3:0]  SD_DAT,
+`else
+      input              SD_CMD_in,
+      input       [3:0]  SD_DAT_in,
+      output             SD_CMD_out,
+      output      [3:0]  SD_DAT_out,
+`endif
 
 `ifdef ENABLE_SMA
       ///////// SMA ///////// 1.5-V PCML ///////
@@ -140,12 +150,14 @@ module SoC(
 `define FREQUENCY 100000000
 
 `define SOC_ENABLE_SDRAM
+// `define SOC_ENABLE_SDRAM_L2CACHE
 `define SOC_ENABLE_VGA
 `define SOC_ENABLE_UART
+// `define SOC_ENABLE_GPIO
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-//	wire clock = CLOCK_125_p;
+`ifndef __VERILATOR__
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -168,12 +180,19 @@ module SoC(
 			sample[4:0] = sample[4:0];
 	end
 
-	assign soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	assign global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
-	assign start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	
-	assign reset = !start_n; // CPU_RESET_n;
+	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
+	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
+	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
+	wire reset = !start_n;
 
+`else
+
+	// Since we want to share pins with HW
+	// this clock will actually be simulated at 100 MHz.
+	wire clock = CLOCK_125_p;
+	wire reset = !CPU_RESET_n;
+
+`endif
   
 `ifdef SOC_ENABLE_VGA
 	// Video memory.
@@ -184,6 +203,7 @@ module SoC(
 	wire [31:0] video_sram_rdata;
 	wire video_sram_ready;
 
+	`ifndef __VERILATOR__
 	SRAM_interface video_sram(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -202,11 +222,12 @@ module SoC(
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
 	);
-	/*
-	BRAM #(
+	`else
+	BRAM_latency #(
 		.WIDTH(32),
-		.SIZE(320*200),
-		.ADDR_LSH(2)
+		.SIZE(320*200/4),
+		.ADDR_LSH(2),
+		.LATENCY(7)
 	) video_sram(
 		.i_clock(clock),
 		.i_request(video_sram_request),
@@ -216,12 +237,13 @@ module SoC(
 		.o_rdata(video_sram_rdata),
 		.o_ready(video_sram_ready)
 	);
-	*/
+	`endif
 
 	// Video controller.
 	wire vram_select;
 	wire [31:0] vram_address;
 	wire vram_ready;
+	wire vram_fifo_full;
 	VideoBus video_bus(
 		.i_clock(clock),
 		
@@ -231,7 +253,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		.i_video_request(vga_enable),
-		.i_video_address(vga_address),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
 		.o_video_rdata(HDMI_TX_D),
 		
 		.o_mem_request(video_sram_request),
@@ -239,12 +262,15 @@ module SoC(
 		.o_mem_address(video_sram_address),
 		.o_mem_wdata(video_sram_wdata),
 		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready)
+		.i_mem_ready(video_sram_ready),
+		
+		.o_fifo_full(vram_fifo_full)
 	);
   
 	// Video signal generator
 	wire vga_enable;
-	wire [15:0] vga_address;
+	wire [8:0] vga_pos_x;
+	wire [8:0] vga_pos_y;
 	VGA #(
 		.PRESCALE(`FREQUENCY / 25000000)
 	) vga(
@@ -252,7 +278,8 @@ module SoC(
 		.o_hsync(HDMI_TX_HS),
 		.o_vsync(HDMI_TX_VS),
 		.o_data_enable(vga_enable),
-		.o_vga_address(vga_address),
+		.o_pos_x(vga_pos_x),
+		.o_pos_y(vga_pos_y),
 		.o_vga_clock(HDMI_TX_CLK)
 	);
 	
@@ -279,9 +306,9 @@ module SoC(
 	wire ram_ready;
 	BRAM #(
 		.WIDTH(32),
-		.SIZE(32'h4000),
+		.SIZE(32'h8000),
 		.ADDR_LSH(2)
-	)ram(
+	) ram(
 		.i_clock(clock),
 		.i_request(ram_select && bus_request),
 		.i_rw(bus_rw),
@@ -297,18 +324,20 @@ module SoC(
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
+
+	`ifndef __VERILATOR__
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
 		// ---
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
+		.i_request(l2cache_bus_request),
+		.i_rw(l2cache_bus_rw),
+		.i_address(l2cache_bus_address),
+		.i_wdata(l2cache_bus_wdata),
+		.o_rdata(l2cache_bus_rdata),
+		.o_ready(l2cache_bus_ready),
 		// ---
 		.DDR2LP_CA(DDR2LP_CA),
 		.DDR2LP_CKE(DDR2LP_CKE),
@@ -321,6 +350,63 @@ module SoC(
 		.DDR2LP_DQS_p(DDR2LP_DQS_p),
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
+	`else
+/*
+	BRAM_latency #(
+		.WIDTH(32),
+		.SIZE(32'h1000000 / 4),
+		.ADDR_LSH(2),
+		.LATENCY(10)
+*/
+	BRAM #(
+		.WIDTH(32),
+		.SIZE(32'h1000000 / 4),
+		.ADDR_LSH(2)
+	) sdram(
+		.i_clock(clock),
+		.i_request(l2cache_bus_request),
+		.i_rw(l2cache_bus_rw),
+		.i_address(l2cache_bus_address),
+		.i_wdata(l2cache_bus_wdata),
+		.o_rdata(l2cache_bus_rdata),
+		.o_ready(l2cache_bus_ready)
+	);
+	`endif
+
+	wire l2cache_bus_rw;
+	wire l2cache_bus_request;
+	wire l2cache_bus_ready;
+	wire [31:0] l2cache_bus_address;
+	wire [31:0] l2cache_bus_rdata;
+	wire [31:0] l2cache_bus_wdata;
+`ifdef SOC_ENABLE_SDRAM_L2CACHE
+	L2_Cache l2cache(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(l2cache_bus_rw),
+		.o_bus_request(l2cache_bus_request),
+		.i_bus_ready(l2cache_bus_ready),
+		.o_bus_address(l2cache_bus_address),
+		.i_bus_rdata(l2cache_bus_rdata),
+		.o_bus_wdata(l2cache_bus_wdata),
+
+		.i_request(sdram_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(sdram_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready)
+	);
+`else
+	assign l2cache_bus_request = sdram_select && bus_request;
+	assign l2cache_bus_rw = bus_rw;
+	assign sdram_ready = l2cache_bus_ready;
+	assign l2cache_bus_address = sdram_address;
+	assign sdram_rdata = l2cache_bus_rdata;
+	assign l2cache_bus_wdata = bus_wdata;
+`endif
+
 `endif
 
 	// LEDS
@@ -336,25 +422,46 @@ module SoC(
 	);
 	
 `ifdef SOC_ENABLE_UART
-	// UART
-	wire uart_select;
-	wire [1:0] uart_address;
-	wire [31:0] uart_rdata;
-	wire uart_ready;
+	// UART (USB)
+	wire uart_0_select;
+	wire [1:0] uart_0_address;
+	wire [31:0] uart_0_rdata;
+	wire uart_0_ready;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8))
-	) uart(
+	) uart_0(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(uart_select && bus_request),
+		.i_request(uart_0_select && bus_request),
 		.i_rw(bus_rw),
-		.i_address(uart_address),
+		.i_address(uart_0_address),
 		.i_wdata(bus_wdata),
-		.o_rdata(uart_rdata),
-		.o_ready(uart_ready),
+		.o_rdata(uart_0_rdata),
+		.o_ready(uart_0_ready),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
+	);
+
+	// UART (GPIO)
+	wire uart_1_select;
+	wire [1:0] uart_1_address;
+	wire [31:0] uart_1_rdata;
+	wire uart_1_ready;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_1(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_1_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(uart_1_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(uart_1_rdata),
+		.o_ready(uart_1_ready),
+		// ---
+		.UART_RX(GPIO[0]),
+		.UART_TX(GPIO[1])
 	);
 `endif
 	
@@ -410,28 +517,73 @@ module SoC(
 		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
+`ifndef __VERILATOR__
 		.SD_CMD(SD_CMD),
 		.SD_DAT(SD_DAT)
+`else
+		.SD_CMD_in(SD_CMD_in),
+		.SD_DAT_in(SD_DAT_in),
+		.SD_CMD_out(SD_CMD_out),
+		.SD_DAT_out(SD_DAT_out)
+`endif
 	);
 `endif
 
+	// DMA
+	wire dma_select;
+	wire [1:0] dma_address;
+	wire [31:0] dma_rdata;
+	wire dma_ready;
+
+	wire dma_bus_rw;
+	wire dma_bus_request;
+	wire dma_bus_ready;
+	wire [31:0] dma_bus_address;
+	wire [31:0] dma_bus_rdata;
+	wire [31:0] dma_bus_wdata;
+
+	DMA dma(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// CPU
+		.i_request(dma_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(dma_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(dma_rdata),
+		.o_ready(dma_ready),
+
+		// System
+		.i_stall(vram_fifo_full),
+		
+		// Bus
+		.o_bus_rw(dma_bus_rw),
+		.o_bus_request(dma_bus_request),
+		.i_bus_ready(dma_bus_ready),
+		.o_bus_address(dma_bus_address),
+		.i_bus_rdata(dma_bus_rdata),
+		.o_bus_wdata(dma_bus_wdata)
+	);
+
 	// Timer
 	wire timer_select;
-	wire [1:0] timer_address;
+	wire [2:0] timer_address;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
+	wire timer_interrupt;
 	Timer #(
 		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(timer_select && bus_request),
+		.i_rw(bus_rw),
 		.i_address(timer_address),
+		.i_wdata(bus_wdata),
 		.o_rdata(timer_rdata),
 		.o_ready(timer_ready),
-		
-		// Debug
-		.i_retire_count(cpu_retire_count)
+		.o_interrupt(timer_interrupt)
 	);
 	
 	//====================================================
@@ -456,7 +608,7 @@ module SoC(
 	wire [31:0] bus_pb_rdata;
 	wire [31:0] bus_pb_wdata;
 
-	CPU_BusAccess bus(
+	BusAccess bus(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -473,14 +625,22 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
-	
+
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
 		.i_pb_request(cpu_dbus_request),
 		.o_pb_ready(cpu_dbus_ready),
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
-		.i_pb_wdata(cpu_dbus_wdata)
+		.i_pb_wdata(cpu_dbus_wdata),
+
+		// Port C (DMA)
+		.i_pc_rw(dma_bus_rw),
+		.i_pc_request(dma_bus_request),
+		.o_pc_ready(dma_bus_ready),
+		.i_pc_address(dma_bus_address),
+		.o_pc_rdata(dma_bus_rdata),
+		.i_pc_wdata(dma_bus_wdata)
 	);
 
 	// CPU
@@ -494,10 +654,15 @@ module SoC(
 	wire [31:0] cpu_dbus_address;
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
-	wire [31:0] cpu_retire_count;
-	CPU_v2 cpu(
+	wire cpu_fault;
+
+	CPU cpu(
         .i_reset(reset),
 		.i_clock(clock),
+
+		// Control
+		.i_timer_interrupt(timer_interrupt),
+		.i_external_interrupt(1'b0),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -514,49 +679,56 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_retire_count(cpu_retire_count)
+		.o_fault(cpu_fault)
 	);
 	
 	//=====================================
 
-	assign rom_select = (bus_address < 32'h00010000);
-	assign rom_address = bus_address - 32'h00000000;
+	assign rom_select = bus_address[31:28] == 4'h0;
+	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	assign ram_select = (bus_address >= 32'h00010000 && bus_address < 32'h00020000);
-	assign ram_address = bus_address - 32'h00010000;
+	assign ram_select = bus_address[31:28] == 4'h1;
+	assign ram_address = { 4'h0, bus_address[27:0] };
 
 `ifdef SOC_ENABLE_SDRAM
-	assign sdram_select = (bus_address >= 32'h20000000 && bus_address < 32'h40000000);
-	assign sdram_address = bus_address - 32'h20000000;
+	assign sdram_select = bus_address[31:28] == 4'h2;
+	assign sdram_address = { 4'h0, bus_address[27:0] };
 `endif
 
 `ifdef SOC_ENABLE_VGA
-	assign vram_select = (bus_address >= 32'h40000000 && bus_address < 32'h50000000);
-	assign vram_address = bus_address - 32'h40000000;
+	assign vram_select = bus_address[31:28] == 4'h3;
+	assign vram_address = { 4'h0, bus_address[27:0] };
 `endif
 
-	assign led_select = (bus_address >= 32'h50000000 && bus_address < 32'h50000010);
-	
+	assign led_select = bus_address[31:28] == 4'h4;
+
 `ifdef SOC_ENABLE_UART
-	assign uart_select = (bus_address >= 32'h50000010 && bus_address < 32'h50000020);
-	assign uart_address = bus_address[3:2]; // - 32'h50000010;
+	assign uart_0_select = bus_address[31:24] == 8'h50;
+	assign uart_0_address = bus_address[3:2];
+	assign uart_1_select = bus_address[31:24] == 8'h51;
+	assign uart_1_address = bus_address[3:2];
 `endif
 
 `ifdef SOC_ENABLE_GPIO
-	assign gpio_select = (bus_address >= 32'h50000020 && bus_address < 32'h50000030);
-	assign gpio_address = bus_address[3:2]; // - 32'h50000020;
+	assign gpio_select = bus_address[31:28] == 4'h6;
+	assign gpio_address = bus_address[3:2];
 `endif
-	
+
 `ifdef SOC_ENABLE_I2C
-	assign i2c_select = (bus_address >= 32'h50000030 && bus_address < 32'h50000040);
+	assign i2c_select = bus_address[31:28] == 4'h7;
 `endif
 
 `ifdef SOC_ENABLE_SD
-	assign sd_select = (bus_address >= 32'h50000040 && bus_address < 32'h50000050);
+	assign sd_select = bus_address[31:28] == 4'h8;
 `endif
 
-	assign timer_select = (bus_address >= 32'h50000050 && bus_address < 32'h50000060);
-	assign timer_address = bus_address[3:2]; // - 32'h50000050;
+	assign dma_select = bus_address[31:28] == 4'h9;
+	assign dma_address = bus_address[3:2];
+
+	assign timer_select = bus_address[31:28] == 4'ha;
+	assign timer_address = bus_address[4:2];
+
+	//=====================================
 
 	assign bus_rdata =
 		rom_select ? rom_rdata :
@@ -568,17 +740,19 @@ module SoC(
 		sdram_select ? sdram_rdata :
 `endif
 `ifdef SOC_ENABLE_UART
-		uart_select ? uart_rdata :
+		uart_0_select ? uart_0_rdata :
+		uart_1_select ? uart_1_rdata :
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_rdata :
 `endif
-`ifdef SOC_ENABLE_SD
-		sd_select ? sd_rdata :
-`endif
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_rdata :
 `endif
+`ifdef SOC_ENABLE_SD
+		sd_select ? sd_rdata :
+`endif
+		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
 		32'h00000000;
 		
@@ -593,7 +767,8 @@ module SoC(
 `endif
 		led_select ? led_ready :
 `ifdef SOC_ENABLE_UART
-		uart_select ? uart_ready :
+		uart_0_select ? uart_0_ready :
+		uart_1_select ? uart_0_ready :
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_ready :
@@ -604,10 +779,46 @@ module SoC(
 `ifdef SOC_ENABLE_I2C
 		i2c_select ? i2c_ready :
 `endif
+		dma_select ? dma_ready :
 		timer_select ? timer_ready :
 		1'b0;
 
+`ifndef __VERILATOR__
 	// 7:0
-	assign LEDG = { soft_reset_n, global_reset_n, start_n };
+	assign LEDG = { 1'b0, 1'b0, cpu_fault };
+`else
+
+	wire bus_valid_select =
+		rom_select |
+		ram_select |
+`ifdef SOC_ENABLE_SDRAM
+		sdram_select |
+`endif
+`ifdef SOC_ENABLE_VGA
+		vram_select |
+`endif
+		led_select |
+`ifdef SOC_ENABLE_UART
+		uart_0_select |
+		uart_1_select |
+`endif
+`ifdef SOC_ENABLE_GPIO
+		gpio_select |
+`endif
+`ifdef SOC_ENABLE_SD
+		sd_select |
+`endif
+`ifdef SOC_ENABLE_I2C
+		i2c_select |
+`endif
+		dma_select |
+		timer_select;
+
+	reg bus_fault = 0;
+	always_comb begin
+		bus_fault = !bus_valid_select && bus_request;
+	end
+	
+`endif
 
 endmodule

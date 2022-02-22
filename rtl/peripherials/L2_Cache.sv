@@ -2,7 +2,7 @@
 
 `timescale 1ns/1ns
 
-module CPU_L2_Cache(
+module L2_Cache(
 	input wire i_reset,
 	input wire i_clock,
 
