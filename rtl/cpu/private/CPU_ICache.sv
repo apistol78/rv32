@@ -45,12 +45,10 @@ module CPU_ICache(
 
 	// One cycle latency, important since
 	// we rely on address only.
-	BRAM #(
+	BRAM_clear #(
 		.WIDTH(64),
 		.SIZE(RANGE),
-		.ADDR_LSH(0),
-		.CLEAR(1),
-		.CLEAR_VALUE(32'hfffffff0)
+		.ADDR_LSH(0)
 	) cache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
