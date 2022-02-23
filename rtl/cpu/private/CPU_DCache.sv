@@ -2,7 +2,9 @@
 
 `timescale 1ns/1ns
 
-module CPU_DCache(
+module CPU_DCache #(
+	parameter SIZE = 14
+)(
 	input i_reset,
 	input i_clock,
 
@@ -25,7 +27,6 @@ module CPU_DCache(
 	input i_cacheable
 );
 
-	localparam SIZE	= 14;
 	localparam RANGE = 1 << SIZE;
 
 	typedef enum bit [3:0]

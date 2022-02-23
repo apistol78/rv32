@@ -1,0 +1,30 @@
+Core: IP_SDRAM_p0 - Instance: sdram|sdram|ip_sdram_inst
+Path, Setup Margin, Hold Margin
+"Address Command (Slow 1100mV 85C Model)",-0.308,-0.056
+"Bus Turnaround Time (Slow 1100mV 85C Model)",5.492,--
+"Core (Slow 1100mV 85C Model)",-0.674,0.16
+"Core Recovery/Removal (Slow 1100mV 85C Model)",-5.984,0.383
+"DQS vs CK (Slow 1100mV 85C Model)",0.079,0.57
+"Read Capture (Slow 1100mV 85C Model)",0.123,0.076
+"Write (Slow 1100mV 85C Model)",0.15,0.193
+"Address Command (Slow 1100mV 0C Model)",-0.337,-0.067
+"Bus Turnaround Time (Slow 1100mV 0C Model)",5.534,--
+"Core (Slow 1100mV 0C Model)",-0.597,0.21
+"Core Recovery/Removal (Slow 1100mV 0C Model)",-5.77,0.414
+"DQS vs CK (Slow 1100mV 0C Model)",0.119,0.611
+"Read Capture (Slow 1100mV 0C Model)",0.134,0.087
+"Write (Slow 1100mV 0C Model)",0.134,0.167
+"Address Command (Fast 1100mV 85C Model)",-0.282,-0.067
+"Bus Turnaround Time (Fast 1100mV 85C Model)",5.856,--
+"Core (Fast 1100mV 85C Model)",0.375,0.13
+"Core Recovery/Removal (Fast 1100mV 85C Model)",-2.387,0.087
+"DQS vs CK (Fast 1100mV 85C Model)",0.426,0.907
+"Read Capture (Fast 1100mV 85C Model)",0.297,0.25
+"Write (Fast 1100mV 85C Model)",0.157,0.157
+"Address Command (Fast 1100mV 0C Model)",-0.305,-0.043
+"Bus Turnaround Time (Fast 1100mV 0C Model)",5.867,--
+"Core (Fast 1100mV 0C Model)",0.461,0.097
+"Core Recovery/Removal (Fast 1100mV 0C Model)",-2.251,0.041
+"DQS vs CK (Fast 1100mV 0C Model)",0.422,0.917
+"Read Capture (Fast 1100mV 0C Model)",0.301,0.254
+"Write (Fast 1100mV 0C Model)",0.152,0.152

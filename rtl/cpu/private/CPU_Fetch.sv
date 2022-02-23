@@ -3,7 +3,8 @@
 `timescale 1ns/1ns
 
 module CPU_Fetch #(
-	parameter RESET_VECTOR
+	parameter RESET_VECTOR,
+	parameter ICACHE_SIZE = 13
 )(
 	input i_reset,
 	input i_clock,
@@ -45,7 +46,9 @@ module CPU_Fetch #(
 	wire icache_ready;
 	reg icache_stall;
 
-	CPU_ICache icache(
+	CPU_ICache #(
+		.SIZE(ICACHE_SIZE)
+	) icache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 

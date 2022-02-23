@@ -4,6 +4,10 @@
 /board/terasic_cv_gx/output_files
 /board/terasic_cv_gx/incremental*
 
+/board/qmtech_cv/db
+/board/qmtech_cv/output_files
+/board/qmtech_cv/incremental*
+
 /code/Doom/doomgeneric/build
 /code/Rv32T/SoC
 /code/Verify/SoC

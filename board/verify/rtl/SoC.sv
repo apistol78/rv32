@@ -31,9 +31,7 @@ module SoC(
 		.SIZE(32'h8000),
 		.ADDR_LSH(2)
 	) ram(
-		.i_reset(reset),
 		.i_clock(clock),
-		.o_initialized(),
 		.i_request(ram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(ram_address),

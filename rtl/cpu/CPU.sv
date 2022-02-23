@@ -10,7 +10,9 @@ module CPU #(
 	parameter VENDORID = 32'h0,
 	parameter ARCHID = 32'h0,
 	parameter IMPID = 32'h0,
-	parameter HARTID = 32'h0	
+	parameter HARTID = 32'h0,
+	parameter ICACHE_SIZE = 13,
+	parameter DCACHE_SIZE = 14
 )(
 	input i_reset,
 	input i_clock,					// CPU clock
@@ -102,7 +104,8 @@ module CPU #(
 	fetch_data_t fetch_data_0;
 	
 	CPU_Fetch #(
-		.RESET_VECTOR(RESET_VECTOR)
+		.RESET_VECTOR(RESET_VECTOR),
+		.ICACHE_SIZE(ICACHE_SIZE)
 	) fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -237,7 +240,9 @@ module CPU #(
 	wire memory_busy;
 	memory_data_t memory_data;
 
-	CPU_Memory memory(
+	CPU_Memory #(
+		.DCACHE_SIZE(DCACHE_SIZE)
+	) memory(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 	

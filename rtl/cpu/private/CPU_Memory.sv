@@ -5,7 +5,9 @@
 `define ENABLE_DCACHE
 //`define ENABLE_WBUFFER
 
-module CPU_Memory(
+module CPU_Memory #(
+	parameter DCACHE_SIZE = 14
+)(
 	input i_reset,
 	input i_clock,
 
@@ -75,7 +77,9 @@ module CPU_Memory(
 	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2);
 
 `ifdef ENABLE_DCACHE
-	CPU_DCache dcache(
+	CPU_DCache #(
+		.SIZE(DCACHE_SIZE)
+	) dcache(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 	

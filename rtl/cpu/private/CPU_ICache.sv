@@ -4,7 +4,9 @@
 
 `define ENABLE_ICACHE
 
-module CPU_ICache(
+module CPU_ICache#(
+	parameter SIZE = 13
+)(
 	input wire i_reset,
 	input wire i_clock,
 	
@@ -20,7 +22,6 @@ module CPU_ICache(
 	input wire [31:0] i_bus_rdata
 );
 
-	localparam SIZE	= 13;
 	localparam RANGE = 1 << SIZE;
 
 	typedef enum bit [2:0]
