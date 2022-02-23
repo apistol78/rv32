@@ -224,7 +224,7 @@ module SoC(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 	`else
-	BRAM_latency #(
+	BRAM #(
 		.WIDTH(32),
 		.SIZE(320*200/4),
 		.ADDR_LSH(2),
@@ -353,7 +353,7 @@ module SoC(
 	);
 	`else
 /*
-	BRAM_latency #(
+	BRAM #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
 		.ADDR_LSH(2),

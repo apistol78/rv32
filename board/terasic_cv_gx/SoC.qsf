@@ -1010,8 +1010,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BusAccess.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BROM.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_latency.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_clear.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM.sv
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedMultiply.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedDivide.qip

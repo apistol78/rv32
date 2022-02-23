@@ -224,13 +224,15 @@ module SoC(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 	`else
-	BRAM_latency #(
+	BRAM #(
 		.WIDTH(32),
 		.SIZE(320*200/4),
 		.ADDR_LSH(2),
 		.LATENCY(7)
 	) video_sram(
+		.i_reset(reset),
 		.i_clock(clock),
+		.o_initialized(),
 		.i_request(video_sram_request),
 		.i_rw(video_sram_rw),
 		.i_address(video_sram_address),
@@ -310,7 +312,9 @@ module SoC(
 		.SIZE(32'h8000),
 		.ADDR_LSH(2)
 	) ram(
+		.i_reset(reset),
 		.i_clock(clock),
+		.o_initialized(),
 		.i_request(ram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(ram_address),
@@ -352,19 +356,15 @@ module SoC(
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
 	`else
-/*
-	BRAM_latency #(
+	BRAM #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
 		.ADDR_LSH(2),
 		.LATENCY(10)
-*/
-	BRAM #(
-		.WIDTH(32),
-		.SIZE(32'h1000000 / 4),
-		.ADDR_LSH(2)
 	) sdram(
+		.i_reset(reset),
 		.i_clock(clock),
+		.o_initialized(),
 		.i_request(l2cache_bus_request),
 		.i_rw(l2cache_bus_rw),
 		.i_address(l2cache_bus_address),

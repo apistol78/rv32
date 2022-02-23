@@ -44,10 +44,11 @@ module L2_Cache(
 
 	// One cycle latency, important since
 	// we rely on address only.
-	BRAM_clear #(
+	BRAM #(
 		.WIDTH(64),
 		.SIZE(RANGE),
 		.ADDR_LSH(0),
+		.CLEAR(1),
 		.CLEAR_VALUE(32'hffff_fff0)
 	) cache(
 		.i_reset(i_reset),
