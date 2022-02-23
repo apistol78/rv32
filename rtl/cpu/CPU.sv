@@ -99,7 +99,7 @@ module CPU #(
 	//====================================================
 	// FETCH
 
-	fetch_data_t fetch_data;
+	fetch_data_t fetch_data_0;
 	
 	CPU_Fetch #(
 		.RESET_VECTOR(RESET_VECTOR)
@@ -125,7 +125,24 @@ module CPU #(
 
 		// Output
 		.i_decode_busy(decode_busy),
-		.o_data(fetch_data)
+		.o_data(fetch_data_0)
+	);
+
+	fetch_data_t fetch_data;
+
+	CPU_SkidBuffer #(
+		.DW($bits(fetch_data_t))
+	) fetch_skid(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+
+		.i_tag(fetch_data_0.tag),
+		.i_data(fetch_data_0),
+		.o_busy(),
+
+		.o_tag(),
+		.o_data(fetch_data),
+		.i_busy(decode_busy)	
 	);
 
 	//====================================================

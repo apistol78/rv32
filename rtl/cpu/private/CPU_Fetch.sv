@@ -5,27 +5,27 @@
 module CPU_Fetch #(
 	parameter RESET_VECTOR
 )(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Control
-	input wire i_jump,
-	input wire [31:0] i_jump_pc,
+	input i_jump,
+	input [31:0] i_jump_pc,
 
 	// Interrupt
-	input wire i_irq_pending,
-	input wire [31:0] i_irq_pc,
+	input i_irq_pending,
+	input [31:0] i_irq_pc,
 	output reg o_irq_dispatched,
 	output reg [31:0] o_irq_epc,
 
 	// Bus
-	output wire o_bus_request,
-	input wire i_bus_ready,
-	output wire [31:0] o_bus_address,
-	input wire [31:0] i_bus_rdata,
+	output o_bus_request,
+	input i_bus_ready,
+	output [31:0] o_bus_address,
+	input [31:0] i_bus_rdata,
 
 	// Output
-	input wire i_decode_busy,
+	input i_decode_busy,
 	output fetch_data_t o_data
 );
 
@@ -37,8 +37,7 @@ module CPU_Fetch #(
 
 	state_t state = WAIT_ICACHE;
 	reg [31:0] pc = RESET_VECTOR;
-	fetch_data_t dataC = 0;
-	fetch_data_t dataN = 0;
+	fetch_data_t data = 0;
 	reg [31:0] starve = 0;
 
 	// ICache
@@ -75,24 +74,17 @@ module CPU_Fetch #(
 	wire have_RS3 = is_R4;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR | is_R4;
 
-	assign o_data = !i_decode_busy ? dataC : dataN;
+	assign o_data = data;
 
 	always_comb begin
 		icache_stall = i_decode_busy || !(state == 0);
 	end
 
 	always_ff @(posedge i_clock) begin
-		if (i_reset)
-			dataN <= 0;
-		else if (!i_decode_busy)
-			dataN <= dataC;
-	end
-
-	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= WAIT_ICACHE;
 			pc <= RESET_VECTOR;
-			dataC <= 0;
+			data <= 0;
 		end
 		else begin
 			o_irq_dispatched <= 0;
@@ -110,17 +102,17 @@ module CPU_Fetch #(
 					WAIT_ICACHE: begin
 						if (icache_ready) begin
 
-							dataC.tag <= dataC.tag + 1;
-							dataC.instruction <= icache_rdata;
-							dataC.pc <= pc;
+							data.tag <= data.tag + 1;
+							data.instruction <= icache_rdata;
+							data.pc <= pc;
 
 							// Decode register indices here since we
 							// need those for fetching registers while
 							// we are decoding rest of instruction.
-							dataC.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
-							dataC.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
-							dataC.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
-							dataC.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
+							data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
+							data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
+							data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
+							data.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
 								// Branch instruction, need to wait
