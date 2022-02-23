@@ -586,6 +586,31 @@ module SoC(
 		.o_ready(timer_ready),
 		.o_interrupt(timer_interrupt)
 	);
+
+	// PLIC
+	wire plic_interrupt;
+	wire plic_select;
+	wire [23:0] plic_address;
+	wire [31:0] plic_rdata;
+	wire plic_ready;
+	PLIC plic(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_interrupt_0(HDMI_TX_INT),
+		.i_interrupt_1(KEY[0]),
+		.i_interrupt_2(0),
+		.i_interrupt_3(0),
+
+		.o_interrupt(plic_interrupt),
+
+		.i_request(plic_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(plic_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(plic_rdata),
+		.o_ready(plic_ready)
+	);
 	
 	//====================================================
 
@@ -663,7 +688,7 @@ module SoC(
 
 		// Control
 		.i_timer_interrupt(timer_interrupt),
-		.i_external_interrupt(1'b0),
+		.i_external_interrupt(plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -729,6 +754,9 @@ module SoC(
 	assign timer_select = bus_address[31:28] == 4'ha;
 	assign timer_address = bus_address[4:2];
 
+	assign plic_select = bus_address[31:28] == 4'hb;
+	assign plic_address = bus_address[23:0];
+
 	//=====================================
 
 	assign bus_rdata =
@@ -755,6 +783,7 @@ module SoC(
 `endif
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
+		plic_select ? plic_rdata :
 		32'h00000000;
 		
 	assign bus_ready =
@@ -782,6 +811,7 @@ module SoC(
 `endif
 		dma_select ? dma_ready :
 		timer_select ? timer_ready :
+		plic_select ? plic_ready :
 		1'b0;
 
 `ifndef __VERILATOR__
@@ -813,7 +843,8 @@ module SoC(
 		i2c_select |
 `endif
 		dma_select |
-		timer_select;
+		timer_select |
+		plic_select;
 
 	reg bus_fault = 0;
 	always_comb begin
