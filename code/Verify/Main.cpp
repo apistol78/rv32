@@ -1201,12 +1201,12 @@ bool verify_MEM_LOAD_HAZARD(const char* trace)
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
 
-		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
-		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a783; // lw		a5,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[0] = 0x100007b7; // lui	a5,0x10000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a783; // lw		a5,0(a5) # 10000000 <_edata+0x1fff0000>
 		tb->SoC__DOT__rom__DOT__data[2] = 0x00078413; // mv		s0,a5
 		tb->SoC__DOT__rom__DOT__data[3] = 0x00008067; // j		0
 
-		tb->SoC__DOT__sdram__DOT__data[0] = 0xcafebabe;
+		tb->SoC__DOT__ram__DOT__data[0] = 0xcafebabe;
 
 		evaluate(tb, trace, 7);
 
@@ -1257,8 +1257,8 @@ bool verify_PIPELINE_MEMORY(const char* trace)
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
 
-		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
-		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a403; // lw		s0,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[0] = 0x100007b7; // lui	a5,0x10000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x0007a403; // lw		s0,0(a5) # 10000000 <_edata+0x1fff0000>
 		tb->SoC__DOT__rom__DOT__data[2] = 0x0087a223; // sw		s0,4(a5)
 		tb->SoC__DOT__rom__DOT__data[3] = 0x0047a403; // lw		s0,4(a5)
 		tb->SoC__DOT__rom__DOT__data[4] = 0x0087a423; // sw		s0,8(a5)
@@ -1267,10 +1267,10 @@ bool verify_PIPELINE_MEMORY(const char* trace)
 		tb->SoC__DOT__rom__DOT__data[7] = 0x00c7a403; // lw		s0,12(a5)
 		tb->SoC__DOT__rom__DOT__data[8] = 0xfe1ff06f; // j		0
 
-		tb->SoC__DOT__sdram__DOT__data[0] = 0x11111111;
-		tb->SoC__DOT__sdram__DOT__data[1] = 0x22222222;
-		tb->SoC__DOT__sdram__DOT__data[2] = 0x33333333;
-		tb->SoC__DOT__sdram__DOT__data[3] = 0x44444444;
+		tb->SoC__DOT__ram__DOT__data[0] = 0x11111111;
+		tb->SoC__DOT__ram__DOT__data[1] = 0x22222222;
+		tb->SoC__DOT__ram__DOT__data[2] = 0x33333333;
+		tb->SoC__DOT__ram__DOT__data[3] = 0x44444444;
 
 		evaluate(tb, trace, 8);
 
@@ -1294,8 +1294,8 @@ bool verify_PIPELINE_MEMORY_B(const char* trace)
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
 		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0;
 
-		tb->SoC__DOT__rom__DOT__data[0] = 0x200007b7; // lui	a5,0x20000
-		tb->SoC__DOT__rom__DOT__data[1] = 0x00078403; // lb		s0,0(a5) # 20000000 <_edata+0x1fff0000>
+		tb->SoC__DOT__rom__DOT__data[0] = 0x100007b7; // lui	a5,0x10000
+		tb->SoC__DOT__rom__DOT__data[1] = 0x00078403; // lb		s0,0(a5) # 10000000 <_edata+0x1fff0000>
 		tb->SoC__DOT__rom__DOT__data[2] = 0x008780a3; // sb		s0,1(a5)
 		tb->SoC__DOT__rom__DOT__data[3] = 0x00178403; // lb		s0,1(a5)
 		tb->SoC__DOT__rom__DOT__data[4] = 0x00878123; // sb		s0,2(a5)
@@ -1304,19 +1304,19 @@ bool verify_PIPELINE_MEMORY_B(const char* trace)
 		tb->SoC__DOT__rom__DOT__data[7] = 0x00378403; // lb		s0,3(a5)
 		tb->SoC__DOT__rom__DOT__data[8] = 0xfe1ff06f; // j		0
 
-		tb->SoC__DOT__sdram__DOT__data[0] = 0x00000011;
-		tb->SoC__DOT__sdram__DOT__data[1] = 0x22222222;
-		tb->SoC__DOT__sdram__DOT__data[2] = 0x33333333;
-		tb->SoC__DOT__sdram__DOT__data[3] = 0x44444444;
+		tb->SoC__DOT__ram__DOT__data[0] = 0x00000011;
+		tb->SoC__DOT__ram__DOT__data[1] = 0x22222222;
+		tb->SoC__DOT__ram__DOT__data[2] = 0x33333333;
+		tb->SoC__DOT__ram__DOT__data[3] = 0x44444444;
 
 		evaluate(tb, trace, 8);
 
 		//printf("S0 %08x\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
-		//printf("D[0] %08x\n", tb->SoC__DOT__sdram__DOT__data[0]);
+		//printf("D[0] %08x\n", tb->SoC__DOT__ram__DOT__data[0]);
 
 		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0x00000011)
 			return false;
-		// if (tb->SoC__DOT__sdram__DOT__data[0] != 0x11111111)
+		// if (tb->SoC__DOT__ram__DOT__data[0] != 0x11111111)
 		// 	return false;
 
 		delete tb;
