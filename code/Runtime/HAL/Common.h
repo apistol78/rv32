@@ -22,4 +22,10 @@
 #define TIMER_COMPARE_L     (volatile uint32_t*)0xa000000c
 #define TIMER_COMPARE_H     (volatile uint32_t*)0xa0000010
 
-#define NO_OPTIMIZE __attribute__((optimize("O0")))
+#define NO_OPTIMIZE         __attribute__((optimize("O0")))
+
+#if defined(__cplusplus)
+#   define EXTERN_C         extern "C"
+#else
+#   define EXTERN_C
+#endif

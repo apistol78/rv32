@@ -10,6 +10,6 @@
 #define GPIO_LOW	0
 #define GPIO_HIGH	1
 
-void gpio_set_direction(int pin, int direction);
+EXTERN_C void gpio_set_direction(int pin, int direction);
 
-void gpio_set_pin(int pin, int level);
+EXTERN_C void gpio_set_pin(int pin, int level);

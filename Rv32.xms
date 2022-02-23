@@ -557,7 +557,7 @@
 			</configurations>
 			<items>
 				<item type="File">
-					<fileName>*.c</fileName>
+					<fileName>*.cpp</fileName>
 					<items/>
 				</item>
 				<item type="File">

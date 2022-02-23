@@ -2,7 +2,7 @@
 
 #include "Runtime/HAL/Common.h"
 
-int32_t runtime_init();
+EXTERN_C int32_t runtime_init();
 
-void runtime_update();
+EXTERN_C void runtime_update();
 

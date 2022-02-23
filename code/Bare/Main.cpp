@@ -11,11 +11,15 @@ uint8_t* framebuffer = (uint8_t*)0x10010000;
 
 //
 
-typedef struct
+class Vec3
 {
+public:
 	float x, y, z;
-}
-vec3_t;
+
+	Vec3() = default;
+
+	Vec3(float x_, float y_, float z_): x(x_), y(y_), z(z_) {}
+};
 
 
 
@@ -23,14 +27,19 @@ vec3_t;
 
 //
 
-typedef struct
+class Vec2i
 {
+public:
 	int32_t x, y;
-} ivec2_t;
 
-int32_t orient2d(const ivec2_t* a, const ivec2_t* b, const ivec2_t* c)
+	Vec2i() = default;
+
+	Vec2i(int32_t x_, int32_t y_) : x(x_), y(y_) {}	
+};
+
+int32_t orient2d(const Vec2i& a, const Vec2i& b, const Vec2i& c)
 {
-	return (b->x - a->x) * (c->y - a->y) - (b->y - a->y) * (c->x - a->x);
+	return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
 int32_t min3(int32_t a, int32_t b, int32_t c)
@@ -55,13 +64,13 @@ int32_t max(int32_t a, int32_t b)
 	return a > b ? a : b;
 }
 
-void triangle(const ivec2_t* v0, const ivec2_t* v1, const ivec2_t* v2, uint8_t color)
+void triangle(const Vec2i& v0, const Vec2i& v1, const Vec2i& v2, uint8_t color)
 {
 	// Compute triangle bounding box
-	int32_t minX = min3(v0->x, v1->x, v2->x);
-	int32_t minY = min3(v0->y, v1->y, v2->y);
-	int32_t maxX = max3(v0->x, v1->x, v2->x);
-	int32_t maxY = max3(v0->y, v1->y, v2->y);
+	int32_t minX = min3(v0.x, v1.x, v2.x);
+	int32_t minY = min3(v0.y, v1.y, v2.y);
+	int32_t maxX = max3(v0.x, v1.x, v2.x);
+	int32_t maxY = max3(v0.y, v1.y, v2.y);
 
 	// Clip against screen bounds
 	minX = max(minX, 0);
@@ -70,15 +79,15 @@ void triangle(const ivec2_t* v0, const ivec2_t* v1, const ivec2_t* v2, uint8_t c
 	maxY = min(maxY, 200 - 1);
 
 	// Triangle setup
-	int32_t A01 = v0->y - v1->y, B01 = v1->x - v0->x;
-	int32_t A12 = v1->y - v2->y, B12 = v2->x - v1->x;
-	int32_t A20 = v2->y - v0->y, B20 = v0->x - v2->x;
+	int32_t A01 = v0.y - v1.y, B01 = v1.x - v0.x;
+	int32_t A12 = v1.y - v2.y, B12 = v2.x - v1.x;
+	int32_t A20 = v2.y - v0.y, B20 = v0.x - v2.x;
 
 	// Barycentric coordinates at minX/minY corner
-	ivec2_t p = { minX, minY };
-	int32_t w0_row = orient2d(v1, v2, &p);
-	int32_t w1_row = orient2d(v2, v0, &p);
-	int32_t w2_row = orient2d(v0, v1, &p);
+	Vec2i p = { minX, minY };
+	int32_t w0_row = orient2d(v1, v2, p);
+	int32_t w1_row = orient2d(v2, v0, p);
+	int32_t w2_row = orient2d(v0, v1, p);
 
 	// Rasterize
 	uint32_t offset = minY * 320;
@@ -112,7 +121,7 @@ void triangle(const ivec2_t* v0, const ivec2_t* v1, const ivec2_t* v2, uint8_t c
 
 // -------------------
 
-const vec3_t vertices[] =
+const Vec3 vertices[] =
 {
 	{ -1.0f, -1.0f,  1.0f },
 	{  1.0f, -1.0f,  1.0f },
@@ -152,7 +161,7 @@ const int32_t indices[] =
 };
 
 
-void main()
+int main()
 {
 	runtime_init();
 
@@ -173,7 +182,7 @@ void main()
 	float head = 0.0f;
 	float pitch = 0.0f;
 	float bank = 0.0f;
-	ivec2_t sv[8];
+	Vec2i sv[8];
 
 	for (;;)
 	{
@@ -229,15 +238,15 @@ void main()
 			int32_t i2 = indices[i * 3 + 2];
 
 			triangle(
-				&sv[i0],
-				&sv[i2],
-				&sv[i1],
+				sv[i0],
+				sv[i2],
+				sv[i1],
 				i + 1
 			);			
 		}
 
 		dma_copy(
-			video,
+			(void*)video,
 			framebuffer,
 			320 * 200 / 4
 		);
@@ -247,4 +256,6 @@ void main()
 		pitch += 0.067f;
 		bank += 0.034f;
 	}
+
+	return 0;
 }
