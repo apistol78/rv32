@@ -8,10 +8,33 @@ module SoC(
 	output led_1
 );
 
-	assign led_1 = led_led[0];
+	wire clock;
+	IP_PLL_Clk pll_clk(
+		.refclk(sys_clk),
+		.rst(!sys_reset_n),
+		.outclk_0(clock),
+		.locked()
+	);
 
-	wire clock = sys_clk;
-	wire reset = !sys_reset_n;
+	reg [31:0] cont = 0;
+	always@(posedge clock)
+		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
+
+	reg[4:0] sample = 0;
+	always @(posedge clock)
+	begin
+		if (cont == 32'd4_000_000)
+			sample[4:0] = { sample[3:0], key_1 };
+		else 
+			sample[4:0] = sample[4:0];
+	end
+
+	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
+	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
+	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
+	wire reset = !start_n;
+
+	assign led_1 = led_led[0];
 
 	// ROM
 	wire rom_select;
