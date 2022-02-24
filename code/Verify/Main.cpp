@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <Core/Log/Log.h>
+#include <Core/Math/Random.h>
 #include "verilated.h"
 #include "verilated_fst_c.h"
 #include "SoC/VSoC.h"
 
 using namespace traktor;
+
+bool g_primeICache = true;
 
 VSoC* create_soc()
 {
@@ -23,8 +26,6 @@ VSoC* create_soc()
 
 void evaluate(VSoC* tb, const char* trace, int32_t steps)
 {
-	//const std::unique_ptr< VerilatedContext > contextp{new VerilatedContext()};
-	
 	VerilatedFstC* tfp = nullptr;
 	if (trace)
 	{
@@ -34,28 +35,40 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 		tfp->open(trace); // "simx.vcd");
 	}
 
-	int32_t time = 0;
+	// Prime icache.
+	if (g_primeICache)
+	{
+		for (int i = 0; i < 10; ++i)
+		{
+			const uint32_t pc = i * 4;
+			const uint32_t inst = tb->SoC__DOT__rom__DOT__data[i];
+			tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[i] =
+				(pc | 1) |
+				(uint64_t(inst) << 32);
+		};
+		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__clear = 0xffffffff;
+	}
 
+	int32_t time = 0;
 	for (int32_t i = 0; i < steps; ++i)
 	{
 		const uint32_t from = tb->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 		while (tb->SoC__DOT__cpu__DOT__writeback__DOT__retired == from)
 		{
-			//contextp->timeInc(1);
 			++time;
 			
 			tb->CLOCK_125_p = 1;
 			tb->eval();
 
 			if (tfp)
-				tfp->dump(time); //contextp->time());
+				tfp->dump(time);
 
-			++time; // contextp->timeInc(1);
+			++time;
 			tb->CLOCK_125_p = 0;
 			tb->eval();
 
 			if (tfp)
-				tfp->dump(time); //contextp->time());
+				tfp->dump(time);
 
 			if (time > 1000)
 			{
@@ -72,7 +85,7 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 	}
 }
 
-#define ITERATIONS 100
+#define ITERATIONS 1000
 
 #define S0 8
 #define S1 9
@@ -82,34 +95,42 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 #define A5 15
 #define RA 1
 
+traktor::Random g_rnd;
+
+int32_t rnd12()
+{
+	int32_t r = (int32_t)g_rnd.next();
+	int32_t v = (r & 0xfff) - 2047;
+	return v;
+}
+
 int32_t rnd32()
 {
-	uint8_t b[] =
-	{
-		(uint8_t)rand(),
-		(uint8_t)rand(),
-		(uint8_t)rand(),
-		(uint8_t)rand()
-	};
-	return *(int32_t*)b;
+	return (int32_t)g_rnd.next();
 }
 
 uint32_t urnd32()
 {
-	uint8_t b[] =
-	{
-		(uint8_t)rand(),
-		(uint8_t)rand(),
-		(uint8_t)rand(),
-		(uint8_t)rand()
-	};
-	return *(uint32_t*)b;
+	return g_rnd.next();
 }
 
 float rndf()
 {
-	return (2.0f * (rand() % 32767)) / 32767.0f - 1.0f;
+	for (;;)
+	{
+		uint32_t v = urnd32();
+		float f = *(float*)&v;
+		if (!std::isnan(f))
+			return f;
+	}
 }
+
+uint32_t patchImmediateI(uint32_t instruction, int32_t value)
+{
+	return (value << 20) | (instruction & 0xfffff);
+}
+
+//================================================
 
 bool verify_ADD(const char* trace)
 {
@@ -133,36 +154,23 @@ bool verify_ADD(const char* trace)
 
 bool verify_ADDI(const char* trace)
 {
-	{
-		int32_t s1 = rnd32();
+	int32_t s1 = rnd32();
+	int32_t i1 = rnd12();
 
-		auto tb = create_soc();
-		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
-		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = s1;
-		tb->SoC__DOT__rom__DOT__data[0] = 0x00348413; // addi	s0,s1,3
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = s1;
+	tb->SoC__DOT__rom__DOT__data[0] = patchImmediateI(0x00348413, i1); // addi	s0,s1,<imm>
 
-		evaluate(tb, trace, 1);
+	evaluate(tb, trace, 1);
 
-		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != (s1 + 3))
-			return false;
+	// printf("%d + %d = %d\n", s1, i1, s1 + i1);
+	// printf("-- %d\n", tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0]);
 
-		delete tb;
-	}
-	{
-		int32_t s1 = rnd32();
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != (s1 + i1))
+		return false;
 
-		auto tb = create_soc();
-		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
-		tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = s1;
-		tb->SoC__DOT__rom__DOT__data[0] = 0xffd48413; // addi	s0,s1,-3
-
-		evaluate(tb, trace, 1);
-
-		if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != (s1 - 3))
-			return false;
-
-		delete tb;
-	}
+	delete tb;
 	return true;
 }
 
@@ -829,13 +837,14 @@ bool verify_SB(const char* trace)
 	tb->SoC__DOT__ram__DOT__data[0] = 0x00000000;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0x12;
-	tb->SoC__DOT__rom__DOT__data[0] = 0x00010437; // lui	s0,0x10
-	tb->SoC__DOT__rom__DOT__data[1] = 0x00240413; // addi	s0,s0,2 # 10002 
+	tb->SoC__DOT__rom__DOT__data[0] = 0x10000437; // lui	s0,0x10000
+	tb->SoC__DOT__rom__DOT__data[1] = 0x00240413; // addi	s0,s0,2 # 10000002 
 	tb->SoC__DOT__rom__DOT__data[2] = 0xfe940fa3; // sb		s1,-1(s0)
+	tb->SoC__DOT__rom__DOT__data[3] = 0x0ff0000f; // fence
 
-	evaluate(tb, trace, 3);
+	evaluate(tb, trace, 4);
 
-	// printf("%08x\n", tb->SoC__DOT__ram__DOT__data[0]);
+	//printf("%08x\n", tb->SoC__DOT__ram__DOT__data[0]);
 
 	if (tb->SoC__DOT__ram__DOT__data[0] != 0x00001200)
 		return false;
@@ -1325,27 +1334,6 @@ bool verify_PIPELINE_MEMORY_B(const char* trace)
 	return true;
 }
 
-bool verify_ICACHE(const char* trace)
-{
-	auto tb = create_soc();
-
-	tb->SoC__DOT__rom__DOT__data[0] = 0x00000013; // nop
-	tb->SoC__DOT__rom__DOT__data[1] = 0x00000013; // nop
-	tb->SoC__DOT__rom__DOT__data[2] = 0x00000013; // nop
-	tb->SoC__DOT__rom__DOT__data[3] = 0x00000013; // nop
-	tb->SoC__DOT__rom__DOT__data[4] = 0xff1ff06f; // j		0
-
-	evaluate(tb, trace, 4 + 1 + 4 + 1 + 2);
-
-	printf("PC: %08x\n", tb->SoC__DOT__cpu__DOT__fetch__DOT__pc);
-
-	if (tb->SoC__DOT__cpu__DOT__fetch__DOT__pc != 0x0000000c)
-		return false;
-
-	delete tb;
-	return true;
-}
-
 bool verify_FADD(const char* trace)
 {
 	const float v1 = rndf();
@@ -1555,7 +1543,7 @@ bool verify_FEQ(const char* trace)
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
-	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0UL;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0U;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v2;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&v3;
@@ -1583,7 +1571,7 @@ bool verify_FLT(const char* trace)
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0;
-	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0UL;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = ~0U;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&v2;
@@ -1711,8 +1699,8 @@ bool verify_FNMSUB(const char* trace)
 
 bool verify_FSGNJ(const char* trace)
 {
-	const float v1 = 1.2f;
-	const float v2 = -2.3f;
+	const float v1 = rndf(); // 1.2f;
+	const float v2 = rndf(); //-2.3f;
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
@@ -1723,10 +1711,25 @@ bool verify_FSGNJ(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	//log::info << *(float*)&r << Endl;
+	float fr = *(float*)&r;
 
-	if (*(float*)&r != -1.2f)
+	bool s1 = v1 >= 0.0f;
+	bool s2 = v2 >= 0.0f;
+	bool sr = fr >= 0.0f;
+
+	if (sr != s2)
+	{
+		printf("v1 %f, v2 %f, fr %f\n", v1, v2, fr);
 		return false;
+	}
+
+	const uint32_t b1 = *(uint32_t*)&v1 & 0x7fffffff;
+	const uint32_t b2 = r & 0x7fffffff;
+	if (b1 != b2)
+	{
+		printf("b1 %08x, b2 %08x\n", b1, b2);
+		return false;
+	}
 
 	delete tb;
 	return true;
@@ -1734,8 +1737,8 @@ bool verify_FSGNJ(const char* trace)
 
 bool verify_FSGNJN(const char* trace)
 {
-	const float v1 = 1.2f;
-	const float v2 = -2.3f;
+	const float v1 = rndf(); // 1.2f;
+	const float v2 = rndf(); //-2.3f;
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
@@ -1746,10 +1749,25 @@ bool verify_FSGNJN(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	//log::info << *(float*)&r << Endl;
+	float fr = *(float*)&r;
 
-	if (*(float*)&r != 1.2f)
+	bool s1 = v1 >= 0.0f;
+	bool s2 = v2 >= 0.0f;
+	bool sr = fr >= 0.0f;
+
+	if (sr == s2)
+	{
+		printf("v1 %f, v2 %f, fr %f\n", v1, v2, fr);
 		return false;
+	}
+
+	const uint32_t b1 = *(uint32_t*)&v1 & 0x7fffffff;
+	const uint32_t b2 = r & 0x7fffffff;
+	if (b1 != b2)
+	{
+		printf("b1 %08x, b2 %08x\n", b1, b2);
+		return false;
+	}
 
 	delete tb;
 	return true;
@@ -1757,8 +1775,8 @@ bool verify_FSGNJN(const char* trace)
 
 bool verify_FSGNJX(const char* trace)
 {
-	const float v1 = 1.2f;
-	const float v2 = -2.3f;
+	const float v1 = rndf(); // 1.2f;
+	const float v2 = rndf(); //-2.3f;
 
 	auto tb = create_soc();
 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = 0;
@@ -1769,10 +1787,25 @@ bool verify_FSGNJX(const char* trace)
 	evaluate(tb, trace, 1);
 
 	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
-	//log::info << *(float*)&r << Endl;
+	float fr = *(float*)&r;
 
-	if (*(float*)&r != -1.2f)
+	bool s1 = v1 >= 0.0f;
+	bool s2 = v2 >= 0.0f;
+	bool sr = fr >= 0.0f;
+
+	if (sr == s1 ^ s2)
+	{
+		printf("v1 %f, v2 %f, fr %f\n", v1, v2, fr);
 		return false;
+	}
+
+	const uint32_t b1 = *(uint32_t*)&v1 & 0x7fffffff;
+	const uint32_t b2 = r & 0x7fffffff;
+	if (b1 != b2)
+	{
+		printf("b1 %08x, b2 %08x\n", b1, b2);
+		return false;
+	}
 
 	delete tb;
 	return true;
@@ -1827,6 +1860,33 @@ bool verify_FMAX(const char* trace)
 	return true;
 }
 
+bool verify_FMIN_FMAX(const char* trace)
+{
+	const float v1 = rndf();
+	const float vmin = rndf();
+	const float vmax = vmin + std::abs(rndf());
+
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[32] = *(uint32_t*)&v1;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[33] = *(uint32_t*)&vmin;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[34] = *(uint32_t*)&vmax;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x28101053; // fmax.s	ft0,ft0,ft1
+	tb->SoC__DOT__rom__DOT__data[1] = 0x28200053; // fmin.s	ft0,ft0,ft2
+
+	evaluate(tb, trace, 2);
+
+	uint32_t r = tb->SoC__DOT__cpu__DOT__registers__DOT__r[32];
+	float fr = *(float*)&r;
+
+	if (fr < vmin || fr > vmax)
+	{
+		printf("vmin %f, vmax %f, v1 %f, fr %f\n", vmin, vmax, v1, fr);
+		return false;
+	}
+	delete tb;
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name, bool ftrce)
@@ -1836,10 +1896,18 @@ bool verify(bool (*fn)(const char* trace), const char* name, bool ftrce)
 
 	sprintf(fnf, "%s.fst", name);
 
+	traktor::Random seed;
+
 	if (!ftrce)
 	{
-		for (int i = 0; i < ITERATIONS; ++i)
+		uint32_t sd;
+		int i;
+
+		for (i = 0; i < ITERATIONS; ++i)
 		{
+			sd = seed.next();
+			g_rnd = traktor::Random(sd);
+
 			if (!fn(nullptr))
 			{
 				result = false;
@@ -1850,9 +1918,10 @@ bool verify(bool (*fn)(const char* trace), const char* name, bool ftrce)
 		// Re-run failed test with tracing enabled.
 		if (!result)
 		{
-			log::info << L"Verify failed, re-run with trace..." << Endl;
+			g_rnd = traktor::Random(sd);
+			printf("Verify failed (at %d / %d), re-run with trace...\n", i, ITERATIONS);
 			if (fn(fnf))
-				log::warning << L"Inconsistent verification." << Endl;
+				printf("Inconsistent verification.\n");
 		}
 	}
 	else
@@ -1922,7 +1991,6 @@ int main(int argc, char **argv)
 	CHECK(verify_PIPELINE);
 	CHECK(verify_PIPELINE_MEMORY);
 	CHECK(verify_PIPELINE_MEMORY_B);
-	CHECK(verify_ICACHE);
 	CHECK(verify_FADD);
 	CHECK(verify_FSUB);
 	CHECK(verify_FMUL);
@@ -1943,6 +2011,7 @@ int main(int argc, char **argv)
 	CHECK(verify_FSGNJX);
 	CHECK(verify_FMIN);
 	CHECK(verify_FMAX);
+	CHECK(verify_FMIN_FMAX);
 
 	if (success)
 		printf("SUCCESS!\n");
