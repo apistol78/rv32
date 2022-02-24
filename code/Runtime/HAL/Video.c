@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "Runtime/HAL/I2C.h"
+#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Video.h"
 
 #define SLAVE_ADDR 0x72
@@ -58,7 +59,7 @@ void reg_update_bits(int reg, int mask, int data)
 #define ADV7513_REG_CHIP_ID_HIGH				0xf5
 #define ADV7513_REG_CHIP_ID_LOW					0xf6
 
-int adv7513_chip_identify()
+static int adv7513_chip_identify()
 {
 	uint8_t rev = 0;
 	uint8_t id0 = 0;
@@ -77,17 +78,22 @@ int adv7513_chip_identify()
 	return 0;
 }
 
-void adv7513_kick_up()
+static void adv7513_kick_up()
 {
 	// power up the encoder
 	reg_update_bits(0x41, 0x40, 0);
 }
 
-void adv7513_power_up()
+static void adv7513_power_up()
 {
 	for (int i = 0; i < sizeof(defaultConfig) / sizeof(defaultConfig[0]); ++i)
 		i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
 }
+
+// static void adv7513_interrupt_handler()
+// {
+// 	printf("ADV7513 interrupt!\n");
+// }
 
 int32_t video_init()
 {
@@ -95,6 +101,7 @@ int32_t video_init()
 	{
 		adv7513_kick_up();
 		adv7513_power_up();
+		// interrupt_set_handler(0, adv7513_interrupt_handler);
 	}
 	return 0;
 }

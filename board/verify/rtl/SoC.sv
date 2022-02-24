@@ -133,6 +133,7 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
+		.i_pipeline_disable(1'b0),
 		.o_fault(cpu_fault)
 	);
 	

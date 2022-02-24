@@ -28,6 +28,7 @@ void HDMI::eval(VSoC* soc)
 
 	if (vs == 0 && m_vsync == false)
 	{
+		m_dirty = true;
 		m_vsync = true;
 		m_vpos = 0;
 	}
@@ -55,7 +56,7 @@ void HDMI::eval(VSoC* soc)
 		{
 			uint32_t* id = (uint32_t*)m_image->getData();
 			id[x + y * 640] = d;
-			m_dirty = true;
+			// m_dirty = true;
 		}
 		m_hpos++;
 	}

@@ -244,6 +244,10 @@ int main(int argc, const char **argv)
 	VSoC* soc = new VSoC();
 	soc->CPU_RESET_n = 1;
 	soc->CLOCK_125_p = 0;
+
+	if (cmdLine.hasOption(L"disable-pipeline"))
+		soc->SoC__DOT__cpu_pipeline_disable = 1;
+
 	soc->eval();
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -324,6 +328,8 @@ int main(int argc, const char **argv)
 		int32_t Tc = (int32_t)(timer.getElapsedTime() * 1000);
 		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
+
+		bool shouldDraw = false;
 		
 		for (int32_t i = 0; i < count; ++i)
 		{
@@ -344,10 +350,13 @@ int main(int argc, const char **argv)
 				log::info << L"TRACE CREATED" << Endl;
 			}
 
+			shouldDraw |= hdmi.shouldDraw();
+
 			++time;
 			soc->CLOCK_125_p = 0;
-			soc->KEY |= key1 ? 2 : 0;
 			soc->CPU_RESET_n = reset ? 0 : 1;
+			soc->KEY |= key1 ? 2 : 0;
+			soc->HDMI_TX_INT = shouldDraw;
 
 			soc->eval();
 
@@ -356,8 +365,9 @@ int main(int argc, const char **argv)
 
 			++time;
 			soc->CLOCK_125_p = 1;
-			soc->KEY |= key1 ? 2 : 0;
 			soc->CPU_RESET_n = reset ? 0 : 1;
+			soc->KEY |= key1 ? 2 : 0;
+			soc->HDMI_TX_INT = shouldDraw;
 
 			soc->eval();
 
@@ -392,7 +402,7 @@ int main(int argc, const char **argv)
 				{
 					*fos << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc);
 
-					for (uint32_t i = 0; i < 32; ++i)
+					for (uint32_t i = 0; i < 64; ++i)
 						*fos << str(L", %08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[i]);
 					
 					*fos << Endl;
@@ -447,7 +457,7 @@ int main(int argc, const char **argv)
 
 		if (form)
 		{
-			if (hdmi.shouldDraw())
+			if (shouldDraw)
 			{
 				framebuffer->copyImage(hdmi.getImage());
 				image->setImage(framebuffer);

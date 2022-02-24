@@ -126,146 +126,126 @@ module CPU_Memory #(
 
 	logic busy;
 	memory_data_t data = 0;
-	memory_data_t next_data = 0;
 	state_t state = IDLE;
-	state_t next_state = IDLE;
 	logic [31:0] rmw_rdata = 0;
-	logic [31:0] next_rmw_rdata = 0;
 
 	always_comb begin
-		busy = (i_data.tag != data.tag) && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
+		busy = (i_data.tag != data.tag) || (state != IDLE); // && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
 	end
 
 	always_ff @(posedge i_clock) begin
-		if (i_reset) begin
-			data <= 0;
-			state <= IDLE;
-			rmw_rdata <= 0;
-		end
-		else begin
-			data <= next_data;
-			state <= next_state;
-			rmw_rdata <= next_rmw_rdata;
-		end
-	end
-
-	always_comb begin
-		next_state = state;
-		next_data = data;
-		next_rmw_rdata = rmw_rdata;
-
-		dcache_request = 0;
-		dcache_rw = 0;
-		dcache_wdata = 0;
-		dcache_flush = 0;
-
 		case (state)
 			IDLE: begin
+				dcache_request <= 0;
+				dcache_rw <= 0;
+				dcache_wdata <= 0;
+				dcache_flush <= 0;
+
 				if (i_data.tag != data.tag) begin
 					if (i_data.mem_read) begin
-						dcache_request = 1;
-						next_state = READ;
+						dcache_request <= 1;
+						state <= READ;
 					end
 					else if (i_data.mem_write) begin
-						dcache_request = 1;
+						dcache_request <= 1;
 						if (i_data.mem_width == 4) begin
-							dcache_rw = 1;
-							dcache_wdata = i_data.rd;
-							next_state = WRITE_WORD;
+							dcache_rw <= 1;
+							dcache_wdata <= i_data.rd;
+							state <= WRITE_WORD;
 						end
 						else begin
 							// Byte or half write, need to perform read-modify-write.
-							next_state = WRITE_RMW_0;
+							state <= WRITE_RMW_0;
 						end
 					end
 					else if (i_data.mem_flush) begin
-						dcache_request = 1;
-						dcache_flush = 1;
-						next_state = FLUSH;
+						dcache_request <= 1;
+						dcache_flush <= 1;
+						state <= FLUSH;
 					end
 					else begin
-						next_data.tag = i_data.tag;
-						next_data.rd = i_data.rd;
-						next_data.inst_rd = i_data.inst_rd;
+						data.tag <= i_data.tag;
+						data.rd <= i_data.rd;
+						data.inst_rd <= i_data.inst_rd;
 					end
 				end
 			end
 
 			FLUSH: begin
-				dcache_request = 1;
-				dcache_flush = 1;
 				if (dcache_ready) begin
-					next_data.tag = i_data.tag;
-					next_data.rd = i_data.rd;
-					next_data.inst_rd = i_data.inst_rd;				
-					next_state = IDLE;
+					dcache_request <= 0;
+					dcache_flush <= 0;
+					data.tag <= i_data.tag;
+					data.rd <= i_data.rd;
+					data.inst_rd <= i_data.inst_rd;				
+					state <= IDLE;
 				end
 			end
 
 			READ: begin
-				dcache_request = 1;
 				if (dcache_ready) begin
-					next_data.tag = i_data.tag;
+					dcache_request <= 0;
+					data.tag <= i_data.tag;
 					case (i_data.mem_width)
-						4: next_data.rd  = dcache_rdata;
-						2: next_data.rd  = { { 16{ i_data.mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
-						1: next_data.rd  = { { 24{ i_data.mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
-						default: next_data.rd  = 0;
+						4: data.rd <= dcache_rdata;
+						2: data.rd <= { { 16{ i_data.mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
+						1: data.rd <= { { 24{ i_data.mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
+						default: data.rd <= 0;
 					endcase
-					next_data.inst_rd = i_data.inst_rd;
-					next_state = IDLE;
+					data.inst_rd <= i_data.inst_rd;
+					state <= IDLE;
 				end
 			end
 
 			WRITE_WORD: begin
-				dcache_request = 1;
-				dcache_rw = 1;
-				dcache_wdata = i_data.rd;
 				if (dcache_ready) begin
-					next_data.tag = i_data.tag;
-					next_data.rd = i_data.rd;
-					next_data.inst_rd = i_data.inst_rd;	
-					next_state = IDLE;
+					dcache_request <= 0;
+					dcache_rw <= 0;
+					data.tag <= i_data.tag;
+					data.rd <= i_data.rd;
+					data.inst_rd <= i_data.inst_rd;	
+					state <= IDLE;
 				end
 			end
 
 			WRITE_RMW_0: begin
-				dcache_request = 1;
 				if (dcache_ready) begin
-					next_rmw_rdata = dcache_rdata;
-					next_state = WRITE_RMW_1;
+					dcache_request <= 0;
+					rmw_rdata <= dcache_rdata;
+					state <= WRITE_RMW_1;
 				end
 			end
 
 			WRITE_RMW_1: begin
-				dcache_request = 1;
-				dcache_rw = 1;
+				dcache_request <= 1;
+				dcache_rw <= 1;
 				if (i_data.mem_width == 1) begin
-					case ( address_byte_index  )
-						2'd0: dcache_wdata = { rmw_rdata[31:24], rmw_rdata[23:16], rmw_rdata[15:8], i_data.rd[7:0] };
-						2'd1: dcache_wdata = { rmw_rdata[31:24], rmw_rdata[23:16],  i_data.rd[7:0], rmw_rdata[7:0] };
-						2'd2: dcache_wdata = { rmw_rdata[31:24],   i_data.rd[7:0], rmw_rdata[15:8], rmw_rdata[7:0] };
-						2'd3: dcache_wdata = {   i_data.rd[7:0], rmw_rdata[23:16], rmw_rdata[15:8], rmw_rdata[7:0] };
+					case (address_byte_index)
+						2'd0: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16], rmw_rdata[15:8], i_data.rd[7:0] };
+						2'd1: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16],  i_data.rd[7:0], rmw_rdata[7:0] };
+						2'd2: dcache_wdata <= { rmw_rdata[31:24],   i_data.rd[7:0], rmw_rdata[15:8], rmw_rdata[7:0] };
+						2'd3: dcache_wdata <= {   i_data.rd[7:0], rmw_rdata[23:16], rmw_rdata[15:8], rmw_rdata[7:0] };
 					endcase
 				end
 				else begin	// width must be 2
-					case ( address_byte_index  )
-						2'd0: dcache_wdata = { rmw_rdata[31:16], i_data.rd[15:0] };
-						2'd2: dcache_wdata = {  i_data.rd[15:0], rmw_rdata[15:0] };
-						default:
-							dcache_wdata = 0;
+					case (address_byte_index)
+						2'd0: dcache_wdata <= { rmw_rdata[31:16], i_data.rd[15:0] };
+						2'd2: dcache_wdata <= {  i_data.rd[15:0], rmw_rdata[15:0] };
+						default: dcache_wdata <= 0;
 					endcase						
 				end
 				if (dcache_ready) begin
-					next_data.tag = i_data.tag;
-					next_data.rd = i_data.rd;
-					next_data.inst_rd = i_data.inst_rd;	
-					next_state = IDLE;
+					dcache_request <= 0;
+					dcache_rw <= 0;
+					data.tag <= i_data.tag;
+					data.rd <= i_data.rd;
+					data.inst_rd <= i_data.inst_rd;	
+					state <= IDLE;
 				end					
 			end
 
 			default:
-				next_state = IDLE;
+				state <= IDLE;
 
 		endcase
 	end

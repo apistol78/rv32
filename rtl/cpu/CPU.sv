@@ -23,19 +23,20 @@ module CPU #(
 
 	// Instruction bus
 	output o_ibus_request,			// IO request.
-	input i_ibus_ready,			// IO request ready.
+	input i_ibus_ready,				// IO request ready.
 	output [31:0] o_ibus_address,	// Address
 	input [31:0] i_ibus_rdata,		// Read data
 	
 	// Data bus
 	output o_dbus_rw,				// Data read/write
 	output o_dbus_request,			// IO request.
-	input i_dbus_ready,			// IO request ready.
+	input i_dbus_ready,				// IO request ready.
 	output [31:0] o_dbus_address,	// Address
 	input [31:0] i_dbus_rdata,		// Read data
-	output [31:0] o_dbus_wdata,	// Write data
+	output [31:0] o_dbus_wdata,		// Write data
 	
 	// Debug
+	input i_pipeline_disable,
 	output o_fault
 );
 
@@ -101,6 +102,8 @@ module CPU #(
 	//====================================================
 	// FETCH
 
+	wire fetch_pipeline_busy = i_pipeline_disable && fetch_data.tag != writeback_data.tag;
+
 	fetch_data_t fetch_data_0;
 	
 	CPU_Fetch #(
@@ -127,7 +130,7 @@ module CPU #(
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Output
-		.i_decode_busy(decode_busy),
+		.i_decode_busy(decode_busy | fetch_pipeline_busy),
 		.o_data(fetch_data_0)
 	);
 

@@ -24,8 +24,10 @@ module PLIC(
 );
 
 	logic [3:0] pending = 0;
+	logic interrupt_issue = 0;
+	logic interrupt_issued = 0;
 
-	assign o_interrupt = |pending;
+	assign o_interrupt = interrupt_issue;
 
 	initial begin
 		 o_rdata = 0;
@@ -44,6 +46,12 @@ module PLIC(
 		end
 		if (i_interrupt_3) begin
 			pending[3] <= 1;
+		end
+
+		interrupt_issue <= 1'b0;
+		if (|pending && !interrupt_issued) begin
+			interrupt_issue <= 1'b1;
+			interrupt_issued <= 1'b1;
 		end
 
 		o_rdata <= 0;
@@ -67,6 +75,12 @@ module PLIC(
 					o_rdata <= 4;
 					pending[3] <= 0;
 				end
+			end
+		end
+
+		if (i_request && i_rw) begin
+			if (i_address == 24'h200004) begin	// complete context 0
+				interrupt_issued <= 1'b0;
 			end
 		end
 

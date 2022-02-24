@@ -592,7 +592,7 @@ module SoC(
 		.i_clock(clock),
 
 		.i_interrupt_0(HDMI_TX_INT),
-		.i_interrupt_1(KEY[0]),
+		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),
 
@@ -674,6 +674,7 @@ module SoC(
 	wire [31:0] cpu_dbus_address;
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
+	wire cpu_pipeline_disable;
 	wire cpu_fault;
 
 	CPU cpu(
@@ -681,8 +682,8 @@ module SoC(
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(timer_interrupt),
-		.i_external_interrupt(plic_interrupt),
+		.i_timer_interrupt(0), // timer_interrupt),
+		.i_external_interrupt(0), // plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -699,6 +700,7 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
+		.i_pipeline_disable(cpu_pipeline_disable),
 		.o_fault(cpu_fault)
 	);
 	
