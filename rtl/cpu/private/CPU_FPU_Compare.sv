@@ -12,7 +12,10 @@ module CPU_FPU_Compare(
 
 	output o_ready,
 	output o_less,
-	output o_equal
+	output o_equal,
+
+	output [31:0] o_min,
+	output [31:0] o_max
 );
 	typedef enum bit [0:0]
 	{
@@ -23,13 +26,14 @@ module CPU_FPU_Compare(
 	logic s_output_ready = 0;
 	state_t state = IDLE;
 
+	logic [31:0] a;
 	logic [22:0] a_m;
-	logic [22:0] b_m;
-
 	logic [9:0] a_e;
-	logic [9:0] b_e;
-
 	logic a_s;
+
+	logic [31:0] b;
+	logic [22:0] b_m;
+	logic [9:0] b_e;
 	logic b_s;
 
 	logic less = 0;
@@ -38,19 +42,22 @@ module CPU_FPU_Compare(
 	assign o_ready = s_output_ready;
 	assign o_less = less;
 	assign o_equal = equal;
+	assign o_min = less ? a : b;
+	assign o_max = less ? b : a;
 
 	always_ff @(posedge i_clock) begin
 		case(state)
 			IDLE: begin
 				s_output_ready <= 0;
 				if (i_request) begin
+					a <= i_op1;
 					a_m <= { i_op1[22:0] };
-					b_m <= { i_op2[22:0] };
-
 					a_e <= { i_op1[30:23] };
-					b_e <= { i_op2[30:23] };
-
 					a_s <= i_op1[31];
+
+					b <= i_op2;
+					b_m <= { i_op2[22:0] };
+					b_e <= { i_op2[30:23] };
 					b_s <= i_op2[31];
 
 					state <= PUT_Z;

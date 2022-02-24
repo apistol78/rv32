@@ -134,8 +134,10 @@ module CPU_FPU(
 		i_op == `FPU_OP_MAX
 	) && i_request;
 	wire cmp_ready;
-	wire cmp_equal;
 	wire cmp_less;
+	wire cmp_equal;
+	wire [31:0] cmp_min;
+	wire [31:0] cmp_max;
 	CPU_FPU_Compare cmp(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
@@ -143,8 +145,10 @@ module CPU_FPU(
 		.i_op1(i_op1),
 		.i_op2(i_op2),
 		.o_ready(cmp_ready),
+		.o_less(cmp_less),
 		.o_equal(cmp_equal),
-		.o_less(cmp_less)
+		.o_min(cmp_min),
+		.o_max(cmp_max)
 	);
 
 	wire [31:0] fcmp_equal = { 31'h0, cmp_equal };
@@ -155,8 +159,8 @@ module CPU_FPU(
 	wire [31:0] fsgnjn_result = { ~i_op2[31], i_op1[30:0] };
 	wire [31:0] fsgnjx_result = { i_op1[31] ^ i_op2[31], i_op1[30:0] };
 
-	wire [31:0] fmin_result = cmp_less ? i_op1 : i_op2;
-	wire [31:0] fmax_result = cmp_less ? i_op2 : i_op1;
+	wire [31:0] fmin_result = cmp_min;
+	wire [31:0] fmax_result = cmp_max;
 
 	assign o_ready =
 		i_request & (
