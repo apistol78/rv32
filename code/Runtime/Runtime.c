@@ -24,8 +24,8 @@ int32_t __attribute__((used)) runtime_init()
 	printf("SP: 0x%x\n", sp);
 	printf("GP: 0x%x\n", gp);
 
-	// printf("** Initialize IRQ handler **\n");
-	// interrupt_init();
+	printf("** Initialize IRQ handler **\n");
+	interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)

@@ -90,10 +90,10 @@ static void adv7513_power_up()
 		i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
 }
 
-// static void adv7513_interrupt_handler()
-// {
-// 	printf("ADV7513 interrupt!\n");
-// }
+static void adv7513_interrupt_handler()
+{
+	printf("ADV7513 interrupt!\n");
+}
 
 int32_t video_init()
 {
@@ -101,7 +101,7 @@ int32_t video_init()
 	{
 		adv7513_kick_up();
 		adv7513_power_up();
-		// interrupt_set_handler(0, adv7513_interrupt_handler);
+		interrupt_set_handler(0, adv7513_interrupt_handler);
 	}
 	return 0;
 }

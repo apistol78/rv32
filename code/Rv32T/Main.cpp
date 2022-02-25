@@ -378,13 +378,14 @@ int main(int argc, const char **argv)
 				log::info << L"TRACE CREATED" << Endl;
 			}
 
-			shouldDraw |= hdmi.shouldDraw();
+			bool hdmiTxInt = hdmi.shouldDraw();
+			shouldDraw |= hdmiTxInt;
 
 			++time;
 			soc->CLOCK_125_p = 0;
 			soc->CPU_RESET_n = reset ? 0 : 1;
 			soc->KEY |= key1 ? 2 : 0;
-			soc->HDMI_TX_INT = shouldDraw;
+			soc->HDMI_TX_INT = hdmiTxInt;
 
 			soc->eval();
 
@@ -395,7 +396,7 @@ int main(int argc, const char **argv)
 			soc->CLOCK_125_p = 1;
 			soc->CPU_RESET_n = reset ? 0 : 1;
 			soc->KEY |= key1 ? 2 : 0;
-			soc->HDMI_TX_INT = shouldDraw;
+			soc->HDMI_TX_INT = hdmiTxInt;
 
 			soc->eval();
 

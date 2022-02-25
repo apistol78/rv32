@@ -684,8 +684,8 @@ module SoC(
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(0), // timer_interrupt),
-		.i_external_interrupt(0), // plic_interrupt),
+		.i_timer_interrupt(timer_interrupt),
+		.i_external_interrupt(plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),

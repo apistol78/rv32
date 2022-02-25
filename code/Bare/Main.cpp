@@ -179,15 +179,6 @@ int main()
 	palette[0] = 0x00000000;
 	palette[1] = 0x00ffffff;
 
-	for (int i = 0; i < 40; ++i)
-	{
-		float a = (float)i * 6.28f / 10.0f;
-		float sa0 = cos(a - 3.14f/2);
-		float sa = sin(a);
-		float ca = cos(a);
-		printf("%d => %f, %f, %f\n", i, ca, sa, sa0);
-	}
-
 	float head = 0.0f;
 	float pitch = 0.0f;
 	float bank = 0.0f;
@@ -212,9 +203,6 @@ int main()
 		const float cb = cos(bank);
 		const float sb = sin(bank);
 
-		printf("\n");
-		printf("%f => %f, %f\n", head, ca, sa);		
-
 		for (int32_t i = 0; i < 8; ++i)
 		{
 			float xa = vertices[i].x * ca - vertices[i].z * sa;
@@ -228,16 +216,6 @@ int main()
 			float x = xb * cb - yb * sb;
 			float y = xb * sb + yb * cb;
 			float z = zb;
-
-			// if (i == 0)
-			// {
-			// 	printf("\n");
-
-			// 	printf("%f, %f\n", ca, sa);
-			// 	printf("%f, %f, %f\n", vertices[i].x, vertices[i].y, vertices[i].z);
-			// 	printf("%f, %f, %f\n", xa, ya, za);
-
-			// }
 
 			z += 5.0f;
 
