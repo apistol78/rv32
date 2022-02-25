@@ -21,7 +21,7 @@ module CPU_Execute (
 
 	// Input
 	output o_busy,
-	input i_memory_raw,
+	// input i_memory_raw,
 	input decode_data_t i_data,
 	input [31:0] i_rs1,
 	input [31:0] i_rs2,
@@ -167,7 +167,7 @@ module CPU_Execute (
 	
 	always_comb begin
 		o_busy =
-			i_memory_raw ||
+			// i_memory_raw ||
 			i_memory_busy ||
 			(
 				(i_data.tag != data.tag) &&
@@ -176,7 +176,7 @@ module CPU_Execute (
 	end
 
 	always_comb begin
-		fpu_request = (i_data.tag != data.tag) && i_data.fpu;
+		fpu_request = !i_memory_busy && (i_data.tag != data.tag) && i_data.fpu;
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -196,18 +196,20 @@ module CPU_Execute (
 			o_ecall <= 0;
 
 			if (
-				!i_memory_raw &&
+				// !i_memory_raw &&
 				!i_memory_busy &&
 				i_data.tag != data.tag
 			) begin
 
 				data.inst_rd <= i_data.inst_rd;
-				data.mem_address <= alu_result;
+				data.rd <= 32'hcafebabe;
+
 				data.mem_read <= i_data.memory_read;
 				data.mem_write <= i_data.memory_write;
 				data.mem_flush <= 0;
 				data.mem_width <= i_data.memory_width;
 				data.mem_signed <= i_data.memory_signed;
+				data.mem_address <= alu_result;
 
 				if (i_data.arithmetic) begin
 					`RD <= alu_result;

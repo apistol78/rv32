@@ -14,9 +14,9 @@ module CPU_Forward (
 
 	output [31:0] o_rs1,
 	output [31:0] o_rs2,
-	output [31:0] o_rs3,
+	output [31:0] o_rs3
 
-	output o_memory_raw
+	// output o_memory_raw
 );
 	assign o_rs1 = rs1;
 	assign o_rs2 = rs2;
@@ -26,21 +26,21 @@ module CPU_Forward (
 	logic [31:0] rs2;
 	logic [31:0] rs3;
 
-	// Read-After-Write hazard detection.
-	always_comb begin
-		if (
-			i_execute_data.tag != i_memory_data.tag &&
-			i_execute_data.mem_read &&
-			(
-				i_execute_data.inst_rd == i_decode_data.inst_rs1 ||
-				i_execute_data.inst_rd == i_decode_data.inst_rs2 ||
-				i_execute_data.inst_rd == i_decode_data.inst_rs3
-			)
-		)
-			o_memory_raw = 1'b1;
-		else
-			o_memory_raw = 1'b0;
-	end
+	// // Read-After-Write hazard detection.
+	// always_comb begin
+	// 	if (
+	// 		i_execute_data.tag != i_memory_data.tag &&
+	// 		i_execute_data.mem_read &&
+	// 		(
+	// 			i_execute_data.inst_rd == i_decode_data.inst_rs1 ||
+	// 			i_execute_data.inst_rd == i_decode_data.inst_rs2 ||
+	// 			i_execute_data.inst_rd == i_decode_data.inst_rs3
+	// 		)
+	// 	)
+	// 		o_memory_raw = 1'b1;
+	// 	else
+	// 		o_memory_raw = 1'b0;
+	// end
 
 	// Forward RS1 from pipeline.
 	always_comb begin

@@ -272,7 +272,7 @@ int main(int argc, const char **argv)
 	Ref< FileOutputStream > fos;
 	if (cmdLine.hasOption(L"trace-pc"))
 	{
-		Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.pc", File::FmWrite);
+		Ref< IStream > f = FileSystem::getInstance().open(cmdLine.getOption(L"trace-pc").getString(), File::FmWrite);
 		if (!f)
 		{
 			log::error << L"Unable to create PC trace." << Endl;
@@ -281,17 +281,45 @@ int main(int argc, const char **argv)
 		fos = new FileOutputStream(f, new Utf8Encoding());
 	}
 
-	Ref< FileOutputStream > bus_os;
-	if (cmdLine.hasOption(L"trace-bus"))
+	Ref< FileOutputStream > exe_os;
+	uint32_t exe_debug_tag = 0;
+
+	if (cmdLine.hasOption(L"trace-execute"))
 	{
-		Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.bus", File::FmWrite);
+		Ref< IStream > f = FileSystem::getInstance().open(cmdLine.getOption(L"trace-execute").getString(), File::FmWrite);
 		if (!f)
 		{
-			log::error << L"Unable to create BUS trace." << Endl;
+			log::error << L"Unable to create EXECUTE trace." << Endl;
 			return 1;
 		}
-		bus_os = new FileOutputStream(f, new Utf8Encoding());
+		exe_os = new FileOutputStream(f, new Utf8Encoding());
 	}
+
+	Ref< FileOutputStream > wb_os;
+	uint32_t wb_debug_tag = 0;
+
+	if (cmdLine.hasOption(L"trace-writeback"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(cmdLine.getOption(L"trace-writeback").getString(), File::FmWrite);
+		if (!f)
+		{
+			log::error << L"Unable to create WRITEBACK trace." << Endl;
+			return 1;
+		}
+		wb_os = new FileOutputStream(f, new Utf8Encoding());
+	}
+
+	// Ref< FileOutputStream > bus_os;
+	// if (cmdLine.hasOption(L"trace-bus"))
+	// {
+	// 	Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.bus", File::FmWrite);
+	// 	if (!f)
+	// 	{
+	// 		log::error << L"Unable to create BUS trace." << Endl;
+	// 		return 1;
+	// 	}
+	// 	bus_os = new FileOutputStream(f, new Utf8Encoding());
+	// }
 
 	// Create from PC.
 	uint32_t traceFromPC = -1;
@@ -410,6 +438,35 @@ int main(int argc, const char **argv)
 				}
 			}
 
+			if (exe_os)
+			{
+				if (soc->SoC__DOT__execute_debug_tag != exe_debug_tag)
+				{
+					*exe_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
+
+					for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__decode__DOT__data); ++i)
+						*exe_os << str(L"%08x", soc->SoC__DOT__cpu__DOT__decode__DOT__data[i]);
+
+					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs1);
+					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs2);
+					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs3);
+
+					*exe_os << Endl;
+					exe_debug_tag = soc->SoC__DOT__execute_debug_tag;
+				}
+			}
+
+			if (wb_os)
+			{
+				if (soc->SoC__DOT__writeback_debug_tag != wb_debug_tag)
+				{
+					*wb_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
+					*wb_os << str(L"%016x", soc->SoC__DOT__cpu__DOT__memory__DOT__data);
+					*wb_os << Endl;
+					wb_debug_tag = soc->SoC__DOT__writeback_debug_tag;
+				}
+			}
+
 			// if (bus_os)
 			// {
 			// 	if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__cpu_dbus_ready)
@@ -428,7 +485,7 @@ int main(int argc, const char **argv)
 			key1 = false;
 			reset = false;
 
-			// if (time/2 >= (957224-1000) && !tfp)
+			// if (time/2 >= (2433127-1000) && !tfp)
 			// {
 			// 	trace = true;
 			// 	slow = true;

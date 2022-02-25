@@ -37,6 +37,8 @@ module CPU #(
 	
 	// Debug
 	input i_pipeline_disable,
+	output [`TAG_SIZE] o_execute_debug_tag,
+	output [`TAG_SIZE] o_writeback_debug_tag,
 	output o_fault
 );
 
@@ -130,7 +132,7 @@ module CPU #(
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Output
-		.i_decode_busy(decode_busy | fetch_pipeline_busy),
+		.i_decode_busy(execute_busy | fetch_pipeline_busy),
 		.o_data(fetch_data_0)
 	);
 
@@ -142,20 +144,17 @@ module CPU #(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
-		.i_tag(fetch_data_0.tag),
 		.i_data(fetch_data_0),
 		.o_busy(),
 
-		.o_tag(),
 		.o_data(fetch_data),
-		.i_busy(decode_busy)	
+		.i_busy(execute_busy)	
 	);
 
 	//====================================================
 	// DECODE
 
 	wire decode_fault;
-	wire decode_busy;
 	decode_data_t decode_data;
 
 	CPU_Decode decode(
@@ -164,11 +163,10 @@ module CPU #(
 		.o_fault(decode_fault),
 
 		// Input
-		.o_busy(decode_busy),
+		.i_execute_busy(execute_busy),
 		.i_data(fetch_data),
 
 		// Output
-		.i_execute_busy(execute_busy),
 		.o_data(decode_data)
 	);
 
@@ -178,7 +176,7 @@ module CPU #(
 	wire [31:0] forward_rs1;
 	wire [31:0] forward_rs2;
 	wire [31:0] forward_rs3;
-	wire forward_memory_raw;
+	// wire forward_memory_raw;
 
 	CPU_Forward forward(
 		.i_decode_data(decode_data),
@@ -192,9 +190,9 @@ module CPU #(
 
 		.o_rs1(forward_rs1),
 		.o_rs2(forward_rs2),
-		.o_rs3(forward_rs3),
+		.o_rs3(forward_rs3)
 
-		.o_memory_raw(forward_memory_raw)
+		// .o_memory_raw(forward_memory_raw)
 	);
 
 	//====================================================
@@ -226,7 +224,7 @@ module CPU #(
 
 		// Input
 		.o_busy(execute_busy),
-		.i_memory_raw(forward_memory_raw),
+		// .i_memory_raw(forward_memory_raw),
 		.i_data(decode_data),
 		.i_rs1(forward_rs1),
 		.i_rs2(forward_rs2),
@@ -285,5 +283,7 @@ module CPU #(
 	//====================================================
 	
 	assign o_fault = decode_fault || execute_fault;
+	assign o_execute_debug_tag = decode_data.tag;
+	assign o_writeback_debug_tag = memory_data.tag;
 
 endmodule

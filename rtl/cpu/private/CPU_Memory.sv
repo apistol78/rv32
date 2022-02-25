@@ -130,7 +130,7 @@ module CPU_Memory #(
 	logic [31:0] rmw_rdata = 0;
 
 	always_comb begin
-		busy = (i_data.tag != data.tag) || (state != IDLE); // && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
+		busy = (i_data.tag != data.tag) && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
 	end
 
 	always_ff @(posedge i_clock) begin

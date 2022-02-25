@@ -8,11 +8,10 @@ module CPU_Decode(
 	output reg o_fault,
 
 	// Input
-	output o_busy,
+	input i_execute_busy,
 	input fetch_data_t i_data,
 	
 	// Output
-	input i_execute_busy,
 	output decode_data_t o_data
 );
 
@@ -45,7 +44,6 @@ module CPU_Decode(
 	wire [31:0] inst_R_imm = { 26'b0, `INSTRUCTION[25:20] };
 	wire [31:0] inst_CSR_imm = { 20'b0, `INSTRUCTION[31:20] };
 
-	assign o_busy = i_execute_busy;
 	assign o_data = data;
 
 	decode_data_t data = 0;
@@ -61,6 +59,12 @@ module CPU_Decode(
 		end
 		else begin
 			if (i_data.tag != data.tag) begin
+
+				// If decode has received new transaction
+				// but execute is still busy we fault.
+				if (i_execute_busy)
+					o_fault <= 1;
+
 				data.pc <= i_data.pc;
 
 				data.inst_rs1 <= i_data.inst_rs1;

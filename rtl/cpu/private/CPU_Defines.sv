@@ -3,7 +3,7 @@
 
 // Tag size, wider is useful for debugging but no more than a
 // single bit should be necessary.
-`define TAG_SIZE                    1:0
+`define TAG_SIZE                    7:0
 
 // Size of register index.
 `define REG_ID_SIZE					5:0

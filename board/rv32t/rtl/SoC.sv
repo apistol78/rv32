@@ -1,4 +1,4 @@
-//`include "CPU_Types.sv"
+`include "CPU_Defines.sv"
 
 `define ENABLE_DDR2LP
 //`define ENABLE_HSMC_XCVR
@@ -675,6 +675,8 @@ module SoC(
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_pipeline_disable;
+	wire [`TAG_SIZE] cpu_execute_debug_tag;
+	wire [`TAG_SIZE] cpu_writeback_debug_tag;
 	wire cpu_fault;
 
 	CPU cpu(
@@ -701,9 +703,11 @@ module SoC(
 
 		// Debug
 		.i_pipeline_disable(cpu_pipeline_disable),
+		.o_execute_debug_tag(cpu_execute_debug_tag),
+		.o_writeback_debug_tag(cpu_writeback_debug_tag),
 		.o_fault(cpu_fault)
 	);
-	
+
 	//=====================================
 
 	assign rom_select = bus_address[31:28] == 4'h0;
@@ -843,8 +847,12 @@ module SoC(
 		plic_select;
 
 	reg bus_fault = 0;
+	reg [`TAG_SIZE] execute_debug_tag = 0;
+	reg [`TAG_SIZE] writeback_debug_tag = 0;
 	always_comb begin
 		bus_fault = !bus_valid_select && bus_request;
+		execute_debug_tag = cpu_execute_debug_tag;
+		writeback_debug_tag = cpu_writeback_debug_tag;
 	end
 	
 `endif

@@ -134,6 +134,8 @@ module SoC(
 
 		// Debug
 		.i_pipeline_disable(1'b0),
+		.o_execute_debug_tag(),
+		.o_writeback_debug_tag(),
 		.o_fault(cpu_fault)
 	);
 	
