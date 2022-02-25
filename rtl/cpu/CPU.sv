@@ -104,7 +104,11 @@ module CPU #(
 	//====================================================
 	// FETCH
 
+`ifdef __VERILATOR__
 	wire fetch_pipeline_busy = i_pipeline_disable && fetch_data.tag != writeback_data.tag;
+`else
+	wire fetch_pipeline_busy = 1'b0;
+`endif
 
 	fetch_data_t fetch_data_0;
 	

@@ -1,11 +1,15 @@
 
 `timescale 1ns/1ns
 
+`define FREQUENCY 100000000
+
 module SoC(
 	input sys_clk,
 	input sys_reset_n,
 	input key_1,
-	output led_1
+	output led_1,
+	input uart_rx,
+	output uart_tx
 );
 
 	wire clock;
@@ -67,7 +71,7 @@ module SoC(
 		.o_rdata(ram_rdata),
 		.o_ready(ram_ready)
 	);
-
+	
 	// LEDS
 	wire led_select;
 	wire led_ready;
@@ -79,6 +83,84 @@ module SoC(
 		.i_wdata(bus_wdata),
 		.o_ready(led_ready),
 		.LEDR(led_led)
+	);
+	
+	// UART (USB)
+	wire uart_0_select;
+	wire [1:0] uart_0_address;
+	wire [31:0] uart_0_rdata;
+	wire uart_0_ready;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_0(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_0_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(uart_0_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(uart_0_rdata),
+		.o_ready(uart_0_ready),
+		// ---
+		.UART_RX(uart_rx),
+		.UART_TX(uart_tx)
+	);
+
+	// DMA
+	wire dma_select;
+	wire [1:0] dma_address;
+	wire [31:0] dma_rdata;
+	wire dma_ready;
+
+	wire dma_bus_rw;
+	wire dma_bus_request;
+	wire dma_bus_ready;
+	wire [31:0] dma_bus_address;
+	wire [31:0] dma_bus_rdata;
+	wire [31:0] dma_bus_wdata;
+
+	DMA dma(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// CPU
+		.i_request(dma_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(dma_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(dma_rdata),
+		.o_ready(dma_ready),
+
+		// System
+		.i_stall(vram_fifo_full),
+		
+		// Bus
+		.o_bus_rw(dma_bus_rw),
+		.o_bus_request(dma_bus_request),
+		.i_bus_ready(dma_bus_ready),
+		.o_bus_address(dma_bus_address),
+		.i_bus_rdata(dma_bus_rdata),
+		.o_bus_wdata(dma_bus_wdata)
+	);
+
+	// Timer
+	wire timer_select;
+	wire [2:0] timer_address;
+	wire [31:0] timer_rdata;
+	wire timer_ready;
+	wire timer_interrupt;
+	Timer #(
+		.FREQUENCY(`FREQUENCY)
+	) timer(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(timer_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(timer_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(timer_rdata),
+		.o_ready(timer_ready),
+		.o_interrupt(timer_interrupt)
 	);
 	
 	//====================================================
@@ -130,12 +212,12 @@ module SoC(
 		.i_pb_wdata(cpu_dbus_wdata),
 
 		// Port C (DMA)
-		.i_pc_rw(),
-		.i_pc_request(),
-		.o_pc_ready(),
-		.i_pc_address(),
-		.o_pc_rdata(),
-		.i_pc_wdata()
+		.i_pc_rw(dma_bus_rw),
+		.i_pc_request(dma_bus_request),
+		.o_pc_ready(dma_bus_ready),
+		.i_pc_address(dma_bus_address),
+		.o_pc_rdata(dma_bus_rdata),
+		.i_pc_wdata(dma_bus_wdata)
 	);
 
 	// CPU
@@ -180,6 +262,7 @@ module SoC(
 		.o_fault(cpu_fault)
 	);
 	
+
 	//=====================================
 
 	assign rom_select = bus_address[31:28] == 4'h0;
@@ -190,17 +273,32 @@ module SoC(
 
 	assign led_select = bus_address[31:28] == 4'h4;
 
+	assign uart_0_select = bus_address[31:24] == 8'h50;
+	assign uart_0_address = bus_address[3:2];
+
+	assign dma_select = bus_address[31:28] == 4'h9;
+	assign dma_address = bus_address[3:2];
+
+	assign timer_select = bus_address[31:28] == 4'ha;
+	assign timer_address = bus_address[4:2];
+	
 	//=====================================
 
 	assign bus_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
+		uart_0_select ? uart_0_rdata :
+		dma_select ? dma_rdata :
+		timer_select ? timer_rdata :
 		32'h00000000;
 		
 	assign bus_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		led_select ? led_ready :
+		uart_0_select ? uart_0_ready :
+		dma_select ? dma_ready :
+		timer_select ? timer_ready :
 		1'b0;
 	
 endmodule

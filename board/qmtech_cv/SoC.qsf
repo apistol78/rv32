@@ -62,16 +62,26 @@ set_global_assignment -name SEARCH_PATH /home/apistol/private/rv32/ip/intel
 set_global_assignment -name SEARCH_PATH /home/apistol/private/rv32/rtl/cpu
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_tx
+set_location_assignment PIN_AB15 -to uart_tx
+set_location_assignment PIN_AA15 -to uart_rx
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rx
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedMultiply.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedDivide.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_Multiply.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_Divide.qip
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BusAccess.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BROM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_clear.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_latency.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/Timer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_TX.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_RX.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_WriteBuffer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Writeback.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Types.sv
