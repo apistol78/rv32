@@ -59,20 +59,39 @@ void main()
 	*leds = 0x00000000;
 
 	// welcome
-	for (uint32_t i = 0; i < 8; ++i)
+	for (uint32_t I = 0; I < 4; ++I)
 	{
-		*leds = (uint32_t)(1 << i);
-		for (uint32_t j = 0; j < 100000; ++j)
-			__asm__ volatile ("nop");
+		for (uint32_t lv = 0; lv < 256; ++lv)
+		{
+			for (uint32_t i = 0; i < 100; ++i)
+			{
+				for (uint32_t j = 0; j < 256; ++j)
+				{
+					*LED_BASE = (j < lv) ? 0xff : 0x00;
+					__asm__ volatile ( "nop" );
+				}
+			}
+		}
+		for (uint32_t lv = 0; lv < 256; ++lv)
+		{
+			for (uint32_t i = 0; i < 100; ++i)
+			{
+				for (uint32_t j = 0; j < 256; ++j)
+				{
+					*LED_BASE = (j > lv) ? 0xff : 0x00;
+					__asm__ volatile ( "nop" );
+				}
+			}
+		}		
 	}
 
-	*leds = 0x000000ff;
-
+/*
 	// clear sdram
 	for (uint32_t addr = 0x20000000; addr < 0x28000000; addr += 4)
 		*((uint32_t*)addr) = 0x00000000;
 
 	*leds = 0x00000000;
+*/
 
 	for (;;)
 	{
