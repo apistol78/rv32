@@ -352,11 +352,11 @@ module SoC(
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
 	`else
-	BRAM_latency #(
+	BRAM/*_latency*/ #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
-		.ADDR_LSH(2),
-		.LATENCY(10)
+		.ADDR_LSH(2)/*,
+		.LATENCY(10)*/
 	) sdram(
 		.i_clock(clock),
 		.i_request(l2cache_bus_request),
@@ -849,10 +849,32 @@ module SoC(
 	reg bus_fault = 0;
 	reg [`TAG_SIZE] execute_debug_tag = 0;
 	reg [`TAG_SIZE] writeback_debug_tag = 0;
+
+	reg debug_request = 0;
+	reg [12:0] debug_select = 0;
+
 	always_comb begin
 		bus_fault = !bus_valid_select && bus_request;
 		execute_debug_tag = cpu_execute_debug_tag;
 		writeback_debug_tag = cpu_writeback_debug_tag;
+
+		debug_request = bus_request;
+		debug_select =
+		{
+			rom_select,
+			ram_select,
+			sdram_select,
+			vram_select,
+			led_select,
+			uart_0_select,
+			uart_1_select,
+			1'b0, // gpio_select,
+			sd_select,
+			i2c_select,
+			dma_select,
+			timer_select,
+			plic_select
+		};
 	end
 	
 `endif

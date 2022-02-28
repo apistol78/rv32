@@ -39,6 +39,7 @@
 #include "Rv32T/HDMI.h"
 #include "Rv32T/LEDR.h"
 #include "Rv32T/Measure.h"
+#include "Rv32T/ProfilerBUS.h"
 #include "Rv32T/SD.h"
 #include "Rv32T/TraceEXE.h"
 #include "Rv32T/TracePC.h"
@@ -317,6 +318,8 @@ int main(int argc, const char **argv)
 			new FileOutputStream(f, new Utf8Encoding())
 		));
 	}
+
+	devices.push_back(new ProfilerBUS());
 
 	uint32_t time = 0;
 	uint32_t lastCycles = 0;
