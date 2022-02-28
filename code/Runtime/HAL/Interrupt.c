@@ -47,6 +47,7 @@ enum
 	RISCV_EXCP_STORE_AMO_PAGE_FAULT = 15,			/* Store/AMO page fault */
 };
 
+#define PLIC_ENABLE		(volatile uint32_t*)0xb0002000
 #define PLIC_CLAIM_0	(volatile uint32_t*)0xb0200004
 #define PLIC_COMPLETE_0	(volatile uint32_t*)0xb0200004
 
@@ -62,7 +63,7 @@ static void irq_entry()
 	uint32_t cause = csr_read_mcause();
 	if (cause & MCAUSE_INTERRUPT_BIT_MASK)
 	{
-		cause &= 0xFF;
+		cause &= 0xffff;
 		if (cause == RISCV_INT_MASK_MTI)
 		{
 			// Timer interrupt.
@@ -97,6 +98,9 @@ void interrupt_init()
 	// Global interrupt enable 
 	csr_set_bits_mie(/*MIE_MTI_BIT_MASK |*/ MIE_MEI_BIT_MASK);
 	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+	// Enable PLIC interrupts.
+	*PLIC_ENABLE = 2 | 4 | 8 | 16;
 }
 
 void interrupt_set_handler(uint32_t source, irq_handler_t handler)

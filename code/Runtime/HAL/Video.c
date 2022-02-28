@@ -92,7 +92,11 @@ static void adv7513_power_up()
 
 static void adv7513_interrupt_handler()
 {
-	printf("ADV7513 interrupt!\n");
+	// Something happened, maybe screen connected etc,
+	// so we reset the encoder.
+	printf("HDMI interrupt, restarting encoder...\n");
+	adv7513_kick_up();
+	adv7513_power_up();
 }
 
 int32_t video_init()

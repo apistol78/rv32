@@ -157,8 +157,6 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-`ifndef __VERILATOR__
-
 	wire clock;
 	IP_PLL_Clk pll_clk(
 		.refclk(CLOCK_125_p),
@@ -184,15 +182,6 @@ module SoC(
 	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
-
-`else
-
-	// Since we want to share pins with HW
-	// this clock will actually be simulated at 100 MHz.
-	wire clock = CLOCK_125_p;
-	wire reset = !CPU_RESET_n;
-
-`endif
   
 `ifdef SOC_ENABLE_VGA
 	// Video memory.
@@ -203,7 +192,6 @@ module SoC(
 	wire [31:0] video_sram_rdata;
 	wire video_sram_ready;
 
-	`ifndef __VERILATOR__
 	SRAM_interface video_sram(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -222,22 +210,6 @@ module SoC(
 		.SRAM_LB_n(SRAM_LB_n),
 		.SRAM_UB_n(SRAM_UB_n)
 	);
-	`else
-	BRAM_latency #(
-		.WIDTH(32),
-		.SIZE(320*200/4),
-		.ADDR_LSH(2),
-		.LATENCY(7)
-	) video_sram(
-		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready)
-	);
-	`endif
 
 	// Video controller.
 	wire vram_select;
@@ -325,10 +297,10 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	`ifndef __VERILATOR__
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
+		.i_clock_sdram(clock),
 		// ---
 		.i_reset(reset),
 		.i_clock(clock),
@@ -350,23 +322,6 @@ module SoC(
 		.DDR2LP_DQS_p(DDR2LP_DQS_p),
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
-	`else
-
-	BRAM #(
-		.WIDTH(32),
-		.SIZE(32'h1000000 / 4),
-		.ADDR_LSH(2),
-		.LATENCY(10)
-	) sdram(
-		.i_clock(clock),
-		.i_request(l2cache_bus_request),
-		.i_rw(l2cache_bus_rw),
-		.i_address(l2cache_bus_address),
-		.i_wdata(l2cache_bus_wdata),
-		.o_rdata(l2cache_bus_rdata),
-		.o_ready(l2cache_bus_ready)
-	);
-	`endif
 
 	wire l2cache_bus_rw;
 	wire l2cache_bus_request;
@@ -512,15 +467,8 @@ module SoC(
 		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
-`ifndef __VERILATOR__
 		.SD_CMD(SD_CMD),
 		.SD_DAT(SD_DAT)
-`else
-		.SD_CMD_in(SD_CMD_in),
-		.SD_DAT_in(SD_DAT_in),
-		.SD_CMD_out(SD_CMD_out),
-		.SD_DAT_out(SD_DAT_out)
-`endif
 	);
 `endif
 
@@ -581,6 +529,31 @@ module SoC(
 		.o_interrupt(timer_interrupt)
 	);
 	
+	// PLIC
+	wire plic_interrupt;
+	wire plic_select;
+	wire [23:0] plic_address;
+	wire [31:0] plic_rdata;
+	wire plic_ready;
+	PLIC plic(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_interrupt_0(HDMI_TX_INT),
+		.i_interrupt_1(0),
+		.i_interrupt_2(0),
+		.i_interrupt_3(0),
+
+		.o_interrupt(plic_interrupt),
+
+		.i_request(plic_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(plic_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(plic_rdata),
+		.o_ready(plic_ready)
+	);
+
 	//====================================================
 
 	// Single port bus.
@@ -657,7 +630,7 @@ module SoC(
 
 		// Control
 		.i_timer_interrupt(timer_interrupt),
-		.i_external_interrupt(1'b0),
+		.i_external_interrupt(plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -723,6 +696,9 @@ module SoC(
 	assign timer_select = bus_address[31:28] == 4'ha;
 	assign timer_address = bus_address[4:2];
 
+	assign plic_select = bus_address[31:28] == 4'hb;
+	assign plic_address = bus_address[23:0];
+
 	//=====================================
 
 	assign bus_rdata =
@@ -749,6 +725,7 @@ module SoC(
 `endif
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
+		plic_select ? plic_rdata :
 		32'h00000000;
 		
 	assign bus_ready =
@@ -776,44 +753,10 @@ module SoC(
 `endif
 		dma_select ? dma_ready :
 		timer_select ? timer_ready :
+		plic_select ? plic_ready :
 		1'b0;
 
-`ifndef __VERILATOR__
 	// 7:0
 	assign LEDG = { 1'b0, 1'b0, cpu_fault };
-`else
-
-	wire bus_valid_select =
-		rom_select |
-		ram_select |
-`ifdef SOC_ENABLE_SDRAM
-		sdram_select |
-`endif
-`ifdef SOC_ENABLE_VGA
-		vram_select |
-`endif
-		led_select |
-`ifdef SOC_ENABLE_UART
-		uart_0_select |
-		uart_1_select |
-`endif
-`ifdef SOC_ENABLE_GPIO
-		gpio_select |
-`endif
-`ifdef SOC_ENABLE_SD
-		sd_select |
-`endif
-`ifdef SOC_ENABLE_I2C
-		i2c_select |
-`endif
-		dma_select |
-		timer_select;
-
-	reg bus_fault = 0;
-	always_comb begin
-		bus_fault = !bus_valid_select && bus_request;
-	end
-	
-`endif
 
 endmodule

@@ -6,11 +6,28 @@
 module SoC(
 	input sys_clk,
 	input sys_reset_n,
+	
 	input key_1,
+	
 	output led_1,
+	
 	input uart_rx,
-	output uart_tx
+	output uart_tx,
+	
+	output sdram_clk,
+	output sdram_clk_en,
+	output sdram_cas_n,
+	output sdram_ce_n,
+	output sdram_ras_n,
+	output sdram_we_n,
+	output sdram_dqml,
+	output sdram_dqmh,
+	output [1:0] sdram_ba,
+	output [11:0] sdram_addr,
+	inout [15:0] sdram_data
 );
+
+	assign io_a_8 = 1'b0; // sys_clk;
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -162,7 +179,32 @@ module SoC(
 		.o_ready(timer_ready),
 		.o_interrupt(timer_interrupt)
 	);
-	
+
+	// PLIC
+	wire plic_interrupt;
+	wire plic_select;
+	wire [23:0] plic_address;
+	wire [31:0] plic_rdata;
+	wire plic_ready;
+	PLIC plic(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_interrupt_0(0),
+		.i_interrupt_1(0),
+		.i_interrupt_2(0),
+		.i_interrupt_3(0),
+
+		.o_interrupt(plic_interrupt),
+
+		.i_request(plic_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(plic_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(plic_rdata),
+		.o_ready(plic_ready)
+	);
+
 	//====================================================
 
 	// Single port bus.
@@ -241,8 +283,8 @@ module SoC(
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(1'b0),
-		.i_external_interrupt(1'b0),
+		.i_timer_interrupt(timer_interrupt),
+		.i_external_interrupt(plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -282,6 +324,9 @@ module SoC(
 	assign timer_select = bus_address[31:28] == 4'ha;
 	assign timer_address = bus_address[4:2];
 	
+	assign plic_select = bus_address[31:28] == 4'hb;
+	assign plic_address = bus_address[23:0];
+
 	//=====================================
 
 	assign bus_rdata =
@@ -290,6 +335,7 @@ module SoC(
 		uart_0_select ? uart_0_rdata :
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
+		plic_select ? plic_rdata :
 		32'h00000000;
 		
 	assign bus_ready =
@@ -299,6 +345,7 @@ module SoC(
 		uart_0_select ? uart_0_ready :
 		dma_select ? dma_ready :
 		timer_select ? timer_ready :
+		plic_select ? plic_ready :
 		1'b0;
 	
 endmodule

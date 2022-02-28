@@ -3,6 +3,7 @@
 module SDRAM_interface(
 	input wire i_global_reset_n,
 	input wire i_soft_reset_n,
+	input wire i_clock_sdram,
 	
 	input wire i_reset,
 	input wire i_clock,
@@ -35,7 +36,7 @@ module SDRAM_interface(
 	wire pll_locked;
 	
 	IP_SDRAM sdram(
-		.pll_ref_clk(i_clock),
+		.pll_ref_clk(i_clock_sdram),
 		.global_reset_n(i_global_reset_n),
 		.soft_reset_n(i_soft_reset_n),
 		

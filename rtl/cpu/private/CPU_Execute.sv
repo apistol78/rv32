@@ -167,7 +167,6 @@ module CPU_Execute (
 	
 	always_comb begin
 		o_busy =
-			// i_memory_raw ||
 			i_memory_busy ||
 			(
 				(i_data.tag != data.tag) &&
@@ -196,13 +195,11 @@ module CPU_Execute (
 			o_ecall <= 0;
 
 			if (
-				// !i_memory_raw &&
 				!i_memory_busy &&
 				i_data.tag != data.tag
 			) begin
 
 				data.inst_rd <= i_data.inst_rd;
-				data.rd <= 32'hcafebabe;
 
 				data.mem_read <= i_data.memory_read;
 				data.mem_write <= i_data.memory_write;
