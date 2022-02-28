@@ -90,62 +90,61 @@ module CPU_Fetch #(
 			data <= 0;
 		end
 		else begin
-			o_irq_dispatched <= 0;
-			o_irq_epc <= 0;
-
-			// Jump to interrupt if interrupt are pending.
-			if (i_irq_pending) begin
-				o_irq_dispatched <= 1;
-				o_irq_epc <= pc;
-				pc <= i_irq_pc;
-				state <= WAIT_ICACHE;
-			end
-			else begin
-				case (state)
-					WAIT_ICACHE: begin
-						if (icache_ready) begin
-
-							data.tag <= data.tag + 1;
-							data.instruction <= icache_rdata;
-							data.pc <= pc;
-
-							// Decode register indices here since we
-							// need those for fetching registers while
-							// we are decoding rest of instruction.
-							data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
-							data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
-							data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
-							data.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
-
-							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
-								// Branch instruction, need to wait
-								// for an explicit "goto" signal before
-								// we can continue feeding the pipeline.
-								state <= WAIT_JUMP;
-							end
-							else begin
-								// Move PC to next instruction, will
-								// enable to icache to start loading
-								// next instruction.
-								pc <= pc + 4;
-							end
+			case (state)
+				WAIT_ICACHE: begin
+					// Jump to interrupt if interrupt are pending, only do
+					// this in this state as we need to finish any pending
+					// branches first.
+					if (i_irq_pending) begin
+						if (!o_irq_dispatched) begin
+							o_irq_dispatched <= 1;
+							o_irq_epc <= pc;
+							pc <= i_irq_pc;
 						end
-						else if (!icache_stall)
-							starve <= starve + 1;
 					end
+					else if (icache_ready) begin
+						data.tag <= data.tag + 1;
+						data.instruction <= icache_rdata;
+						data.pc <= pc;
 
-					WAIT_JUMP: begin
-						// Wait for "goto" signal.
-						if (i_jump) begin
-							pc <= i_jump_pc;
-							state <= WAIT_ICACHE;
-						end				
+						// Decode register indices here since we
+						// need those for fetching registers while
+						// we are decoding rest of instruction.
+						data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
+						data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
+						data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
+						data.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
+
+						if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
+							// Branch instruction, need to wait
+							// for an explicit "goto" signal before
+							// we can continue feeding the pipeline.
+							state <= WAIT_JUMP;
+						end
+						else begin
+							// Move PC to next instruction, will
+							// enable to icache to start loading
+							// next instruction.
+							pc <= pc + 4;
+						end
 					end
+`ifdef __VERILATOR__					
+					else if (!icache_stall)
+						starve <= starve + 1;
+`endif
+				end
 
-					default:
+				WAIT_JUMP: begin
+					// Wait for "goto" signal.
+					if (i_jump) begin
+						pc <= i_jump_pc;
 						state <= WAIT_ICACHE;
-				endcase
-			end
+					end				
+				end
+
+				default:
+					state <= WAIT_ICACHE;
+			endcase
 		end
 	end
 
