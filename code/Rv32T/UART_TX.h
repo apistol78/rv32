@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Core/Config.h>
+#include "Rv32T/Device.h"
 
-class VSoC;
-
-class UART_TX
+class UART_TX : public Device
 {
+	T_RTTI_CLASS;
+
 public:
-	void eval(VSoC* soc);
+	virtual void eval(VSoC* soc, uint32_t time) override final;
 
 private:
 	int32_t m_state = 0;

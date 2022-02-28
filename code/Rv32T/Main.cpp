@@ -40,6 +40,9 @@
 #include "Rv32T/LEDR.h"
 #include "Rv32T/Measure.h"
 #include "Rv32T/SD.h"
+#include "Rv32T/TraceEXE.h"
+#include "Rv32T/TracePC.h"
+#include "Rv32T/TraceWB.h"
 #include "Rv32T/UART_TX.h"
 
 // Verilated SoC
@@ -127,10 +130,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName)
 	}
 
 	if (start != -1)
-	{
 		soc->SoC__DOT__cpu__DOT__fetch__DOT__pc = start;
-//		soc->SoC__DOT__cpu__DOT__fetch__DOT__next_pc = start;
-	}
 
 	return true;
 }
@@ -269,7 +269,16 @@ int main(int argc, const char **argv)
 	if (cmdLine.hasOption(L't', L"trace"))
 		trace = true;
 
-	Ref< FileOutputStream > fos;
+	// Create devices.
+	HDMI hdmi;
+
+	RefArray< Device > devices;
+	devices.push_back(&hdmi);
+	devices.push_back(new LEDR());
+	devices.push_back(new UART_TX());
+	devices.push_back(new SD());
+
+	// Create trace devices.
 	if (cmdLine.hasOption(L"trace-pc"))
 	{
 		Ref< IStream > f = FileSystem::getInstance().open(cmdLine.getOption(L"trace-pc").getString(), File::FmWrite);
@@ -278,11 +287,10 @@ int main(int argc, const char **argv)
 			log::error << L"Unable to create PC trace." << Endl;
 			return 1;
 		}
-		fos = new FileOutputStream(f, new Utf8Encoding());
+		devices.push_back(new TracePC(
+			new FileOutputStream(f, new Utf8Encoding())
+		));
 	}
-
-	Ref< FileOutputStream > exe_os;
-	uint32_t exe_debug_tag = 0;
 
 	if (cmdLine.hasOption(L"trace-execute"))
 	{
@@ -292,11 +300,10 @@ int main(int argc, const char **argv)
 			log::error << L"Unable to create EXECUTE trace." << Endl;
 			return 1;
 		}
-		exe_os = new FileOutputStream(f, new Utf8Encoding());
+		devices.push_back(new TraceEXE(
+			new FileOutputStream(f, new Utf8Encoding())
+		));
 	}
-
-	Ref< FileOutputStream > wb_os;
-	uint32_t wb_debug_tag = 0;
 
 	if (cmdLine.hasOption(L"trace-writeback"))
 	{
@@ -306,32 +313,12 @@ int main(int argc, const char **argv)
 			log::error << L"Unable to create WRITEBACK trace." << Endl;
 			return 1;
 		}
-		wb_os = new FileOutputStream(f, new Utf8Encoding());
+		devices.push_back(new TraceWB(
+			new FileOutputStream(f, new Utf8Encoding())
+		));
 	}
 
-	// Ref< FileOutputStream > bus_os;
-	// if (cmdLine.hasOption(L"trace-bus"))
-	// {
-	// 	Ref< IStream > f = FileSystem::getInstance().open(L"Rv32T.bus", File::FmWrite);
-	// 	if (!f)
-	// 	{
-	// 		log::error << L"Unable to create BUS trace." << Endl;
-	// 		return 1;
-	// 	}
-	// 	bus_os = new FileOutputStream(f, new Utf8Encoding());
-	// }
-
-	// Create from PC.
-	uint32_t traceFromPC = -1;
-	if (cmdLine.hasOption(L"trace-from"))
-		traceFromPC = cmdLine.getOption(L"trace-from").getInteger();
-
-	HDMI hdmi;
-	LEDR ledr;
-	UART_TX uart_tx;
-	SD sd;
-
-	int32_t time = 0;
+	uint32_t time = 0;
 	uint32_t lastCycles = 0;
 	uint32_t lastRetired = 0;
 	uint32_t lastStarve = 0;
@@ -340,8 +327,6 @@ int main(int argc, const char **argv)
 	Measure busSDRAM;
 	Measure stallExecute;
 	Measure stallMemory;
-
-	uint32_t lastTracePC = -1;
 	int32_t Tp = 0;
 
 	timer.reset();
@@ -353,7 +338,7 @@ int main(int argc, const char **argv)
 				break;
 		}
 
-		int32_t Tc = (int32_t)(timer.getElapsedTime() * 1000);
+		uint32_t Tc = (uint32_t)(timer.getElapsedTime() * 1000);
 		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
 
@@ -361,13 +346,6 @@ int main(int argc, const char **argv)
 		
 		for (int32_t i = 0; i < count; ++i)
 		{
-			// if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc == traceFromPC)
-			// {
-			// 	log::info << L"TRACE FROM BEGUN" << Endl;
-			// 	trace = true;
-			// 	traceFromPC = -1;
-			// }
-
 			if (trace)
 			{
 				Verilated::traceEverOn(true);
@@ -403,14 +381,8 @@ int main(int argc, const char **argv)
 			if (tfp)
 				tfp->dump(time);
 
-			hdmi.eval(soc);
-			ledr.eval(soc);
-			uart_tx.eval(soc);
-			sd.eval(soc);
-
-			// TODO
-			// Check output of each CPU pipeline stage
-			// are kept during entire output tag cycle.
+			for (auto device : devices)
+				device->eval(soc, time);
 
 			// Count number of cycles bus is active.
 			if (soc->SoC__DOT__cpu_ibus_request /* || soc->SoC__DOT__cpu_dbus_request*/)
@@ -425,73 +397,8 @@ int main(int argc, const char **argv)
 			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
 				stallMemory++;
 
-			if (fos)
-			{
-				if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc != lastTracePC)
-				{
-					*fos << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc);
-
-					for (uint32_t i = 0; i < 64; ++i)
-						*fos << str(L", %08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[i]);
-					
-					*fos << Endl;
-					lastTracePC = soc->SoC__DOT__cpu__DOT__fetch__DOT__pc;
-				}
-			}
-
-			if (exe_os)
-			{
-				if (soc->SoC__DOT__execute_debug_tag != exe_debug_tag)
-				{
-					*exe_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
-
-					for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__decode__DOT__data); ++i)
-						*exe_os << str(L"%08x", soc->SoC__DOT__cpu__DOT__decode__DOT__data[i]);
-
-					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs1);
-					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs2);
-					*exe_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs3);
-
-					*exe_os << Endl;
-					exe_debug_tag = soc->SoC__DOT__execute_debug_tag;
-				}
-			}
-
-			if (wb_os)
-			{
-				if (soc->SoC__DOT__writeback_debug_tag != wb_debug_tag)
-				{
-					*wb_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
-					*wb_os << str(L"%016x", soc->SoC__DOT__cpu__DOT__memory__DOT__data);
-					*wb_os << Endl;
-					wb_debug_tag = soc->SoC__DOT__writeback_debug_tag;
-				}
-			}
-
-			// if (bus_os)
-			// {
-			// 	if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__cpu_dbus_ready)
-			// 	{
-			// 		*bus_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", ";
-			// 		*bus_os << (soc->SoC__DOT__cpu_dbus_rw ? L"W" : L"R") << L", ";
-			// 		*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_address) << L", ";
-			// 		if (soc->SoC__DOT__cpu_dbus_rw)
-			// 			*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_wdata);
-			// 		else
-			// 			*bus_os << str(L"%08x", soc->SoC__DOT__cpu_dbus_rdata);
-			// 		*bus_os << Endl;
-			// 	}
-			// }
-
 			key1 = false;
 			reset = false;
-
-			// if (time/2 >= (2433127-1000) && !tfp)
-			// {
-			// 	trace = true;
-			// 	slow = true;
-			// 	log::info << L"TRACING!!" << Endl;
-			// }
 
 			if (soc->SoC__DOT__cpu__DOT__decode_fault)
 			{

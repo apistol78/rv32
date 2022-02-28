@@ -4,18 +4,18 @@
 #include <Core/Misc/String.h>
 #include "Rv32T/CRC.h"
 #include "Rv32T/SD.h"
-
-// Verilated SoC
-#include "SoC/VSoC.h"
+#include "Rv32T/SoC/VSoC.h"
 
 using namespace traktor;
+
+T_IMPLEMENT_RTTI_CLASS(L"SD", SD, Device)
 
 SD::SD()
 {
 	m_stream = FileSystem::getInstance().open(L"FS.img", File::FmRead);
 }
 
-void SD::eval(VSoC* soc)
+void SD::eval(VSoC* soc, uint32_t time)
 {
 	auto& clk = soc->SD_CLK;
 	auto& cmd = soc->SD_CMD_out;

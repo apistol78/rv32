@@ -1,13 +1,13 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32T/UART_TX.h"
-
-// Verilated SoC
-#include "SoC/VSoC.h"
+#include "Rv32T/SoC/VSoC.h"
 
 using namespace traktor;
 
-void UART_TX::eval(VSoC* soc)
+T_IMPLEMENT_RTTI_CLASS(L"UART_TX", UART_TX, Device)
+
+void UART_TX::eval(VSoC* soc, uint32_t time)
 {
 	const int32_t T = 100000000 / 115200;
 

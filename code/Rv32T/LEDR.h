@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Core/Config.h>
+#include "Rv32T/Device.h"
 
-class VSoC;
-
-class LEDR
+class LEDR : public Device
 {
+	T_RTTI_CLASS;
+
 public:
-	void eval(VSoC* soc);
+	virtual void eval(VSoC* soc, uint32_t time) override final;
 
 private:
 	uint32_t m_current = 0;

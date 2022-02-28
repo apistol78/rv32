@@ -1,11 +1,11 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32T/HDMI.h"
-
-// Verilated SoC
-#include "SoC/VSoC.h"
+#include "Rv32T/SoC/VSoC.h"
 
 using namespace traktor;
+
+T_IMPLEMENT_RTTI_CLASS(L"HDMI", HDMI, Device)
 
 HDMI::HDMI()
 {
@@ -17,7 +17,7 @@ HDMI::HDMI()
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f)); 
 }
 
-void HDMI::eval(VSoC* soc)
+void HDMI::eval(VSoC* soc, uint32_t time)
 {
 	auto& clk = soc->HDMI_TX_CLK;
 	auto& de = soc->HDMI_TX_DE;
