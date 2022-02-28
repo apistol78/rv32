@@ -29,7 +29,6 @@ module CPU_FPU_Add(
 	} state_t;
 
 	reg s_output_ready = 0;
-	reg [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
 	reg [31:0] z;
@@ -41,7 +40,7 @@ module CPU_FPU_Add(
 	reg [27:0] sum;
 
 	assign o_ready = s_output_ready;
-	assign o_result = s_output_z;
+	assign o_result = z;
 
 	always_ff @(posedge i_clock) begin
 		case(state)
@@ -49,12 +48,10 @@ module CPU_FPU_Add(
 				s_output_ready <= 0;
 				if (i_request) begin
 					a_m <= { i_op1[22:0], 3'd0 };
-					b_m <= { i_op2[22:0], 3'd0 };
-
 					a_e <= i_op1[30:23] - 127;
-					b_e <= i_op2[30:23] - 127;
-					
 					a_s <= i_op1[31];
+					b_m <= { i_op2[22:0], 3'd0 };
+					b_e <= i_op2[30:23] - 127;
 					b_s <= i_op2[31];
 					state <= SPECIAL_CASES;
 				end
@@ -67,6 +64,7 @@ module CPU_FPU_Add(
 					z[30:23] <= 255;
 					z[22] <= 1;
 					z[21:0] <= 0;
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				// if a is inf return inf
 				end else if (a_e == 128) begin
@@ -80,30 +78,35 @@ module CPU_FPU_Add(
 							z[22] <= 1;
 							z[21:0] <= 0;
 					end
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				// if b is inf return inf
 				end else if (b_e == 128) begin
 					z[31] <= b_s;
 					z[30:23] <= 255;
 					z[22:0] <= 0;
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				//if a is zero return b
 				end else if ((($signed(a_e) == -127) && (a_m == 0)) && (($signed(b_e) == -127) && (b_m == 0))) begin
 					z[31] <= a_s & b_s;
 					z[30:23] <= b_e[7:0] + 127;
 					z[22:0] <= b_m[26:3];
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				//if a is zero return b
 				end else if (($signed(a_e) == -127) && (a_m == 0)) begin
 					z[31] <= b_s;
 					z[30:23] <= b_e[7:0] + 127;
 					z[22:0] <= b_m[26:3];
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				//if b is zero return a
 				end else if (($signed(b_e) == -127) && (b_m == 0)) begin
 					z[31] <= a_s;
 					z[30:23] <= a_e[7:0] + 127;
 					z[22:0] <= a_m[26:3];
+					s_output_ready <= 1;
 					state <= PUT_Z;
 				end else begin
 					//Denormalised Number
@@ -219,12 +222,12 @@ module CPU_FPU_Add(
 					z[30 : 23] <= 255;
 					z[31] <= z_s;
 				end
+				s_output_ready <= 1;
 				state <= PUT_Z;
 			end
 
 			PUT_Z: begin
 				s_output_ready <= 1;
-				s_output_z <= z;
 				if (!i_request) begin
 					s_output_ready <= 0;
 					state <= IDLE;
