@@ -4,7 +4,7 @@
 `define FREQUENCY 100000000
 
 module SoC(
-	input sys_clk,
+	input sys_clk,		// 50 MHz oscillator
 	input sys_reset_n,
 	
 	input key_1,
@@ -23,19 +23,11 @@ module SoC(
 	output sdram_dqml,
 	output sdram_dqmh,
 	output [1:0] sdram_ba,
-	output [11:0] sdram_addr,
+	output [12:0] sdram_addr,
 	inout [15:0] sdram_data
 );
 
-	assign io_a_8 = 1'b0; // sys_clk;
-
-	wire clock;
-	IP_PLL_Clk pll_clk(
-		.refclk(sys_clk),
-		.rst(!sys_reset_n),
-		.outclk_0(clock),
-		.locked()
-	);
+	wire clock;	// Clock is driven by SDRAM PLL since this board don't have many PLLs.
 
 	reg [31:0] cont = 0;
 	always@(posedge clock)
@@ -50,8 +42,8 @@ module SoC(
 			sample[4:0] = sample[4:0];
 	end
 
-	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
+	// wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
+	// wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
 
@@ -87,6 +79,38 @@ module SoC(
 		.i_wdata(bus_wdata),
 		.o_rdata(ram_rdata),
 		.o_ready(ram_ready)
+	);
+	
+	// SDRAM
+	wire sdram_select;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+
+	SDRAM_interface sdram(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_clock_sys(sys_clk),
+		.o_clock_pll(clock),
+		// ---
+		.i_request(sdram_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(sdram_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready),
+		// ---
+		.sdram_clk(sdram_clk),
+		.sdram_clk_en(sdram_clk_en),
+		.sdram_cas_n(sdram_cas_n),
+		.sdram_ce_n(sdram_ce_n),
+		.sdram_ras_n(sdram_ras_n),
+		.sdram_we_n(sdram_we_n),
+		.sdram_dqml(sdram_dqml),
+		.sdram_dqmh(sdram_dqmh),
+		.sdram_ba(sdram_ba),
+		.sdram_addr(sdram_addr),
+		.sdram_data(sdram_data)
 	);
 	
 	// LEDS
@@ -149,7 +173,7 @@ module SoC(
 		.o_ready(dma_ready),
 
 		// System
-		.i_stall(vram_fifo_full),
+		.i_stall(1'b0), // vram_fifo_full),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),
@@ -277,7 +301,7 @@ module SoC(
 
 	CPU #(
 		.ICACHE_SIZE(8),
-		.DCACHE_SIZE(10)
+		.DCACHE_SIZE(2)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -313,6 +337,9 @@ module SoC(
 	assign ram_select = bus_address[31:28] == 4'h1;
 	assign ram_address = { 4'h0, bus_address[27:0] };
 
+	assign sdram_select = bus_address[31:28] == 4'h2;
+	assign sdram_address = { 4'h0, bus_address[27:0] };
+	
 	assign led_select = bus_address[31:28] == 4'h4;
 
 	assign uart_0_select = bus_address[31:24] == 8'h50;
@@ -332,6 +359,7 @@ module SoC(
 	assign bus_rdata =
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
+		sdram_select ? sdram_rdata :
 		uart_0_select ? uart_0_rdata :
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
@@ -341,6 +369,7 @@ module SoC(
 	assign bus_ready =
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
+		sdram_select ? sdram_ready :
 		led_select ? led_ready :
 		uart_0_select ? uart_0_ready :
 		dma_select ? dma_ready :
