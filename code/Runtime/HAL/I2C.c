@@ -1,4 +1,5 @@
 #include "Runtime/HAL/I2C.h"
+#include "Runtime/HAL/Interrupt.h"
 
 #define I2C_RD_SDA() \
 	((*I2C_BASE & 1) == 1)
@@ -105,15 +106,18 @@ uint8_t NO_OPTIMIZE i2c_tx(uint8_t d)
 
 void i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
 {
+	interrupt_disable();
 	i2c_start();
 	i2c_tx(deviceAddr);
 	i2c_tx(controlAddr);
 	i2c_tx(controlData);
 	i2c_stop();
+	interrupt_enable();
 }
 
 void i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)
 {
+	interrupt_disable();
 	i2c_start();
 	i2c_tx(deviceAddr);
 	i2c_tx(controlAddr);
@@ -121,4 +125,5 @@ void i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)
 	i2c_tx(deviceAddr | 1);
 	*outControlData = i2c_rx(0);  // read
 	i2c_stop();
+	interrupt_enable();
 }

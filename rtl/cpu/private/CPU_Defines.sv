@@ -57,6 +57,7 @@
 `define FPU_OP_MAX			20
 
 // CSR registers
+`define CSR_MSTATUS		12'h300
 `define CSR_MIE			12'h304
 `define CSR_MTVEC		12'h305
 `define CSR_MEPC		12'h341

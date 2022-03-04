@@ -34,6 +34,7 @@ module CPU_CSR #(
 	input [31:0] i_irq_epc
 );
 
+	reg mstatus_mie = 0;
 	reg mie_meie = 0; 
 	reg mie_mtie = 0;
 	reg mie_msie = 0;
@@ -44,6 +45,7 @@ module CPU_CSR #(
 	reg mip_mtip = 0;
 	reg mip_msip = 0;
 
+	wire [31:0] mstatus = { 28'b0, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
 	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
@@ -52,7 +54,9 @@ module CPU_CSR #(
 	// Read CSR value by index.
 	always @(*) begin
 		o_rdata = 0;
-		if (i_index == `CSR_MIE)
+		if (i_index == `CSR_MSTATUS)
+			o_rdata = mstatus;
+		else if (i_index == `CSR_MIE)
 			o_rdata = mie;
 		else if (i_index == `CSR_MTVEC)
 			o_rdata = mtvec;
@@ -76,6 +80,7 @@ module CPU_CSR #(
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
+			mstatus_mie <= 0;
 			mie_meie <= 0;
 			mie_mtie <= 0;
 			mie_msie <= 0;
@@ -88,7 +93,10 @@ module CPU_CSR #(
 		end
 		else begin
 			if (i_wdata_wr) begin
-				if (i_index == `CSR_MIE) begin
+				if (i_index == `CSR_MSTATUS) begin
+					mstatus_mie <= i_wdata[3];
+				end
+				else if (i_index == `CSR_MIE) begin
 					mie_meie <= i_wdata[11];
 					mie_mtie <= i_wdata[7];
 					mie_msie <= i_wdata[3];
@@ -100,7 +108,7 @@ module CPU_CSR #(
 			end
 
 			if (i_timer_interrupt) begin
-				if (mie_mtie) begin
+				if (mstatus_mie && mie_mtie) begin
 					o_irq_pending <= 1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 7);
@@ -109,7 +117,7 @@ module CPU_CSR #(
 			end
 
 			if (i_external_interrupt) begin
-				if (mie_meie) begin
+				if (mstatus_mie && mie_meie) begin
 					o_irq_pending <= 1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 11);
@@ -118,7 +126,7 @@ module CPU_CSR #(
 			end
 
 			if (i_ecall) begin
-				if (mie_msie) begin
+				if (mstatus_mie && mie_msie) begin
 					o_irq_pending <= 1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h00000000 | (1 << 11);

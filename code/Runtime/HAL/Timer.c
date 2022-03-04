@@ -1,3 +1,4 @@
+#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
 
 uint32_t timer_get_ms()
@@ -16,12 +17,18 @@ uint64_t timer_get_cycles()
 {
 	uint32_t mtimeh;
 	uint32_t mtimel;
+
+	interrupt_disable();
+
 	do
 	{
 		mtimeh = *TIMER_CYCLES_H;
 		mtimel = *TIMER_CYCLES_L;
 	}
 	while (mtimeh != *TIMER_CYCLES_H);
+
+	interrupt_enable();
+
 	return (uint64_t)(
 		(((uint64_t)mtimeh) << 32) | mtimel
 	);

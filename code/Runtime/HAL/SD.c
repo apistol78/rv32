@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/CRC.h"
+#include "Runtime/HAL/Interrupt.h"
 
 #define SD_4BIT_MODE
 
@@ -53,7 +54,7 @@ void __attribute__ ((noinline)) sd_half_cycle()
 
 #define SD_HALF_CYCLE() // sd_half_cycle()
 
-void sd_dummy_clock(uint32_t clockCnt)
+static void sd_dummy_clock(uint32_t clockCnt)
 {
 	for (uint32_t i = 0; i < clockCnt; ++i)
 	{
@@ -462,8 +463,13 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
 
+	interrupt_disable();
+
 	if (!sd_cmd17(addr)) // , SD_STATE_TRAN))
+	{
+		interrupt_enable();
 		return 0;
+	}
 
 	SD_WR_DAT_DIR_IN();
 
@@ -482,7 +488,10 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 #endif      
 			break;
 		if (try++ > 9000)
-			return 0;        
+		{
+			interrupt_enable();
+			return 0;
+		}     
 	}
 
     // Read data (512byte = 1 block)
@@ -515,6 +524,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		buffer[i] = Data8;
 	}
 
+	interrupt_enable();
 	return bufferLen;
 }
 
