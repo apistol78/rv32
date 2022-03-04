@@ -51,7 +51,7 @@ enum
 #define PLIC_CLAIM_0	(volatile uint32_t*)0xb0200004
 #define PLIC_COMPLETE_0	(volatile uint32_t*)0xb0200004
 
-irq_handler_t g_handlers[] = { 0, 0, 0, 0 };
+irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0 };
 
 #pragma GCC push_options
 #pragma GCC optimize ("align-functions=4")
@@ -67,6 +67,9 @@ static void irq_entry()
 		if (cause == RISCV_INT_MASK_MTI)
 		{
 			// Timer interrupt.
+			irq_handler_t handler = g_handlers[0];
+			if (handler)
+				handler();
 		}
 		else if (cause == RISCV_INT_MASK_MEI)
 		{
@@ -75,7 +78,7 @@ static void irq_entry()
 			if (claimed)
 			{
 				// Call appropriate handler for source.
-				irq_handler_t handler = g_handlers[claimed - 1];
+				irq_handler_t handler = g_handlers[claimed];
 				if (handler)
 					handler();
 			}
@@ -96,7 +99,7 @@ void interrupt_init()
 	csr_write_mtvec((uint_xlen_t)irq_entry);
 
 	// Global interrupt enable 
-	csr_set_bits_mie(/*MIE_MTI_BIT_MASK |*/ MIE_MEI_BIT_MASK);
+	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
 	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
 	// Enable PLIC interrupts.
@@ -106,4 +109,14 @@ void interrupt_init()
 void interrupt_set_handler(uint32_t source, irq_handler_t handler)
 {
 	g_handlers[source] = handler;
+}
+
+void interrupt_enable()
+{
+	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
+}
+
+void interrupt_disable()
+{
+	csr_clr_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
 }

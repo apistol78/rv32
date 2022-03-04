@@ -591,7 +591,7 @@ module SoC(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(HDMI_TX_INT),
+		.i_interrupt_0(0),
 		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),

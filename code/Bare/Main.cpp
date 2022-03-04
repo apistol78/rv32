@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
@@ -161,9 +162,43 @@ const int32_t indices[] =
 };
 
 
+
+kernel_cs_t lock = { 0 };
+
+void test_thread_a()
+{
+	for (;;)
+	{
+		kernel_cs_lock(&lock);
+		printf("Thread 1...\n");
+		kernel_cs_unlock(&lock);
+
+		for (int i = 0; i < 10000; ++i)
+			__asm__ volatile ("nop");
+	}
+}
+
+void test_thread_b()
+{
+	for (;;)
+	{
+		kernel_cs_lock(&lock);
+		printf("Thread 2...\n");
+		kernel_cs_unlock(&lock);
+
+		for (int i = 0; i < 10000; ++i)
+			__asm__ volatile ("nop");
+	}
+}
+
+
+
 int main()
 {
 	runtime_init();
+
+	kernel_create_thread(test_thread_a);
+	kernel_create_thread(test_thread_b);
 
 	volatile uint32_t* palette = VIDEO_PALETTE_BASE;
 	volatile uint32_t* video = VIDEO_DATA_BASE;
@@ -186,12 +221,18 @@ int main()
 
 	for (;;)
 	{
+		*LED_BASE = 0xdd;
+
 		static int count = 0;
 		if (++count >= 60)
 		{
 			static uint32_t last_ms = 0;
 			uint32_t ms = timer_get_ms();
+
+			kernel_cs_lock(&lock);
 			printf("%d fps\n", (60 * 1000) / (ms - last_ms));
+			kernel_cs_unlock(&lock);
+			
 			last_ms = ms;
 			count = 0;
 		}

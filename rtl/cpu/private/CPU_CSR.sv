@@ -72,6 +72,8 @@ module CPU_CSR #(
 			o_rdata = HARTID;
 	end
 
+	reg rd = 0;
+
 	always @(posedge i_clock) begin
 		if (i_reset) begin
 			mie_meie <= 0;
@@ -124,7 +126,9 @@ module CPU_CSR #(
 				end
 			end
 
-			if (i_irq_dispatched) begin
+			rd <= i_irq_dispatched;
+
+			if ({ rd, i_irq_dispatched } == 2'b01) begin
 				o_irq_pending <= 0;
 				mepc <= i_irq_epc;
 				mip_mtip <= 1'b0;
