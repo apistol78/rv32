@@ -191,6 +191,7 @@ module CPU_Execute (
 		end
 		else begin
 
+			o_csr_wdata_wr <= 0;
 			o_jump <= 0;
 			o_ecall <= 0;
 

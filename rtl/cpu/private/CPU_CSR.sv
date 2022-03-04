@@ -93,6 +93,8 @@ module CPU_CSR #(
 				end
 				else if (i_index == `CSR_MTVEC)
 					mtvec <= i_wdata;
+				else if (i_index == `CSR_MEPC)
+					mepc <= i_wdata;
 			end
 
 			if (i_timer_interrupt) begin
