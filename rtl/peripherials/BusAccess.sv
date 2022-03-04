@@ -1,7 +1,9 @@
 
 `timescale 1ns/1ns
 
-module BusAccess(
+module BusAccess #(
+	parameter [0:0] REGISTERED = 1'b1
+)(
 	input wire i_reset,
 	input wire i_clock,
 
@@ -36,68 +38,150 @@ module BusAccess(
 	input wire [31:0] i_pc_wdata
 );
 
-	reg [1:0] state;
+	reg [1:0] state = 0;
+	reg [1:0] next_state = 0;
 
 	initial begin
-		state = 2'd0;
 		o_bus_rw = 1'b0;
 		o_bus_address = 0;
 		o_bus_wdata = 0;
 	end
 
-	assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
-	assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
-	assign o_pc_ready = i_pc_request && (state == 2'd3) ? i_bus_ready : 1'b0;
+	generate if (!REGISTERED) begin
 
-	assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
-	assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
-	assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+		assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
+		assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
+		assign o_pc_ready = i_pc_request && (state == 2'd3) ? i_bus_ready : 1'b0;
 
-	assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
+		assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
+		assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
+		assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
 
-	always_ff @(posedge i_clock) begin
-		if (i_reset) begin
-			state <= 2'd0;
-			o_bus_rw <= 1'b0;
-			o_bus_address <= 0;
-			o_bus_wdata <= 0;
+		assign o_bus_request = i_pa_request | i_pb_request | i_pc_request;
+
+		always_ff @(posedge i_clock) begin
+			state <= next_state;
 		end
-		else begin
+
+		always_comb begin
+
+			next_state = state;
+
+			o_bus_rw = 0;
+			o_bus_address = 0;
+			o_bus_wdata = 0;
+			
 			case (state)
 
 				// Wait for any request.
 				2'd0: begin
 					if (i_pb_request) begin
-						o_bus_rw <= i_pb_rw;
-						o_bus_address <= i_pb_address;
-						o_bus_wdata <= i_pb_wdata;
-						state <= 2'd2;
+						o_bus_rw = i_pb_rw;
+						o_bus_address = i_pb_address;
+						o_bus_wdata = i_pb_wdata;
+						next_state = 2'd2;
 					end
 					else if (i_pa_request) begin
-						o_bus_rw <= 1'b0;
-						o_bus_address <= i_pa_address;
-						state <= 2'd1;		
+						o_bus_rw = 1'b0;
+						o_bus_address = i_pa_address;
+						next_state = 2'd1;		
 					end
 					else if (i_pc_request) begin
-						o_bus_rw <= i_pc_rw;
-						o_bus_address <= i_pc_address;
-						o_bus_wdata <= i_pc_wdata;
-						state <= 2'd3;
+						o_bus_rw = i_pc_rw;
+						o_bus_address = i_pc_address;
+						o_bus_wdata = i_pc_wdata;
+						next_state = 2'd3;
 					end					
 				end
 
 				// Wait until request has been processed.
-				2'd1, 2'd2, 2'd3: begin
+				2'd1: begin
+					o_bus_address = i_pa_address;
 					if (i_bus_ready) begin
-						state <= 2'd0;
+						next_state = 2'd0;
+					end
+				end
+				2'd2: begin
+					o_bus_rw = i_pb_rw;
+					o_bus_address = i_pb_address;
+					o_bus_wdata = i_pb_wdata;
+					if (i_bus_ready) begin
+						next_state = 2'd0;
+					end
+				end
+				2'd3: begin
+					o_bus_rw = i_pc_rw;
+					o_bus_address = i_pc_address;
+					o_bus_wdata = i_pc_wdata;
+					if (i_bus_ready) begin
+						next_state = 2'd0;
 					end
 				end
 
 				default:
-					state <= 2'd0;
+					next_state = 2'd0;
 
 			endcase
 		end
-	end
+	end endgenerate
+
+	generate if (REGISTERED) begin
+
+		assign o_pa_ready = i_pa_request && (state == 2'd1) ? i_bus_ready : 1'b0;
+		assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
+		assign o_pc_ready = i_pc_request && (state == 2'd3) ? i_bus_ready : 1'b0;
+
+		assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
+		assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
+		assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+
+		assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
+
+		always_ff @(posedge i_clock) begin
+			if (i_reset) begin
+				state <= 2'd0;
+				o_bus_rw <= 1'b0;
+				o_bus_address <= 0;
+				o_bus_wdata <= 0;
+			end
+			else begin
+				case (state)
+
+					// Wait for any request.
+					2'd0: begin
+						if (i_pb_request) begin
+							o_bus_rw <= i_pb_rw;
+							o_bus_address <= i_pb_address;
+							o_bus_wdata <= i_pb_wdata;
+							state <= 2'd2;
+						end
+						else if (i_pa_request) begin
+							o_bus_rw <= 1'b0;
+							o_bus_address <= i_pa_address;
+							state <= 2'd1;		
+						end
+						else if (i_pc_request) begin
+							o_bus_rw <= i_pc_rw;
+							o_bus_address <= i_pc_address;
+							o_bus_wdata <= i_pc_wdata;
+							state <= 2'd3;
+						end					
+					end
+
+					// Wait until request has been processed.
+					2'd1, 2'd2, 2'd3: begin
+						if (i_bus_ready) begin
+							state <= 2'd0;
+						end
+					end
+
+					default:
+						state <= 2'd0;
+
+				endcase
+			end
+		end
+
+	end endgenerate
 
 endmodule

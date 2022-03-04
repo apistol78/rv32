@@ -628,7 +628,9 @@ module SoC(
 	wire [31:0] bus_pb_rdata;
 	wire [31:0] bus_pb_wdata;
 
-	BusAccess bus(
+	BusAccess #(
+		.REGISTERED(1)
+	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -760,58 +762,58 @@ module SoC(
 	//=====================================
 
 	assign bus_rdata =
-		rom_select ? rom_rdata :
-		ram_select ? ram_rdata :
+		rom_select ? rom_rdata			:
+		ram_select ? ram_rdata			:
 `ifdef SOC_ENABLE_SRAM
-		sram_select ? sram_rdata :
+		sram_select ? sram_rdata		:
 `endif
 `ifdef SOC_ENABLE_SDRAM
-		sdram_select ? sdram_rdata :
+		sdram_select ? sdram_rdata		:
 `endif
 `ifdef SOC_ENABLE_UART
-		uart_0_select ? uart_0_rdata :
-		uart_1_select ? uart_1_rdata :
+		uart_0_select ? uart_0_rdata	:
+		uart_1_select ? uart_1_rdata	:
 `endif
 `ifdef SOC_ENABLE_GPIO
-		gpio_select ? gpio_rdata :
+		gpio_select ? gpio_rdata		:
 `endif
 `ifdef SOC_ENABLE_I2C
-		i2c_select ? i2c_rdata :
+		i2c_select ? i2c_rdata			:
 `endif
 `ifdef SOC_ENABLE_SD
-		sd_select ? sd_rdata :
+		sd_select ? sd_rdata			:
 `endif
-		dma_select ? dma_rdata :
-		timer_select ? timer_rdata :
-		plic_select ? plic_rdata :
+		dma_select ? dma_rdata			:
+		timer_select ? timer_rdata		:
+		plic_select ? plic_rdata		:
 		32'h00000000;
 		
 	assign bus_ready =
-		rom_select ? rom_ready :
-		ram_select ? ram_ready :
+		rom_ready		|
+		ram_ready		|
 `ifdef SOC_ENABLE_SDRAM
-		sdram_select ? sdram_ready :
+		sdram_ready		|
 `endif
 `ifdef SOC_ENABLE_VGA
-		vram_select ? vram_ready :
+		vram_ready		|
 `endif
-		led_select ? led_ready :
+		led_ready		|
 `ifdef SOC_ENABLE_UART
-		uart_0_select ? uart_0_ready :
-		uart_1_select ? uart_0_ready :
+		uart_0_ready	|
+		uart_0_ready	|
 `endif
 `ifdef SOC_ENABLE_GPIO
-		gpio_select ? gpio_ready :
+		gpio_ready		|
 `endif
 `ifdef SOC_ENABLE_SD
-		sd_select ? sd_ready :
+		sd_ready		|
 `endif
 `ifdef SOC_ENABLE_I2C
-		i2c_select ? i2c_ready :
+		i2c_ready		|
 `endif
-		dma_select ? dma_ready :
-		timer_select ? timer_ready :
-		plic_select ? plic_ready :
+		dma_ready		|
+		timer_ready		|
+		plic_ready		|
 		1'b0;
 
 `ifndef __VERILATOR__
@@ -820,30 +822,30 @@ module SoC(
 `else
 
 	wire bus_valid_select =
-		rom_select |
-		ram_select |
+		rom_select		|
+		ram_select		|
 `ifdef SOC_ENABLE_SDRAM
-		sdram_select |
+		sdram_select	|
 `endif
 `ifdef SOC_ENABLE_VGA
-		vram_select |
+		vram_select		|
 `endif
-		led_select |
+		led_select		|
 `ifdef SOC_ENABLE_UART
-		uart_0_select |
-		uart_1_select |
+		uart_0_select	|
+		uart_1_select	|
 `endif
 `ifdef SOC_ENABLE_GPIO
-		gpio_select |
+		gpio_select		|
 `endif
 `ifdef SOC_ENABLE_SD
-		sd_select |
+		sd_select		|
 `endif
 `ifdef SOC_ENABLE_I2C
-		i2c_select |
+		i2c_select		|
 `endif
-		dma_select |
-		timer_select |
+		dma_select		|
+		timer_select	|
 		plic_select;
 
 	reg bus_fault = 0;
