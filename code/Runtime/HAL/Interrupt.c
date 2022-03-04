@@ -85,6 +85,13 @@ static void irq_entry()
 			*PLIC_COMPLETE_0 = claimed;
 		}
 	}
+	else	// Software interrupt.
+	{
+		// \hack Call timer interrupt handler, kernel scheduler.
+		irq_handler_t handler = g_handlers[0];
+		if (handler)
+			handler();
+	}
 }
 
 #pragma GCC pop_options
@@ -99,7 +106,7 @@ void interrupt_init()
 	csr_write_mtvec((uint_xlen_t)irq_entry);
 
 	// Global interrupt enable 
-	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
+	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK | MIE_MSI_BIT_MASK);
 	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
 	// Enable PLIC interrupts.
@@ -113,10 +120,10 @@ void interrupt_set_handler(uint32_t source, irq_handler_t handler)
 
 void interrupt_enable()
 {
-	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
+	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void interrupt_disable()
 {
-	csr_clr_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK);
+	csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);	
 }

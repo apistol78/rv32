@@ -169,12 +169,11 @@ void test_thread_a()
 {
 	for (;;)
 	{
-		kernel_cs_lock(&lock);
-		printf("Thread 1...\n");
-		kernel_cs_unlock(&lock);
-
-		for (int i = 0; i < 10000; ++i)
-			__asm__ volatile ("nop");
+		//kernel_cs_lock(&lock);
+		//printf("Thread 1...\n");
+		//kernel_cs_unlock(&lock);
+		*LED_BASE = 0xaa;
+		kernel_sleep(1000);
 	}
 }
 
@@ -182,12 +181,11 @@ void test_thread_b()
 {
 	for (;;)
 	{
-		kernel_cs_lock(&lock);
-		printf("Thread 2...\n");
-		kernel_cs_unlock(&lock);
-
-		for (int i = 0; i < 10000; ++i)
-			__asm__ volatile ("nop");
+		//kernel_cs_lock(&lock);
+		//printf("Thread 2...\n");
+		//kernel_cs_unlock(&lock);
+		*LED_BASE = 0xbb;
+		kernel_sleep(1000);
 	}
 }
 
@@ -229,10 +227,10 @@ int main()
 			static uint32_t last_ms = 0;
 			uint32_t ms = timer_get_ms();
 
-			kernel_cs_lock(&lock);
+			//kernel_cs_lock(&lock);
 			printf("%d fps\n", (60 * 1000) / (ms - last_ms));
-			kernel_cs_unlock(&lock);
-			
+			//kernel_cs_unlock(&lock);
+
 			last_ms = ms;
 			count = 0;
 		}

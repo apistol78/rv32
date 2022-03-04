@@ -7,11 +7,11 @@
 
 #define KERNEL_TIMER_RATE 1000000
 
-static kernel_thread_t g_threads[4];
+static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 1;
 
-void kernel_timer_handler()
+void kernel_scheduler()
 {
 	__asm__ volatile (
 		"addi	sp, sp, -256		\n"
@@ -88,9 +88,21 @@ void kernel_timer_handler()
 		);
 	}
 
+	// Update thread states.
+	for (uint32_t i = 0; i < g_count; ++i)
+	{
+		if (g_threads[i].sleep > 0)
+			g_threads[i].sleep--;
+	}
+
 	// Select new thread.
-	if (++g_current >= 3)
-		g_current = 0;
+	for (;;)
+	{
+		if (++g_current >= g_count)
+			g_current = 0;
+		if (g_threads[g_current].sleep == 0)
+			break;
+	}
 
 	// Restore new thread, patch current return address into it's stack.
 	{
@@ -174,13 +186,13 @@ void kernel_timer_handler()
 static void* kernel_alloc_stack()
 {
 	uint8_t* stack = malloc(65536);
-    if (stack)
-    {
-	    memset(stack, 0, 65536);
-	    return stack + 65536 - 256;
-    }
-    else
-        return 0;
+	if (stack)
+	{
+		memset(stack, 0, 65536);
+		return stack + 65536 - 256;
+	}
+	else
+		return 0;
 }
 
 void kernel_init()
@@ -189,10 +201,11 @@ void kernel_init()
 	kernel_thread_t* t = &g_threads[0];
 	t->sp = 0;
 	t->epc = 0;
+	t->sleep = 0;
 
-	// Setup timer interrupt for task switching.
+	// Setup timer interrupt for kernel scheduler.
 	timer_set_compare(KERNEL_TIMER_RATE);
-	interrupt_set_handler(0, kernel_timer_handler);
+	interrupt_set_handler(0, kernel_scheduler);
 }
 
 void kernel_create_thread(kernel_thread_fn_t fn)
@@ -200,25 +213,37 @@ void kernel_create_thread(kernel_thread_fn_t fn)
 	kernel_thread_t* t = &g_threads[g_count];
 	t->sp = (uint32_t)kernel_alloc_stack();
 	t->epc = (uint32_t)fn;
+	t->sleep = 0;
 	++g_count;
+}
+
+void kernel_yield()
+{
+	// __asm__ volatile ("ecall");
+}
+
+void kernel_sleep(uint32_t ms)
+{
+	interrupt_disable();
+	g_threads[g_current].sleep = (ms + 99) / 100;
+	interrupt_enable();
+	kernel_yield();
 }
 
 void kernel_cs_lock(volatile kernel_cs_t* cs)
 {
-    for (;;)
-    {
-        while (cs->counter != 0)
-            __asm__ volatile ("nop");
-
-        interrupt_disable();
-
-        if (cs->counter == 0)
-        {
-            cs->counter = 1;
-            interrupt_enable();
-            return;
-        }
-    }
+	for (;;)
+	{
+		while (cs->counter != 0)
+			__asm__ volatile ("nop");
+		interrupt_disable();
+		if (cs->counter == 0)
+		{
+			cs->counter = 1;
+			interrupt_enable();
+			return;
+		}
+	}
 }
 
 void kernel_cs_unlock(volatile kernel_cs_t* cs)
