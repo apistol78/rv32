@@ -33,7 +33,8 @@ module CPU_Fetch #(
 	typedef enum bit [1:0]
 	{
 		WAIT_ICACHE,
-		WAIT_JUMP
+		WAIT_JUMP,
+		WAIT_IRQ
 	} state_t;
 
 	state_t state = WAIT_ICACHE;
@@ -118,11 +119,16 @@ module CPU_Fetch #(
 							data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
 							data.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
 
-							if (is_JUMP || is_JUMP_CONDITIONAL || is_ECALL || is_MRET || is_WFI) begin
+							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
 								// Branch instruction, need to wait
 								// for an explicit "goto" signal before
 								// we can continue feeding the pipeline.
 								state <= WAIT_JUMP;
+							end
+							else if (is_ECALL || is_WFI) begin
+								// Software interrupt, need to wait
+								// for IRQ signal before continue.
+								state <= WAIT_IRQ;
 							end
 							else begin
 								// Move PC to next instruction, will
@@ -144,6 +150,16 @@ module CPU_Fetch #(
 						pc <= i_jump_pc;
 						state <= WAIT_ICACHE;
 					end				
+				end
+
+				WAIT_IRQ: begin
+					// Wait for IRQ signal.
+					if (i_irq_pending && !o_irq_dispatched) begin
+						o_irq_dispatched <= 1;
+						o_irq_epc <= pc + 4;
+						pc <= i_irq_pc;
+						state <= WAIT_ICACHE;
+					end
 				end
 
 				default:

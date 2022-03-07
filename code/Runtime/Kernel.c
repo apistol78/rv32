@@ -219,14 +219,12 @@ void kernel_create_thread(kernel_thread_fn_t fn)
 
 void kernel_yield()
 {
-	// __asm__ volatile ("ecall");
+	__asm__ volatile ("ecall");
 }
 
 void kernel_sleep(uint32_t ms)
 {
-	interrupt_disable();
 	g_threads[g_current].sleep = (ms + 99) / 100;
-	interrupt_enable();
 	kernel_yield();
 }
 

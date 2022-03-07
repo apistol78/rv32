@@ -108,7 +108,7 @@ void interrupt_init()
 
 	// Global interrupt enable 
 	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK | MIE_MSI_BIT_MASK);
-	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+	interrupt_enable();
 
 	// Enable PLIC interrupts.
 	*PLIC_ENABLE = 2 | 4 | 8 | 16;
@@ -121,12 +121,12 @@ void interrupt_set_handler(uint32_t source, irq_handler_t handler)
 
 void interrupt_enable()
 {
-	if (--g_interrupt_enable == 0)
+	if (g_interrupt_enable++ == 0)
 		csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void interrupt_disable()
 {
-	if (g_interrupt_enable++ == 0)
+	if (--g_interrupt_enable == 0)
 		csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
