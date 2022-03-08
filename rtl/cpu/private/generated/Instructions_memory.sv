@@ -2,36 +2,36 @@
 // ==================================================
 
 wire memory_read = 
-	is_FLW  |
-	is_LB   |
-	is_LBU  |
-	is_LH   |
-	is_LHU  |
-	is_LW   |
+	is_FLW |
+	is_LB  |
+	is_LBU |
+	is_LH  |
+	is_LHU |
+	is_LW  |
 	1'b0;
 
 wire memory_write = 
-	is_FSW  |
-	is_SB   |
-	is_SH   |
-	is_SW   |
+	is_FSW |
+	is_SB  |
+	is_SH  |
+	is_SW  |
 	1'b0;
 
 wire [2:0] memory_width = 
-	is_FLW  ? 3'd4 :
-	is_FSW  ? 3'd4 :
-	is_LB   ? 3'd1 :
-	is_LBU  ? 3'd1 :
-	is_LH   ? 3'd2 :
-	is_LHU  ? 3'd2 :
-	is_LW   ? 3'd4 :
-	is_SB   ? 3'd1 :
-	is_SH   ? 3'd2 :
-	is_SW   ? 3'd4 :
+	is_FLW ? 3'd4 :
+	is_FSW ? 3'd4 :
+	is_LB  ? 3'd1 :
+	is_LBU ? 3'd1 :
+	is_LH  ? 3'd2 :
+	is_LHU ? 3'd2 :
+	is_LW  ? 3'd4 :
+	is_SB  ? 3'd1 :
+	is_SH  ? 3'd2 :
+	is_SW  ? 3'd4 :
 	3'd0;
 
 wire memory_signed = 
-	is_LB   |
-	is_LH   |
+	is_LB |
+	is_LH |
 	1'b0;
 

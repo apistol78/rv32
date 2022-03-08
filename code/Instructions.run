@@ -1621,7 +1621,7 @@ function main(argv)
 
 		-- Instruction signals.
 		for _, inst in ipairs(vi) do
-			stdout:printLn("wire is_" .. string.format("%-7s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+			stdout:printLn("wire is_" .. string.format("%-9s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
 		end
 		stdout:printLn("")
 
@@ -1676,7 +1676,7 @@ function main(argv)
 		stdout:printLn("wire RD_bank =");
 		for _, inst in ipairs(vi) do
 			if inst.verilog_rd_bank ~= nil and inst.verilog_rd_bank ~= 0 then
-				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rd_bank .. " :");
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rd_bank .. " :");
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1685,7 +1685,7 @@ function main(argv)
 		stdout:printLn("wire RS1_bank =");
 		for _, inst in ipairs(vi) do
 			if inst.verilog_rs1_bank ~= nil and inst.verilog_rs1_bank ~= 0 then
-				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs1_bank .. " :");
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs1_bank .. " :");
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1694,7 +1694,7 @@ function main(argv)
 		stdout:printLn("wire RS2_bank =");
 		for _, inst in ipairs(vi) do
 			if inst.verilog_rs2_bank ~= nil and inst.verilog_rs2_bank ~= 0 then
-				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1703,7 +1703,7 @@ function main(argv)
 		stdout:printLn("wire RS3_bank =");
 		for _, inst in ipairs(vi) do
 			if inst.verilog_rs3_bank ~= nil and inst.verilog_rs3_bank ~= 0 then
-				stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1759,7 +1759,7 @@ function main(argv)
 		stdout:printLn("wire memory_read = ")
 		for i, inst in ipairs(alu) do
 			if inst.verilog_memory.direction == "R" then
-				stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. "|")
+				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. "|")
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1768,7 +1768,7 @@ function main(argv)
 		stdout:printLn("wire memory_write = ")
 		for i, inst in ipairs(alu) do
 			if inst.verilog_memory.direction == "W" then
-				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
+				stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " |")
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1776,7 +1776,7 @@ function main(argv)
 
 		stdout:printLn("wire [2:0] memory_width = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " ? 3'd" .. inst.verilog_memory.width .. " :")
+			stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " ? 3'd" .. inst.verilog_memory.width .. " :")
 		end
 		stdout:printLn("\t3'd0;")
 		stdout:printLn("")
@@ -1784,7 +1784,7 @@ function main(argv)
 		stdout:printLn("wire memory_signed = ")
 		for i, inst in ipairs(alu) do
 			if inst.verilog_memory.signed == true then
-				stdout:printLn("\tis_" .. string.format("%-4s", inst.name) .. " |")
+				stdout:printLn("\tis_" .. string.format("%-2s", inst.name) .. " |")
 			end
 		end
 		stdout:printLn("\t1'b0;")
@@ -1839,16 +1839,11 @@ function main(argv)
 			end
 		end	
 		
-		local count = 0;
+		stdout:printLn("`OP <= ")
 		for i, inst in ipairs(t) do
-			if count == 0 then
-				stdout:printLn("if (is_" .. inst.name .. ")")
-			else
-				stdout:printLn("else if (is_" .. inst.name .. ")")
-			end
-			stdout:printLn("\t`OP <= OP_" .. inst.name .. ";")
-			count = count + 1
+			stdout:printLn("\tis_" .. string.format("%-6s", inst.name) .. " ? OP_" .. string.format("%-6s", inst.name) .. " : ")
 		end
+		stdout:printLn("\t0;")
 
 	elseif language == "verilog_execute_ops" then
 
@@ -1933,7 +1928,7 @@ function main(argv)
 
 		stdout:printLn("wire [4:0] fpu_operation = ")
 		for i, inst in ipairs(fpu) do
-			stdout:printLn("\tis_" .. string.format("%-7s", inst.name) .. " ? " .. string.format("%-1s", inst.verilog_fpu.operation) .. " :")
+			stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? " .. string.format("%-18s", inst.verilog_fpu.operation) .. " :")
 		end
 		stdout:printLn("\t5'd0;")
 		stdout:printLn("")
