@@ -629,7 +629,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -800,7 +800,7 @@ module SoC(
 		led_ready		|
 `ifdef SOC_ENABLE_UART
 		uart_0_ready	|
-		uart_0_ready	|
+		uart_1_ready	|
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_ready		|

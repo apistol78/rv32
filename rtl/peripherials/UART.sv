@@ -18,7 +18,7 @@ module UART #(
     output wire UART_TX
 );
 
-	wire rx_request;
+	logic rx_request;
 	wire rx_ready;
 	UART_RX #(
 		.PRESCALE(PRESCALE)
@@ -32,7 +32,7 @@ module UART #(
 		.UART_RX(UART_RX)
 	);
 
-	wire tx_request;
+	logic tx_request;
 	wire tx_ready;
 	UART_TX #(
 		.PRESCALE(PRESCALE)
@@ -45,12 +45,12 @@ module UART #(
 		.UART_TX(UART_TX)
 	);
 	
-	assign rx_request = i_request && !i_rw;
-	assign tx_request = i_request && i_rw;
+	always_ff @(posedge i_clock)
+	begin
+		rx_request <= i_request && !i_rw;
+		tx_request <= i_request && i_rw;
+	end
 	
-	assign o_ready =
-		rx_request ? rx_ready :
-		tx_request ? tx_ready :
-		1'b0;
+	assign o_ready = rx_ready | tx_ready;
 
 endmodule
