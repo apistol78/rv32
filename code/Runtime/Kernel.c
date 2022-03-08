@@ -9,7 +9,7 @@
 
 static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
-static int32_t g_count = 1;
+static int32_t g_count = 0;
 
 static void kernel_scheduler()
 {
@@ -202,6 +202,9 @@ void kernel_init()
 	t->sp = 0;
 	t->epc = 0;
 	t->sleep = 0;
+
+	g_current = 0;
+	g_count = 1;
 
 	// Setup timer interrupt for kernel scheduler.
 	timer_set_compare(KERNEL_TIMER_RATE);
