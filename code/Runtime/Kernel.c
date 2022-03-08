@@ -11,7 +11,7 @@ static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 1;
 
-void kernel_scheduler()
+static void kernel_scheduler()
 {
 	__asm__ volatile (
 		"addi	sp, sp, -256		\n"
@@ -224,7 +224,9 @@ void kernel_yield()
 
 void kernel_sleep(uint32_t ms)
 {
+	interrupt_disable();
 	g_threads[g_current].sleep = (ms + 99) / 100;
+	interrupt_enable();
 	kernel_yield();
 }
 

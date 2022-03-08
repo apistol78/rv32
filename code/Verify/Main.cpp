@@ -1887,6 +1887,32 @@ bool verify_FMIN_FMAX(const char* trace)
 	return true;
 }
 
+bool verify_CSRRS(const char* trace)
+{
+	auto tb = create_soc();
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] = 0x00000008;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] = 0x00000000;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] = 0x00000008;
+	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] = 0x00000000;
+	tb->SoC__DOT__rom__DOT__data[0] = 0x30042473; // csrrs	s0,mstatus,s0
+	tb->SoC__DOT__rom__DOT__data[1] = 0x300024f3; // csrrs	s1,mstatus,zero
+	tb->SoC__DOT__rom__DOT__data[2] = 0x30093973; // csrrc	s2,mstatus,s2
+	tb->SoC__DOT__rom__DOT__data[3] = 0x300039f3; // csrrc	s3,mstatus,zero
+
+	evaluate(tb, trace, 4);
+
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != 0x00000000)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S1] != 0x00000008)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S2] != 0x00000008)
+		return false;
+	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S3] != 0x00000000)
+		return false;
+
+	return true;
+}
+
 // ========================================================
 
 bool verify(bool (*fn)(const char* trace), const char* name, bool ftrce)
@@ -2012,6 +2038,7 @@ int main(int argc, char **argv)
 	CHECK(verify_FMIN);
 	CHECK(verify_FMAX);
 	CHECK(verify_FMIN_FMAX);
+	CHECK(verify_CSRRS);
 
 	if (success)
 		printf("SUCCESS!\n");

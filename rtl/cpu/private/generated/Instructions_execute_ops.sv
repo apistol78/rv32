@@ -4,7 +4,7 @@
 // CSRRC
 if (`EXECUTE_OP == OP_CSRRC) begin
 	`RD <= i_csr_rdata;
-	o_csr_wdata <= i_csr_rdata & !`RS1;
+	o_csr_wdata <= i_csr_rdata & ~`RS1;
 	o_csr_wdata_wr <= 1;
 	`EXECUTE_DONE;
 end

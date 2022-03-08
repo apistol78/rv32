@@ -327,11 +327,11 @@ local instructions = {
 			uint32_t data = readCSR(f.csr);
 			uint32_t tmp = R_u(f.rs1);
 			R_u(f.rd) = data;
-			writeCSR(f.csr, R_u(f.rd) & !tmp);
+			writeCSR(f.csr, R_u(f.rd) & ~tmp);
 		]],
 		verilog_text = [[
 			`RD <= i_csr_rdata;
-			o_csr_wdata <= i_csr_rdata & !`RS1;
+			o_csr_wdata <= i_csr_rdata & ~`RS1;
 			o_csr_wdata_wr <= 1;
 			`EXECUTE_DONE;
 		]]

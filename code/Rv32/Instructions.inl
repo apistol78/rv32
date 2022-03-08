@@ -171,7 +171,7 @@ else if ((word & 0x0000707f) == 0x00003073)
 			uint32_t data = readCSR(f.csr);
 			uint32_t tmp = R_u(f.rs1);
 			R_u(f.rd) = data;
-			writeCSR(f.csr, R_u(f.rd) & !tmp);
+			writeCSR(f.csr, R_u(f.rd) & ~tmp);
 		
 	return true;
 }
