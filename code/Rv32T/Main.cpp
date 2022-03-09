@@ -415,9 +415,9 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;
 			}
-			if (soc->SoC__DOT__bus_fault)
+			if (soc->SoC__DOT__debug_bus_fault)
 			{
-				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__bus_address) << L", terminating." << Endl;
+				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__debug_bus_fault_address) << L" (" << int32_t(soc->SoC__DOT__debug_bus_fault_type) << L"), terminating." << Endl;
 				g_going = false;
 				break;				
 			}
@@ -508,6 +508,14 @@ int main(int argc, const char **argv)
 	log::info << L"RETIRE : " << soc->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
 	log::info << L"BUS    : " << busActive.value() << L", " << (busActive.value() * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
 	log::info << L"MS     : " << soc->SoC__DOT__timer__DOT__ms << Endl;
+
+	log::info << Endl;
+	log::info << L"RA     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[1]) << Endl;
+	log::info << L"SP     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[2]) << Endl;
+	log::info << L"GP     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[3]) << Endl;
+	log::info << L"TP     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[4]) << Endl;
+	log::info << L"T0     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[5]) << Endl;
+	log::info << L"A3     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[13]) << Endl;
 
 	hdmi.getImage()->save(L"Rv32T.png");
 

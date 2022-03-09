@@ -158,116 +158,12 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 
-`ifndef __VERILATOR__
-
-	wire clock;
-	IP_PLL_Clk pll_clk(
-		.refclk(CLOCK_125_p),
-		.rst(!CPU_RESET_n),
-		.outclk_0(clock),
-		.locked()
-	);
-
-	reg [31:0] cont = 0;
-	always@(posedge clock)
-		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
-
-	reg[4:0] sample = 0;
-	always @(posedge clock)
-	begin
-		if (cont == 32'd4_000_000)
-			sample[4:0] = { sample[3:0], KEY[0] };
-		else 
-			sample[4:0] = sample[4:0];
-	end
-
-	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
-	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	wire reset = !start_n;
-
-`else
-
 	// Since we want to share pins with HW
 	// this clock will actually be simulated at 100 MHz.
 	wire clock = CLOCK_125_p;
 	wire reset = !CPU_RESET_n;
-
-`endif
   
 `ifdef SOC_ENABLE_VGA
-	// Video memory.
-	wire video_sram_request;
-	wire video_sram_rw;
-	wire [31:0] video_sram_address;
-	wire [31:0] video_sram_wdata;
-	wire [31:0] video_sram_rdata;
-	wire video_sram_ready;
-
-	`ifndef __VERILATOR__
-	SRAM_interface video_sram(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready),
-		// ---
-		.SRAM_A(SRAM_A),
-		.SRAM_D(SRAM_D),
-		.SRAM_CE_n(SRAM_CE_n),
-		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n),
-		.SRAM_LB_n(SRAM_LB_n),
-		.SRAM_UB_n(SRAM_UB_n)
-	);
-	`else
-	BRAM_latency #(
-		.WIDTH(32),
-		.SIZE(320*200/4),
-		.ADDR_LSH(2),
-		.LATENCY(7)
-	) video_sram(
-		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready)
-	);
-	`endif
-
-	// Video controller.
-	wire vram_select;
-	wire [31:0] vram_address;
-	wire vram_ready;
-	wire vram_fifo_full;
-	VideoBus video_bus(
-		.i_clock(clock),
-		
-		.i_cpu_request(vram_select && bus_request),
-		.i_cpu_address(vram_address),
-		.i_cpu_wdata(bus_wdata),
-		.o_cpu_ready(vram_ready),
-		
-		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x),
-		.i_video_pos_y(vga_pos_y),
-		.o_video_rdata(HDMI_TX_D),
-		
-		.o_mem_request(video_sram_request),
-		.o_mem_rw(video_sram_rw),
-		.o_mem_address(video_sram_address),
-		.o_mem_wdata(video_sram_wdata),
-		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready),
-		
-		.o_fifo_full(vram_fifo_full)
-	);
-  
 	// Video signal generator
 	wire vga_enable;
 	wire [8:0] vga_pos_x;
@@ -285,6 +181,132 @@ module SoC(
 	);
 	
 	assign HDMI_TX_DE = vga_enable;
+
+	// Video memory.
+	wire video_sram_request;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+	BRAM_latency #(
+		.WIDTH(32),
+		.SIZE(320*200/4),
+		.ADDR_LSH(2),
+		.LATENCY(7)
+	) video_sram(
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready)
+	);
+
+	// Video framebuffer controller.
+	wire vbus_request;
+	wire [31:0] vbus_address;
+	wire [31:0] vbus_wdata;
+	wire vbus_ready;
+	wire vbus_fifo_full;
+	VideoBus video_bus(
+		.i_clock(clock),
+		
+		// CPU interface.
+		.i_cpu_request(vbus_request),
+		.i_cpu_address(vbus_address),
+		.i_cpu_wdata(vbus_wdata),
+		.o_cpu_ready(vbus_ready),
+		
+		// Video signal interface.
+		.i_video_request(vga_enable),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
+		.o_video_rdata(HDMI_TX_D),
+		
+		// Video RAM interface.
+		.o_mem_request(video_sram_request),
+		.o_mem_rw(video_sram_rw),
+		.o_mem_address(video_sram_address),
+		.o_mem_wdata(video_sram_wdata),
+		.i_mem_rdata(video_sram_rdata),
+		.i_mem_ready(video_sram_ready),
+		
+		.o_fifo_full(vbus_fifo_full)
+	);
+
+	// Multiplex access to framebuffer from CPU and GPU.
+	wire vram_select;
+	wire [31:0] vram_address;
+	wire vram_ready;
+	BusAccess #(
+		.REGISTERED(1'b0)
+	) cpu_gpu_vbus_mux(
+		.i_reset(reset),
+		.i_clock(clock),
+		
+		// Output to video framebuffer.
+		.o_bus_rw(),
+		.o_bus_request(vbus_request),
+		.i_bus_ready(vbus_ready),
+		.o_bus_address(vbus_address),
+		.i_bus_rdata(),
+		.o_bus_wdata(vbus_wdata),
+
+		// NC
+		.i_pa_request(1'b0),
+		.o_pa_ready(),
+		.i_pa_address(0),
+		.o_pa_rdata(),
+
+		// CPU port.
+		.i_pb_rw(1'b1),
+		.i_pb_request(vram_select && bus_request),
+		.o_pb_ready(vram_ready),
+		.i_pb_address(vram_address),
+		.o_pb_rdata(),
+		.i_pb_wdata(bus_wdata),
+
+		// GPU port.
+		.i_pc_rw(),
+		.i_pc_request(gpu_fb_request),
+		.o_pc_ready(gpu_fb_ready),
+		.i_pc_address(gpu_fb_address),
+		.o_pc_rdata(),
+		.i_pc_wdata(gpu_fb_wdata)
+	);
+
+	// GPU
+	wire gpu_select;
+	wire [1:0] gpu_address;
+	wire [31:0] gpu_rdata;
+	wire gpu_ready;
+
+	wire gpu_fb_request;
+	wire gpu_fb_ready;
+	wire [31:0] gpu_fb_address;
+	wire [31:0] gpu_fb_wdata;
+
+	GPU gpu(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// Command interface.
+		.i_request(gpu_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(gpu_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(gpu_rdata),
+		.o_ready(gpu_ready),
+
+		// Framebuffer output.
+		.o_fb_request(gpu_fb_request),
+		.i_fb_ready(gpu_fb_ready),
+		.o_fb_address(gpu_fb_address),
+		.o_fb_wdata(gpu_fb_wdata)
+	);
+
 `endif
 	
 	// ROM
@@ -326,32 +348,6 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	`ifndef __VERILATOR__
-	SDRAM_interface sdram(
-		.i_global_reset_n(global_reset_n),
-		.i_soft_reset_n(soft_reset_n),
-		// ---
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(l2cache_bus_request),
-		.i_rw(l2cache_bus_rw),
-		.i_address(l2cache_bus_address),
-		.i_wdata(l2cache_bus_wdata),
-		.o_rdata(l2cache_bus_rdata),
-		.o_ready(l2cache_bus_ready),
-		// ---
-		.DDR2LP_CA(DDR2LP_CA),
-		.DDR2LP_CKE(DDR2LP_CKE),
-		.DDR2LP_CK_n(DDR2LP_CK_n),
-		.DDR2LP_CK_p(DDR2LP_CK_p),
-		.DDR2LP_CS_n(DDR2LP_CS_n),
-		.DDR2LP_DM(DDR2LP_DM),
-		.DDR2LP_DQ(DDR2LP_DQ),
-		.DDR2LP_DQS_n(DDR2LP_DQS_n),
-		.DDR2LP_DQS_p(DDR2LP_DQS_p),
-		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
-	);
-	`else
 	BRAM/*_latency*/ #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
@@ -366,7 +362,6 @@ module SoC(
 		.o_rdata(l2cache_bus_rdata),
 		.o_ready(l2cache_bus_ready)
 	);
-	`endif
 
 	wire l2cache_bus_rw;
 	wire l2cache_bus_request;
@@ -512,15 +507,10 @@ module SoC(
 		.o_ready(sd_ready),
 		// ---
 		.SD_CLK(SD_CLK),
-`ifndef __VERILATOR__
-		.SD_CMD(SD_CMD),
-		.SD_DAT(SD_DAT)
-`else
 		.SD_CMD_in(SD_CMD_in),
 		.SD_DAT_in(SD_DAT_in),
 		.SD_CMD_out(SD_CMD_out),
 		.SD_DAT_out(SD_DAT_out)
-`endif
 	);
 `endif
 
@@ -550,7 +540,7 @@ module SoC(
 		.o_ready(dma_ready),
 
 		// System
-		.i_stall(vram_fifo_full),
+		.i_stall(vbus_fifo_full),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),
@@ -629,7 +619,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -759,6 +749,9 @@ module SoC(
 	assign plic_select = bus_address[31:28] == 4'hb;
 	assign plic_address = bus_address[23:0];
 
+	assign gpu_select = bus_address[31:28] == 4'hc;
+	assign gpu_address = bus_address[3:2];
+
 	//=====================================
 
 	assign bus_rdata =
@@ -786,6 +779,7 @@ module SoC(
 		dma_select ? dma_rdata			:
 		timer_select ? timer_rdata		:
 		plic_select ? plic_rdata		:
+		gpu_select ? gpu_rdata			:
 		32'h00000000;
 		
 	assign bus_ready =
@@ -814,12 +808,10 @@ module SoC(
 		dma_ready		|
 		timer_ready		|
 		plic_ready		|
+		gpu_ready		|
 		1'b0;
 
-`ifndef __VERILATOR__
-	// 7:0
-	assign LEDG = { 1'b0, 1'b0, cpu_fault };
-`else
+	//=====================================
 
 	wire bus_valid_select =
 		rom_select		|
@@ -848,15 +840,25 @@ module SoC(
 		timer_select	|
 		plic_select;
 
-	reg bus_fault = 0;
+	reg debug_bus_fault = 0;
+	reg [31:0] debug_bus_fault_address = 0;
+	reg [1:0] debug_bus_fault_type = 0;
+
 	reg [`TAG_SIZE] execute_debug_tag = 0;
 	reg [`TAG_SIZE] writeback_debug_tag = 0;
 
 	reg debug_request = 0;
-	reg [12:0] debug_select = 0;
+	reg [13:0] debug_select = 0;
 
 	always_comb begin
-		bus_fault = !bus_valid_select && bus_request;
+		debug_bus_fault = !bus_valid_select && bus_request;
+		debug_bus_fault_address = bus_address;
+		debug_bus_fault_type =
+			cpu_ibus_request ? 2'd1 :
+			cpu_dbus_request ? 2'd2 :
+			dma_bus_request ? 2'd3 :
+			2'd0;
+
 		execute_debug_tag = cpu_execute_debug_tag;
 		writeback_debug_tag = cpu_writeback_debug_tag;
 
@@ -875,10 +877,9 @@ module SoC(
 			i2c_select,
 			dma_select,
 			timer_select,
-			plic_select
+			plic_select,
+			gpu_select
 		};
 	end
-	
-`endif
 
 endmodule
