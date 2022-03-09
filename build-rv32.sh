@@ -17,13 +17,13 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp 
 
 # Generate verilated code.
 mkdir -p code/Verify/SoC
-verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/gpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi
 
 mkdir -p code/Rv32T/SoC
-verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC board/rv32t/rtl/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/gpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC board/rv32t/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi
