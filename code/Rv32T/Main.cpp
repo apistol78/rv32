@@ -487,6 +487,7 @@ int main(int argc, const char **argv)
 					// str(L"%d", soc->SoC__DOT__l2cache__DOT__hit) << L", " <<
 					// str(L"%d", soc->SoC__DOT__l2cache__DOT__miss) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
+					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;

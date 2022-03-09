@@ -20,7 +20,7 @@ module CPU_CSR #(
 
 	// Instruction I/O access.
 	input [11:0] i_index,
-	output reg [31:0] o_rdata,
+	output logic [31:0] o_rdata,
 	input i_wdata_wr,
 	input [31:0] i_wdata,
 
@@ -28,22 +28,22 @@ module CPU_CSR #(
 	output [31:0] o_epc,
 
 	// Pending interrupt output.
-	output reg o_irq_pending,
-	output reg [31:0] o_irq_pc,
+	output logic o_irq_pending,
+	output logic [31:0] o_irq_pc,
 	input i_irq_dispatched,
 	input [31:0] i_irq_epc
 );
 
-	reg mstatus_mie = 0;
-	reg mie_meie = 0; 
-	reg mie_mtie = 0;
-	reg mie_msie = 0;
-	reg [31:0] mtvec = 0;
-	reg [31:0] mepc = 0;
-	reg [31:0] mcause = 0;
-	reg mip_meip = 0;
-	reg mip_mtip = 0;
-	reg mip_msip = 0;
+	logic mstatus_mie = 0;
+	logic mie_meie = 0; 
+	logic mie_mtie = 0;
+	logic mie_msie = 0;
+	logic [31:0] mtvec = 0;
+	logic [31:0] mepc = 0;
+	logic [31:0] mcause = 0;
+	logic mip_meip = 0;
+	logic mip_mtip = 0;
+	logic mip_msip = 0;
 
 	wire [31:0] mstatus = { 28'b0, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
@@ -76,7 +76,8 @@ module CPU_CSR #(
 			o_rdata = HARTID;
 	end
 
-	reg rd = 0;
+	logic [2:0] issued = 0;
+	logic rd = 0;
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin
@@ -92,6 +93,7 @@ module CPU_CSR #(
 			mip_msip <= 0;
 		end
 		else begin
+			// Write CSR registers.
 			if (i_wdata_wr) begin
 				if (i_index == `CSR_MSTATUS) begin
 					mstatus_mie <= i_wdata[3];
@@ -107,39 +109,55 @@ module CPU_CSR #(
 					mepc <= i_wdata;
 			end
 
-			if (i_timer_interrupt) begin
-				if (mstatus_mie && mie_mtie) begin
-					o_irq_pending <= 1;
-					o_irq_pc <= mtvec;
-					mcause <= 32'h80000000 | (1 << 7);
+			// Check interrupts, set pending flags.
+			if (mstatus_mie) begin
+				if (i_timer_interrupt && mie_mtie) begin
 					mip_mtip <= 1'b1;
 				end
-			end
-
-			if (i_external_interrupt) begin
-				if (mstatus_mie && mie_meie) begin
-					o_irq_pending <= 1;
-					o_irq_pc <= mtvec;
-					mcause <= 32'h80000000 | (1 << 11);
+				if (i_external_interrupt && mie_meie) begin
 					mip_meip <= 1'b1;
 				end
-			end
-
-			if (i_ecall) begin
-				if (mstatus_mie && mie_msie) begin
-					o_irq_pending <= 1;
-					o_irq_pc <= mtvec;
-					mcause <= 32'h00000000 | (1 << 11);
+				if (i_ecall && mie_msie) begin
 					mip_msip <= 1'b1;
 				end
 			end
 
-			rd <= i_irq_dispatched;
+			// Issue interrupts.
+			if (!o_irq_pending) begin
+				if (mip_mtip) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h80000000 | (1 << 7);
+					issued <= 1;
+				end
+				else if (mip_meip) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h80000000 | (1 << 11);					
+					issued <= 2;
+				end
+				else if (mip_msip) begin
+					o_irq_pending <= 1;
+					o_irq_pc <= mtvec;
+					mcause <= 32'h00000000 | (1 << 11);					
+					issued <= 4;
+				end
+			end
+			else begin
+				rd <= i_irq_dispatched;
+				if ({ rd, i_irq_dispatched } == 2'b01) begin
+					mepc <= i_irq_epc;
 
-			if ({ rd, i_irq_dispatched } == 2'b01) begin
-				o_irq_pending <= 0;
-				mepc <= i_irq_epc;
-				mip_mtip <= 1'b0;
+					if (issued[0])
+						mip_mtip <= 1'b0;
+					if (issued[1])
+						mip_meip <= 1'b0;
+					if (issued[2])
+						mip_msip <= 1'b0;
+
+					o_irq_pending <= 0;
+					issued <= 0;
+				end
 			end
 		end
 	end

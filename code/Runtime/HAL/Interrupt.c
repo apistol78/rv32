@@ -51,7 +51,7 @@ enum
 #define PLIC_CLAIM_0	(volatile uint32_t*)0xb0200004
 #define PLIC_COMPLETE_0	(volatile uint32_t*)0xb0200004
 
-irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0 };
+irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0, 0 };
 uint32_t g_interrupt_enable = 0;
 
 #pragma GCC push_options
@@ -68,9 +68,9 @@ static void irq_entry()
 		if (cause == RISCV_INT_MASK_MTI)
 		{
 			// Timer interrupt.
-			irq_handler_t handler = g_handlers[0];
+			irq_handler_t handler = g_handlers[IRQ_SOURCE_TIMER];
 			if (handler)
-				handler();
+				handler(IRQ_SOURCE_TIMER);
 		}
 		else if (cause == RISCV_INT_MASK_MEI)
 		{
@@ -81,17 +81,17 @@ static void irq_entry()
 				// Call appropriate handler for source.
 				irq_handler_t handler = g_handlers[claimed];
 				if (handler)
-					handler();
+					handler(claimed);
 			}
 			*PLIC_COMPLETE_0 = claimed;
 		}
 	}
-	else	// Software interrupt.
+	else
 	{
-		// \hack Call timer interrupt handler, kernel scheduler.
-		irq_handler_t handler = g_handlers[0];
+		// Software interrupt.
+		irq_handler_t handler = g_handlers[IRQ_SOURCE_ECALL];
 		if (handler)
-			handler();
+			handler(IRQ_SOURCE_ECALL);
 	}
 }
 

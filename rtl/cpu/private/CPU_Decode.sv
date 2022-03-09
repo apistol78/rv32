@@ -60,11 +60,12 @@ module CPU_Decode(
 		else begin
 			if (i_data.tag != data.tag) begin
 
+`ifdef __VERILATOR__
 				// If decode has received new transaction
 				// but execute is still busy we fault.
 				if (i_execute_busy)
 					o_fault <= 1;
-
+`endif
 				data.pc <= i_data.pc;
 
 				data.inst_rs1 <= i_data.inst_rs1;

@@ -5,13 +5,15 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
 
-#define KERNEL_TIMER_RATE 1000000
+#define KERNEL_MAIN_CLOCK 			10000000
+#define KERNEL_SCHEDULE_FREQUENCY	16
+#define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 
-static void kernel_scheduler()
+static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
 	__asm__ volatile (
 		"addi	sp, sp, -256		\n"
@@ -89,10 +91,13 @@ static void kernel_scheduler()
 	}
 
 	// Update thread states.
-	for (uint32_t i = 0; i < g_count; ++i)
+	if (source == IRQ_SOURCE_TIMER)
 	{
-		if (g_threads[i].sleep > 0)
-			g_threads[i].sleep--;
+		for (uint32_t i = 0; i < g_count; ++i)
+		{
+			if (g_threads[i].sleep > 0)
+				g_threads[i].sleep--;
+		}
 	}
 
 	// Select new thread.
@@ -104,7 +109,7 @@ static void kernel_scheduler()
 			break;
 	}
 
-	// Restore new thread, patch current return address into it's stack.
+	// Restore new thread.
 	{
 		kernel_thread_t* t = &g_threads[g_current];
 		csr_write_mepc(t->epc);
@@ -177,10 +182,24 @@ static void kernel_scheduler()
 		"flw	f29, 244(sp)		\n"
 		"flw	f30, 248(sp)		\n"
 		"flw	f31, 252(sp)		\n"
-		"addi	sp, sp, 256\n"
+		"addi	sp, sp, 256			\n"
 	);
 
-	timer_set_compare(KERNEL_TIMER_RATE);
+	// Setup next timer interrupt, do this inline since we
+	// cannot touch stack.
+	if (source == IRQ_SOURCE_TIMER)
+	{
+		uint32_t mtimeh = *TIMER_CYCLES_H;
+		uint32_t mtimel = *TIMER_CYCLES_L;
+		uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	}
+
+	__asm__ volatile (
+		"ret"
+	);
 }
 
 static void* kernel_alloc_stack()
@@ -208,7 +227,8 @@ void kernel_init()
 
 	// Setup timer interrupt for kernel scheduler.
 	timer_set_compare(KERNEL_TIMER_RATE);
-	interrupt_set_handler(0, kernel_scheduler);
+	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
+	interrupt_set_handler(IRQ_SOURCE_ECALL, kernel_scheduler);
 }
 
 void kernel_create_thread(kernel_thread_fn_t fn)
@@ -228,7 +248,7 @@ void kernel_yield()
 void kernel_sleep(uint32_t ms)
 {
 	interrupt_disable();
-	g_threads[g_current].sleep = (ms + 99) / 100;
+	g_threads[g_current].sleep = ms >> 4;	// Scheduler frequency.
 	interrupt_enable();
 	kernel_yield();
 }
