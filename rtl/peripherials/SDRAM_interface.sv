@@ -3,7 +3,7 @@
 module SDRAM_interface(
 	input wire i_global_reset_n,
 	input wire i_soft_reset_n,
-	input wire i_clock_sdram,
+	input wire i_clock_pll_ref,
 	
 	input wire i_reset,
 	input wire i_clock,
@@ -34,9 +34,10 @@ module SDRAM_interface(
 	wire local_init_done;
 	wire local_cal_success;
 	wire pll_locked;
+	wire pll_avl_clk;
 	
 	IP_SDRAM sdram(
-		.pll_ref_clk(i_clock_sdram),
+		.pll_ref_clk(i_clock_pll_ref),
 		.global_reset_n(i_global_reset_n),
 		.soft_reset_n(i_soft_reset_n),
 		
@@ -76,6 +77,7 @@ module SDRAM_interface(
 		
 		.local_init_done(local_init_done),
 		.local_cal_success(local_cal_success),
+		
 		.pll_locked(pll_locked)
 	);
 	

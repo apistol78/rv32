@@ -300,7 +300,8 @@ module SoC(
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
-		.i_clock_sdram(clock),
+		.i_clock_pll_ref(clock),
+		
 		// ---
 		.i_reset(reset),
 		.i_clock(clock),
@@ -576,7 +577,9 @@ module SoC(
 	wire [31:0] bus_pb_rdata;
 	wire [31:0] bus_pb_wdata;
 
-	BusAccess bus(
+	BusAccess #(
+		.REGISTERED(1)
+	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -740,7 +743,7 @@ module SoC(
 		led_select ? led_ready :
 `ifdef SOC_ENABLE_UART
 		uart_0_select ? uart_0_ready :
-		uart_1_select ? uart_0_ready :
+		uart_1_select ? uart_1_ready :
 `endif
 `ifdef SOC_ENABLE_GPIO
 		gpio_select ? gpio_ready :

@@ -44,32 +44,41 @@ module CPU_Forward (
 
 	// Forward RS1 from pipeline.
 	always_comb begin
-		rs1 =
-			(i_decode_data.inst_rs1 == 0) ? 32'h0 :
-			(i_decode_data.inst_rs1 == i_execute_data.inst_rd && i_execute_data.mem_read == 0) ? i_execute_data.rd :
-			(i_decode_data.inst_rs1 == i_memory_data.inst_rd) ? i_memory_data.rd :
-			(i_decode_data.inst_rs1 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
-			i_rs1;
+		if (i_decode_data.have_rs[0]) begin
+			rs1 =
+				(i_decode_data.inst_rs1 == i_execute_data.inst_rd) ? i_execute_data.rd :
+				(i_decode_data.inst_rs1 == i_memory_data.inst_rd) ? i_memory_data.rd :
+				(i_decode_data.inst_rs1 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
+				i_rs1;
+		end
+		else
+			rs1 = 32'h0;
 	end
 
 	// Forward RS2 from pipeline.
 	always_comb begin
-		rs2 =
-			(i_decode_data.inst_rs2 == 0) ? 32'h0 :
-			(i_decode_data.inst_rs2 == i_execute_data.inst_rd && i_execute_data.mem_read == 0) ? i_execute_data.rd :
-			(i_decode_data.inst_rs2 == i_memory_data.inst_rd) ? i_memory_data.rd :
-			(i_decode_data.inst_rs2 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
-			i_rs2;
+		if (i_decode_data.have_rs[1]) begin
+			rs2 =
+				(i_decode_data.inst_rs2 == i_execute_data.inst_rd) ? i_execute_data.rd :
+				(i_decode_data.inst_rs2 == i_memory_data.inst_rd) ? i_memory_data.rd :
+				(i_decode_data.inst_rs2 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
+				i_rs2;
+		end
+		else
+			rs2 = 32'h0;
 	end
 
 	// Forward RS3 from pipeline.
 	always_comb begin
-		rs3 =
-			(i_decode_data.inst_rs3 == 0) ? 32'h0 :
-			(i_decode_data.inst_rs3 == i_execute_data.inst_rd && i_execute_data.mem_read == 0) ? i_execute_data.rd :
-			(i_decode_data.inst_rs3 == i_memory_data.inst_rd) ? i_memory_data.rd :
-			(i_decode_data.inst_rs3 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
-			i_rs3;
+		if (i_decode_data.have_rs[2]) begin
+			rs3 =
+				(i_decode_data.inst_rs3 == i_execute_data.inst_rd) ? i_execute_data.rd :
+				(i_decode_data.inst_rs3 == i_memory_data.inst_rd) ? i_memory_data.rd :
+				(i_decode_data.inst_rs3 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
+				i_rs3;
+		end
+		else
+			rs3 = 32'h0;
 	end
 
 endmodule

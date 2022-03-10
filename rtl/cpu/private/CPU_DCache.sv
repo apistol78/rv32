@@ -109,7 +109,7 @@ module CPU_DCache #(
 		cache_wdata = 0;
 		cache_address = i_address[(SIZE - 1) + 2:2];
 		
-		case (1'b1)
+		case (1'b1)	// synthesis full_case
 			state[IDLE]: begin
 				if (i_request) begin
 					if (i_flush) begin

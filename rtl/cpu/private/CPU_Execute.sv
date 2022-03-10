@@ -202,7 +202,7 @@ module CPU_Execute (
 				i_data.tag != data.tag
 			) begin
 
-				data.inst_rd <= i_data.inst_rd;
+				data.inst_rd <= register_t'(!i_data.memory_read ? i_data.inst_rd : 0);
 
 				data.mem_read <= i_data.memory_read;
 				data.mem_write <= i_data.memory_write;
@@ -210,6 +210,7 @@ module CPU_Execute (
 				data.mem_width <= i_data.memory_width;
 				data.mem_signed <= i_data.memory_signed;
 				data.mem_address <= alu_signed_sum_result;
+				data.mem_inst_rd <= i_data.inst_rd;
 
 				if (i_data.arithmetic) begin
 					`RD <= alu_result;

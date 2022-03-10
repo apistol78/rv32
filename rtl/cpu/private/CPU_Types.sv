@@ -56,6 +56,7 @@ typedef struct packed
 {
 	logic [`TAG_SIZE] tag;
 	logic [31:0] pc;				//!< Program counter.
+	logic [2:0] have_rs;
 	register_t inst_rs1;			//!< Index source register 1.
 	register_t inst_rs2;			//!< Index source register 2.
 	register_t inst_rs3;			//!< Index source register 3.
@@ -91,6 +92,7 @@ typedef struct packed
 	logic [2:0] mem_width;
 	logic mem_signed;
 	logic [31:0] mem_address;
+	register_t mem_inst_rd;			//!< Memory load into register, separate from inst_rd since we cannot forward from execute on load.
 }
 execute_data_t;
 

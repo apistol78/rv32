@@ -192,7 +192,7 @@ module CPU_Memory #(
 						1: data.rd <= { { 24{ i_data.mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
 						default: data.rd <= 0;
 					endcase
-					data.inst_rd <= i_data.inst_rd;
+					data.inst_rd <= i_data.mem_inst_rd; //inst_rd;
 					state <= IDLE;
 				end
 			end

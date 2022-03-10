@@ -68,11 +68,17 @@ module CPU_Decode(
 `endif
 				data.pc <= i_data.pc;
 
+				data.have_rs <= {
+					i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
+					i_data.inst_rs2 != 0 ? 1'b1 : 1'b0,
+					i_data.inst_rs1 != 0 ? 1'b1 : 1'b0
+				};
+
 				data.inst_rs1 <= i_data.inst_rs1;
 				data.inst_rs2 <= i_data.inst_rs2;
 				data.inst_rs3 <= i_data.inst_rs3;
 				data.inst_rd <= i_data.inst_rd;
-				
+			
 				data.imm <=
 					is_B ? inst_B_imm :
 					is_I ? inst_I_imm :
