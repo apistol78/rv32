@@ -28,12 +28,11 @@ module CPU_ICache#(
 	{
 		IDLE			= 0,
 		READ_SETUP		= 1,
-		READ_PREFETCH	= 2,
-		READ_BUS		= 3
+		READ_BUS		= 2
 	} state_t;
 
-	logic [3:0] next = 1 << IDLE;
-	logic [3:0] state = 1 << IDLE;
+	logic [2:0] next = 1 << IDLE;
+	logic [2:0] state = 1 << IDLE;
 
 	// Cache memory.
 	wire cache_initialized;
@@ -102,32 +101,21 @@ module CPU_ICache#(
 			end
 			
 			state[READ_SETUP]: begin
-				if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
-					o_ready = 1;
-					o_rdata = cache_rdata[63:32];
-					cache_pc = i_input_pc + 4;
-					next[READ_PREFETCH] = 1;
+				if (!i_stall) begin
+					if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
+						o_ready = 1;
+						o_rdata = cache_rdata[63:32];
+						cache_pc = i_input_pc + 4;
+						next[READ_SETUP] = 1;
+					end
+					else begin
+						o_bus_request = 1;
+						next[READ_BUS] = 1;
+					end
 				end
 				else begin
-					o_bus_request = 1;
-					next[READ_BUS] = 1;
+					next[IDLE] = 1;		// We need to go back to IDLE, seems to become unstable if we stay.
 				end
-			end
-
-			state[READ_PREFETCH]: begin
-				if (!i_stall && cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
-					o_ready = 1;
-					o_rdata = cache_rdata[63:32];
-					cache_pc = i_input_pc + 4;
-					next[READ_PREFETCH] = 1;
-				end
-				else if (!i_stall) begin
-					o_bus_request = 1;
-					next[READ_BUS] = 1;
-				end
-				else begin
-					next[IDLE] = 1;
-				end			
 			end
 
 			state[READ_BUS]: begin
