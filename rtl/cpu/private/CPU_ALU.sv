@@ -10,6 +10,7 @@ module CPU_ALU(
 
 	output wire [31:0] o_result,
 	output wire [31:0] o_shift_result,
+	output wire [31:0] o_signed_sum_result,
 	output wire o_compare_result
 );
 
@@ -45,6 +46,8 @@ module CPU_ALU(
 		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :
 		0;
 		
+	assign o_signed_sum_result = signed_sum;
+
 	assign o_compare_result =
 		i_op == `OP_SIGNED_LESS_THAN ? signed_lt_result :
 		i_op == `OP_UNSIGNED_LESS_THAN ? unsigned_lt_result :

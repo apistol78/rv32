@@ -95,6 +95,7 @@ module CPU_Execute (
 
 	wire [31:0] alu_result;
 	wire [31:0] alu_shift_result;
+	wire [31:0] alu_signed_sum_result;
 	wire alu_compare_result;
 	CPU_ALU alu(
 		.i_op(i_data.alu_operation),
@@ -102,6 +103,7 @@ module CPU_Execute (
 		.i_op2(alu_operand2),
 		.o_result(alu_result),
 		.o_shift_result(alu_shift_result),
+		.o_signed_sum_result(alu_signed_sum_result),
 		.o_compare_result(alu_compare_result)
 	);
 
@@ -207,7 +209,7 @@ module CPU_Execute (
 				data.mem_flush <= 0;
 				data.mem_width <= i_data.memory_width;
 				data.mem_signed <= i_data.memory_signed;
-				data.mem_address <= alu_result;
+				data.mem_address <= alu_signed_sum_result;
 
 				if (i_data.arithmetic) begin
 					`RD <= alu_result;
@@ -223,7 +225,7 @@ module CPU_Execute (
 				end
 				else if (i_data.jump) begin
 					`RD <= `PC + 4;
-					`GOTO(alu_result);
+					`GOTO(alu_signed_sum_result);
 					`EXECUTE_DONE;
 				end
 				else if (i_data.jump_conditional) begin
