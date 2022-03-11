@@ -107,6 +107,7 @@ int main(int argc, const char** argv)
 	Unknown sd(L"SD", true);
 	Unknown dma(L"DMA", true);
 	Unknown tmr(L"TIMER", true);
+	Unknown plic(L"PLIC", true);
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
@@ -121,6 +122,7 @@ int main(int argc, const char** argv)
 	bus.map(0x80000000, 0x90000000, &sd);
 	bus.map(0x90000000, 0xa0000000, &dma);
 	bus.map(0xa0000000, 0xb0000000, &tmr);
+	bus.map(0xb0000000, 0xc0000000, &plic);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))

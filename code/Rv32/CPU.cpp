@@ -145,9 +145,11 @@ FormatU parseFormatU(uint32_t word)
 #define PC_NEXT m_next
 
 #define R(x) m_registers[x]
-
 #define R_s(x) (int32_t&)m_registers[x]
 #define R_u(x) (uint32_t&)m_registers[x]
+
+#define FR(x) m_flt_registers[x]
+#define FR_u(x) (uint32_t&)m_flt_registers[x]
 
 #define MEM_RD(addr) m_dcache->readU32(addr)
 #define MEM_WR(addr, value) m_dcache->writeU32(addr, value)

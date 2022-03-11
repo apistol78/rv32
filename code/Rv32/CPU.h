@@ -46,6 +46,7 @@ private:
     uint32_t m_pc;
     uint32_t m_next;
     uint32_t m_registers[32];
+    float m_flt_registers[32];
     uint32_t m_csr[4096];
     bool m_waitForInterrupt;
 

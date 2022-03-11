@@ -2,19 +2,20 @@
 `timescale 1ns/1ns
 
 module FIFO64 #(
-	parameter DEPTH = 64
+	parameter DEPTH = 64,
+	parameter WIDTH = 64
 )(
 	input i_clock,
 	output o_empty,
 	output o_full,
 	input i_write,
-	input [63:0] i_wdata,
+	input [WIDTH-1:0] i_wdata,
 	input i_read,
-	output [63:0] o_rdata
+	output [WIDTH-1:0] o_rdata
 );
 
-	logic [63:0] rdata = 0;
-	logic [63:0] data [0:DEPTH - 1];
+	logic [WIDTH-1:0] rdata = 0;
+	logic [WIDTH-1:0] data [0:DEPTH - 1];
 	logic [$clog2(DEPTH) - 1:0] in = 0;
 	logic [$clog2(DEPTH) - 1:0] out = 0;
 

@@ -190,13 +190,39 @@ void test_thread_b()
 }
 
 
+void audio_play_sound(const int16_t* samples, uint32_t nsamples)
+{
+	volatile int32_t* audio = (volatile int32_t*)0xd0000000;
+	for (uint32_t i = 0; i < nsamples; ++i)
+		*audio = samples[i];
+}
+
 
 int main()
 {
-	runtime_init();
+	//runtime_init();
 
-	kernel_create_thread(test_thread_a);
-	kernel_create_thread(test_thread_b);
+	// kernel_create_thread(test_thread_a);
+	// kernel_create_thread(test_thread_b);
+
+
+	{
+
+		int16_t data[1024];
+		for (int32_t i = 0; i < 1024; ++i)
+		{
+			float f = (i / 1024.0f);
+			float v = sin(f * 6.28f * 10.0f);
+			data[i] = (int16_t)(v * 32767.0f + 32767.0f);
+		}
+
+		for (int32_t i = 0;; ++i)
+		{
+			//printf("Playing %d...\n", i);
+			audio_play_sound(data, 1024);
+		}
+	}
+
 
 	volatile uint32_t* palette = VIDEO_PALETTE_BASE;
 	volatile uint32_t* video = VIDEO_DATA_BASE;

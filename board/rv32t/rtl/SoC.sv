@@ -157,6 +157,7 @@ module SoC(
 // `define SOC_ENABLE_GPIO
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
+`define SOC_ENABLE_AUDIO
 
 	// Since we want to share pins with HW
 	// this clock will actually be simulated at 100 MHz.
@@ -514,6 +515,32 @@ module SoC(
 	);
 `endif
 
+`ifdef SOC_ENABLE_AUDIO
+	// Audio
+	wire audio_pwm_output_busy;
+	wire [15:0] audio_pwm_output_sample;
+	AUDIO_pwm_output audio_pwm_output(
+		.i_clock(clock),
+		.o_busy(audio_pwm_output_busy),
+		.i_sample(audio_pwm_output_sample),
+		.o_pwm(GPIO[0])
+	);
+
+	wire audio_controller_select;
+	wire audio_controller_ready;
+	AUDIO_controller audio_controller(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_request(audio_controller_select && bus_request),
+		.i_wdata(bus_wdata[15:0]),
+		.o_ready(audio_controller_ready),
+
+		.i_output_busy(audio_pwm_output_busy),
+		.o_output_sample(audio_pwm_output_sample)
+	);
+`endif
+
 	// DMA
 	wire dma_select;
 	wire [1:0] dma_address;
@@ -740,6 +767,10 @@ module SoC(
 	assign sd_select = bus_address[31:28] == 4'h8;
 `endif
 
+`ifdef SOC_ENABLE_AUDIO
+	assign audio_controller_select = bus_address[31:28] == 4'hd;
+`endif
+
 	assign dma_select = bus_address[31:28] == 4'h9;
 	assign dma_address = bus_address[3:2];
 
@@ -783,61 +814,67 @@ module SoC(
 		32'h00000000;
 		
 	assign bus_ready =
-		rom_ready		|
-		ram_ready		|
-`ifdef SOC_ENABLE_SDRAM
-		sdram_ready		|
+		rom_ready				|
+		ram_ready				|
+`ifdef SOC_ENABLE_SDRAM		
+		sdram_ready				|
+`endif		
+`ifdef SOC_ENABLE_VGA		
+		vram_ready				|
+`endif		
+		led_ready				|
+`ifdef SOC_ENABLE_UART		
+		uart_0_ready			|
+		uart_1_ready			|
+`endif		
+`ifdef SOC_ENABLE_GPIO		
+		gpio_ready				|
+`endif		
+`ifdef SOC_ENABLE_SD		
+		sd_ready				|
+`endif		
+`ifdef SOC_ENABLE_I2C		
+		i2c_ready				|
 `endif
-`ifdef SOC_ENABLE_VGA
-		vram_ready		|
+`ifdef SOC_ENABLE_AUDIO
+		audio_controller_ready	|
 `endif
-		led_ready		|
-`ifdef SOC_ENABLE_UART
-		uart_0_ready	|
-		uart_1_ready	|
-`endif
-`ifdef SOC_ENABLE_GPIO
-		gpio_ready		|
-`endif
-`ifdef SOC_ENABLE_SD
-		sd_ready		|
-`endif
-`ifdef SOC_ENABLE_I2C
-		i2c_ready		|
-`endif
-		dma_ready		|
-		timer_ready		|
-		plic_ready		|
-		gpu_ready		|
+		dma_ready				|
+		timer_ready				|
+		plic_ready				|
+		gpu_ready				|
 		1'b0;
 
 	//=====================================
 
 	wire bus_valid_select =
-		rom_select		|
-		ram_select		|
-`ifdef SOC_ENABLE_SDRAM
-		sdram_select	|
+		rom_select				|
+		ram_select				|
+`ifdef SOC_ENABLE_SDRAM		
+		sdram_select			|
+`endif		
+`ifdef SOC_ENABLE_VGA		
+		vram_select				|
+`endif		
+		led_select				|
+`ifdef SOC_ENABLE_UART		
+		uart_0_select			|
+		uart_1_select			|
+`endif		
+`ifdef SOC_ENABLE_GPIO		
+		gpio_select				|
+`endif		
+`ifdef SOC_ENABLE_SD		
+		sd_select				|
+`endif		
+`ifdef SOC_ENABLE_I2C		
+		i2c_select				|
 `endif
-`ifdef SOC_ENABLE_VGA
-		vram_select		|
+`ifdef SOC_ENABLE_AUDIO
+		audio_controller_select	|
 `endif
-		led_select		|
-`ifdef SOC_ENABLE_UART
-		uart_0_select	|
-		uart_1_select	|
-`endif
-`ifdef SOC_ENABLE_GPIO
-		gpio_select		|
-`endif
-`ifdef SOC_ENABLE_SD
-		sd_select		|
-`endif
-`ifdef SOC_ENABLE_I2C
-		i2c_select		|
-`endif
-		dma_select		|
-		timer_select	|
+		dma_select				|
+		timer_select			|
 		plic_select;
 
 	reg debug_bus_fault = 0;

@@ -617,6 +617,10 @@ local instructions = {
 		name = "FLW",
 		format = "I",
 		type = insttype.MEMORY,
+		cpp = [[
+			auto f = parseFormatI(word);
+			FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
+		]],
 		verilog_alu = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.RS1,
@@ -816,6 +820,10 @@ local instructions = {
 		name = "FSW",
 		format = "S",
 		type = insttype.MEMORY,
+		cpp = [[
+			auto f = parseFormatS(word);
+			MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
+		]],
 		verilog_alu = {
 			operation = operations.SIGNED_ADD,
 			operand1 = operands.RS1,
@@ -1588,12 +1596,11 @@ function main(argv)
 			if i > 1 then stdout:print("else if") else stdout:print("if") end
 			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
 			stdout:printLn("{")
-			stdout:printLn("\tTRACE(L\"\t" .. inst.name .. "\");")
 			if inst.cpp ~= nil then
 				stdout:printLn(inst.cpp)
 				stdout:printLn("\treturn true;")
 			else
-				stdout:printLn("\tlog::error << L\"Not implemented.\" << Endl;")
+				stdout:printLn("\tlog::error << L\"" .. inst.name .. " not implemented.\" << Endl;")
 				stdout:printLn("\treturn false;")
 			end
 			stdout:printLn("}")

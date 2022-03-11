@@ -1,6 +1,5 @@
 if ((word & 0xfe00707f) == 0x00000033)
 {
-	TRACE(L"	ADD");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
 		
@@ -8,7 +7,6 @@ if ((word & 0xfe00707f) == 0x00000033)
 }
 else if ((word & 0x0000707f) == 0x00000013)
 {
-	TRACE(L"	ADDI");
 			auto f = parseFormatI(word);
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         
@@ -16,79 +14,66 @@ else if ((word & 0x0000707f) == 0x00000013)
 }
 else if ((word & 0x0000707f) == 0x0000001b)
 {
-	TRACE(L"	ADDIW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"ADDIW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000003b)
 {
-	TRACE(L"	ADDW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"ADDW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0000302f)
 {
-	TRACE(L"	AMOADD.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOADD.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0000202f)
 {
-	TRACE(L"	AMOADD.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOADD.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x6000302f)
 {
-	TRACE(L"	AMOAND.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOAND.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x6000202f)
 {
-	TRACE(L"	AMOAND.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOAND.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0xe000302f)
 {
-	TRACE(L"	AMOMAXU.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOMAXU.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0xe000202f)
 {
-	TRACE(L"	AMOMAXU.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOMAXU.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x4000302f)
 {
-	TRACE(L"	AMOOR.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOOR.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x4000202f)
 {
-	TRACE(L"	AMOOR.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOOR.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0800302f)
 {
-	TRACE(L"	AMOSWAP.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOSWAP.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x0800202f)
 {
-	TRACE(L"	AMOSWAP.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"AMOSWAP.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x00007033)
 {
-	TRACE(L"	AND");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
 		
@@ -96,7 +81,6 @@ else if ((word & 0xfe00707f) == 0x00007033)
 }
 else if ((word & 0x0000707f) == 0x00007013)
 {
-	TRACE(L"	ANDI");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
         
@@ -104,7 +88,6 @@ else if ((word & 0x0000707f) == 0x00007013)
 }
 else if ((word & 0x0000007f) == 0x00000017)
 {
-	TRACE(L"	AUIPC");
 			auto f = parseFormatU(word);
 			R_u(f.rd) = PC + f.imm;
 		
@@ -112,7 +95,6 @@ else if ((word & 0x0000007f) == 0x00000017)
 }
 else if ((word & 0x0000707f) == 0x00000063)
 {
-	TRACE(L"	BEQ");
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -121,7 +103,6 @@ else if ((word & 0x0000707f) == 0x00000063)
 }
 else if ((word & 0x0000707f) == 0x00005063)
 {
-	TRACE(L"	BGE");
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -130,7 +111,6 @@ else if ((word & 0x0000707f) == 0x00005063)
 }
 else if ((word & 0x0000707f) == 0x00007063)
 {
-	TRACE(L"	BGEU");
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -139,7 +119,6 @@ else if ((word & 0x0000707f) == 0x00007063)
 }
 else if ((word & 0x0000707f) == 0x00004063)
 {
-	TRACE(L"	BLT");
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -148,7 +127,6 @@ else if ((word & 0x0000707f) == 0x00004063)
 }
 else if ((word & 0x0000707f) == 0x00006063)
 {
-	TRACE(L"	BLTU");
 			auto f = parseFormatB(word);
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -157,7 +135,6 @@ else if ((word & 0x0000707f) == 0x00006063)
 }
 else if ((word & 0x0000707f) == 0x00001063)
 {
-	TRACE(L"	BNE");
 			auto f = parseFormatB(word);
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
@@ -166,7 +143,6 @@ else if ((word & 0x0000707f) == 0x00001063)
 }
 else if ((word & 0x0000707f) == 0x00003073)
 {
-	TRACE(L"	CSRRC");
 			auto f = parseFormatCSR(word);
 			uint32_t data = readCSR(f.csr);
 			uint32_t tmp = R_u(f.rs1);
@@ -177,14 +153,12 @@ else if ((word & 0x0000707f) == 0x00003073)
 }
 else if ((word & 0x0000707f) == 0x00007073)
 {
-	TRACE(L"	CSRRCI");
 			log::info << L"CSRRCI" << Endl;
 		
 	return true;
 }
 else if ((word & 0x0000707f) == 0x00002073)
 {
-	TRACE(L"	CSRRS");
 			auto f = parseFormatCSR(word);
 			uint32_t data = readCSR(f.csr);
 			uint32_t tmp = R_u(f.rs1);
@@ -195,14 +169,12 @@ else if ((word & 0x0000707f) == 0x00002073)
 }
 else if ((word & 0x0000707f) == 0x00006073)
 {
-	TRACE(L"	CSRRSI");
 			log::info << L"CSRRSI" << Endl;
 		
 	return true;
 }
 else if ((word & 0x0000707f) == 0x00001073)
 {
-	TRACE(L"	CSRRW");
 			auto f = parseFormatCSR(word);
 			R_s(f.rd) = readCSR(f.csr);
 			writeCSR(f.csr, R_s(f.rs1));
@@ -211,14 +183,12 @@ else if ((word & 0x0000707f) == 0x00001073)
 }
 else if ((word & 0x0000707f) == 0x00005073)
 {
-	TRACE(L"	CSRRWI");
 			log::info << L"CSRRWI" << Endl;
 		
 	return true;
 }
 else if ((word & 0xfe00707f) == 0x02004033)
 {
-	TRACE(L"	DIV");
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
 			int32_t divisor = R_s(f.rs2);
@@ -233,7 +203,6 @@ else if ((word & 0xfe00707f) == 0x02004033)
 }
 else if ((word & 0xfe00707f) == 0x02005033)
 {
-	TRACE(L"	DIVU");
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
 			uint32_t divisor = R_u(f.rs2);
@@ -246,194 +215,166 @@ else if ((word & 0xfe00707f) == 0x02005033)
 }
 else if ((word & 0xfe00707f) == 0x0200503b)
 {
-	TRACE(L"	DIVUW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"DIVUW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200403b)
 {
-	TRACE(L"	DIVW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"DIVW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x00100073)
 {
-	TRACE(L"	EBREAK");
 			return false;
 		
 	return true;
 }
 else if ((word & 0xffffffff) == 0x00000073)
 {
-	TRACE(L"	ECALL");
 		
 	return true;
 }
 else if ((word & 0xfe00007f) == 0x00000053)
 {
-	TRACE(L"	FADD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FADD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xc0000053)
 {
-	TRACE(L"	FCVT_W_S");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FCVT_W_S not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xd0000053)
 {
-	TRACE(L"	FCVT_S_W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FCVT_S_W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0007f) == 0xd0100053)
 {
-	TRACE(L"	FCVT_S_WU");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FCVT_S_WU not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x18000053)
 {
-	TRACE(L"	FDIV");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FDIV not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
-	TRACE(L"	FENCE");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FENCE not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x0000100f)
 {
-	TRACE(L"	FENCE.I");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FENCE.I not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0xa0002053)
 {
-	TRACE(L"	FEQ");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FEQ not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003007)
 {
-	TRACE(L"	FLD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FLD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0xa0000053)
 {
-	TRACE(L"	FLE");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FLE not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0xa0001053)
 {
-	TRACE(L"	FLT");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FLT not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002007)
 {
-	TRACE(L"	FLW");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			auto f = parseFormatI(word);
+			FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
+		
+	return true;
 }
 else if ((word & 0x0600007f) == 0x00000043)
 {
-	TRACE(L"	FMADD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMADD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0600007f) == 0x00000047)
 {
-	TRACE(L"	FMSUB");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMSUB not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0600007f) == 0x0000004f)
 {
-	TRACE(L"	FNMADD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FNMADD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0600007f) == 0x0000004b)
 {
-	TRACE(L"	FNMSUB");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FNMSUB not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x28000053)
 {
-	TRACE(L"	FMIN");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMIN not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x28001053)
 {
-	TRACE(L"	FMAX");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMAX not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x10000053)
 {
-	TRACE(L"	FMUL");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMUL not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xe0000053)
 {
-	TRACE(L"	FMV_X_W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMV_X_W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
-	TRACE(L"	FMV_W_X");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FMV_W_X not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003027)
 {
-	TRACE(L"	FSD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FSD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x20000053)
 {
-	TRACE(L"	FSGNJ");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FSGNJ not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x20001053)
 {
-	TRACE(L"	FSGNJN");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FSGNJN not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x20002053)
 {
-	TRACE(L"	FSGNJX");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FSGNJX not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00007f) == 0x08000053)
 {
-	TRACE(L"	FSUB");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"FSUB not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002027)
 {
-	TRACE(L"	FSW");
-	log::error << L"Not implemented." << Endl;
-	return false;
+			auto f = parseFormatS(word);
+			MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
+		
+	return true;
 }
 else if ((word & 0x0000007f) == 0x0000006f)
 {
-	TRACE(L"	JAL");
 			auto f = parseFormatJ(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = PC + f.imm;
@@ -442,7 +383,6 @@ else if ((word & 0x0000007f) == 0x0000006f)
 }
 else if ((word & 0x0000707f) == 0x00000067)
 {
-	TRACE(L"	JALR");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = R(f.rs1) + f.imm;
@@ -451,7 +391,6 @@ else if ((word & 0x0000707f) == 0x00000067)
 }
 else if ((word & 0x0000707f) == 0x00000003)
 {
-	TRACE(L"	LB");
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		
@@ -459,7 +398,6 @@ else if ((word & 0x0000707f) == 0x00000003)
 }
 else if ((word & 0x0000707f) == 0x00004003)
 {
-	TRACE(L"	LBU");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		
@@ -467,13 +405,11 @@ else if ((word & 0x0000707f) == 0x00004003)
 }
 else if ((word & 0x0000707f) == 0x00003003)
 {
-	TRACE(L"	LD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"LD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00001003)
 {
-	TRACE(L"	LH");
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		
@@ -481,7 +417,6 @@ else if ((word & 0x0000707f) == 0x00001003)
 }
 else if ((word & 0x0000707f) == 0x00005003)
 {
-	TRACE(L"	LHU");
 			auto f = parseFormatI(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		
@@ -489,19 +424,16 @@ else if ((word & 0x0000707f) == 0x00005003)
 }
 else if ((word & 0xf9f0707f) == 0x1000302f)
 {
-	TRACE(L"	LR.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"LR.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf9f0707f) == 0x1000202f)
 {
-	TRACE(L"	LR.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"LR.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000007f) == 0x00000037)
 {
-	TRACE(L"	LUI");
 			auto f = parseFormatU(word);
 			R_s(f.rd) = f.imm;
 		
@@ -509,7 +441,6 @@ else if ((word & 0x0000007f) == 0x00000037)
 }
 else if ((word & 0x0000707f) == 0x00002003)
 {
-	TRACE(L"	LW");
 			auto f = parseFormatI(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		
@@ -517,13 +448,11 @@ else if ((word & 0x0000707f) == 0x00002003)
 }
 else if ((word & 0x0000707f) == 0x00006003)
 {
-	TRACE(L"	LWU");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"LWU not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x02000033)
 {
-	TRACE(L"	MUL");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		
@@ -531,7 +460,6 @@ else if ((word & 0xfe00707f) == 0x02000033)
 }
 else if ((word & 0xfe00707f) == 0x02001033)
 {
-	TRACE(L"	MULH");
 			auto f = parseFormatR(word);
 			int64_t lh = (int64_t)R_s(f.rs1);
 			int64_t rh = (int64_t)R_s(f.rs2);
@@ -541,7 +469,6 @@ else if ((word & 0xfe00707f) == 0x02001033)
 }
 else if ((word & 0xfe00707f) == 0x02003033)
 {
-	TRACE(L"	MULHU");
 			auto f = parseFormatR(word);
 			uint64_t lh = (uint64_t)R(f.rs1);
 			uint64_t rh = (uint64_t)R(f.rs2);
@@ -551,19 +478,16 @@ else if ((word & 0xfe00707f) == 0x02003033)
 }
 else if ((word & 0xfe00707f) == 0x02002033)
 {
-	TRACE(L"	MULHSU");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"MULHSU not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200003b)
 {
-	TRACE(L"	MULW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"MULW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x30200073)
 {
-	TRACE(L"	MRET");
 			PC_NEXT = readCSR(CSR::MEPC);
 			log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
 		
@@ -571,7 +495,6 @@ else if ((word & 0xffffffff) == 0x30200073)
 }
 else if ((word & 0xfe00707f) == 0x00006033)
 {
-	TRACE(L"	OR");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
 		
@@ -579,7 +502,6 @@ else if ((word & 0xfe00707f) == 0x00006033)
 }
 else if ((word & 0x0000707f) == 0x00006013)
 {
-	TRACE(L"	ORI");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
 		
@@ -587,7 +509,6 @@ else if ((word & 0x0000707f) == 0x00006013)
 }
 else if ((word & 0xfe00707f) == 0x02006033)
 {
-	TRACE(L"	REM");
 			auto f = parseFormatR(word);
 			int32_t dividend = R_s(f.rs1);
 			int32_t divisor = R_s(f.rs2);
@@ -600,7 +521,6 @@ else if ((word & 0xfe00707f) == 0x02006033)
 }
 else if ((word & 0xfe00707f) == 0x02007033)
 {
-	TRACE(L"	REMU");
 			auto f = parseFormatR(word);
 			uint32_t dividend = R_u(f.rs1);
 			uint32_t divisor = R_u(f.rs2);
@@ -613,19 +533,16 @@ else if ((word & 0xfe00707f) == 0x02007033)
 }
 else if ((word & 0xfe00707f) == 0x0200703b)
 {
-	TRACE(L"	REMUW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"REMUW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0200603b)
 {
-	TRACE(L"	REMW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"REMW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00000023)
 {
-	TRACE(L"	SB");
 			auto f = parseFormatS(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		
@@ -633,31 +550,26 @@ else if ((word & 0x0000707f) == 0x00000023)
 }
 else if ((word & 0xf800707f) == 0x1800302f)
 {
-	TRACE(L"	SC.D");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SC.D not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xf800707f) == 0x1800202f)
 {
-	TRACE(L"	SC.W");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SC.W not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00003023)
 {
-	TRACE(L"	SD");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SD not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe007fff) == 0x12000073)
 {
-	TRACE(L"	SFENCE.VMA");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SFENCE.VMA not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00001023)
 {
-	TRACE(L"	SH");
 			auto f = parseFormatS(word);
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		
@@ -665,7 +577,6 @@ else if ((word & 0x0000707f) == 0x00001023)
 }
 else if ((word & 0xfe00707f) == 0x00001033)
 {
-	TRACE(L"	SLL");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 		
@@ -673,7 +584,6 @@ else if ((word & 0xfe00707f) == 0x00001033)
 }
 else if ((word & 0xfc00707f) == 0x00001013)
 {
-	TRACE(L"	SLLI");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 		
@@ -681,19 +591,16 @@ else if ((word & 0xfc00707f) == 0x00001013)
 }
 else if ((word & 0xfe00707f) == 0x0000101b)
 {
-	TRACE(L"	SLLIW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SLLIW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000103b)
 {
-	TRACE(L"	SLLW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SLLW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x00002033)
 {
-	TRACE(L"	SLT");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 		
@@ -701,7 +608,6 @@ else if ((word & 0xfe00707f) == 0x00002033)
 }
 else if ((word & 0x0000707f) == 0x00002013)
 {
-	TRACE(L"	SLTI");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		
@@ -709,7 +615,6 @@ else if ((word & 0x0000707f) == 0x00002013)
 }
 else if ((word & 0x0000707f) == 0x00003013)
 {
-	TRACE(L"	SLTIU");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		
@@ -717,7 +622,6 @@ else if ((word & 0x0000707f) == 0x00003013)
 }
 else if ((word & 0xfe00707f) == 0x00003033)
 {
-	TRACE(L"	SLTU");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 		
@@ -725,7 +629,6 @@ else if ((word & 0xfe00707f) == 0x00003033)
 }
 else if ((word & 0xfe00707f) == 0x40005033)
 {
-	TRACE(L"	SRA");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 		
@@ -733,7 +636,6 @@ else if ((word & 0xfe00707f) == 0x40005033)
 }
 else if ((word & 0xfc00707f) == 0x40005013)
 {
-	TRACE(L"	SRAI");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 		
@@ -741,25 +643,21 @@ else if ((word & 0xfc00707f) == 0x40005013)
 }
 else if ((word & 0xfc00707f) == 0x4000501b)
 {
-	TRACE(L"	SRAIW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SRAIW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x4000503b)
 {
-	TRACE(L"	SRAW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SRAW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x10200073)
 {
-	TRACE(L"	SRET");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SRET not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x00005033)
 {
-	TRACE(L"	SRL");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		
@@ -767,7 +665,6 @@ else if ((word & 0xfe00707f) == 0x00005033)
 }
 else if ((word & 0xfc00707f) == 0x00005013)
 {
-	TRACE(L"	SRLI");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 		
@@ -775,19 +672,16 @@ else if ((word & 0xfc00707f) == 0x00005013)
 }
 else if ((word & 0xfc00707f) == 0x0000501b)
 {
-	TRACE(L"	SRLIW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SRLIW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x0000503b)
 {
-	TRACE(L"	SRLW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SRLW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xfe00707f) == 0x40000033)
 {
-	TRACE(L"	SUB");
 			auto f = parseFormatR(word);
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 		
@@ -795,13 +689,11 @@ else if ((word & 0xfe00707f) == 0x40000033)
 }
 else if ((word & 0xfe00707f) == 0x4000003b)
 {
-	TRACE(L"	SUBW");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"SUBW not implemented." << Endl;
 	return false;
 }
 else if ((word & 0x0000707f) == 0x00002023)
 {
-	TRACE(L"	SW");
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		
@@ -809,20 +701,17 @@ else if ((word & 0x0000707f) == 0x00002023)
 }
 else if ((word & 0xffffffff) == 0x00200073)
 {
-	TRACE(L"	URET");
-	log::error << L"Not implemented." << Endl;
+	log::error << L"URET not implemented." << Endl;
 	return false;
 }
 else if ((word & 0xffffffff) == 0x10500073)
 {
-	TRACE(L"	WFI");
 			m_waitForInterrupt = true;
 		
 	return true;
 }
 else if ((word & 0xfe00707f) == 0x00004033)
 {
-	TRACE(L"	XOR");
 			auto f = parseFormatR(word);
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 		
@@ -830,7 +719,6 @@ else if ((word & 0xfe00707f) == 0x00004033)
 }
 else if ((word & 0x0000707f) == 0x00004013)
 {
-	TRACE(L"	XORI");
 			auto f = parseFormatI(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		

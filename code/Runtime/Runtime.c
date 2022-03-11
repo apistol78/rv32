@@ -23,8 +23,8 @@ int32_t __attribute__((used)) runtime_init()
 	// printf("SP: 0x%x\n", sp);
 	// printf("GP: 0x%x\n", gp);
 
-	printf("** Initialize IRQ handler **\n");
-	interrupt_init();
+	//printf("** Initialize IRQ handler **\n");
+	//interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)
@@ -38,8 +38,8 @@ int32_t __attribute__((used)) runtime_init()
 	if (file_init() != 0)
 		printf("FS init failed!\n");
 
-	printf("** Initialize Kernel **\n");
-	kernel_init();
+	//printf("** Initialize Kernel **\n");
+	//kernel_init();
 
 	printf("** Ready **\n");
     return 0;
