@@ -526,15 +526,15 @@ module SoC(
 		.o_pwm(GPIO[0])
 	);
 
-	wire audio_controller_select;
-	wire audio_controller_ready;
+	wire audio_select;
+	wire audio_ready;
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_request(audio_controller_select && bus_request),
+		.i_request(audio_select && bus_request),
 		.i_wdata(bus_wdata[15:0]),
-		.o_ready(audio_controller_ready),
+		.o_ready(audio_ready),
 
 		.i_output_busy(audio_pwm_output_busy),
 		.o_output_sample(audio_pwm_output_sample)
@@ -768,7 +768,7 @@ module SoC(
 `endif
 
 `ifdef SOC_ENABLE_AUDIO
-	assign audio_controller_select = bus_address[31:28] == 4'hd;
+	assign audio_select = bus_address[31:28] == 4'hd;
 `endif
 
 	assign dma_select = bus_address[31:28] == 4'h9;
@@ -837,7 +837,7 @@ module SoC(
 		i2c_ready				|
 `endif
 `ifdef SOC_ENABLE_AUDIO
-		audio_controller_ready	|
+		audio_ready				|
 `endif
 		dma_ready				|
 		timer_ready				|
@@ -871,7 +871,7 @@ module SoC(
 		i2c_select				|
 `endif
 `ifdef SOC_ENABLE_AUDIO
-		audio_controller_select	|
+		audio_select			|
 `endif
 		dma_select				|
 		timer_select			|

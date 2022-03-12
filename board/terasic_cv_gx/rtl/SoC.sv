@@ -156,6 +156,7 @@ module SoC(
 // `define SOC_ENABLE_GPIO
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
+`define SOC_ENABLE_AUDIO
 
 	wire clock;
 	IP_PLL_Clk pll_clk(
@@ -473,6 +474,32 @@ module SoC(
 	);
 `endif
 
+`ifdef SOC_ENABLE_AUDIO
+	// Audio
+	wire audio_pwm_output_busy;
+	wire [15:0] audio_pwm_output_sample;
+	AUDIO_pwm_output audio_pwm_output(
+		.i_clock(clock),
+		.o_busy(audio_pwm_output_busy),
+		.i_sample(audio_pwm_output_sample),
+		.o_pwm(GPIO[0])
+	);
+
+	wire audio_select;
+	wire audio_ready;
+	AUDIO_controller audio_controller(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_request(audio_select && bus_request),
+		.i_wdata(bus_wdata[15:0]),
+		.o_ready(audio_ready),
+
+		.i_output_busy(audio_pwm_output_busy),
+		.o_output_sample(audio_pwm_output_sample)
+	);
+`endif
+
 	// DMA
 	wire dma_select;
 	wire [1:0] dma_address;
@@ -693,6 +720,10 @@ module SoC(
 	assign sd_select = bus_address[31:28] == 4'h8;
 `endif
 
+`ifdef SOC_ENABLE_AUDIO
+	assign audio_select = bus_address[31:28] == 4'hd;
+`endif
+
 	assign dma_select = bus_address[31:28] == 4'h9;
 	assign dma_address = bus_address[3:2];
 
@@ -705,58 +736,61 @@ module SoC(
 	//=====================================
 
 	assign bus_rdata =
-		rom_select ? rom_rdata :
-		ram_select ? ram_rdata :
+		rom_select ? rom_rdata			:
+		ram_select ? ram_rdata			:
 `ifdef SOC_ENABLE_SRAM
-		sram_select ? sram_rdata :
+		sram_select ? sram_rdata		:
 `endif
 `ifdef SOC_ENABLE_SDRAM
-		sdram_select ? sdram_rdata :
+		sdram_select ? sdram_rdata		:
 `endif
 `ifdef SOC_ENABLE_UART
-		uart_0_select ? uart_0_rdata :
-		uart_1_select ? uart_1_rdata :
+		uart_0_select ? uart_0_rdata	:
+		uart_1_select ? uart_1_rdata	:
 `endif
 `ifdef SOC_ENABLE_GPIO
-		gpio_select ? gpio_rdata :
+		gpio_select ? gpio_rdata		:
 `endif
 `ifdef SOC_ENABLE_I2C
-		i2c_select ? i2c_rdata :
+		i2c_select ? i2c_rdata			:
 `endif
 `ifdef SOC_ENABLE_SD
-		sd_select ? sd_rdata :
+		sd_select ? sd_rdata			:
 `endif
-		dma_select ? dma_rdata :
-		timer_select ? timer_rdata :
-		plic_select ? plic_rdata :
+		dma_select ? dma_rdata			:
+		timer_select ? timer_rdata		:
+		plic_select ? plic_rdata		:
 		32'h00000000;
 		
 	assign bus_ready =
-		rom_select ? rom_ready :
-		ram_select ? ram_ready :
+		rom_select ? rom_ready			:
+		ram_select ? ram_ready			:
 `ifdef SOC_ENABLE_SDRAM
-		sdram_select ? sdram_ready :
+		sdram_select ? sdram_ready		:
 `endif
 `ifdef SOC_ENABLE_VGA
-		vram_select ? vram_ready :
+		vram_select ? vram_ready		:
 `endif
-		led_select ? led_ready :
+		led_select ? led_ready			:
 `ifdef SOC_ENABLE_UART
-		uart_0_select ? uart_0_ready :
-		uart_1_select ? uart_1_ready :
+		uart_0_select ? uart_0_ready	:
+		uart_1_select ? uart_1_ready	:
 `endif
 `ifdef SOC_ENABLE_GPIO
-		gpio_select ? gpio_ready :
+		gpio_select ? gpio_ready		:
 `endif
 `ifdef SOC_ENABLE_SD
-		sd_select ? sd_ready :
+		sd_select ? sd_ready			:
 `endif
 `ifdef SOC_ENABLE_I2C
-		i2c_select ? i2c_ready :
+		i2c_select ? i2c_ready			:
 `endif
-		dma_select ? dma_ready :
-		timer_select ? timer_ready :
-		plic_select ? plic_ready :
+`ifdef SOC_ENABLE_AUDIO
+		audio_select ? audio_ready		:
+`endif
+		dma_select ? dma_ready			:
+		timer_select ? timer_ready		:
+		plic_select ? plic_ready		:
 		1'b0;
 
 	// 7:0

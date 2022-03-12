@@ -41,7 +41,7 @@ module AUDIO_pwm_output #(
 	end
 
 	genvar i;
-	generate for (i = 0; i < 16; i = i + 1) begin
+	generate for (i = 0; i < 16; i = i + 1) begin : reverse_bits
 		assign pwm_counter_rev[i] = pwm_counter[15 - i];
 	end endgenerate
 

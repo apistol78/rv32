@@ -43,8 +43,8 @@ module CPU_DCache #(
 		READ_BUS_WAIT	= 9
 	} state_t;
 
-	logic [9:0] state = 1 << IDLE;
-	logic [9:0] next = 1 << IDLE;
+	(* synthesis, fsm_state = "onehot" *) logic [9:0] state = 1 << IDLE;
+	(* synthesis, fsm_state = "onehot" *) logic [9:0] next = 1 << IDLE;
 
 	logic [SIZE:0] flush_address = 0;
 	logic [SIZE:0] next_flush_address = 0;
