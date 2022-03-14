@@ -14,6 +14,13 @@ module SoC(
 	input uart_rx,
 	output uart_tx,
 	
+	output lcd_rst,
+	output lcd_cs,
+	output lcd_rd,
+	output lcd_rw,
+	output lcd_rs,
+	inout [15:0] lcd_db,
+	
 	output sdram_clk,
 	output sdram_clk_en,
 	output sdram_cas_n,
@@ -27,8 +34,16 @@ module SoC(
 	inout [15:0] sdram_data
 );
 
-	wire clock;	// Clock is driven by SDRAM PLL since this board don't have many PLLs.
-
+	wire clock;
+	wire clock_sdram;		// 100MHz, phase shifted.
+	IP_PLL_Clk pll_clk(
+		.refclk(sys_clk),
+		.rst(!sys_reset_n),
+		.outclk_0(clock),
+		.outclk_1(clock_sdram),
+		.locked()
+	);
+	
 	reg [31:0] cont = 0;
 	always@(posedge clock)
 		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
@@ -46,9 +61,21 @@ module SoC(
 	// wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
-
+	
 	assign led_1 = led_led[0];
 
+	// LCD
+	VIDEO_ILI9331 video(
+		.i_reset(reset),
+		.i_clock(clock),
+		.o_lcd_rst(lcd_rst),
+		.o_lcd_cs(lcd_cs),
+		.o_lcd_rd(lcd_rd),
+		.o_lcd_rw(lcd_rw),
+		.o_lcd_rs(lcd_rs),
+		.io_lcd_db(lcd_db)
+	);
+	
 	// ROM
 	wire rom_select;
 	wire [31:0] rom_address;
@@ -87,11 +114,10 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	SDRAM_interface sdram(
+	SDRAM_interface_2 sdram(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_clock_sys(sys_clk),
-		.o_clock_pll(clock),
+		.i_clock_sdram(clock_sdram),
 		// ---
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
@@ -126,7 +152,7 @@ module SoC(
 		.LEDR(led_led)
 	);
 	
-	// UART (USB)
+	// UART (FTDI)
 	wire uart_0_select;
 	wire [1:0] uart_0_address;
 	wire [31:0] uart_0_rdata;
@@ -301,7 +327,7 @@ module SoC(
 
 	CPU #(
 		.ICACHE_SIZE(8),
-		.DCACHE_SIZE(2)
+		.DCACHE_SIZE(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
