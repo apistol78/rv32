@@ -11,6 +11,7 @@
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Log/LogRedirectTarget.h>
+#include <Core/Math/Random.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
 #include <Core/Thread/ThreadManager.h>
@@ -356,18 +357,19 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 
 bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 {
-	uint8_t utd[16];
-	uint8_t ind[16];
+	uint8_t utd[64];
+	uint8_t ind[64];
 
 	uint8_t cnt = 0;
 	uint32_t error = 0;
 
-	const uint32_t nb = 16;
+	const uint32_t nb = 64;
 
+	Random rnd = Random();
 	for (uint32_t addr = from; addr < to; addr += nb)
 	{
 		for (int32_t i = 0; i < nb; ++i)
-			utd[i] = cnt++;
+			utd[i] = (uint8_t)rnd.next();
 
 		log::info << L"S " << str(L"%08x", addr) << L": ";
 		for (int32_t i = 0; i < nb; ++i)
@@ -395,19 +397,26 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 		uint8_t reply = read< uint8_t >(serial);
 		if (reply != 0x80)
 		{
-			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			log::error << L"Error reply (write), got " << str(L"%02x", reply) << Endl;
 			return false;
 		}
+	}
+
+	rnd = Random();
+	for (uint32_t addr = from; addr < to; addr += nb)
+	{
+		for (int32_t i = 0; i < nb; ++i)
+			utd[i] = (uint8_t)rnd.next();
 
 		// Read back data.
 		write< uint8_t >(serial, 0x02);
 		write< uint32_t >(serial, addr);
 		write< uint8_t >(serial, nb);
 
-		reply = read< uint8_t >(serial);
+		uint8_t reply = read< uint8_t >(serial);
 		if (reply != 0x80)
 		{
-			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			log::error << L"Error reply (read), got " << str(L"%02x", reply) << Endl;
 			return false;
 		}
 		read< uint8_t >(serial, ind, nb);
@@ -424,8 +433,8 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 
 		log::info << Endl;
 
-		if (error)
-			break;
+//		if (error)
+//			break;
 	}
 
 	return error == 0;
@@ -503,6 +512,14 @@ int main(int argc, const char** argv)
 	{
 		log::error << L"Unable to open serial port " << port << L"." << Endl;
 		return 1;
+	}
+
+	if (commandLine.hasOption(L"memcheck"))
+	{
+		uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
+		uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
+		memcheck(serial, from, to);
+		return 0;
 	}
 
 #if defined(_WIN32)
