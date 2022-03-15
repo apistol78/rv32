@@ -2,7 +2,6 @@
 
 `timescale 1ns/1ns
 
-`define ENABLE_DCACHE
 //`define ENABLE_WBUFFER
 
 module CPU_Memory #(
@@ -72,49 +71,61 @@ module CPU_Memory #(
 	wire [31:0] dcache_address;
 	wire [31:0] dcache_rdata;
 	reg [31:0] dcache_wdata = 0;
+	wire dcache_need_flush;
 
 	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
 	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2);
 
-`ifdef ENABLE_DCACHE
-	CPU_DCache #(
-		.SIZE(DCACHE_SIZE)
-	) dcache(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-	
+	generate
+		if (DCACHE_SIZE > 0) begin
+
+			CPU_DCache #(
+				.SIZE(DCACHE_SIZE)
+			) dcache(
+				.i_reset(i_reset),
+				.i_clock(i_clock),
+			
 `ifdef ENABLE_WBUFFER
-		.o_bus_rw(wbuffer_rw),
-		.o_bus_request(wbuffer_request),
-		.i_bus_ready(wbuffer_ready),
-		.o_bus_address(wbuffer_address),
-		.i_bus_rdata(wbuffer_rdata),
-		.o_bus_wdata(wbuffer_wdata),
+				.o_bus_rw(wbuffer_rw),
+				.o_bus_request(wbuffer_request),
+				.i_bus_ready(wbuffer_ready),
+				.o_bus_address(wbuffer_address),
+				.i_bus_rdata(wbuffer_rdata),
+				.o_bus_wdata(wbuffer_wdata),
 `else
-		.o_bus_rw(o_bus_rw),
-		.o_bus_request(o_bus_request),
-		.i_bus_ready(i_bus_ready),
-		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata),
-		.o_bus_wdata(o_bus_wdata),
+				.o_bus_rw(o_bus_rw),
+				.o_bus_request(o_bus_request),
+				.i_bus_ready(i_bus_ready),
+				.o_bus_address(o_bus_address),
+				.i_bus_rdata(i_bus_rdata),
+				.o_bus_wdata(o_bus_wdata),
 `endif
-		.i_rw(dcache_rw),
-		.i_request(dcache_request),
-		.i_flush(dcache_flush),
-		.o_ready(dcache_ready),
-		.i_address(dcache_address),
-		.o_rdata(dcache_rdata),
-		.i_wdata(dcache_wdata),
-		.i_cacheable(dcache_cacheable)
-	);
-`else	
-	assign o_bus_rw = dcache_rw;
-	assign o_bus_request = dcache_request;
-	assign dcache_ready = i_bus_ready;
-	assign o_bus_address = dcache_address;
-	assign dcache_rdata = i_bus_rdata;
-	assign o_bus_wdata = dcache_wdata;
-`endif
+				.i_rw(dcache_rw),
+				.i_request(dcache_request),
+				.i_flush(dcache_flush),
+				.o_ready(dcache_ready),
+				.i_address(dcache_address),
+				.o_rdata(dcache_rdata),
+				.i_wdata(dcache_wdata),
+				.i_cacheable(dcache_cacheable)
+			);
+
+			assign dcache_need_flush = 1'b1;
+
+		end
+		else begin
+
+			assign o_bus_rw = dcache_rw;
+			assign o_bus_request = dcache_request;
+			assign dcache_ready = i_bus_ready;
+			assign o_bus_address = dcache_address;
+			assign dcache_rdata = i_bus_rdata;
+			assign o_bus_wdata = dcache_wdata;
+
+			assign dcache_need_flush = 1'b0;
+
+		end
+	endgenerate
 
 	assign o_busy = busy;
 	assign o_data = data;
@@ -158,7 +169,7 @@ module CPU_Memory #(
 							state <= WRITE_RMW_0;
 						end
 					end
-					else if (i_data.mem_flush) begin
+					else if (i_data.mem_flush && dcache_need_flush) begin
 						dcache_request <= 1;
 						dcache_flush <= 1;
 						state <= FLUSH;
