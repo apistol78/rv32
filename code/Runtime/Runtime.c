@@ -26,17 +26,17 @@ int32_t __attribute__((used)) runtime_init()
 	//printf("** Initialize IRQ handler **\n");
 	//interrupt_init();
 	
-	printf("** Initialize Video **\n");
-	if (video_init() != 0)
-		printf("Video init failed!\n");
+	// printf("** Initialize Video **\n");
+	// if (video_init() != 0)
+	// 	printf("Video init failed!\n");
 
-	printf("** Initialize SD card **\n");
-	if (sd_init() != 0)
-		printf("SD init failed!\n");
+	// printf("** Initialize SD card **\n");
+	// if (sd_init() != 0)
+	// 	printf("SD init failed!\n");
 
-	printf("** Initialize FS **\n");
-	if (file_init() != 0)
-		printf("FS init failed!\n");
+	// printf("** Initialize FS **\n");
+	// if (file_init() != 0)
+	// 	printf("FS init failed!\n");
 
 	//printf("** Initialize Kernel **\n");
 	//kernel_init();

@@ -16,10 +16,11 @@ module SoC(
 	
 	output lcd_rst,
 	output lcd_cs,
-	output lcd_rd,
-	output lcd_rw,
 	output lcd_rs,
-	inout [15:0] lcd_db,
+	output lcd_mosi,
+	input lcd_miso,
+	output lcd_sck,
+	output lcd_led,
 	
 	output sdram_clk,
 	output sdram_clk_en,
@@ -57,23 +58,32 @@ module SoC(
 			sample[4:0] = sample[4:0];
 	end
 
-	// wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	// wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
 	
 	assign led_1 = led_led[0];
+	assign lcd_led = 1'b1;
 
 	// LCD
-	VIDEO_ILI9331 video(
+	wire video_select;
+	wire [1:0] video_address;
+	wire video_ready;
+	VIDEO_LCD_i80_SPI video(
 		.i_reset(reset),
 		.i_clock(clock),
+
+		.i_request(video_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(video_address),
+		.i_wdata(bus_wdata),
+		.o_ready(video_ready),
+
 		.o_lcd_rst(lcd_rst),
 		.o_lcd_cs(lcd_cs),
-		.o_lcd_rd(lcd_rd),
-		.o_lcd_rw(lcd_rw),
 		.o_lcd_rs(lcd_rs),
-		.io_lcd_db(lcd_db)
+		.o_lcd_mosi(lcd_mosi),
+		.i_lcd_miso(lcd_miso),
+		.o_lcd_sck(lcd_sck)
 	);
 	
 	// ROM
@@ -327,7 +337,7 @@ module SoC(
 
 	CPU #(
 		.ICACHE_SIZE(8),
-		.DCACHE_SIZE(0)
+		.DCACHE_SIZE(8)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -366,6 +376,9 @@ module SoC(
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
 	
+	assign video_select = bus_address[31:28] == 4'h3;
+	assign video_address = bus_address[3:2];
+
 	assign led_select = bus_address[31:28] == 4'h4;
 
 	assign uart_0_select = bus_address[31:24] == 8'h50;
@@ -396,6 +409,7 @@ module SoC(
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		sdram_select ? sdram_ready :
+		video_select ? video_ready :
 		led_select ? led_ready :
 		uart_0_select ? uart_0_ready :
 		dma_select ? dma_ready :
