@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "ADV7513BSWZ")(type "Legacy")(uri "/home/apistol/rv32/schematics/libs/adv7513bswz/ADV7513BSWZ.lib")(options "")(descr ""))
+)
