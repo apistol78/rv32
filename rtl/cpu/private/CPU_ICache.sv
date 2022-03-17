@@ -26,9 +26,9 @@ module CPU_ICache#(
 
 	typedef enum
 	{
-		IDLE			= 0,
-		READ_SETUP		= 1,
-		READ_BUS		= 2
+		IDLE		= 0,
+		READ_SETUP	= 1,
+		READ_BUS	= 2
 	} state_t;
 
 	logic [2:0] next = 1 << IDLE;
@@ -40,7 +40,7 @@ module CPU_ICache#(
 	logic [63:0] cache_wdata = 0;
 	wire [63:0] cache_rdata;
 	logic [31:0] cache_pc;
-	wire [SIZE - 1:0] cache_label = cache_pc[(SIZE - 1):2];	// 2 lowest bits are always zero.
+	wire [SIZE - 1:0] cache_label = cache_pc[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
 
 	// One cycle latency, important since
 	// we rely on address only.
