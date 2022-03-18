@@ -123,6 +123,23 @@ bool writeVerilog(const std::wstring& fileName, uint8_t word, const AlignedVecto
 	return true;
 }
 
+bool writeVerilogRange(const std::wstring& fileName, uint8_t word, const AlignedVector< uint8_t >& image)
+{
+	std::wstring tmp;
+
+	Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmWrite);
+	if (!f)
+	{
+		log::error << L"Unable to create \"" << fileName << L"\"." << Endl;
+		return false;
+	}
+
+	FileOutputStream fos(f, new AnsiEncoding());
+	fos << L"0:" << (image.size() / (word / 8)) - 1;
+
+	return true;
+}
+
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
@@ -131,8 +148,18 @@ int main(int argc, const char** argv)
 	if (!loadHEX(commandLine.getString(0), image))
 		return 1;
 
-	if (!writeVerilog(commandLine.getString(1), commandLine.getOption('w', L"word").getInteger(), image))
-		return 2;
+	const int32_t word = commandLine.hasOption('w', L"word") ? commandLine.getOption('w', L"word").getInteger() : 32;
+
+	if (commandLine.hasOption(L"vmem"))
+	{
+		if (!writeVerilog(commandLine.getOption(L"vmem").getString(), word, image))
+			return 2;
+	}
+	if (commandLine.hasOption(L"vmem-range"))
+	{
+		if (!writeVerilogRange(commandLine.getOption(L"vmem-range").getString(), word, image))
+			return 2;
+	}
 
 	log::info << L"Image converted succesfully." << Endl;
 	return 0;

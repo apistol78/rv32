@@ -15,6 +15,11 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run veri
 # Generate instructions (Emulator).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp > code/Rv32/Instructions.inl
 
+# Generate firmware verilog memory file, \note using last built converter.
+riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Firmware Firmware.hex
+build/linux/ReleaseStatic/Hex2Verilog -word=32 Firmware.hex -vmem=Firmware.vmem -vmem-range=Firmware.vmem-range
+rm Firmware.hex
+
 # Generate verilated code.
 mkdir -p code/Verify/SoC
 verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/gpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
@@ -48,8 +53,3 @@ riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > Firmware.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > Bare.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > Doom.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > Quake.dump
-
-# Generate firmware verilog memory file.
-riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Firmware Firmware.hex
-build/linux/ReleaseStatic/Hex2Verilog -word=32 Firmware.hex Firmware.vmem
-rm Firmware.hex

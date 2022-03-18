@@ -9,7 +9,13 @@ module BROM(
 	output reg o_ready
 );
 
-	reg [31:0] data [0:400];
+	reg [31:0] data [
+`ifdef __TESTBENCH__
+	`include "Firmware.vmem-range"		
+`else
+	`include "../../Firmware.vmem-range"		
+`endif
+	];
 
 	initial o_ready = 0;
 
