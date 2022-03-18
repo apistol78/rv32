@@ -44,6 +44,12 @@ make -j4 -f Rv32.mak ReleaseStatic
 popd
 
 # Generate useful dumps.
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > Firmware.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > Bare.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > Doom.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > Quake.dump
+
+# Generate firmware verilog memory file.
+riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Firmware Firmware.hex
+build/linux/ReleaseStatic/Hex2Verilog -word=32 Firmware.hex Firmware.vmem
+rm Firmware.hex

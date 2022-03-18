@@ -590,8 +590,8 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalCompilerOptions>-nostdlib -ffreestanding</additionalCompilerOptions>
+					<additionalLinkerOptions>-nostdlib -ffreestanding -T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -611,8 +611,8 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions/>
-					<additionalLinkerOptions/>
+					<additionalCompilerOptions>-nostdlib -ffreestanding</additionalCompilerOptions>
+					<additionalLinkerOptions>-nostdlib -ffreestanding -T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -622,6 +622,10 @@
 				</item>
 			</configurations>
 			<items>
+				<item type="File">
+					<fileName>*.s</fileName>
+					<items/>
+				</item>
 				<item type="File">
 					<fileName>*.c</fileName>
 					<items/>
