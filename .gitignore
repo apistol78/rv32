@@ -1,4 +1,5 @@
 /build
+/dumps
 /.vs
 /board/terasic_cv_gx/db
 /board/terasic_cv_gx/output_files

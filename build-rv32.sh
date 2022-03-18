@@ -49,7 +49,8 @@ make -j4 -f Rv32.mak ReleaseStatic
 popd
 
 # Generate useful dumps.
-riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > Firmware.dump
-riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > Bare.dump
-riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > Doom.dump
-riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > Quake.dump
+mkdir -p dumps
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > dumps/Firmware.dump
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > dumps/Bare.dump
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > dumps/Doom.dump
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > dumps/Quake.dump
