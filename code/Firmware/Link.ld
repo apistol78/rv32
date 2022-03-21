@@ -4,7 +4,7 @@ ENTRY( _start )
 MEMORY
 {
   rom      (rx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
-  ram      (rw) : ORIGIN = 0x00010000, LENGTH = 0x00010000
+  ram      (rw) : ORIGIN = 0x10000000, LENGTH = 0x00010000
 }
 
 STACK_SIZE = 0x2000;
@@ -61,15 +61,6 @@ SECTIONS
     . = ALIGN(4);
     _edata = .;
     edata = .;
-
-/*
-    .stack (NOLOAD):
-    {
-        . = ALIGN(8);
-        . = . + STACK_SIZE;
-        . = ALIGN(8);
-    } > ram
-*/
 
     /* End of uninitalized data segement */
     .heap (NOLOAD):

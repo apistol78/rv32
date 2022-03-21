@@ -583,15 +583,18 @@
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpDebug</targetProfile>
 					<precompiledHeader/>
-					<includePaths/>
+					<includePaths>
+						<item>code/Firmware/FatFs/source</item>
+						<item>code</item>
+					</includePaths>
 					<definitions>
 						<item>_DEBUG</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-nostdlib -ffreestanding</additionalCompilerOptions>
-					<additionalLinkerOptions>-nostdlib -ffreestanding -T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
+					<additionalCompilerOptions></additionalCompilerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -604,15 +607,18 @@
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpRelease</targetProfile>
 					<precompiledHeader/>
-					<includePaths/>
+					<includePaths>
+						<item>code/Firmware/FatFs/source</item>
+						<item>code</item>
+					</includePaths>
 					<definitions>
 						<item>NDEBUG</item>
 					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-nostdlib -ffreestanding</additionalCompilerOptions>
-					<additionalLinkerOptions>-nostdlib -ffreestanding -T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
+					<additionalCompilerOptions></additionalCompilerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -622,6 +628,41 @@
 				</item>
 			</configurations>
 			<items>
+				<item type="Filter">
+					<name>FatFs</name>
+					<items>
+						<item type="Filter">
+							<name>source</name>
+							<items>
+								<item type="File">
+									<fileName>FatFs/source/ff.c</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>FatFs/source/ff.h</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>FatFs/source/ffconf.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>HAL</name>
+					<items>
+						<item type="File">
+							<fileName>HAL/*.c</fileName>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>HAL/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
 				<item type="File">
 					<fileName>*.s</fileName>
 					<items/>
