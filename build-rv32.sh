@@ -53,6 +53,8 @@ popd
 mkdir -p dumps
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > dumps/Firmware.dump
 riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Firmware > dumps/Firmware.map
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Kernal > dumps/Kernal.dump
+riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Kernal > dumps/Kernal.map
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > dumps/Bare.dump
 riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Bare > dumps/Bare.map
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > dumps/Doom.dump
