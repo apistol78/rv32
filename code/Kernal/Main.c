@@ -84,11 +84,11 @@ int32_t launch_elf(const char* filename)
 			if ((shdr.sh_flags & 0x02) == 0x02)	// SHF_ALLOC
 			{
 				file_seek(fd, shdr.sh_offset, 0);
-				for (uint32_t i = 0; i < shdr.sh_size; i += 16)
+				for (uint32_t i = 0; i < shdr.sh_size; i += 512)
 				{
 					uint32_t nb = shdr.sh_size - i;
-					if (nb > 16)
-						nb = 16;
+					if (nb > 512)
+						nb = 512;
 					if (file_read(fd, (void*)(shdr.sh_addr + i), nb) != nb)
 						return 3;
 				}
@@ -112,7 +112,10 @@ int32_t launch_elf(const char* filename)
 				tmp[sym.st_size] = 0;
 
 				if (strcmp(tmp, "_start") == 0)
+				{
 					jstart = sym.st_value;
+					break;
+				}
 			}
 		}
 	}
