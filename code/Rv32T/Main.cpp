@@ -62,7 +62,7 @@ void abortHandler(int s)
 }
 #endif
 
-bool loadELF(VSoC* soc, const std::wstring& fileName)
+bool loadELF(VSoC* soc, const std::wstring& fileName, bool jumpTo)
 {
 	AlignedVector< uint8_t > elf;
 	uint32_t start = -1;
@@ -113,7 +113,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName)
 					dst[addr - base + j] = pbits[j];
 			}
 		}
-		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
+		else if (shdr[i].sh_type == 0x02 && jumpTo)	// SHT_SYMTAB
 		{
 			const char* strings = (const char*)(elf.c_ptr() + shdr[shdr[i].sh_link].sh_offset);
 			auto sym = (const ELF32_Sym*)(elf.c_ptr() + shdr[i].sh_offset);
@@ -179,9 +179,13 @@ int main(int argc, const char **argv)
 	bool reset = false;
 	bool key1 = false;
 	bool slow = false;
+	bool mute = false;
 
 	if (cmdLine.hasOption(L"slow"))
 		slow = true;
+
+	if (cmdLine.hasOption(L"mute"))
+		mute = true;
 
 	// Create user interface.
 	Ref< ui::Form > form;
@@ -251,10 +255,17 @@ int main(int argc, const char **argv)
 
 	soc->eval();
 
+	if (cmdLine.hasOption(L"elf-kernal"))
+	{
+		std::wstring fileName = cmdLine.getOption(L"elf-kernal").getString();
+		if (!loadELF(soc, fileName, false))
+			return 1;
+	}	
+
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
 		std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
-		if (!loadELF(soc, fileName))
+		if (!loadELF(soc, fileName, true))
 			return 1;
 	}
 
@@ -417,7 +428,8 @@ int main(int argc, const char **argv)
 			}
 			if (soc->SoC__DOT__debug_bus_fault)
 			{
-				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__debug_bus_fault_address) << L" (" << int32_t(soc->SoC__DOT__debug_bus_fault_type) << L"), terminating." << Endl;
+				const wchar_t* faults[] = { L"NA", L"IBUS", L"DBUS", L"DMA" };
+				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__debug_bus_fault_address) << L" (" << faults[soc->SoC__DOT__debug_bus_fault_type] << L"), terminating." << Endl;
 				g_going = false;
 				break;				
 			}
@@ -468,7 +480,7 @@ int main(int argc, const char **argv)
 				stallMemory.snapshot();					
 			}
 		}
-		else
+		else if (!mute)
 		{
 			if ((Tc % 600) == 0)
 			{
@@ -487,7 +499,8 @@ int main(int argc, const char **argv)
 					// str(L"%d", soc->SoC__DOT__l2cache__DOT__hit) << L", " <<
 					// str(L"%d", soc->SoC__DOT__l2cache__DOT__miss) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
-					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) <<
+					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
+					//str(L"%d BP HIT", soc->SoC__DOT__cpu__DOT__fetch__DOT__bp_debug_hit) <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
@@ -517,6 +530,9 @@ int main(int argc, const char **argv)
 	log::info << L"TP     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[4]) << Endl;
 	log::info << L"T0     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[5]) << Endl;
 	log::info << L"A3     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[13]) << Endl;
+	log::info << L"A4     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[14]) << Endl;
+	log::info << L"A5     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[15]) << Endl;
+	log::info << L"S2     : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[18]) << Endl;
 
 	hdmi.getImage()->save(L"Rv32T.png");
 

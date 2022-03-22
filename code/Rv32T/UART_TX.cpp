@@ -50,7 +50,9 @@ void UART_TX::eval(VSoC* soc, uint32_t time)
 				log::info << (wchar_t)m_data;
 			else
 			{
-				log::info << L"<" << (int32_t)m_data << L">";
+				if (m_data != 10 && m_data != 13)
+					log::info << L"<" << (int32_t)m_data << L">";
+
 				if (m_data == '\n')
 					log::info << Endl;
 			}
