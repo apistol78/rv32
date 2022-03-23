@@ -4,22 +4,24 @@
 module UART_RX #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
-	input wire i_request,
-	input wire [1:0] i_address,
-	output reg [31:0] o_rdata,
-    output wire o_ready,
+	input i_request,
+	input [1:0] i_address,
+	output logic [31:0] o_rdata,
+    output o_ready,
 	
-    input wire UART_RX
+    input UART_RX
 );
-	reg frame_error;
-	reg [18:0] prescale;
-	reg [7:0] data;
-	reg [3:0] bidx;
-	reg [3:0] rds;
-	reg rx;
+	parameter MAX_PRESCALE_VALUE = (PRESCALE << 3);
+
+	logic frame_error = 0;
+	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
+	logic [7:0] data = 0;
+	logic [3:0] bidx = 0;
+	logic [3:0] rds = 0;
+	logic rx = 0;
 	
 	// FIFO
 	wire rx_fifo_empty;
@@ -40,19 +42,13 @@ module UART_RX #(
 	);
 	
 	initial begin
-		frame_error = 0;
-		prescale = 0;
-		data = 0;
-		bidx = 0;
-		rds = 0;
-		rx = 0;
 		o_rdata = 32'h0;
 	end
 	
 	assign o_ready = (rds == 5) && i_request;
 	
 	// Read from FIFO.
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			rds <= 0;
 			o_rdata <= 32'h0;
@@ -91,7 +87,7 @@ module UART_RX #(
 	end	
 	
 	// Receive and put into FIFO.
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		frame_error <= 0;
 
 		rx_fifo_write <= 0;

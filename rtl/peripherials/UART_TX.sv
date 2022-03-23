@@ -12,47 +12,88 @@ module UART_TX #(
 
 	output reg UART_TX
 );
+	parameter MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
-	reg [18:0] prescale;
-	reg [8:0] data;
-	reg [3:0] bidx;
+	logic [1:0] state = 0;
+	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
+	logic [8:0] data = 0;
+	logic [3:0] bidx = 0;
+
+	// FIFO
+	wire tx_fifo_empty;
+	wire tx_fifo_full;
+	logic tx_fifo_write = 0;
+	logic tx_fifo_read = 0;
+	wire [7:0] tx_fifo_rdata;
+	FIFO64 #(
+		.DEPTH(64),
+		.WIDTH(8)
+	) tx_fifo(
+		.i_clock(i_clock),
+		.o_empty(tx_fifo_empty),
+		.o_full(tx_fifo_full),
+		.i_write(tx_fifo_write),
+		.i_wdata(i_wdata[7:0]),
+		.i_read(tx_fifo_read),
+		.o_rdata(tx_fifo_rdata)
+	);
 
 	initial begin
-		o_ready = 0;
-		prescale = 0;
-		data = 0;
-		bidx = 0;
 		UART_TX = 1;
 	end
 
-	always @(posedge i_clock) begin
-		if (prescale > 0) begin
-			prescale <= prescale - 1;
+	// Write to FIFO.
+	always_ff @(posedge i_clock) begin
+		tx_fifo_write <= 0;
+		if (!i_request) begin
+			o_ready <= 0;
 		end
-		else if (i_request) begin
-			if (bidx == 0) begin
-				prescale <= (PRESCALE << 3) - 1;
-				bidx <= 8 + 1;
-				data <= { 1'b1, i_wdata };
-				UART_TX <= 0;
-			end
-			else if (bidx > 1) begin
-				bidx <= bidx - 1;
-				prescale <= (PRESCALE << 3) - 1;
-				{ data, UART_TX } <= { 1'b0, data };
-			end
-			else if (bidx == 1) begin
-				bidx <= bidx - 1;
-				prescale <= (PRESCALE << 3);
-				UART_TX <= 1;
+		if (i_request) begin
+			if (!tx_fifo_full) begin
+				if (!o_ready)
+					tx_fifo_write <= 1;
 				o_ready <= 1;
 			end
 		end
-		
-		if (!i_request) begin
-			bidx <= 0;
-			o_ready <= 0;
-		end
+	end
+
+	// Read from FIFO and transmit each byte.
+	always @(posedge i_clock) begin
+		case (state)
+			0: begin
+				if (!tx_fifo_empty) begin
+					tx_fifo_read <= 1;
+					bidx <= 0;
+					state <= 1;
+				end
+			end
+
+			1: begin
+				tx_fifo_read <= 0;
+				if (prescale > 0) begin
+					prescale <= prescale - 1;
+				end
+				else begin				
+					if (bidx == 0) begin
+						prescale <= (PRESCALE << 3) - 1;
+						bidx <= 8 + 1;
+						data <= { 1'b1, tx_fifo_rdata };
+						UART_TX <= 0;
+					end
+					else if (bidx > 1) begin
+						bidx <= bidx - 1;
+						prescale <= (PRESCALE << 3) - 1;
+						{ data, UART_TX } <= { 1'b0, data };
+					end
+					else if (bidx == 1) begin
+						bidx <= bidx - 1;
+						prescale <= (PRESCALE << 3);
+						UART_TX <= 1;
+						state <= 0;
+					end
+				end
+			end
+		endcase
 	end
 
 endmodule
