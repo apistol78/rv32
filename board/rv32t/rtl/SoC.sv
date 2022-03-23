@@ -158,6 +158,7 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 `define SOC_ENABLE_AUDIO
+//`define SOC_ENABLE_GPU
 
 	// Since we want to share pins with HW
 	// this clock will actually be simulated at 100 MHz.
@@ -165,6 +166,7 @@ module SoC(
 	wire reset = !CPU_RESET_n;
   
 `ifdef SOC_ENABLE_VGA
+
 	// Video signal generator
 	wire vga_enable;
 	wire [8:0] vga_pos_x;
@@ -237,6 +239,7 @@ module SoC(
 		.o_fifo_full(vbus_fifo_full)
 	);
 
+`ifdef SOC_ENABLE_GPU
 	// Multiplex access to framebuffer from CPU and GPU.
 	wire vram_select;
 	wire [31:0] vram_address;
@@ -307,8 +310,20 @@ module SoC(
 		.o_fb_address(gpu_fb_address),
 		.o_fb_wdata(gpu_fb_wdata)
 	);
+`else
 
-`endif
+	wire vram_select;
+	wire [31:0] vram_address;
+	wire vram_ready;	
+
+	assign vbus_request = vram_select && bus_request;
+	assign vbus_address = vram_address;
+	assign vbus_wdata = bus_wdata;
+	assign vram_ready = vbus_ready;
+
+`endif	// SOC_ENABLE_GPU
+
+`endif	// SOC_ENABLE_VGA
 	
 	// ROM
 	wire rom_select;
@@ -698,7 +713,10 @@ module SoC(
 	wire [`TAG_SIZE] cpu_writeback_debug_tag;
 	wire cpu_fault;
 
-	CPU cpu(
+	CPU #(
+		.ICACHE_SIZE(16)//,
+		//.DCACHE_SIZE(16)
+	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
@@ -780,8 +798,10 @@ module SoC(
 	assign plic_select = bus_address[31:28] == 4'hb;
 	assign plic_address = bus_address[23:0];
 
+`ifdef SOC_ENABLE_GPU
 	assign gpu_select = bus_address[31:28] == 4'hc;
 	assign gpu_address = bus_address[3:2];
+`endif
 
 	//=====================================
 
@@ -810,7 +830,9 @@ module SoC(
 		dma_select ? dma_rdata			:
 		timer_select ? timer_rdata		:
 		plic_select ? plic_rdata		:
+`ifdef SOC_ENABLE_GPU
 		gpu_select ? gpu_rdata			:
+`endif
 		32'h00000000;
 		
 	assign bus_ready =
@@ -842,7 +864,9 @@ module SoC(
 		dma_ready				|
 		timer_ready				|
 		plic_ready				|
+`ifdef SOC_ENABLE_GPU
 		gpu_ready				|
+`endif
 		1'b0;
 
 	//=====================================
@@ -915,7 +939,11 @@ module SoC(
 			dma_select,
 			timer_select,
 			plic_select,
+`ifdef SOC_ENABLE_GPU
 			gpu_select
+`else
+			1'b0
+`endif
 		};
 	end
 
