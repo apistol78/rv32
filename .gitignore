@@ -20,3 +20,5 @@
 *.bak
 *.vcd
 /quartus/SoC.qws
+
+/schematics/*/*-backups
