@@ -256,6 +256,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BusAccess.
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BROM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_clear.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_dual.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_latency.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
