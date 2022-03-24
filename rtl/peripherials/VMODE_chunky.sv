@@ -1,7 +1,7 @@
 
 `timescale 1ns/1ns
 
-module VideoBus #(
+module VMODE_chunky #(
 	PPITCH = 320,
 	FIFO_DEPTH = 256
 )(
@@ -53,7 +53,6 @@ module VideoBus #(
 	logic palette_cpu_request = 0;
 	logic [7:0] palette_cpu_address = 0;
 	logic [23:0] palette_cpu_wdata = 0;
-
 	logic [7:0] palette_video_address = 0;
 	wire [23:0] palette_video_rdata;
 

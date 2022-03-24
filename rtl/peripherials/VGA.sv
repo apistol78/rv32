@@ -1,39 +1,40 @@
 
 `timescale 1ns/1ns
 
+// 640 * 400
 module VGA #(
-    parameter PRESCALE = 50000000 / 25000000
+	parameter SYSTEM_FREQUENCY = 100_000_000,
+	parameter VGA_FREQUENCY = 25_175_000,
+	parameter HLINE = 800,
+	parameter HBACK = 144,
+	parameter HFRONT = 16,
+	parameter HPULSE = 96,
+	parameter VLINE = 449,
+	parameter VBACK = 36,
+	parameter VFRONT = 13,
+	parameter VPULSE = 2
 )(
 	input i_clock,
 
 	output wire o_hsync,
 	output wire o_vsync,
 	output wire o_data_enable,
-	output wire [8:0] o_pos_x,
-	output wire [8:0] o_pos_y,
+	output wire [9:0] o_pos_x,
+	output wire [9:0] o_pos_y,
 	output reg o_vga_clock
 );
-	localparam hori_line  = 800;
-	localparam hori_back  = 144;
-	localparam hori_front = 16;
+	parameter PRESCALE = SYSTEM_FREQUENCY / VGA_FREQUENCY;
 	
-	localparam vert_line  = 449;
-	localparam vert_back  = 36;
-	localparam vert_front = 13;
-	
-	localparam H_sync_cycle = 96;
-	localparam V_sync_cycle = 2;
-	
-	reg [3:0] prescale = 0;
-	reg [9:0] vga_h = 0;
-	reg [9:0] vga_v = 0;
+	logic [3:0] prescale = 0;
+	logic [9:0] vga_h = 0;
+	logic [9:0] vga_v = 0;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		prescale <= prescale + 1;
 		if (prescale >= PRESCALE - 1) begin
-			if (vga_h == hori_line - 1) begin
+			if (vga_h == HLINE - 1) begin
 				vga_h <= 0;
-				if (vga_v == vert_line - 1)
+				if (vga_v == VLINE - 1)
 					vga_v <= 0;
 				else
 					vga_v <= vga_v + 1;
@@ -45,15 +46,12 @@ module VGA #(
 		end
 		o_vga_clock <= prescale[1];	// \fixme Assume 100 MHz clock.
 	end
-	
-	wire [9:0] px = vga_h - hori_back;
-	wire [9:0] py = vga_v - vert_back;
 
-	assign o_hsync = (vga_h < H_sync_cycle) ? 0 : 1;
-	assign o_vsync = (vga_v < V_sync_cycle) ? 0 : 1;
+	assign o_hsync = (vga_h < HPULSE) ? 0 : 1;
+	assign o_vsync = (vga_v < VPULSE) ? 0 : 1;
 	
-	assign o_data_enable = (vga_h >= hori_back && vga_h < hori_line - hori_front && vga_v >= vert_back && vga_v < vert_line - vert_front);
-	assign o_pos_x = px[9:1];
-	assign o_pos_y = py[9:1];
+	assign o_data_enable = (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
+	assign o_pos_x = vga_h - HBACK;
+	assign o_pos_y = vga_v - VBACK;
 
 endmodule

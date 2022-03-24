@@ -100,16 +100,16 @@ module SoC(
 		.o_ready(video_sram_ready)
 	);
 
-	// Video controller.
+	// Video mode; chunky 8-bit palette.
 	wire vbus_select;
 	wire [31:0] vbus_address;
 	wire vbus_ready;
 	wire vbus_fifo_full;
 	wire [31:0] vbus_rdata;
-	VideoBus #(
+	VMODE_chunky #(
 		.PPITCH(400),
 		.FIFO_DEPTH(8)
-	) video_bus(
+	) vmode_chunky(
 		.i_clock(clock),
 		
 		.i_cpu_request(vbus_select && bus_request),

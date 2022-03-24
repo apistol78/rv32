@@ -169,10 +169,10 @@ module SoC(
 
 	// Video signal generator
 	wire vga_enable;
-	wire [8:0] vga_pos_x;
-	wire [8:0] vga_pos_y;
+	wire [9:0] vga_pos_x;
+	wire [9:0] vga_pos_y;
 	VGA #(
-		.PRESCALE(`FREQUENCY / 25000000)
+		.SYSTEM_FREQUENCY(`FREQUENCY)
 	) vga(
 		.i_clock(clock),
 		.o_hsync(HDMI_TX_HS),
@@ -207,25 +207,28 @@ module SoC(
 		.o_ready(video_sram_ready)
 	);
 
-	// Video framebuffer controller.
-	wire vbus_request;
-	wire [31:0] vbus_address;
-	wire [31:0] vbus_wdata;
-	wire vbus_ready;
-	wire vbus_fifo_full;
-	VideoBus video_bus(
+	// Video mode; chunky 8-bit palette.
+	wire vmode_request;
+	wire [31:0] vmode_address;
+	wire [31:0] vmode_wdata;
+	wire vmode_ready;
+	wire vmode_fifo_full;
+	VMODE_chunky #(
+		.PPITCH(320),
+		.FIFO_DEPTH(8)
+	) vmode_chunky(
 		.i_clock(clock),
 		
 		// CPU interface.
-		.i_cpu_request(vbus_request),
-		.i_cpu_address(vbus_address),
-		.i_cpu_wdata(vbus_wdata),
-		.o_cpu_ready(vbus_ready),
+		.i_cpu_request(vmode_request),
+		.i_cpu_address(vmode_address),
+		.i_cpu_wdata(vmode_wdata),
+		.o_cpu_ready(vmode_ready),
 		
 		// Video signal interface.
 		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x),
-		.i_video_pos_y(vga_pos_y),
+		.i_video_pos_x(vga_pos_x[9:1]),
+		.i_video_pos_y(vga_pos_y[9:1]),
 		.o_video_rdata(HDMI_TX_D),
 		
 		// Video RAM interface.
@@ -236,7 +239,7 @@ module SoC(
 		.i_mem_rdata(video_sram_rdata),
 		.i_mem_ready(video_sram_ready),
 		
-		.o_fifo_full(vbus_fifo_full)
+		.o_fifo_full(vmode_fifo_full)
 	);
 
 `ifdef SOC_ENABLE_GPU
@@ -252,11 +255,11 @@ module SoC(
 		
 		// Output to video framebuffer.
 		.o_bus_rw(),
-		.o_bus_request(vbus_request),
-		.i_bus_ready(vbus_ready),
-		.o_bus_address(vbus_address),
+		.o_bus_request(vmode_request),
+		.i_bus_ready(vmode_ready),
+		.o_bus_address(vmode_address),
 		.i_bus_rdata(),
-		.o_bus_wdata(vbus_wdata),
+		.o_bus_wdata(vmode_wdata),
 
 		// NC
 		.i_pa_request(1'b0),
@@ -316,10 +319,10 @@ module SoC(
 	wire [31:0] vram_address;
 	wire vram_ready;	
 
-	assign vbus_request = vram_select && bus_request;
-	assign vbus_address = vram_address;
-	assign vbus_wdata = bus_wdata;
-	assign vram_ready = vbus_ready;
+	assign vmode_request = vram_select && bus_request;
+	assign vmode_address = vram_address;
+	assign vmode_wdata = bus_wdata;
+	assign vram_ready = vmode_ready;
 
 `endif	// SOC_ENABLE_GPU
 
@@ -582,7 +585,7 @@ module SoC(
 		.o_ready(dma_ready),
 
 		// System
-		.i_stall(vbus_fifo_full),
+		.i_stall(vmode_fifo_full),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),

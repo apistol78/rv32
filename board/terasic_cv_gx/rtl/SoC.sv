@@ -212,12 +212,15 @@ module SoC(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 
-	// Video controller.
+	// Video mode; chunky 8-bit palette.
 	wire vram_select;
 	wire [31:0] vram_address;
 	wire vram_ready;
 	wire vram_fifo_full;
-	VideoBus video_bus(
+	VMODE_chunky #(
+		.PPITCH(320),
+		.FIFO_DEPTH(8)
+	) vmode_chunky(
 		.i_clock(clock),
 		
 		.i_cpu_request(vram_select && bus_request),
@@ -226,8 +229,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x),
-		.i_video_pos_y(vga_pos_y),
+		.i_video_pos_x(vga_pos_x[9:1]),
+		.i_video_pos_y(vga_pos_y[9:1]),
 		.o_video_rdata(HDMI_TX_D),
 		
 		.o_mem_request(video_sram_request),
@@ -242,10 +245,10 @@ module SoC(
   
 	// Video signal generator
 	wire vga_enable;
-	wire [8:0] vga_pos_x;
-	wire [8:0] vga_pos_y;
+	wire [9:0] vga_pos_x;
+	wire [9:0] vga_pos_y;
 	VGA #(
-		.PRESCALE(`FREQUENCY / 25000000)
+		.SYSTEM_FREQUENCY(`FREQUENCY)
 	) vga(
 		.i_clock(clock),
 		.o_hsync(HDMI_TX_HS),
