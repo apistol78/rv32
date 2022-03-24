@@ -267,8 +267,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/Timer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_TX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_RX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VideoBus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VIDEO_LCD_AT070TN92.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VMODE_chunky.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_WriteBuffer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Writeback.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Types.sv

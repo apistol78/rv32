@@ -777,15 +777,15 @@ set_global_assignment -name SEARCH_PATH /home/apistol/private/rv32/board/terasic
 set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
 set_global_assignment -name SDC_FILE SoC.sdc
 set_global_assignment -name QIP_FILE ip/IP_SDRAM.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/SDRAM_interface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SoC.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VideoBus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VMODE_chunky.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VGA.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_TX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_RX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/Timer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SRAM_interface.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SDRAM_interface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SD.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/PLIC.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv

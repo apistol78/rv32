@@ -1,26 +1,26 @@
 
 `timescale 1ns/1ns
 
-// 800*400
+// 800*480
 module VIDEO_LCD_AT070NTN92 #(
 	parameter SYSTEM_FREQUENCY = 100_000_000,
 	parameter VGA_FREQUENCY = 25_175_000,
-	parameter HLINE = 800,
-	parameter HBACK = 144,
-	parameter HFRONT = 16,
-	parameter HPULSE = 20,
-	parameter VLINE = 449,
-	parameter VBACK = 36,
-	parameter VFRONT = 13,
-	parameter VPULSE = 6
+	parameter HLINE = 1056,
+	parameter HBACK = 46,
+	parameter HFRONT = 210,
+	parameter HPULSE = 1,
+	parameter VLINE = 525,
+	parameter VBACK = 23,
+	parameter VFRONT = 22,
+	parameter VPULSE = 1
 )(
 	input i_clock,
 
 	// Video output.
 	output logic o_vga_clock,
-	output logic o_data_enable,		// i_clock
-	output logic [10:0] o_pos_x,	// i_clock
-	output logic [10:0] o_pos_y		// i_clock
+	output logic o_data_enable,
+	output logic [10:0] o_pos_x,
+	output logic [10:0] o_pos_y
 );
 	// Configuration
 	parameter cfg_prescale = SYSTEM_FREQUENCY / VGA_FREQUENCY;

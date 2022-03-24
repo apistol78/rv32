@@ -73,7 +73,7 @@ module SoC(
 	assign lcd_bkl = cont[11];		// Backlight PWM controlled
 	assign lcd_clk = vga_clock;
 	assign lcd_de = vga_enable;
-	assign lcd_r = vga_pos_x; // vbus_rdata[23:16];
+	assign lcd_r = vbus_rdata[23:16];
 	assign lcd_g = vbus_rdata[15:8];
 	assign lcd_b = vbus_rdata[7:0];
 	assign lcd_vsync = 1'b0;
@@ -132,6 +132,7 @@ module SoC(
 		.o_fifo_full(vbus_fifo_full)
 	);
 
+	// 800*480
 	wire vga_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
@@ -149,7 +150,6 @@ module SoC(
 		.VPULSE(1)
 	) vga(
 		.i_clock(clock),
-
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y),
@@ -422,8 +422,8 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
-		.ICACHE_SIZE(4),
-		.DCACHE_SIZE(2)
+		.ICACHE_SIZE(10),
+		.DCACHE_SIZE(8)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
