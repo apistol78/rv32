@@ -68,8 +68,8 @@ void	VID_Init (unsigned char *palette)
   baseheight = 200;
   basewidth = 320;
 
-  //vid_buffer = malloc(sizeof(byte) * basewidth * baseheight); //Left buffer
-  vid_buffer = (byte*)0x10010000;
+  vid_buffer = malloc(sizeof(byte) * basewidth * baseheight); //Left buffer
+  //vid_buffer = (byte*)0x10010000;
 
   zbuffer = malloc(sizeof(short) * basewidth * baseheight);
 

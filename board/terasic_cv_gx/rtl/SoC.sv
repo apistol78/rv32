@@ -282,7 +282,7 @@ module SoC(
 	wire ram_ready;
 	BRAM #(
 		.WIDTH(32),
-		.SIZE(32'h8000),
+		.SIZE(32'h200),
 		.ADDR_LSH(2)
 	) ram(
 		.i_clock(clock),

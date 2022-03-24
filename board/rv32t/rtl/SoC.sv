@@ -348,7 +348,7 @@ module SoC(
 	wire ram_ready;
 	BRAM #(
 		.WIDTH(32),
-		.SIZE(32'h8000),
+		.SIZE(32'h200),
 		.ADDR_LSH(2)
 	) ram(
 		.i_clock(clock),
@@ -367,11 +367,11 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	BRAM/*_latency*/ #(
+	BRAM_latency #(
 		.WIDTH(32),
 		.SIZE(32'h1000000 / 4),
-		.ADDR_LSH(2)/*,
-		.LATENCY(10)*/
+		.ADDR_LSH(2),
+		.LATENCY(16)
 	) sdram(
 		.i_clock(clock),
 		.i_request(l2cache_bus_request),
