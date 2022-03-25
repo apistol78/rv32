@@ -2,7 +2,6 @@
 #include "doomgeneric.h"
 #include "doomkeys.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
@@ -29,23 +28,10 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 	}
 
 	for (uint32_t i = 0; i < 256; ++i)
-		(VIDEO_PALETTE_BASE)[i] = colors[i];
+		video_set_palette(i, colors[i]);
 
-/*
-	const uint32_t* src = (const uint32_t*)frame;
-	for (uint32_t i = 0; i < 320 * 200 / 4; ++i)
-		(VIDEO_DATA_BASE)[i] = src[i];
-*/
-
-	dma_wait();
-
-	__asm__ volatile ("fence");
-	
-	dma_copy(
-		VIDEO_DATA_BASE,
-		frame,
-		320 * 200 / 4
-	);
+	video_blit_wait();
+	video_blit(frame);
 }
 
 void DG_SleepMs(uint32_t ms)

@@ -200,21 +200,18 @@ int main()
 {
 	runtime_init();
 
-	volatile uint32_t* palette = VIDEO_PALETTE_BASE;
-	volatile uint32_t* video = VIDEO_DATA_BASE;
-
-	framebuffer = (uint8_t*)malloc(FW * FH);
+	framebuffer = (uint8_t*)video_create_secondary_target();
 
 	for (uint32_t i = 0; i < 256; ++i)
 	{
-		uint8_t r = rand();
-		uint8_t g = rand();
-		uint8_t b = rand();
-		palette[i] = (r << 16) | (g << 8) | b;
+		const uint8_t r = rand();
+		const uint8_t g = rand();
+		const uint8_t b = rand();
+		video_set_palette(i, (r << 16) | (g << 8) | b);
 	}
 
-	palette[0] = 0x00333333;
-	palette[1] = 0x00ffffff;
+	video_set_palette(0, 0x00333333);
+	video_set_palette(1, 0x00ffffff);
 
 	float head = 0.0f;
 	float pitch = 0.0f;
@@ -270,7 +267,7 @@ int main()
 			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
 		}
 
-		dma_wait();
+		video_blit_wait();
 		memset(framebuffer, 0, FW * FH);
 
 		// for (uint32_t i = 0; i < FW * FH; ++i)
@@ -290,14 +287,7 @@ int main()
 			);			
 		}
 
-		// Ensure data is written from dcache to sdram before DMA.
-		__asm__ volatile ("fence");
-
-		dma_copy(
-			(void*)video,
-			framebuffer,
-			(FW * FH) / 4
-		);
+		video_blit(framebuffer);
 
 		head += 0.043f;
 		pitch += 0.067f;

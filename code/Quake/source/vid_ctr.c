@@ -23,7 +23,6 @@
 #include "d_local.h"
 
 //#include "ctr.h"
-#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
@@ -54,7 +53,7 @@ void	VID_SetPalette (unsigned char *palette)
     table++;
     pal += 3;
 
-    (VIDEO_PALETTE_BASE)[i] = (r << 16) | (g << 8) | b;
+    video_set_palette(i, (r << 16) | (g << 8) | b);
   }
 }
 
@@ -68,8 +67,7 @@ void	VID_Init (unsigned char *palette)
   baseheight = 200;
   basewidth = 320;
 
-  vid_buffer = malloc(sizeof(byte) * basewidth * baseheight); //Left buffer
-  //vid_buffer = (byte*)0x10010000;
+  vid_buffer = video_create_secondary_target();
 
   zbuffer = malloc(sizeof(short) * basewidth * baseheight);
 
@@ -141,15 +139,8 @@ void	VID_Update (vrect_t *rects){
 		count = 0;
 	}
 
-	dma_wait();
-
-	__asm__ volatile ("fence");
-	
-	dma_copy(
-		VIDEO_DATA_BASE,
-		vid_buffer,
-		320 * 200 / 4
-	);
+  video_blit_wait();
+  video_blit(vid_buffer);
 }
 
 /*

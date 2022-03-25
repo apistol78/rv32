@@ -1,6 +1,19 @@
 #pragma once
 
-#define VIDEO_DATA_BASE     (volatile uint32_t*)0x30000000
-#define VIDEO_PALETTE_BASE  (volatile uint32_t*)0x31000000
-
 EXTERN_C int32_t video_init();
+
+EXTERN_C int32_t video_get_resolution_width();
+
+EXTERN_C int32_t video_get_resolution_height();
+
+EXTERN_C void video_set_palette(uint8_t index, uint32_t color);
+
+EXTERN_C void* video_get_primary_target();
+
+EXTERN_C void* video_create_secondary_target();
+
+EXTERN_C void video_destroy_secondary_target(void* target);
+
+EXTERN_C void video_blit(const void* source);
+
+EXTERN_C void video_blit_wait();

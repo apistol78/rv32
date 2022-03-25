@@ -1,7 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Video.h"
+
+#define VIDEO_DATA_BASE     0x30000000
+#define VIDEO_PALETTE_BASE  0x31000000
 
 #define SLAVE_ADDR 0x72
 
@@ -108,4 +113,51 @@ int32_t video_init()
 		interrupt_set_handler(1, adv7513_interrupt_handler);
 	}
 	return 0;
+}
+
+int32_t video_get_resolution_width()
+{
+	return 320;
+}
+
+int32_t video_get_resolution_height()
+{
+	return 200;
+}
+
+void video_set_palette(uint8_t index, uint32_t color)
+{
+	uint32_t* palette = (uint32_t*)VIDEO_PALETTE_BASE;
+	palette[index] = color;
+}
+
+void* video_get_primary_target()
+{
+	return (void*)VIDEO_DATA_BASE;
+}
+
+void* video_create_secondary_target()
+{
+	return malloc(320 * 200);
+}
+
+void video_destroy_secondary_target(void* target)
+{
+	free(target);
+}
+
+void video_blit(const void* source)
+{
+	// Ensure data is written from dcache to sdram before DMA.
+	__asm__ volatile ("fence");
+	dma_copy(
+		(void*)VIDEO_DATA_BASE,
+		source,
+		(320 * 200) / 4
+	);
+}
+
+void video_blit_wait()
+{
+	dma_wait();
 }
