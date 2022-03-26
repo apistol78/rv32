@@ -25,25 +25,25 @@ module DMA(
 );
 	typedef enum bit [3:0]
 	{
-		IDLE			= 0,
-		READ_CMD		= 1,
+		IDLE			= 4'd0,
+		READ_CMD		= 4'd1,
 
 		// Write
-		W_WRITE_REQ		= 2,
-		W_WAIT_WRITE	= 3,
+		W_WRITE_REQ		= 4'd2,
+		W_WAIT_WRITE	= 4'd3,
 
 		// Copy
-		C_READ_REQ		= 4,
-		C_WAIT_READ		= 5,
-		C_WRITE_REQ		= 6,
-		C_WAIT_WRITE	= 7
+		C_READ_REQ		= 4'd4,
+		C_WAIT_READ		= 4'd5,
+		C_WRITE_REQ		= 4'd6,
+		C_WAIT_WRITE	= 4'd7
 	}
 	state_t;
 
 	typedef enum bit [1:0]
 	{
-		WRITE	= 1,
-		COPY	= 2
+		WRITE	= 2'd1,
+		COPY	= 2'd2
 	}
 	dma_type_t;
 
@@ -60,7 +60,7 @@ module DMA(
 	wire queue_full;
 	logic queue_write = 0;
 	logic queue_read = 0;
-	wire dma_command_t queue_rdata;
+	dma_command_t queue_rdata;
 	FIFO64 #(
 		.DEPTH(8),
 		.WIDTH($bits(dma_command_t))
@@ -112,7 +112,7 @@ module DMA(
 					o_ready <= 1;
 				end
 				else if (i_address == 2'b11) begin
-					wr_command.dt <= i_wdata[1:0];
+					wr_command.dt <= dma_type_t'(i_wdata[1:0]);
 					if (!queue_full) begin
 						queue_write <= !o_ready;
 						o_ready <= 1;
