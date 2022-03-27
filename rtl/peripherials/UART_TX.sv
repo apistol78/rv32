@@ -25,9 +25,8 @@ module UART_TX #(
 	logic tx_fifo_write = 0;
 	logic tx_fifo_read = 0;
 	wire [7:0] tx_fifo_rdata;
-	FIFO64 #(
-		.DEPTH(64),
-		.WIDTH(8)
+	FIFO #(
+		.DEPTH(64)
 	) tx_fifo(
 		.i_clock(i_clock),
 		.o_empty(tx_fifo_empty),
@@ -58,7 +57,7 @@ module UART_TX #(
 	end
 
 	// Read from FIFO and transmit each byte.
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		case (state)
 			0: begin
 				if (!tx_fifo_empty) begin
@@ -70,23 +69,24 @@ module UART_TX #(
 
 			1: begin
 				tx_fifo_read <= 0;
+				prescale <= (PRESCALE << 3) - 1;
+				bidx <= 8+1;
+				data <= { 1'b1, tx_fifo_rdata };
+				UART_TX <= 0;
+				state <= 2;
+			end
+
+			2: begin
 				if (prescale > 0) begin
 					prescale <= prescale - 1;
 				end
 				else begin				
-					if (bidx == 0) begin
-						prescale <= (PRESCALE << 3) - 1;
-						bidx <= 8 + 1;
-						data <= { 1'b1, tx_fifo_rdata };
-						UART_TX <= 0;
-					end
-					else if (bidx > 1) begin
+					if (bidx > 0) begin
 						bidx <= bidx - 1;
 						prescale <= (PRESCALE << 3) - 1;
 						{ data, UART_TX } <= { 1'b0, data };
 					end
-					else if (bidx == 1) begin
-						bidx <= bidx - 1;
+					else begin
 						prescale <= (PRESCALE << 3);
 						UART_TX <= 1;
 						state <= 0;
