@@ -10,8 +10,14 @@ module SoC(
     output led_3
 );
 
-    assign clock = sys_clk;
-
+    wire clock;
+    IP_Clock ipclk(
+        .clk_out1(clock),
+        .reset(~sys_rst_n),
+        .locked(),
+        .clk_in1(sys_clk)
+    );
+    
 	reg [31:0] cont = 0;
 	always@(posedge clock)
 		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
@@ -20,17 +26,23 @@ module SoC(
 	always @(posedge clock)
 	begin
 		if (cont == 32'd4_000_000)
-			sample[4:0] = { sample[3:0], ~sys_rst_n };
+			sample[4:0] = { sample[3:0], sys_rst_n };
 		else 
 			sample[4:0] = sample[4:0];
 	end
 
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
+	
+	//=====================================
+	
+	reg [31:0] counter = 0;
+	always_ff @(posedge clock)
+	   counter <= counter + 1;
 
     assign led_1 = ~led_led[0];
     assign led_2 = ~led_led[1];
-    assign led_3 = ~led_led[2];
+    assign led_3 = counter[23]; // ~led_led[2];
 
 	//=====================================
 
@@ -382,5 +394,57 @@ module SoC(
 		// Debug
 		.o_fault(cpu_fault)
 	);
+	
+	//=====================================
+
+	assign rom_select = bus_address[31:28] == 4'h0;
+	assign rom_address = { 4'h0, bus_address[27:0] };
+
+	assign ram_select = bus_address[31:28] == 4'h1;
+	assign ram_address = { 4'h0, bus_address[27:0] };
+
+	assign sdram_select = bus_address[31:28] == 4'h2;
+	assign sdram_address = { 4'h0, bus_address[27:0] };
+	
+	assign vbus_select = bus_address[31:28] == 4'h3;
+	assign vbus_address = { 4'h0, bus_address[27:0] };
+
+	assign led_select = bus_address[31:28] == 4'h4;
+
+	assign uart_0_select = bus_address[31:24] == 8'h50;
+	assign uart_0_address = bus_address[3:2];
+
+	assign dma_select = bus_address[31:28] == 4'h9;
+	assign dma_address = bus_address[3:2];
+
+	assign timer_select = bus_address[31:28] == 4'ha;
+	assign timer_address = bus_address[4:2];
+	
+	assign plic_select = bus_address[31:28] == 4'hb;
+	assign plic_address = bus_address[23:0];
+
+	//=====================================
+
+	assign bus_rdata =
+		rom_select ? rom_rdata :
+		ram_select ? ram_rdata :
+		// sdram_select ? sdram_rdata :
+		uart_0_select ? uart_0_rdata :
+		dma_select ? dma_rdata :
+		timer_select ? timer_rdata :
+		plic_select ? plic_rdata :
+		32'h00000000;
+		
+	assign bus_ready =
+		rom_select ? rom_ready :
+		ram_select ? ram_ready :
+		// sdram_select ? sdram_ready :
+		vbus_select ? vbus_ready :
+		led_select ? led_ready :
+		uart_0_select ? uart_0_ready :
+		dma_select ? dma_ready :
+		timer_select ? timer_ready :
+		plic_select ? plic_ready :
+		1'b0;	
 	
 endmodule
