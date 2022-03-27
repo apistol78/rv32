@@ -1,0 +1,9 @@
+{
+	"version": "1.0",
+	"modules": {
+		"IP_Multiply": {
+			"proto_instances": {
+			}
+		}
+	}
+}

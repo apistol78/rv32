@@ -1,0 +1,144 @@
+{
+  "design": {
+    "design_info": {
+      "boundary_crc": "0xD96D810698B0254C",
+      "device": "xc7k325tffg676-1",
+      "name": "IP_Divide",
+      "rev_ctrl_bd_flag": "RevCtrlBdOff",
+      "synth_flow_mode": "Hierarchical",
+      "tool_version": "2021.2",
+      "validated": "true"
+    },
+    "design_tree": {
+      "div_gen_0": "",
+      "xlslice_0": "",
+      "xlslice_1": ""
+    },
+    "ports": {
+      "clock": {
+        "direction": "I"
+      },
+      "numer": {
+        "direction": "I",
+        "left": "31",
+        "right": "0"
+      },
+      "denom": {
+        "direction": "I",
+        "left": "31",
+        "right": "0"
+      },
+      "quotient": {
+        "direction": "O",
+        "left": "31",
+        "right": "0"
+      },
+      "remain": {
+        "direction": "O",
+        "left": "31",
+        "right": "0"
+      }
+    },
+    "components": {
+      "div_gen_0": {
+        "vlnv": "xilinx.com:ip:div_gen:5.1",
+        "xci_name": "IP_Divide_div_gen_0_0",
+        "xci_path": "ip/IP_Divide_div_gen_0_0/IP_Divide_div_gen_0_0.xci",
+        "inst_hier_path": "div_gen_0",
+        "parameters": {
+          "dividend_and_quotient_width": {
+            "value": "32"
+          },
+          "divisor_width": {
+            "value": "32"
+          },
+          "fractional_width": {
+            "value": "32"
+          },
+          "latency": {
+            "value": "36"
+          },
+          "operand_sign": {
+            "value": "Signed"
+          }
+        }
+      },
+      "xlslice_0": {
+        "vlnv": "xilinx.com:ip:xlslice:1.0",
+        "xci_name": "IP_Divide_xlslice_0_0",
+        "xci_path": "ip/IP_Divide_xlslice_0_0/IP_Divide_xlslice_0_0.xci",
+        "inst_hier_path": "xlslice_0",
+        "parameters": {
+          "DIN_FROM": {
+            "value": "63"
+          },
+          "DIN_TO": {
+            "value": "32"
+          },
+          "DIN_WIDTH": {
+            "value": "64"
+          },
+          "DOUT_WIDTH": {
+            "value": "32"
+          }
+        }
+      },
+      "xlslice_1": {
+        "vlnv": "xilinx.com:ip:xlslice:1.0",
+        "xci_name": "IP_Divide_xlslice_1_0",
+        "xci_path": "ip/IP_Divide_xlslice_1_0/IP_Divide_xlslice_1_0.xci",
+        "inst_hier_path": "xlslice_1",
+        "parameters": {
+          "DIN_FROM": {
+            "value": "31"
+          },
+          "DIN_WIDTH": {
+            "value": "64"
+          },
+          "DOUT_WIDTH": {
+            "value": "32"
+          }
+        }
+      }
+    },
+    "nets": {
+      "clock_1": {
+        "ports": [
+          "clock",
+          "div_gen_0/aclk"
+        ]
+      },
+      "denom_1": {
+        "ports": [
+          "denom",
+          "div_gen_0/s_axis_divisor_tdata"
+        ]
+      },
+      "div_gen_0_m_axis_dout_tdata": {
+        "ports": [
+          "div_gen_0/m_axis_dout_tdata",
+          "xlslice_0/Din",
+          "xlslice_1/Din"
+        ]
+      },
+      "numer_1": {
+        "ports": [
+          "numer",
+          "div_gen_0/s_axis_dividend_tdata"
+        ]
+      },
+      "xlslice_0_Dout": {
+        "ports": [
+          "xlslice_0/Dout",
+          "quotient"
+        ]
+      },
+      "xlslice_1_Dout": {
+        "ports": [
+          "xlslice_1/Dout",
+          "remain"
+        ]
+      }
+    }
+  }
+}

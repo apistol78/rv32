@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Sun Mar 27 13:23:30 2022" VIVADOVERSION="2021.2">
+
+  <SYSTEMINFO ARCH="kintex7" DEVICE="7k325t" NAME="IP_UnsignedMultiply" PACKAGE="ffg676" SPEEDGRADE="-1"/>
+
+  <EXTERNALPORTS>
+    <PORT DIR="I" NAME="clock" SIGIS="undef" SIGNAME="External_Ports_clock">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="mult_gen_0" PORT="CLK"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="I" LEFT="31" NAME="dataa" RIGHT="0" SIGIS="undef" SIGNAME="External_Ports_dataa">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="mult_gen_0" PORT="A"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="I" LEFT="31" NAME="datab" RIGHT="0" SIGIS="undef" SIGNAME="External_Ports_datab">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="mult_gen_0" PORT="B"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" LEFT="63" NAME="result" RIGHT="0" SIGIS="undef" SIGNAME="mult_gen_0_P">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="mult_gen_0" PORT="P"/>
+      </CONNECTIONS>
+    </PORT>
+  </EXTERNALPORTS>
+
+  <EXTERNALINTERFACES/>
+
+  <MODULES>
+    <MODULE COREREVISION="17" FULLNAME="/mult_gen_0" HWVERSION="12.0" INSTANCE="mult_gen_0" IPTYPE="PERIPHERAL" IS_ENABLE="1" MODCLASS="PERIPHERAL" MODTYPE="mult_gen" VLNV="xilinx.com:ip:mult_gen:12.0">
+      <DOCUMENTS>
+        <DOCUMENT SOURCE="http://www.xilinx.com/cgi-bin/docs/ipdoc?c=mult_gen;v=v12_0;d=pg108-mult-gen.pdf"/>
+      </DOCUMENTS>
+      <PARAMETERS>
+        <PARAMETER NAME="C_VERBOSITY" VALUE="0"/>
+        <PARAMETER NAME="C_MODEL_TYPE" VALUE="0"/>
+        <PARAMETER NAME="C_OPTIMIZE_GOAL" VALUE="1"/>
+        <PARAMETER NAME="C_XDEVICEFAMILY" VALUE="kintex7"/>
+        <PARAMETER NAME="C_HAS_CE" VALUE="0"/>
+        <PARAMETER NAME="C_HAS_SCLR" VALUE="0"/>
+        <PARAMETER NAME="C_LATENCY" VALUE="5"/>
+        <PARAMETER NAME="C_A_WIDTH" VALUE="32"/>
+        <PARAMETER NAME="C_A_TYPE" VALUE="1"/>
+        <PARAMETER NAME="C_B_WIDTH" VALUE="32"/>
+        <PARAMETER NAME="C_B_TYPE" VALUE="1"/>
+        <PARAMETER NAME="C_OUT_HIGH" VALUE="63"/>
+        <PARAMETER NAME="C_OUT_LOW" VALUE="0"/>
+        <PARAMETER NAME="C_MULT_TYPE" VALUE="0"/>
+        <PARAMETER NAME="C_CE_OVERRIDES_SCLR" VALUE="0"/>
+        <PARAMETER NAME="C_CCM_IMP" VALUE="0"/>
+        <PARAMETER NAME="C_B_VALUE" VALUE="10000001"/>
+        <PARAMETER NAME="C_HAS_ZERO_DETECT" VALUE="0"/>
+        <PARAMETER NAME="C_ROUND_OUTPUT" VALUE="0"/>
+        <PARAMETER NAME="C_ROUND_PT" VALUE="0"/>
+        <PARAMETER NAME="InternalUser" VALUE="0"/>
+        <PARAMETER NAME="Component_Name" VALUE="IP_UnsignedMultiply_mult_gen_0_0"/>
+        <PARAMETER NAME="MultType" VALUE="Parallel_Multiplier"/>
+        <PARAMETER NAME="PortAType" VALUE="Unsigned"/>
+        <PARAMETER NAME="PortAWidth" VALUE="32"/>
+        <PARAMETER NAME="PortBType" VALUE="Unsigned"/>
+        <PARAMETER NAME="PortBWidth" VALUE="32"/>
+        <PARAMETER NAME="ConstValue" VALUE="129"/>
+        <PARAMETER NAME="CcmImp" VALUE="Distributed_Memory"/>
+        <PARAMETER NAME="Multiplier_Construction" VALUE="Use_LUTs"/>
+        <PARAMETER NAME="OptGoal" VALUE="Speed"/>
+        <PARAMETER NAME="Use_Custom_Output_Width" VALUE="false"/>
+        <PARAMETER NAME="OutputWidthHigh" VALUE="63"/>
+        <PARAMETER NAME="OutputWidthLow" VALUE="0"/>
+        <PARAMETER NAME="UseRounding" VALUE="false"/>
+        <PARAMETER NAME="RoundPoint" VALUE="0"/>
+        <PARAMETER NAME="PipeStages" VALUE="5"/>
+        <PARAMETER NAME="ClockEnable" VALUE="false"/>
+        <PARAMETER NAME="SyncClear" VALUE="false"/>
+        <PARAMETER NAME="SclrCePriority" VALUE="SCLR_Overrides_CE"/>
+        <PARAMETER NAME="ZeroDetect" VALUE="false"/>
+        <PARAMETER NAME="EDK_IPTYPE" VALUE="PERIPHERAL"/>
+      </PARAMETERS>
+      <PORTS>
+        <PORT CLKFREQUENCY="10000000" DIR="I" NAME="CLK" SIGIS="clk" SIGNAME="External_Ports_clock">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="clock"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="31" NAME="A" RIGHT="0" SIGIS="data" SIGNAME="External_Ports_dataa">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="dataa"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="31" NAME="B" RIGHT="0" SIGIS="data" SIGNAME="External_Ports_datab">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="datab"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="63" NAME="P" RIGHT="0" SIGIS="data" SIGNAME="mult_gen_0_P">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="result"/>
+          </CONNECTIONS>
+        </PORT>
+      </PORTS>
+      <BUSINTERFACES/>
+    </MODULE>
+  </MODULES>
+
+</EDKSYSTEM>

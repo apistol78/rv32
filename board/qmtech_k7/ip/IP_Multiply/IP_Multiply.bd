@@ -1,0 +1,93 @@
+{
+  "design": {
+    "design_info": {
+      "boundary_crc": "0x8254FD4A025B75AC",
+      "device": "xc7k325tffg676-1",
+      "name": "IP_Multiply",
+      "rev_ctrl_bd_flag": "RevCtrlBdOff",
+      "synth_flow_mode": "Hierarchical",
+      "tool_version": "2021.2",
+      "validated": "true"
+    },
+    "design_tree": {
+      "mult_gen_0": ""
+    },
+    "ports": {
+      "clock": {
+        "direction": "I"
+      },
+      "dataa": {
+        "direction": "I",
+        "left": "31",
+        "right": "0"
+      },
+      "datab": {
+        "direction": "I",
+        "left": "31",
+        "right": "0"
+      },
+      "result": {
+        "direction": "O",
+        "left": "63",
+        "right": "0",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": "xilinx.com:interface:datatypes:1.0 {DATA {datatype {name {attribs {resolve_type immediate dependency {} format string minimum {} maximum {}} value data} bitwidth {attribs {resolve_type generated dependency bitwidth format long minimum {} maximum {}} value 64} bitoffset {attribs {resolve_type immediate dependency {} format long minimum {} maximum {}} value 0} integer {signed {attribs {resolve_type generated dependency signed format bool minimum {} maximum {}} value TRUE}}}} DATA_WIDTH 64}",
+            "value_src": "ip_prop"
+          }
+        }
+      }
+    },
+    "components": {
+      "mult_gen_0": {
+        "vlnv": "xilinx.com:ip:mult_gen:12.0",
+        "xci_name": "IP_Multiply_mult_gen_0_0",
+        "xci_path": "ip/IP_Multiply_mult_gen_0_0/IP_Multiply_mult_gen_0_0.xci",
+        "inst_hier_path": "mult_gen_0",
+        "parameters": {
+          "PipeStages": {
+            "value": "5"
+          },
+          "PortAType": {
+            "value": "Signed"
+          },
+          "PortAWidth": {
+            "value": "32"
+          },
+          "PortBType": {
+            "value": "Signed"
+          },
+          "PortBWidth": {
+            "value": "32"
+          }
+        }
+      }
+    },
+    "nets": {
+      "clock_1": {
+        "ports": [
+          "clock",
+          "mult_gen_0/CLK"
+        ]
+      },
+      "dataa_1": {
+        "ports": [
+          "dataa",
+          "mult_gen_0/A"
+        ]
+      },
+      "datab_1": {
+        "ports": [
+          "datab",
+          "mult_gen_0/B"
+        ]
+      },
+      "mult_gen_0_P": {
+        "ports": [
+          "mult_gen_0/P",
+          "result"
+        ]
+      }
+    }
+  }
+}
