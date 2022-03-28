@@ -1,39 +1,37 @@
 
-// 55 ALUTS
-// 81 DL Registers
-
 `timescale 1ns/1ns
 
 module Timer#(
-    parameter FREQUENCY = 50000000
+    parameter FREQUENCY,
+	parameter DEVICEID
 )(
-	input wire i_reset,
-	input wire i_clock,
-	input wire i_request,
-	input wire i_rw,
-	input wire [2:0] i_address,
-	input wire [31:0] i_wdata,
-	output reg [31:0] o_rdata,
-	output reg o_ready,
+	input i_reset,
+	input i_clock,
+	input i_request,
+	input i_rw,
+	input [2:0] i_address,
+	input [31:0] i_wdata,
+	output logic [31:0] o_rdata,
+	output logic o_ready,
 
-	output reg o_interrupt
+	output logic o_interrupt
 );
 
 	localparam PRESCALE = FREQUENCY / 1000;
 	localparam PRESCALE_WIDTH = $clog2(PRESCALE);
 
-	reg [PRESCALE_WIDTH - 1:0] prescale = 0;
-	reg [63:0] cycles = 0;
-	reg [63:0] compare = { 64{1'b1} };
-	reg [31:0] ms = 0;
-	reg request = 0;
+	logic [PRESCALE_WIDTH - 1:0] prescale = 0;
+	logic [63:0] cycles = 0;
+	logic [63:0] compare = { 64{1'b1} };
+	logic [31:0] ms = 0;
+	logic request = 0;
 
 	initial begin
 		o_ready = 1'b0;
 		o_interrupt = 1'b0;
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset)
 			cycles <= 64'h0;
 		else begin
@@ -42,7 +40,7 @@ module Timer#(
 		end
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			ms <= 0;
 			prescale <= 0;
@@ -56,26 +54,26 @@ module Timer#(
 		end
 	end
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_request && !request) begin
 			if (!i_rw) begin
-				if (i_address == 3'h0) begin
-					o_rdata <= ms;
-				end
-				else if (i_address == 3'h1) begin
-					o_rdata <= cycles[31:0];
-				end
-				else if (i_address == 3'h2) begin
-					o_rdata <= cycles[63:32];
-				end
+				case (i_address)
+					3'h0: o_rdata <= ms;
+					3'h1: o_rdata <= cycles[31:0];
+					3'h2: o_rdata <= cycles[63:32];
+					3'h3: o_rdata <= compare[31:0];
+					3'h4: o_rdata <= compare[63:32];
+					3'h5: o_rdata <= FREQUENCY;
+					3'h6: o_rdata <= DEVICEID;
+					default: o_rdata <= 0;
+				endcase
 			end
 			else begin
-				if (i_address == 3'h3) begin
-					compare[31:0] <= i_wdata;
-				end
-				else if (i_address == 3'h4) begin
-					compare[63:32] <= i_wdata;
-				end
+				case (i_address)
+					3'h3: compare[31:0] <= i_wdata;
+					3'h4: compare[63:32] <= i_wdata;
+					default:;
+				endcase
 			end
 			o_ready <= 1;
 		end

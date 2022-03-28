@@ -256,7 +256,8 @@ module SoC(
 	wire timer_ready;
 	wire timer_interrupt;
 	Timer #(
-		.FREQUENCY(`FREQUENCY)
+		.FREQUENCY(`FREQUENCY),
+		.DEVICEID(4)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),

@@ -1,6 +1,14 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
 
+#define TIMER_MS            (volatile uint32_t*)0xa0000000
+#define TIMER_CYCLES_L      (volatile uint32_t*)0xa0000004
+#define TIMER_CYCLES_H      (volatile uint32_t*)0xa0000008
+#define TIMER_COMPARE_L     (volatile uint32_t*)0xa000000c
+#define TIMER_COMPARE_H     (volatile uint32_t*)0xa0000010
+#define TIMER_FREQUENCY     (volatile uint32_t*)0xa0000014
+#define TIMER_DEVICE_ID     (volatile uint32_t*)0xa0000018
+
 uint32_t timer_get_ms()
 {
 	return *TIMER_MS;
@@ -40,4 +48,14 @@ void timer_set_compare(uint64_t offset)
 	*TIMER_COMPARE_H = 0xFFFFFFFF;
 	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
 	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+}
+
+uint32_t timer_get_frequency()
+{
+	return *TIMER_FREQUENCY;
+}
+
+uint32_t timer_get_device_id()
+{
+	return *TIMER_DEVICE_ID;
 }

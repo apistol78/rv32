@@ -603,7 +603,8 @@ module SoC(
 	wire timer_ready;
 	wire timer_interrupt;
 	Timer #(
-		.FREQUENCY(`FREQUENCY)
+		.FREQUENCY(`FREQUENCY),
+		.DEVICEID(1)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -716,10 +717,7 @@ module SoC(
 	wire [`TAG_SIZE] cpu_writeback_debug_tag;
 	wire cpu_fault;
 
-	CPU #(
-		.ICACHE_SIZE(16)//,
-		//.DCACHE_SIZE(16)
-	) cpu(
+	CPU cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
