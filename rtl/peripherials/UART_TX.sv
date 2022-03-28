@@ -4,13 +4,13 @@
 module UART_TX #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(
-	input wire i_reset,
-	input wire i_clock,
-	input wire i_request,
-	input wire [31:0] i_wdata,
-	output reg o_ready,
+	input i_reset,
+	input i_clock,
+	input i_request,
+	input [31:0] i_wdata,
+	output logic o_ready,
 
-	output reg UART_TX
+	output logic UART_TX
 );
 	parameter MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
@@ -38,7 +38,8 @@ module UART_TX #(
 	);
 
 	initial begin
-		UART_TX = 1;
+		UART_TX = 1'b1;
+		o_ready = 1'b0;
 	end
 
 	// Write to FIFO.
@@ -61,14 +62,17 @@ module UART_TX #(
 		case (state)
 			0: begin
 				if (!tx_fifo_empty) begin
-					tx_fifo_read <= 1;
-					bidx <= 0;
-					state <= 1;
+					if (!tx_fifo_read)
+						tx_fifo_read <= 1;
+					else begin
+						tx_fifo_read <= 0;
+						bidx <= 0;
+						state <= 1;
+					end
 				end
 			end
 
 			1: begin
-				tx_fifo_read <= 0;
 				prescale <= (PRESCALE << 3) - 1;
 				bidx <= 8+1;
 				data <= { 1'b1, tx_fifo_rdata };
