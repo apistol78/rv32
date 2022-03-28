@@ -67,7 +67,7 @@ void	VID_Init (unsigned char *palette)
   baseheight = 200;
   basewidth = 320;
 
-  vid_buffer = video_create_secondary_target();
+  vid_buffer = video_get_secondary_target();
 
   zbuffer = malloc(sizeof(short) * basewidth * baseheight);
 
@@ -139,8 +139,8 @@ void	VID_Update (vrect_t *rects){
 		count = 0;
 	}
 
-  video_blit_wait();
-  video_blit(vid_buffer);
+  video_swap_wait();
+  video_swap();
 }
 
 /*

@@ -30,8 +30,8 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 	for (uint32_t i = 0; i < 256; ++i)
 		video_set_palette(i, colors[i]);
 
-	video_blit_wait();
-	video_blit(frame);
+	video_swap_wait();
+	video_swap();
 }
 
 void DG_SleepMs(uint32_t ms)

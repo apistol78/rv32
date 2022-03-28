@@ -219,8 +219,8 @@ void I_InitGraphics (void)
 
 
     /* Allocate screen to draw to */
-    extern void* video_create_secondary_target();
-    I_VideoBuffer = (byte*)video_create_secondary_target();
+    extern void* video_get_secondary_target();
+    I_VideoBuffer = (byte*)video_get_secondary_target();
 
 	screenvisible = true;
 
@@ -230,7 +230,7 @@ void I_InitGraphics (void)
 
 void I_ShutdownGraphics (void)
 {
-	Z_Free (I_VideoBuffer);
+	//Z_Free (I_VideoBuffer);
 }
 
 void I_StartFrame (void)

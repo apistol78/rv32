@@ -200,7 +200,7 @@ int main()
 {
 	runtime_init();
 
-	framebuffer = (uint8_t*)video_create_secondary_target();
+	framebuffer = (uint8_t*)video_get_secondary_target();
 
 	for (uint32_t i = 0; i < 256; ++i)
 	{
@@ -267,9 +267,9 @@ int main()
 			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
 		}
 
-		video_blit_wait();
-		memset(framebuffer, 0, FW * FH);
+		video_swap_wait();
 
+		memset(framebuffer, 0, FW * FH);
 		// for (uint32_t i = 0; i < FW * FH; ++i)
 		//  	framebuffer[i] = rand();
 
@@ -287,7 +287,10 @@ int main()
 			);			
 		}
 
-		video_blit(framebuffer);
+		video_swap();
+
+		// \fixme will clear memory but not dcache...
+		//dma_write(framebuffer, FW * FH, 0);
 
 		head += 0.043f;
 		pitch += 0.067f;

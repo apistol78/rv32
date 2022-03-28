@@ -8,9 +8,13 @@
 #define VIDEO_DATA_BASE     0x30000000
 #define VIDEO_PALETTE_BASE  0x31000000
 
-#define SLAVE_ADDR 0x72
+#define ADV7513_REG_CHIP_REVISION	0x00
+#define ADV7513_REG_CHIP_ID_HIGH	0xf5
+#define ADV7513_REG_CHIP_ID_LOW		0xf6
 
-const struct {
+#define SLAVE_ADDR 					0x72
+
+static const struct {
 	uint8_t reg;
 	uint8_t val;
 } const defaultConfig[] =
@@ -48,7 +52,10 @@ const struct {
 	{ 0xfa, 0x7d }
 };
 
-void reg_update_bits(int reg, int mask, int data)
+static void* primary_target = 0;
+static void* secondary_target = 0;
+
+static void reg_update_bits(int reg, int mask, int data)
 {
 	uint8_t regv = 0;
 
@@ -59,10 +66,6 @@ void reg_update_bits(int reg, int mask, int data)
 
 	i2c_write(SLAVE_ADDR, reg, regv);
 }
-
-#define ADV7513_REG_CHIP_REVISION				0x00
-#define ADV7513_REG_CHIP_ID_HIGH				0xf5
-#define ADV7513_REG_CHIP_ID_LOW					0xf6
 
 static int adv7513_chip_identify()
 {
@@ -112,6 +115,12 @@ int32_t video_init()
 		adv7513_power_up();
 		interrupt_set_handler(1, adv7513_interrupt_handler);
 	}
+
+	primary_target = (uint32_t*)VIDEO_DATA_BASE;
+
+	if ((secondary_target = malloc(320 * 200)) == 0)
+		return 1;
+
 	return 0;
 }
 
@@ -133,31 +142,26 @@ void video_set_palette(uint8_t index, uint32_t color)
 
 void* video_get_primary_target()
 {
-	return (void*)VIDEO_DATA_BASE;
+	return primary_target;
 }
 
-void* video_create_secondary_target()
+void* video_get_secondary_target()
 {
-	return malloc(320 * 200);
+	return secondary_target;
 }
 
-void video_destroy_secondary_target(void* target)
-{
-	free(target);
-}
-
-void video_blit(const void* source)
+void video_swap()
 {
 	// Ensure data is written from dcache to sdram before DMA.
 	__asm__ volatile ("fence");
 	dma_copy(
-		(void*)VIDEO_DATA_BASE,
-		source,
+		primary_target,
+		secondary_target,
 		(320 * 200) / 4
 	);
 }
 
-void video_blit_wait()
+void video_swap_wait()
 {
 	dma_wait();
 }
