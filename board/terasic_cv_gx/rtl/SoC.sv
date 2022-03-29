@@ -185,7 +185,29 @@ module SoC(
 	wire reset = !start_n;
   
 `ifdef SOC_ENABLE_VGA
-	// Video memory.
+
+	assign HDMI_TX_DE = vga_enable;
+	assign HDMI_TX_CLK = vga_clock;
+
+	// Video signal generator
+	wire vga_enable;
+	wire vga_clock;
+	wire [9:0] vga_pos_x;
+	wire [9:0] vga_pos_y;
+
+	VGA #(
+		.SYSTEM_FREQUENCY(`FREQUENCY)
+	) vga(
+		.i_clock(clock),
+		.o_hsync(HDMI_TX_HS),
+		.o_vsync(HDMI_TX_VS),
+		.o_data_enable(vga_enable),
+		.o_pos_x(vga_pos_x),
+		.o_pos_y(vga_pos_y),
+		.o_vga_clock(vga_clock)
+	);
+	
+	// Video physical memory.
 	wire video_sram_request;
 	wire video_sram_rw;
 	wire [31:0] video_sram_address;
@@ -212,54 +234,95 @@ module SoC(
 		.SRAM_UB_n(SRAM_UB_n)
 	);
 
+	// Video memory dual port.
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	BusAccess #(
+		.REGISTERED(0)
+	) vram_bus(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(video_sram_rw),
+		.o_bus_request(video_sram_request),
+		.i_bus_ready(video_sram_ready),
+		.o_bus_address(video_sram_address),
+		.i_bus_rdata(video_sram_rdata),
+		.o_bus_wdata(video_sram_wdata),
+
+		.i_pa_request(1'b0),
+		.o_pa_ready(),
+		.i_pa_address(32'h0),
+		.o_pa_rdata(),
+
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_request(vram_pb_request),
+		.o_pb_ready(vram_pb_ready),
+		.i_pb_address(vram_pb_address),
+		.o_pb_rdata(vram_pb_rdata),
+		.i_pb_wdata(vram_pb_wdata),
+
+		.i_pc_rw(vram_pa_rw),
+		.i_pc_request(vram_pa_request),
+		.o_pc_ready(vram_pa_ready),
+		.i_pc_address(vram_pa_address),
+		.o_pc_rdata(vram_pa_rdata),
+		.i_pc_wdata(vram_pa_wdata)
+	);
+
 	// Video mode; chunky 8-bit palette.
 	wire vram_select;
 	wire [31:0] vram_address;
+	wire [31:0] vram_rdata;
 	wire vram_ready;
-	wire vram_fifo_full;
+
 	VMODE_chunky #(
-		.PPITCH(320),
-		.FIFO_DEPTH(8)
+		.PPITCH(320)
 	) vmode_chunky(
 		.i_clock(clock),
 		
+		// CPU interface.
 		.i_cpu_request(vram_select && bus_request),
+		.i_cpu_rw(bus_rw),
 		.i_cpu_address(vram_address),
 		.i_cpu_wdata(bus_wdata),
+		.o_cpu_rdata(vram_rdata),
 		.o_cpu_ready(vram_ready),
 		
+		// Video signal interface.
 		.i_video_request(vga_enable),
 		.i_video_pos_x(vga_pos_x[9:1]),
 		.i_video_pos_y(vga_pos_y[9:1]),
 		.o_video_rdata(HDMI_TX_D),
 		
-		.o_mem_request(video_sram_request),
-		.o_mem_rw(video_sram_rw),
-		.o_mem_address(video_sram_address),
-		.o_mem_wdata(video_sram_wdata),
-		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready),
-		
-		.o_fifo_full(vram_fifo_full)
+		// Video RAM interface.
+		.o_vram_pa_request(vram_pa_request),
+		.o_vram_pa_rw(vram_pa_rw),
+		.o_vram_pa_address(vram_pa_address),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.i_vram_pa_rdata(vram_pa_rdata),
+		.i_vram_pa_ready(vram_pa_ready),
+
+		.o_vram_pb_request(vram_pb_request),
+		.o_vram_pb_rw(vram_pb_rw),
+		.o_vram_pb_address(vram_pb_address),
+		.o_vram_pb_wdata(vram_pb_wdata),
+		.i_vram_pb_rdata(vram_pb_rdata),
+		.i_vram_pb_ready(vram_pb_ready)
 	);
   
-	// Video signal generator
-	wire vga_enable;
-	wire [9:0] vga_pos_x;
-	wire [9:0] vga_pos_y;
-	VGA #(
-		.SYSTEM_FREQUENCY(`FREQUENCY)
-	) vga(
-		.i_clock(clock),
-		.o_hsync(HDMI_TX_HS),
-		.o_vsync(HDMI_TX_VS),
-		.o_data_enable(vga_enable),
-		.o_pos_x(vga_pos_x),
-		.o_pos_y(vga_pos_y),
-		.o_vga_clock(HDMI_TX_CLK)
-	);
-	
-	assign HDMI_TX_DE = vga_enable;
 `endif
 	
 	// ROM
@@ -742,8 +805,8 @@ module SoC(
 	assign bus_rdata =
 		rom_select ? rom_rdata			:
 		ram_select ? ram_rdata			:
-`ifdef SOC_ENABLE_SRAM
-		sram_select ? sram_rdata		:
+`ifdef SOC_ENABLE_VGA		
+		vram_select ? vram_rdata		:
 `endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_rdata		:

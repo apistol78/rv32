@@ -204,7 +204,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*320*200/4),
+		.SIZE(2*320*200),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),
