@@ -9,6 +9,13 @@
 /board/qmtech_cv/output_files
 /board/qmtech_cv/incremental*
 
+/board/qmtech_k7___
+/board/qmtech_k7_git_tst
+/board/qmtech_k7/qmtech_k7
+*.jou
+
+/board/terasic_cv_gx/simulation
+
 /code/Doom/doomgeneric/build
 /code/Rv32T/SoC
 /code/Verify/SoC
@@ -22,3 +29,8 @@
 /quartus/SoC.qws
 
 /schematics/*/*-backups
+
+/*.fst
+/Rv32T.png
+/*.vmem
+/*.vmem-range
