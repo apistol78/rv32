@@ -2,53 +2,39 @@
 `timescale 1ns/1ns
 
 module VMODE_chunky #(
-	PPITCH = 320,
-	FIFO_DEPTH = 256
+	PPITCH = 320
 )(
-	input wire i_clock,
+	input i_clock,
 
 	// CPU
-	input wire i_cpu_request,
-	input wire [31:0] i_cpu_address,
-	input wire [31:0] i_cpu_wdata,
+	input i_cpu_request,
+	input i_cpu_rw,
+	input [31:0] i_cpu_address,
+	input [31:0] i_cpu_wdata,
+	output reg [31:0] o_cpu_rdata,
 	output reg o_cpu_ready,
 
 	// Video
-	input wire i_video_request,
-	input wire [8:0] i_video_pos_x,
-	input wire [8:0] i_video_pos_y,
+	input i_video_request,
+	input [8:0] i_video_pos_x,
+	input [8:0] i_video_pos_y,
 	output reg [31:0] o_video_rdata,
 
 	// Memory
-	output reg o_mem_request,
-	output reg o_mem_rw,
-	output reg [31:0] o_mem_address,
-	output reg [31:0] o_mem_wdata,
-	input wire [31:0] i_mem_rdata,
-	input wire i_mem_ready,
-	
-	// Debug
-	output reg o_fifo_full
+	output reg o_vram_pa_request,
+	output reg o_vram_pa_rw,
+	output reg [31:0] o_vram_pa_address,
+	output reg [31:0] o_vram_pa_wdata,
+	input [31:0] i_vram_pa_rdata,
+	input i_vram_pa_ready,
+
+	output reg o_vram_pb_request,
+	output reg o_vram_pb_rw,
+	output reg [31:0] o_vram_pb_address,
+	output reg [31:0] o_vram_pb_wdata,
+	input [31:0] i_vram_pb_rdata,
+	input i_vram_pb_ready
 );
-
-	wire fifo_empty;
-	wire fifo_full;
-	logic fifo_write = 0;
-	logic [63:0] fifo_wdata;
-	logic fifo_read = 0;
-	wire [63:0] fifo_rdata;
-
-	FIFO64 #(
-		.DEPTH(FIFO_DEPTH)
-	) fifo(
-		.i_clock(i_clock),
-		.o_empty(fifo_empty),
-		.o_full(fifo_full),
-		.i_write(fifo_write),
-		.i_wdata(fifo_wdata),
-		.i_read(fifo_read),
-		.o_rdata(fifo_rdata)
-	);
 
 	logic palette_cpu_request = 0;
 	logic [7:0] palette_cpu_address = 0;
@@ -83,42 +69,49 @@ module VMODE_chunky #(
 	logic [2:0] state = 0;
 	logic [31:0] quad = 0;
 	logic [31:0] next_quad = 0;
-	
+
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 
 	initial begin
 		o_cpu_ready = 1'b0;
 		o_video_rdata = 1'b0;
-		o_mem_request = 1'b0;
-		o_mem_rw = 1'b0;
-		o_mem_address = 32'h0;
-		o_mem_wdata = 32'h0;
-		o_fifo_full = 1'b0;
+
+		o_vram_pa_request = 1'b0;
+		o_vram_pa_rw = 1'b0;
+		o_vram_pa_address = 32'h0;
+		o_vram_pa_wdata = 32'h0;
+
+		o_vram_pb_request = 1'b0;
+		o_vram_pb_rw = 1'b0;
+		o_vram_pb_address = 32'h0;
+		o_vram_pb_wdata = 32'h0;
 	end
 
-	always_ff @(posedge i_clock) begin
-		if (i_cpu_request && !o_cpu_ready) begin
-			if (i_cpu_address < 32'h01000000) begin
-				if (!fifo_full) begin
-					fifo_write <= 1'b1;
-					fifo_wdata <= { i_cpu_address, i_cpu_wdata };
-					o_cpu_ready <= 1'b1;
-				end
-			end
-			else begin
-				palette_cpu_request <= 1'b1;
-				palette_cpu_wdata <= i_cpu_wdata[23:0];
-				palette_cpu_address <= (i_cpu_address - 32'h01000000) >> 2;
-				o_cpu_ready <= 1'b1;
-			end
-		end
-		else begin
-			fifo_write <= 1'b0;
-			palette_cpu_request <= 1'b0;
-			o_cpu_ready <= 1'b0;
-		end
-		o_fifo_full <= fifo_full;
+	//===============================
+	// CPU
+
+	wire cpu_vram_request = i_cpu_request && (i_cpu_address < 32'h01000000);
+	wire cpu_palette_request = i_cpu_request && (i_cpu_address >= 32'h01000000);
+
+	always_comb begin
+		o_vram_pa_request = cpu_vram_request;
+		o_vram_pa_rw = i_cpu_rw;
+		o_vram_pa_address = i_cpu_address;
+		o_vram_pa_wdata = i_cpu_wdata;
+
+		palette_cpu_request = cpu_palette_request;
+		palette_cpu_wdata = i_cpu_wdata[23:0];
+		palette_cpu_address = (i_cpu_address - 32'h01000000) >> 2;
+
+		o_cpu_rdata = i_vram_pa_rdata;
+		o_cpu_ready = 
+			cpu_vram_request ? i_vram_pa_ready :
+			cpu_palette_request ? 1'b1 :
+			1'b0;
 	end
+
+	//===============================
+	// Video
 
 	always_comb begin
 		palette_video_address = 0;
@@ -139,58 +132,31 @@ module VMODE_chunky #(
 	 		quad <= next_quad;
 	 end
 	
-	// Transfer from FIFO to VRAM.
-	// Read VRAM during scan out.
 	always_ff @(posedge i_clock) begin
 	
-		o_mem_request <= 0;
-		o_mem_rw <= 0;
-		o_mem_address <= 0;
-		o_mem_wdata <= 0;
-		
-		fifo_read <= 0;
+		o_vram_pb_request <= 0;
+		o_vram_pb_rw <= 0;
+		o_vram_pb_address <= ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * PPITCH);
+		o_vram_pb_wdata <= 0;
 	
 		case (state)
-			// Wait until video request or until data in FIFO.
 			0: begin
-				if (!i_video_request) begin
-					if (!fifo_empty) begin
-						fifo_read <= 1;
-						state <= 1;
-					end
-				end
-				else begin
-					if (((i_video_pos_x + 2) & 3) == 0) begin
-						o_mem_request <= 1;
-						o_mem_address <= ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * PPITCH);
-						state <= 2;
-					end
+				if (((i_video_pos_x + 2) & 3) == 0) begin
+					o_vram_pb_request <= 1;
+					state <= 1;
 				end
 			end
 
-			// Copy FIFO to VRAM.
 			1: begin
-				o_mem_request <= 1;
-				o_mem_rw <= 1;
-				o_mem_address <= fifo_rdata[63:32];
-				o_mem_wdata <= fifo_rdata[31:0];
-				if (i_mem_ready) begin
-					o_mem_request <= 0;
-					state <= 0;
+				o_vram_pb_request <= 1;
+				if (i_vram_pb_ready) begin
+					o_vram_pb_request <= 0;
+					next_quad <= i_vram_pb_rdata;
+					state <= 2;
 				end
 			end
 
 			2: begin
-				o_mem_request <= 1;
-				o_mem_address <= ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * PPITCH);
-				if (i_mem_ready) begin
-					o_mem_request <= 0;
-					next_quad <= i_mem_rdata;
-					state <= 3;
-				end
-			end
-
-			3: begin
 				if (((i_video_pos_x + 1) & 3) == 3)
 					state <= 0;
 			end

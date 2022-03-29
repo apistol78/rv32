@@ -220,6 +220,7 @@ int main()
 
 	int32_t m = 1;
 
+	printf("Enter loop...\n");
 	for (;;)
 	{
 		static int count = 0;
@@ -267,9 +268,11 @@ int main()
 			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
 		}
 
+
 		video_swap_wait();
 
-		memset(framebuffer, 0, FW * FH);
+		//memset(framebuffer, 0, FW * FH);
+
 		// for (uint32_t i = 0; i < FW * FH; ++i)
 		//  	framebuffer[i] = rand();
 
@@ -287,10 +290,9 @@ int main()
 			);			
 		}
 
-		video_swap();
+		//video_swap();
 
-		// \fixme will clear memory but not dcache...
-		//dma_write(framebuffer, FW * FH, 0);
+		dma_write(framebuffer, FW * FH / 4, 0x00000000);
 
 		head += 0.043f;
 		pitch += 0.067f;

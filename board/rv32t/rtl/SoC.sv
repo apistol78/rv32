@@ -158,7 +158,6 @@ module SoC(
 `define SOC_ENABLE_I2C
 `define SOC_ENABLE_SD
 `define SOC_ENABLE_AUDIO
-//`define SOC_ENABLE_GPU
 
 	// Since we want to share pins with HW
 	// this clock will actually be simulated at 100 MHz.
@@ -167,10 +166,15 @@ module SoC(
   
 `ifdef SOC_ENABLE_VGA
 
-	// Video signal generator
+	assign HDMI_TX_DE = vga_enable;
+	assign HDMI_TX_CLK = vga_clock;
+
+	// Video signal generator.
 	wire vga_enable;
+	wire vga_clock;
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
+
 	VGA #(
 		.SYSTEM_FREQUENCY(`FREQUENCY)
 	) vga(
@@ -180,50 +184,64 @@ module SoC(
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y),
-		.o_vga_clock(HDMI_TX_CLK)
+		.o_vga_clock(vga_clock)
 	);
 	
-	assign HDMI_TX_DE = vga_enable;
-
 	// Video memory.
-	wire video_sram_request;
-	wire video_sram_rw;
-	wire [31:0] video_sram_address;
-	wire [31:0] video_sram_wdata;
-	wire [31:0] video_sram_rdata;
-	wire video_sram_ready;
-	BRAM_latency #(
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(320*200/4),
-		.ADDR_LSH(2),
-		.LATENCY(7)
-	) video_sram(
+		.SIZE(2*320*200/4),
+		.ADDR_LSH(2)
+	) vram(
 		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready)
+
+		.i_pa_request(vram_pa_request),
+		.i_pa_rw(vram_pa_rw),
+		.i_pa_address(vram_pa_address),
+		.i_pa_wdata(vram_pa_wdata),
+		.o_pa_rdata(vram_pa_rdata),
+		.o_pa_ready(vram_pa_ready),
+
+		.i_pb_request(vram_pb_request),
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_address(vram_pb_address),
+		.i_pb_wdata(vram_pb_wdata),
+		.o_pb_rdata(vram_pb_rdata),
+		.o_pb_ready(vram_pb_ready)
 	);
 
 	// Video mode; chunky 8-bit palette.
-	wire vmode_request;
-	wire [31:0] vmode_address;
-	wire [31:0] vmode_wdata;
-	wire vmode_ready;
-	wire vmode_fifo_full;
+	wire vram_select;
+	wire [31:0] vram_address;
+	wire [31:0] vram_rdata;
+	wire vram_ready;	
+
 	VMODE_chunky #(
-		.PPITCH(320),
-		.FIFO_DEPTH(8)
+		.PPITCH(320)
 	) vmode_chunky(
 		.i_clock(clock),
 		
 		// CPU interface.
-		.i_cpu_request(vmode_request),
-		.i_cpu_address(vmode_address),
-		.i_cpu_wdata(vmode_wdata),
-		.o_cpu_ready(vmode_ready),
+		.i_cpu_request(vram_select && bus_request),
+		.i_cpu_rw(bus_rw),
+		.i_cpu_address(vram_address),
+		.i_cpu_wdata(bus_wdata),
+		.o_cpu_rdata(vram_rdata),
+		.o_cpu_ready(vram_ready),
 		
 		// Video signal interface.
 		.i_video_request(vga_enable),
@@ -232,99 +250,20 @@ module SoC(
 		.o_video_rdata(HDMI_TX_D),
 		
 		// Video RAM interface.
-		.o_mem_request(video_sram_request),
-		.o_mem_rw(video_sram_rw),
-		.o_mem_address(video_sram_address),
-		.o_mem_wdata(video_sram_wdata),
-		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready),
-		
-		.o_fifo_full(vmode_fifo_full)
+		.o_vram_pa_request(vram_pa_request),
+		.o_vram_pa_rw(vram_pa_rw),
+		.o_vram_pa_address(vram_pa_address),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.i_vram_pa_rdata(vram_pa_rdata),
+		.i_vram_pa_ready(vram_pa_ready),
+
+		.o_vram_pb_request(vram_pb_request),
+		.o_vram_pb_rw(vram_pb_rw),
+		.o_vram_pb_address(vram_pb_address),
+		.o_vram_pb_wdata(vram_pb_wdata),
+		.i_vram_pb_rdata(vram_pb_rdata),
+		.i_vram_pb_ready(vram_pb_ready)
 	);
-
-`ifdef SOC_ENABLE_GPU
-	// Multiplex access to framebuffer from CPU and GPU.
-	wire vram_select;
-	wire [31:0] vram_address;
-	wire vram_ready;
-	BusAccess #(
-		.REGISTERED(1'b0)
-	) cpu_gpu_vbus_mux(
-		.i_reset(reset),
-		.i_clock(clock),
-		
-		// Output to video framebuffer.
-		.o_bus_rw(),
-		.o_bus_request(vmode_request),
-		.i_bus_ready(vmode_ready),
-		.o_bus_address(vmode_address),
-		.i_bus_rdata(),
-		.o_bus_wdata(vmode_wdata),
-
-		// NC
-		.i_pa_request(1'b0),
-		.o_pa_ready(),
-		.i_pa_address(0),
-		.o_pa_rdata(),
-
-		// CPU port.
-		.i_pb_rw(1'b1),
-		.i_pb_request(vram_select && bus_request),
-		.o_pb_ready(vram_ready),
-		.i_pb_address(vram_address),
-		.o_pb_rdata(),
-		.i_pb_wdata(bus_wdata),
-
-		// GPU port.
-		.i_pc_rw(),
-		.i_pc_request(gpu_fb_request),
-		.o_pc_ready(gpu_fb_ready),
-		.i_pc_address(gpu_fb_address),
-		.o_pc_rdata(),
-		.i_pc_wdata(gpu_fb_wdata)
-	);
-
-	// GPU
-	wire gpu_select;
-	wire [1:0] gpu_address;
-	wire [31:0] gpu_rdata;
-	wire gpu_ready;
-
-	wire gpu_fb_request;
-	wire gpu_fb_ready;
-	wire [31:0] gpu_fb_address;
-	wire [31:0] gpu_fb_wdata;
-
-	GPU gpu(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		// Command interface.
-		.i_request(gpu_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(gpu_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(gpu_rdata),
-		.o_ready(gpu_ready),
-
-		// Framebuffer output.
-		.o_fb_request(gpu_fb_request),
-		.i_fb_ready(gpu_fb_ready),
-		.o_fb_address(gpu_fb_address),
-		.o_fb_wdata(gpu_fb_wdata)
-	);
-`else
-
-	wire vram_select;
-	wire [31:0] vram_address;
-	wire vram_ready;	
-
-	assign vmode_request = vram_select && bus_request;
-	assign vmode_address = vram_address;
-	assign vmode_wdata = bus_wdata;
-	assign vram_ready = vmode_ready;
-
-`endif	// SOC_ENABLE_GPU
 
 `endif	// SOC_ENABLE_VGA
 	
@@ -585,7 +524,7 @@ module SoC(
 		.o_ready(dma_ready),
 
 		// System
-		.i_stall(vmode_fifo_full),
+		.i_stall(1'b0),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),
@@ -799,11 +738,6 @@ module SoC(
 	assign plic_select = bus_address[31:28] == 4'hb;
 	assign plic_address = bus_address[23:0];
 
-`ifdef SOC_ENABLE_GPU
-	assign gpu_select = bus_address[31:28] == 4'hc;
-	assign gpu_address = bus_address[3:2];
-`endif
-
 	//=====================================
 
 	assign bus_rdata =
@@ -811,6 +745,9 @@ module SoC(
 		ram_select ? ram_rdata			:
 `ifdef SOC_ENABLE_SRAM
 		sram_select ? sram_rdata		:
+`endif
+`ifdef SOC_ENABLE_VGA		
+		vram_select ? vram_rdata		:
 `endif
 `ifdef SOC_ENABLE_SDRAM
 		sdram_select ? sdram_rdata		:
@@ -831,9 +768,6 @@ module SoC(
 		dma_select ? dma_rdata			:
 		timer_select ? timer_rdata		:
 		plic_select ? plic_rdata		:
-`ifdef SOC_ENABLE_GPU
-		gpu_select ? gpu_rdata			:
-`endif
 		32'h00000000;
 		
 	assign bus_ready =
@@ -865,9 +799,6 @@ module SoC(
 		dma_ready				|
 		timer_ready				|
 		plic_ready				|
-`ifdef SOC_ENABLE_GPU
-		gpu_ready				|
-`endif
 		1'b0;
 
 	//=====================================
@@ -940,11 +871,7 @@ module SoC(
 			dma_select,
 			timer_select,
 			plic_select,
-`ifdef SOC_ENABLE_GPU
-			gpu_select
-`else
 			1'b0
-`endif
 		};
 	end
 

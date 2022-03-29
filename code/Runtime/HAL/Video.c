@@ -3,6 +3,7 @@
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
 #define VIDEO_DATA_BASE     0x30000000
@@ -54,6 +55,7 @@ static const struct {
 
 static void* primary_target = 0;
 static void* secondary_target = 0;
+static uint32_t need_fence = 0;
 
 static void reg_update_bits(int reg, int mask, int data)
 {
@@ -109,17 +111,32 @@ static void adv7513_interrupt_handler()
 
 int32_t video_init()
 {
-	if (adv7513_chip_identify())
+	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32T)
 	{
-		adv7513_kick_up();
-		adv7513_power_up();
-		interrupt_set_handler(1, adv7513_interrupt_handler);
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		need_fence = 0;
 	}
+	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
+	{
+		if (adv7513_chip_identify())
+		{
+			adv7513_kick_up();
+			adv7513_power_up();
+			interrupt_set_handler(1, adv7513_interrupt_handler);
+		}
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		need_fence = 0;
+	}
+	else
+	{	
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(320 * 200)) == 0)
+			return 1;
 
-	primary_target = (uint32_t*)VIDEO_DATA_BASE;
-
-	if ((secondary_target = malloc(320 * 200)) == 0)
-		return 1;
+		need_fence = 1;
+	}
 
 	return 0;
 }
@@ -152,8 +169,12 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	// Ensure data is written from dcache to sdram before DMA.
-	__asm__ volatile ("fence");
+	if (need_fence)
+	{
+		// Ensure data is written from DCACHE to VRAM before DMA.
+		__asm__ volatile ("fence");
+	}
+
 	dma_copy(
 		primary_target,
 		secondary_target,
