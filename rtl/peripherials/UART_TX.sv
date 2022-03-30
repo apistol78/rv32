@@ -12,7 +12,7 @@ module UART_TX #(
 
 	output logic UART_TX
 );
-	parameter MAX_PRESCALE_VALUE = (PRESCALE << 3);
+	localparam MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
 	logic [1:0] state = 0;
 	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;

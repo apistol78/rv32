@@ -82,7 +82,7 @@ ncvlog -work worklib -messages -sv ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRA
 ncvlog -work worklib -messages -sv ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/ip_top/*.v >> ies_sim.log
 ncvlog -work worklib -messages -sv ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/phy/*.v >> ies_sim.log
 ncvlog -work worklib -messages -sv ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/ui/*.v >> ies_sim.log
-ncvlog -sv -work worklib -messages ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/axi/*.v >> ies_sim.log 
+
 
 
 ncvlog -sv -work worklib -messages example_top.v >> ies_sim.log

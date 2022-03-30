@@ -14,9 +14,8 @@ module UART_RX #(
 	
     input UART_RX
 );
-	parameter MAX_PRESCALE_VALUE = (PRESCALE << 3);
+	localparam MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
-	logic frame_error = 0;
 	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
 	logic [7:0] data = 0;
 	logic [3:0] bidx = 0;
@@ -88,8 +87,6 @@ module UART_RX #(
 	
 	// Receive and put into FIFO.
 	always_ff @(posedge i_clock) begin
-		frame_error <= 0;
-
 		rx_fifo_write <= 0;
 		rx <= UART_RX;
 	
@@ -122,10 +119,7 @@ module UART_RX #(
 					// Stop bit found, save data into fifo.
 					rx_fifo_write <= 1;
 				end
-				else begin
-					// Stop bit expected.
-					frame_error <= 1;
-				end
+				// Else stop bit expected.
 			end
 		end
 		else begin

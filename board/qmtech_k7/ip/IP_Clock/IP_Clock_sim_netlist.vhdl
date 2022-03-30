@@ -1,7 +1,7 @@
 -- Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2021.2 (lin64) Build 3367213 Tue Oct 19 02:47:39 MDT 2021
--- Date        : Sun Mar 27 14:42:27 2022
+-- Date        : Wed Mar 30 20:29:16 2022
 -- Host        : pn-conan-ws running 64-bit Pop!_OS 21.10
 -- Command     : write_vhdl -force -mode funcsim
 --               /home/apistol/private/rv32/board/qmtech_k7/ip/IP_Clock/IP_Clock_sim_netlist.vhdl
@@ -17,6 +17,7 @@ use UNISIM.VCOMPONENTS.ALL;
 entity IP_Clock_clk_wiz is
   port (
     clk_out1 : out STD_LOGIC;
+    clk_out2 : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -26,13 +27,13 @@ end IP_Clock_clk_wiz;
 architecture STRUCTURE of IP_Clock_clk_wiz is
   signal clk_in1_IP_Clock : STD_LOGIC;
   signal clk_out1_IP_Clock : STD_LOGIC;
+  signal clk_out2_IP_Clock : STD_LOGIC;
   signal clkfbout_IP_Clock : STD_LOGIC;
   signal clkfbout_buf_IP_Clock : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT0B_UNCONNECTED : STD_LOGIC;
-  signal NLW_mmcm_adv_inst_CLKOUT1_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT2_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED : STD_LOGIC;
@@ -54,6 +55,7 @@ architecture STRUCTURE of IP_Clock_clk_wiz is
   attribute IFD_DELAY_VALUE : string;
   attribute IFD_DELAY_VALUE of clkin1_ibufg : label is "AUTO";
   attribute BOX_TYPE of clkout1_buf : label is "PRIMITIVE";
+  attribute BOX_TYPE of clkout2_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of mmcm_adv_inst : label is "PRIMITIVE";
 begin
 clkf_buf: unisim.vcomponents.BUFG
@@ -74,6 +76,11 @@ clkout1_buf: unisim.vcomponents.BUFG
       I => clk_out1_IP_Clock,
       O => clk_out1
     );
+clkout2_buf: unisim.vcomponents.BUFG
+     port map (
+      I => clk_out2_IP_Clock,
+      O => clk_out2
+    );
 mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
     generic map(
       BANDWIDTH => "OPTIMIZED",
@@ -86,7 +93,7 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKOUT0_DUTY_CYCLE => 0.500000,
       CLKOUT0_PHASE => 0.000000,
       CLKOUT0_USE_FINE_PS => false,
-      CLKOUT1_DIVIDE => 1,
+      CLKOUT1_DIVIDE => 5,
       CLKOUT1_DUTY_CYCLE => 0.500000,
       CLKOUT1_PHASE => 0.000000,
       CLKOUT1_USE_FINE_PS => false,
@@ -136,7 +143,7 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKINSTOPPED => NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED,
       CLKOUT0 => clk_out1_IP_Clock,
       CLKOUT0B => NLW_mmcm_adv_inst_CLKOUT0B_UNCONNECTED,
-      CLKOUT1 => NLW_mmcm_adv_inst_CLKOUT1_UNCONNECTED,
+      CLKOUT1 => clk_out2_IP_Clock,
       CLKOUT1B => NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED,
       CLKOUT2 => NLW_mmcm_adv_inst_CLKOUT2_UNCONNECTED,
       CLKOUT2B => NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED,
@@ -168,6 +175,7 @@ use UNISIM.VCOMPONENTS.ALL;
 entity IP_Clock is
   port (
     clk_out1 : out STD_LOGIC;
+    clk_out2 : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -182,6 +190,7 @@ inst: entity work.IP_Clock_clk_wiz
      port map (
       clk_in1 => clk_in1,
       clk_out1 => clk_out1,
+      clk_out2 => clk_out2,
       locked => locked,
       reset => reset
     );

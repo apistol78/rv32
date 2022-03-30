@@ -27,7 +27,7 @@
 
   <ReferenceClock>No Buffer</ReferenceClock>
 
-  <SysResetPolarity>ACTIVE LOW</SysResetPolarity>
+  <SysResetPolarity>ACTIVE HIGH</SysResetPolarity>
 
   <BankSelectionFlag>FALSE</BankSelectionFlag>
 
@@ -42,7 +42,7 @@
     <TimePeriod>2500</TimePeriod>
     <VccAuxIO>1.8V</VccAuxIO>
     <PHYRatio>4:1</PHYRatio>
-    <InputClkFreq>50</InputClkFreq>
+    <InputClkFreq>100</InputClkFreq>
     <UIExtraClocks>0</UIExtraClocks>
     <MMCM_VCO>800</MMCM_VCO>
     <MMCMClkOut0> 1.000</MMCMClkOut0>
@@ -113,9 +113,9 @@
       <Pin IN_TERM="" IOSTANDARD="SSTL15" PADName="AF4" SLEW="FAST" VCCAUX_IO="NORMAL" name="ddr3_we_n"/>
     </PinSelection>
     <System_Control>
-      <Pin Bank="12" PADName="AB26" name="sys_rst"/>
-      <Pin Bank="16" PADName="B14" name="init_calib_complete"/>
-      <Pin Bank="16" PADName="C14" name="tg_compare_error"/>
+      <Pin Bank="Select Bank" PADName="No connect" name="sys_rst"/>
+      <Pin Bank="Select Bank" PADName="No connect" name="init_calib_complete"/>
+      <Pin Bank="Select Bank" PADName="No connect" name="tg_compare_error"/>
     </System_Control>
     <TimingParameters>
       <Parameters tcke="5" tfaw="40" tras="35" trcd="13.75" trefi="7.8" trfc="160" trp="13.75" trrd="7.5" trtp="7.5" twtr="7.5"/>
@@ -140,14 +140,7 @@
     <mr2AutoSelfRefresh name="Auto Self Refresh">Enabled</mr2AutoSelfRefresh>
     <mr2SelfRefreshTempRange name="High Temparature Self Refresh Rate">Normal</mr2SelfRefreshTempRange>
     <mr2RTTWR name="RTT_WR - Dynamic On Die Termination (ODT)">Dynamic ODT off</mr2RTTWR>
-    <PortInterface>AXI</PortInterface>
-    <AXIParameters>
-      <C0_C_RD_WR_ARB_ALGORITHM>RD_PRI_REG</C0_C_RD_WR_ARB_ALGORITHM>
-      <C0_S_AXI_ADDR_WIDTH>28</C0_S_AXI_ADDR_WIDTH>
-      <C0_S_AXI_DATA_WIDTH>32</C0_S_AXI_DATA_WIDTH>
-      <C0_S_AXI_ID_WIDTH>4</C0_S_AXI_ID_WIDTH>
-      <C0_S_AXI_SUPPORTS_NARROW_BURST>0</C0_S_AXI_SUPPORTS_NARROW_BURST>
-    </AXIParameters>
+    <PortInterface>NATIVE</PortInterface>
   </Controller>
 
 

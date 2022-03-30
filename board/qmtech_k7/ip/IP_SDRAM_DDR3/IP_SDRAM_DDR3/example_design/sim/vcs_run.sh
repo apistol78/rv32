@@ -83,7 +83,7 @@ vlogan -sverilog ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DD
 vlogan -sverilog ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/phy/*.v >> vcs_sim.log
 vlogan -sverilog ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/ui/*.v >> vcs_sim.log
 
-vlogan -sverilog ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/axi/*.v >> vcs_sim.log
+
 
 
 vlogan -sverilog example_top.v >> vcs_sim.log

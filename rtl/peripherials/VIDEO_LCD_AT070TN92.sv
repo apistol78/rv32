@@ -23,15 +23,15 @@ module VIDEO_LCD_AT070NTN92 #(
 	output logic [10:0] o_pos_y
 );
 	// Configuration
-	parameter cfg_prescale = SYSTEM_FREQUENCY / VGA_FREQUENCY;
-	parameter cfg_hline = HLINE;
-	parameter cfg_hback = HBACK;
-	parameter cfg_hfront = HFRONT;
-	parameter cfg_hpulse = HPULSE;
-	parameter cfg_vline = VLINE;
-	parameter cfg_vback = VBACK;
-	parameter cfg_vfront = VFRONT;
-	parameter cfg_vpulse = VPULSE;
+	localparam cfg_prescale = SYSTEM_FREQUENCY / VGA_FREQUENCY;
+	localparam cfg_hline = HLINE;
+	localparam cfg_hback = HBACK;
+	localparam cfg_hfront = HFRONT;
+	localparam cfg_hpulse = HPULSE;
+	localparam cfg_vline = VLINE;
+	localparam cfg_vback = VBACK;
+	localparam cfg_vfront = VFRONT;
+	localparam cfg_vpulse = VPULSE;
 
 	logic [7:0] prescale = 0;
 	logic [10:0] vga_h = 0;

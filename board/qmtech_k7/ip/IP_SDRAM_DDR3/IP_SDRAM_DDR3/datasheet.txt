@@ -28,11 +28,11 @@ Extended FPGA Options:
 /*******************************************************/
 Controller Options :
    Memory                        : DDR3_SDRAM
-   Interface                     : AXI
+   Interface                     : NATIVE
    Design Clock Frequency        : 2500 ps (  0.00 MHz)
    Phy to Controller Clock Ratio : 4:1
-   Input Clock Period            : 20000 ps
-   CLKFBOUT_MULT (PLL)           : 16
+   Input Clock Period            : 10000 ps
+   CLKFBOUT_MULT (PLL)           : 8
    DIVCLK_DIVIDE (PLL)           : 1
    VCC_AUX IO                    : 1.8V
    Memory Type                   : Components
@@ -44,7 +44,7 @@ Controller Options :
    ORDERING                      : Normal
 
 AXI Parameters :
-   Data Width                    : 32
+   Data Width                    : 128
    Arbitration Scheme            : RD_PRI_REG
    Narrow Burst Support          : 0
    ID Width                      : 4
@@ -69,11 +69,11 @@ Bank Selections:
 
 System_Control: 
 	SignalName: sys_rst
-		PadLocation: AB26  Bank: 12
+		PadLocation: No connect  Bank: Select Bank
 	SignalName: init_calib_complete
-		PadLocation: B14  Bank: 16
+		PadLocation: No connect  Bank: Select Bank
 	SignalName: tg_compare_error
-		PadLocation: C14  Bank: 16
+		PadLocation: No connect  Bank: Select Bank
 
 
 

@@ -52,7 +52,7 @@
     <MMCMClkOut4>1</MMCMClkOut4>
     <DataWidth>16</DataWidth>
     <DeepMemory>1</DeepMemory>
-    <DataMask>0</DataMask>
+    <DataMask>1</DataMask>
     <ECC>Disabled</ECC>
     <Ordering>Normal</Ordering>
     <BankMachineCnt>4</BankMachineCnt>

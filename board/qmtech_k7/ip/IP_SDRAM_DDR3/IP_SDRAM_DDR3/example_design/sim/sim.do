@@ -84,7 +84,7 @@ vlog  -incr ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/us
 vlog  -incr ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/ip_top/*.v
 vlog  -incr ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/phy/*.v
 vlog  -incr ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/ui/*.v
-vlog -incr ../IP_SDRAM_DDR3_ex.srcs/sources_1/ip/IP_SDRAM_DDR3/IP_SDRAM_DDR3/user_design/rtl/axi/*
+
 
 
 vlog  example_top.v
