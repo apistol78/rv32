@@ -123,7 +123,7 @@ module SDRAM_interface(
 					// Read
 					if (app_rdy) begin
 						app_en <= 1;
-						app_addr <= i_address[29:2];
+						app_addr <= { i_address[25:2], 1'b0, 3'b000 };
 						app_cmd <= CMD_READ;
 						state <= WAIT_READ;
 					end
@@ -133,7 +133,7 @@ module SDRAM_interface(
 					if (app_rdy && app_wdf_rdy) begin
 						app_en <= 1;
 						app_wdf_wren <= 1;
-						app_addr <= i_address[29:2];
+						app_addr <= { i_address[25:2], 1'b0, 3'b000 };
 						app_wdf_mask <= 16'hfff0;	// Only write 32 bit.
 						app_cmd <= CMD_WRITE;
 						app_wdf_data <= { 96'b0, i_wdata };
