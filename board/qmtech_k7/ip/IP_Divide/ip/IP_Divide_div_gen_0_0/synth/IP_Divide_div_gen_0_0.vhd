@@ -60,8 +60,10 @@ ENTITY IP_Divide_div_gen_0_0 IS
   PORT (
     aclk : IN STD_LOGIC;
     s_axis_divisor_tvalid : IN STD_LOGIC;
+    s_axis_divisor_tready : OUT STD_LOGIC;
     s_axis_divisor_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
     s_axis_dividend_tvalid : IN STD_LOGIC;
+    s_axis_dividend_tready : OUT STD_LOGIC;
     s_axis_dividend_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
     m_axis_dout_tvalid : OUT STD_LOGIC;
     m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
@@ -124,7 +126,7 @@ ARCHITECTURE IP_Divide_div_gen_0_0_arch OF IP_Divide_div_gen_0_0 IS
   ATTRIBUTE CHECK_LICENSE_TYPE : STRING;
   ATTRIBUTE CHECK_LICENSE_TYPE OF IP_Divide_div_gen_0_0_arch : ARCHITECTURE IS "IP_Divide_div_gen_0_0,div_gen_v5_1_18,{}";
   ATTRIBUTE CORE_GENERATION_INFO : STRING;
-  ATTRIBUTE CORE_GENERATION_INFO OF IP_Divide_div_gen_0_0_arch: ARCHITECTURE IS "IP_Divide_div_gen_0_0,div_gen_v5_1_18,{x_ipProduct=Vivado 2021.2,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=div_gen,x_ipVersion=5.1,x_ipCoreRevision=18,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_XDEVICEFAMILY=kintex7,C_HAS_ARESETN=0,C_HAS_ACLKEN=0,C_LATENCY=36,ALGORITHM_TYPE=1,DIVISOR_WIDTH=32,DIVIDEND_WIDTH=32,SIGNED_B=1,DIVCLK_SEL=1,FRACTIONAL_B=0,FRACTIONAL_WIDTH=32,C_HAS_DIV_BY_ZERO=0,C_THROTTLE_SCHEME=3,C_TLAST_RESOLUTION=0,C_HAS_S_AXIS_DIVISOR_TUSER=0,C_HAS_S_AXIS_DIVISOR_TLAST=0,C_S_" & 
+  ATTRIBUTE CORE_GENERATION_INFO OF IP_Divide_div_gen_0_0_arch: ARCHITECTURE IS "IP_Divide_div_gen_0_0,div_gen_v5_1_18,{x_ipProduct=Vivado 2021.2,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=div_gen,x_ipVersion=5.1,x_ipCoreRevision=18,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_XDEVICEFAMILY=kintex7,C_HAS_ARESETN=0,C_HAS_ACLKEN=0,C_LATENCY=15,ALGORITHM_TYPE=1,DIVISOR_WIDTH=32,DIVIDEND_WIDTH=32,SIGNED_B=1,DIVCLK_SEL=1,FRACTIONAL_B=0,FRACTIONAL_WIDTH=32,C_HAS_DIV_BY_ZERO=0,C_THROTTLE_SCHEME=4,C_TLAST_RESOLUTION=0,C_HAS_S_AXIS_DIVISOR_TUSER=0,C_HAS_S_AXIS_DIVISOR_TLAST=0,C_S_" & 
 "AXIS_DIVISOR_TDATA_WIDTH=32,C_S_AXIS_DIVISOR_TUSER_WIDTH=1,C_HAS_S_AXIS_DIVIDEND_TUSER=0,C_HAS_S_AXIS_DIVIDEND_TLAST=0,C_S_AXIS_DIVIDEND_TDATA_WIDTH=32,C_S_AXIS_DIVIDEND_TUSER_WIDTH=1,C_M_AXIS_DOUT_TDATA_WIDTH=64,C_M_AXIS_DOUT_TUSER_WIDTH=1}";
   ATTRIBUTE X_INTERFACE_INFO : STRING;
   ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
@@ -142,10 +144,12 @@ ARCHITECTURE IP_Divide_div_gen_0_0_arch OF IP_Divide_div_gen_0_0 IS
 "_type generated dependency dividend_offset format long minimum {} maximum {}} value 0} integer {signed {attribs {resolve_type immediate dependency {} format bool minimum {} maximum {}} value false}}}}}}} TUSER_WIDTH 0}, INSERT_VIP 0";
   ATTRIBUTE X_INTERFACE_INFO OF m_axis_dout_tvalid: SIGNAL IS "xilinx.com:interface:axis:1.0 M_AXIS_DOUT TVALID";
   ATTRIBUTE X_INTERFACE_INFO OF s_axis_dividend_tdata: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVIDEND TDATA";
-  ATTRIBUTE X_INTERFACE_PARAMETER OF s_axis_dividend_tvalid: SIGNAL IS "XIL_INTERFACENAME S_AXIS_DIVIDEND, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 0, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 1000000, PHASE 0.0, LAYERED_METADATA undef, INSERT_VIP 0";
+  ATTRIBUTE X_INTERFACE_INFO OF s_axis_dividend_tready: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVIDEND TREADY";
+  ATTRIBUTE X_INTERFACE_PARAMETER OF s_axis_dividend_tvalid: SIGNAL IS "XIL_INTERFACENAME S_AXIS_DIVIDEND, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 1000000, PHASE 0.0, LAYERED_METADATA undef, INSERT_VIP 0";
   ATTRIBUTE X_INTERFACE_INFO OF s_axis_dividend_tvalid: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVIDEND TVALID";
   ATTRIBUTE X_INTERFACE_INFO OF s_axis_divisor_tdata: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVISOR TDATA";
-  ATTRIBUTE X_INTERFACE_PARAMETER OF s_axis_divisor_tvalid: SIGNAL IS "XIL_INTERFACENAME S_AXIS_DIVISOR, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 0, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 1000000, PHASE 0.0, LAYERED_METADATA undef, INSERT_VIP 0";
+  ATTRIBUTE X_INTERFACE_INFO OF s_axis_divisor_tready: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVISOR TREADY";
+  ATTRIBUTE X_INTERFACE_PARAMETER OF s_axis_divisor_tvalid: SIGNAL IS "XIL_INTERFACENAME S_AXIS_DIVISOR, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 1000000, PHASE 0.0, LAYERED_METADATA undef, INSERT_VIP 0";
   ATTRIBUTE X_INTERFACE_INFO OF s_axis_divisor_tvalid: SIGNAL IS "xilinx.com:interface:axis:1.0 S_AXIS_DIVISOR TVALID";
   ATTRIBUTE X_INTERFACE_PARAMETER OF aclk: SIGNAL IS "XIL_INTERFACENAME aclk_intf, ASSOCIATED_BUSIF S_AXIS_DIVIDEND:S_AXIS_DIVISOR:M_AXIS_DOUT, ASSOCIATED_RESET aresetn, ASSOCIATED_CLKEN aclken, FREQ_HZ 1000000, FREQ_TOLERANCE_HZ 0, PHASE 0.0, INSERT_VIP 0";
   ATTRIBUTE X_INTERFACE_INFO OF aclk: SIGNAL IS "xilinx.com:signal:clock:1.0 aclk_intf CLK";
@@ -155,7 +159,7 @@ BEGIN
       C_XDEVICEFAMILY => "kintex7",
       C_HAS_ARESETN => 0,
       C_HAS_ACLKEN => 0,
-      C_LATENCY => 36,
+      C_LATENCY => 15,
       ALGORITHM_TYPE => 1,
       DIVISOR_WIDTH => 32,
       DIVIDEND_WIDTH => 32,
@@ -164,7 +168,7 @@ BEGIN
       FRACTIONAL_B => 0,
       FRACTIONAL_WIDTH => 32,
       C_HAS_DIV_BY_ZERO => 0,
-      C_THROTTLE_SCHEME => 3,
+      C_THROTTLE_SCHEME => 4,
       C_TLAST_RESOLUTION => 0,
       C_HAS_S_AXIS_DIVISOR_TUSER => 0,
       C_HAS_S_AXIS_DIVISOR_TLAST => 0,
@@ -182,10 +186,12 @@ BEGIN
       aclken => '1',
       aresetn => '1',
       s_axis_divisor_tvalid => s_axis_divisor_tvalid,
+      s_axis_divisor_tready => s_axis_divisor_tready,
       s_axis_divisor_tuser => STD_LOGIC_VECTOR(TO_UNSIGNED(0, 1)),
       s_axis_divisor_tlast => '0',
       s_axis_divisor_tdata => s_axis_divisor_tdata,
       s_axis_dividend_tvalid => s_axis_dividend_tvalid,
+      s_axis_dividend_tready => s_axis_dividend_tready,
       s_axis_dividend_tuser => STD_LOGIC_VECTOR(TO_UNSIGNED(0, 1)),
       s_axis_dividend_tlast => '0',
       s_axis_dividend_tdata => s_axis_dividend_tdata,

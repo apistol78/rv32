@@ -21,7 +21,39 @@ module BRAM_clear #(
 	output reg [WIDTH - 1:0] o_rdata,
 	output reg o_ready
 );
+    reg [31:0] clear = 0;
+    
+    assign o_initialized = clear >= SIZE;
 
+	always_ff @(posedge i_clock) begin
+		if (i_reset) begin
+			clear <= 0;
+		end
+		else if (clear < SIZE) begin
+			clear <= clear + 1;
+		end
+	end
+	
+	logic ready;
+	
+    BRAM #(
+        .WIDTH(WIDTH),
+        .SIZE(SIZE),
+        .ADDR_LSH(ADDR_LSH)
+    ) bram(
+        .i_clock(i_clock),
+        .i_request(o_initialized ? i_request : 1'b1),
+        .i_rw(o_initialized ? i_rw : 1'b1),
+        .i_address(o_initialized ? i_address : clear),
+        .i_wdata(o_initialized ? i_wdata : CLEAR_VALUE),
+        .o_rdata(o_rdata),
+        .o_ready(ready)
+    );
+    
+    assign o_ready = o_initialized ? ready : 1'b0;
+    
+/*
+    (* ram_style = "block" *)
 	reg [WIDTH - 1:0] data [0:SIZE - 1];
 	reg [31:0] clear;
 
@@ -67,5 +99,5 @@ module BRAM_clear #(
 
 	always_ff @(posedge i_clock)
 		o_ready <= i_request;
-
+*/
 endmodule

@@ -62,10 +62,10 @@
             "value": "32"
           },
           "latency": {
-            "value": "35"
+            "value": "15"
           },
           "latency_configuration": {
-            "value": "Automatic"
+            "value": "Manual"
           },
           "operand_sign": {
             "value": "Unsigned"

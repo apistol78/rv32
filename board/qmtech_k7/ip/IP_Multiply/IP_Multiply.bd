@@ -45,8 +45,11 @@
         "xci_path": "ip/IP_Multiply_mult_gen_0_0/IP_Multiply_mult_gen_0_0.xci",
         "inst_hier_path": "mult_gen_0",
         "parameters": {
+          "Multiplier_Construction": {
+            "value": "Use_Mults"
+          },
           "PipeStages": {
-            "value": "5"
+            "value": "3"
           },
           "PortAType": {
             "value": "Signed"

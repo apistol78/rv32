@@ -129,6 +129,12 @@ int32_t video_init()
 		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
 		need_fence = 0;
 	}
+	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
+	{
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		need_fence = 0;
+	}
 	else
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;

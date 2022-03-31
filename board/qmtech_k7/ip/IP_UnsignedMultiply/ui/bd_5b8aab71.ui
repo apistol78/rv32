@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-658,-553",
+   "Default View_TopLeft":"-674,-452",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
@@ -10,12 +10,12 @@ preplace portBus dataa -pg 1 -lvl 0 -x -30 -y -250 -defaultsOSRD
 preplace portBus datab -pg 1 -lvl 0 -x -30 -y -230 -defaultsOSRD
 preplace portBus result -pg 1 -lvl 2 -x 230 -y -270 -defaultsOSRD
 preplace inst mult_gen_0 -pg 1 -lvl 1 -x 110 -y -210 -defaultsOSRD
-preplace netloc clock_1 1 0 1 10 -270n
 preplace netloc dataa_1 1 0 1 0 -250n
 preplace netloc datab_1 1 0 1 -10 -230n
 preplace netloc mult_gen_0_P 1 1 1 210 -270n
+preplace netloc clock_1 1 0 1 10 -270n
 levelinfo -pg 1 -30 110 230
 pagesize -pg 1 -db -bbox -sgen -170 -290 370 160
 "
 }
-
+0

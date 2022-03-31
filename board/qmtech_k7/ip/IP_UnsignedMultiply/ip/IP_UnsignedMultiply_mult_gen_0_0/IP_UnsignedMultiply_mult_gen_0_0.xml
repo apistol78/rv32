@@ -247,7 +247,7 @@
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:782f23a5</spirit:value>
+            <spirit:value>9:f32a734c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -261,11 +261,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:23:30 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 16:41:59 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:782f23a5</spirit:value>
+            <spirit:value>9:f32a734c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -281,11 +281,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:23:30 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 16:41:59 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:782f23a5</spirit:value>
+            <spirit:value>9:f32a734c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -314,7 +314,7 @@
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:19551263</spirit:value>
+            <spirit:value>9:17c0c299</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -330,11 +330,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:23:30 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 16:41:59 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:19551263</spirit:value>
+            <spirit:value>9:17c0c299</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -348,11 +348,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:24:02 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 16:42:51 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:782f23a5</spirit:value>
+            <spirit:value>9:f32a734c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -522,7 +522,7 @@
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_LATENCY</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">5</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">3</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_A_WIDTH</spirit:name>
@@ -550,7 +550,7 @@
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_MULT_TYPE</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_MULT_TYPE">0</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_MULT_TYPE">1</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_CE_OVERRIDES_SCLR</spirit:name>
@@ -916,7 +916,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Multiplier_Construction</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Multiplier_Construction" spirit:choiceRef="choice_list_a8a38fa5" spirit:order="10">Use_LUTs</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Multiplier_Construction" spirit:choiceRef="choice_list_a8a38fa5" spirit:order="10">Use_Mults</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -993,7 +993,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>PipeStages</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.PipeStages" spirit:choiceRef="choice_list_ae2447ac" spirit:order="17">5</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.PipeStages" spirit:choiceRef="choice_list_ae2447ac" spirit:order="17">3</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -1063,6 +1063,7 @@
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK_INTF.FREQ_TOLERANCE_HZ" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK_INTF.PHASE" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.P_INTF.LAYERED_METADATA" xilinx:valueSource="propagated" xilinx:valuePermission="bd"/>
+        <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Multiplier_Construction" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.OutputWidthHigh" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.PipeStages" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.PortAType" xilinx:valueSource="user" xilinx:valuePermission="bd_and_user"/>

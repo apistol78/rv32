@@ -4,12 +4,12 @@
 
 module SoC(
     input sys_clk,
-    input sys_rst,
+    input sys_rst,	// SW1, pulled high
 
     output led_1,
     output led_2,
     output led_3,
-    
+
     input uart_rx,
     output uart_tx,
     
@@ -27,7 +27,6 @@ module SoC(
 	output [0:0] ddr3_cke,
 	output [1:0] ddr3_dm,
 	output [0:0] ddr3_odt
-
 );
 
     wire clock;
@@ -44,13 +43,13 @@ module SoC(
 	always@(posedge clock)
 		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
 
-	reg[4:0] sample = 0;
+	reg [4:0] sample = 0;
 	always @(posedge clock)
 	begin
 		if (cont == 32'd4_000_000)
-			sample[4:0] = { sample[3:0], sys_rst };
+			sample[4:0] <= { sample[3:0], ~sys_rst };
 		else 
-			sample[4:0] = sample[4:0];
+			sample[4:0] <= sample[4:0];
 	end
 
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
@@ -450,8 +449,8 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
-		.ICACHE_SIZE(10),
-		.DCACHE_SIZE(8)
+		.ICACHE_SIZE(14),
+		.DCACHE_SIZE(14)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),

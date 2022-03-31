@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Sun Mar 27 13:39:10 2022" VIVADOVERSION="2021.2">
+<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Thu Mar 31 17:33:53 2022" VIVADOVERSION="2021.2">
 
   <SYSTEMINFO ARCH="kintex7" DEVICE="7k325t" NAME="IP_UnsignedDivide" PACKAGE="ffg676" SPEEDGRADE="-1"/>
 
@@ -42,7 +42,7 @@
         <PARAMETER NAME="C_XDEVICEFAMILY" VALUE="kintex7"/>
         <PARAMETER NAME="C_HAS_ARESETN" VALUE="0"/>
         <PARAMETER NAME="C_HAS_ACLKEN" VALUE="0"/>
-        <PARAMETER NAME="C_LATENCY" VALUE="35"/>
+        <PARAMETER NAME="C_LATENCY" VALUE="15"/>
         <PARAMETER NAME="ALGORITHM_TYPE" VALUE="1"/>
         <PARAMETER NAME="DIVISOR_WIDTH" VALUE="32"/>
         <PARAMETER NAME="DIVIDEND_WIDTH" VALUE="32"/>
@@ -82,8 +82,8 @@
         <PARAMETER NAME="OptimizeGoal" VALUE="Performance"/>
         <PARAMETER NAME="OutTready" VALUE="false"/>
         <PARAMETER NAME="OutTLASTBehv" VALUE="Null"/>
-        <PARAMETER NAME="latency_configuration" VALUE="Automatic"/>
-        <PARAMETER NAME="latency" VALUE="35"/>
+        <PARAMETER NAME="latency_configuration" VALUE="Manual"/>
+        <PARAMETER NAME="latency" VALUE="15"/>
         <PARAMETER NAME="ACLKEN" VALUE="false"/>
         <PARAMETER NAME="ARESETN" VALUE="false"/>
         <PARAMETER NAME="EDK_IPTYPE" VALUE="PERIPHERAL"/>

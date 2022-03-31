@@ -701,7 +701,7 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:d596f253</spirit:value>
+            <spirit:value>9:4205ce7f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -715,11 +715,11 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:39:10 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:53 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:d596f253</spirit:value>
+            <spirit:value>9:4205ce7f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -735,11 +735,11 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:39:10 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:53 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:d596f253</spirit:value>
+            <spirit:value>9:4205ce7f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -789,7 +789,7 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:67676a9a</spirit:value>
+            <spirit:value>9:c2eee5de</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -805,11 +805,11 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:39:10 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:53 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:67676a9a</spirit:value>
+            <spirit:value>9:c2eee5de</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -824,11 +824,11 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:39:10 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:53 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:d596f253</spirit:value>
+            <spirit:value>9:4205ce7f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -841,12 +841,8 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         </spirit:fileSetRef>
         <spirit:parameters>
           <spirit:parameter>
-            <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:39:44 UTC 2022</spirit:value>
-          </spirit:parameter>
-          <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:d596f253</spirit:value>
+            <spirit:value>9:4205ce7f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1264,7 +1260,7 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_LATENCY</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">35</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">15</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>ALGORITHM_TYPE</spirit:name>
@@ -1874,11 +1870,11 @@ ue false}}}}}}} TUSER_WIDTH 0}</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>latency_configuration</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.latency_configuration" spirit:choiceRef="choice_list_93ab811d" spirit:order="20">Automatic</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.latency_configuration" spirit:choiceRef="choice_list_93ab811d" spirit:order="20">Manual</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>latency</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.latency" spirit:order="21" spirit:minimum="35" spirit:maximum="35" spirit:rangeType="long">35</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.latency" spirit:order="21" spirit:minimum="1" spirit:maximum="35" spirit:rangeType="long">15</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>ACLKEN</spirit:name>

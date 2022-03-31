@@ -24,7 +24,7 @@ module BRAM_dual #(
 	output reg [WIDTH - 1:0] o_pb_rdata,
 	output reg o_pb_ready
 );
-
+    (* ram_style = "block" *)
 	logic [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial begin

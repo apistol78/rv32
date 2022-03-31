@@ -46,6 +46,9 @@
         "xci_path": "ip/IP_Divide_div_gen_0_0/IP_Divide_div_gen_0_0.xci",
         "inst_hier_path": "div_gen_0",
         "parameters": {
+          "FlowControl": {
+            "value": "Blocking"
+          },
           "dividend_and_quotient_width": {
             "value": "32"
           },
@@ -56,7 +59,10 @@
             "value": "32"
           },
           "latency": {
-            "value": "36"
+            "value": "15"
+          },
+          "latency_configuration": {
+            "value": "Manual"
           },
           "operand_sign": {
             "value": "Signed"

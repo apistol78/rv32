@@ -14,7 +14,7 @@ module BRAM #(
 	output reg [WIDTH - 1:0] o_rdata,
 	output reg o_ready
 );
-
+    (* ram_style = "block" *)
 	reg [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial o_ready = 0;

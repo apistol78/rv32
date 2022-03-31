@@ -105,7 +105,7 @@ ARCHITECTURE IP_Multiply_mult_gen_0_0_arch OF IP_Multiply_mult_gen_0_0 IS
   ATTRIBUTE CHECK_LICENSE_TYPE : STRING;
   ATTRIBUTE CHECK_LICENSE_TYPE OF IP_Multiply_mult_gen_0_0_arch : ARCHITECTURE IS "IP_Multiply_mult_gen_0_0,mult_gen_v12_0_17,{}";
   ATTRIBUTE CORE_GENERATION_INFO : STRING;
-  ATTRIBUTE CORE_GENERATION_INFO OF IP_Multiply_mult_gen_0_0_arch: ARCHITECTURE IS "IP_Multiply_mult_gen_0_0,mult_gen_v12_0_17,{x_ipProduct=Vivado 2021.2,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=mult_gen,x_ipVersion=12.0,x_ipCoreRevision=17,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_VERBOSITY=0,C_MODEL_TYPE=0,C_OPTIMIZE_GOAL=1,C_XDEVICEFAMILY=kintex7,C_HAS_CE=0,C_HAS_SCLR=0,C_LATENCY=5,C_A_WIDTH=32,C_A_TYPE=0,C_B_WIDTH=32,C_B_TYPE=0,C_OUT_HIGH=63,C_OUT_LOW=0,C_MULT_TYPE=0,C_CE_OVERRIDES_SCLR=0,C_CCM_IMP=0,C_B_VALUE=10000001,C_HAS_ZERO_DETECT=0,C_ROUND_OUTPUT=0,C_ROUND_PT" & 
+  ATTRIBUTE CORE_GENERATION_INFO OF IP_Multiply_mult_gen_0_0_arch: ARCHITECTURE IS "IP_Multiply_mult_gen_0_0,mult_gen_v12_0_17,{x_ipProduct=Vivado 2021.2,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=mult_gen,x_ipVersion=12.0,x_ipCoreRevision=17,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_VERBOSITY=0,C_MODEL_TYPE=0,C_OPTIMIZE_GOAL=1,C_XDEVICEFAMILY=kintex7,C_HAS_CE=0,C_HAS_SCLR=0,C_LATENCY=3,C_A_WIDTH=32,C_A_TYPE=0,C_B_WIDTH=32,C_B_TYPE=0,C_OUT_HIGH=63,C_OUT_LOW=0,C_MULT_TYPE=1,C_CE_OVERRIDES_SCLR=0,C_CCM_IMP=0,C_B_VALUE=10000001,C_HAS_ZERO_DETECT=0,C_ROUND_OUTPUT=0,C_ROUND_PT" & 
 "=0}";
   ATTRIBUTE X_INTERFACE_INFO : STRING;
   ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
@@ -127,14 +127,14 @@ BEGIN
       C_XDEVICEFAMILY => "kintex7",
       C_HAS_CE => 0,
       C_HAS_SCLR => 0,
-      C_LATENCY => 5,
+      C_LATENCY => 3,
       C_A_WIDTH => 32,
       C_A_TYPE => 0,
       C_B_WIDTH => 32,
       C_B_TYPE => 0,
       C_OUT_HIGH => 63,
       C_OUT_LOW => 0,
-      C_MULT_TYPE => 0,
+      C_MULT_TYPE => 1,
       C_CE_OVERRIDES_SCLR => 0,
       C_CCM_IMP => 0,
       C_B_VALUE => "10000001",

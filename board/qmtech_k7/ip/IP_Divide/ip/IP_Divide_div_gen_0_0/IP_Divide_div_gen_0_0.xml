@@ -403,7 +403,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>HAS_TREADY</spirit:name>
-          <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TREADY">0</spirit:value>
+          <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TREADY">1</spirit:value>
           <spirit:vendorExtensions>
             <xilinx:parameterInfo>
               <xilinx:parameterUsage>none</xilinx:parameterUsage>
@@ -571,7 +571,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>HAS_TREADY</spirit:name>
-          <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TREADY">0</spirit:value>
+          <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TREADY">1</spirit:value>
           <spirit:vendorExtensions>
             <xilinx:parameterInfo>
               <xilinx:parameterUsage>none</xilinx:parameterUsage>
@@ -701,7 +701,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:bb80b72b</spirit:value>
+            <spirit:value>9:4691d28f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -715,11 +715,11 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:33:56 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:54 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:bb80b72b</spirit:value>
+            <spirit:value>9:4691d28f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -735,11 +735,11 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:33:56 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:54 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:bb80b72b</spirit:value>
+            <spirit:value>9:4691d28f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -789,7 +789,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:770a4d15</spirit:value>
+            <spirit:value>9:ee3832a2</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -805,11 +805,11 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:33:56 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:54 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:770a4d15</spirit:value>
+            <spirit:value>9:ee3832a2</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -824,11 +824,11 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:33:56 UTC 2022</spirit:value>
+            <spirit:value>Thu Mar 31 15:33:54 UTC 2022</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:bb80b72b</spirit:value>
+            <spirit:value>9:4691d28f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -841,12 +841,8 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         </spirit:fileSetRef>
         <spirit:parameters>
           <spirit:parameter>
-            <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Sun Mar 27 11:33:57 UTC 2022</spirit:value>
-          </spirit:parameter>
-          <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:bb80b72b</spirit:value>
+            <spirit:value>9:4691d28f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -955,7 +951,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:vendorExtensions>
           <xilinx:portInfo>
             <xilinx:enablement>
-              <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="PORT_ENABLEMENT.s_axis_divisor_tready" xilinx:dependency="spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 1 or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 2 or (spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 3 and (spirit:decode(id(&apos;MODELPARAM_VALUE.ALGORITHM_TYPE&apos;)) = 3 or spirit:decode(id(&apos;MODELPARAM_VALUE.DIVCLK_SEL&apos;)) > 1)) or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 4">false</xilinx:isEnabled>
+              <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="PORT_ENABLEMENT.s_axis_divisor_tready" xilinx:dependency="spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 1 or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 2 or (spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 3 and (spirit:decode(id(&apos;MODELPARAM_VALUE.ALGORITHM_TYPE&apos;)) = 3 or spirit:decode(id(&apos;MODELPARAM_VALUE.DIVCLK_SEL&apos;)) > 1)) or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 4">true</xilinx:isEnabled>
             </xilinx:enablement>
           </xilinx:portInfo>
         </spirit:vendorExtensions>
@@ -1064,7 +1060,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:vendorExtensions>
           <xilinx:portInfo>
             <xilinx:enablement>
-              <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="PORT_ENABLEMENT.s_axis_dividend_tready" xilinx:dependency="spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 1 or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 2 or (spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 3 and (spirit:decode(id(&apos;MODELPARAM_VALUE.ALGORITHM_TYPE&apos;)) = 3 or spirit:decode(id(&apos;MODELPARAM_VALUE.DIVCLK_SEL&apos;)) > 1)) or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 4">false</xilinx:isEnabled>
+              <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="PORT_ENABLEMENT.s_axis_dividend_tready" xilinx:dependency="spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 1 or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 2 or (spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 3 and (spirit:decode(id(&apos;MODELPARAM_VALUE.ALGORITHM_TYPE&apos;)) = 3 or spirit:decode(id(&apos;MODELPARAM_VALUE.DIVCLK_SEL&apos;)) > 1)) or spirit:decode(id(&apos;MODELPARAM_VALUE.C_THROTTLE_SCHEME&apos;)) = 4">true</xilinx:isEnabled>
             </xilinx:enablement>
           </xilinx:portInfo>
         </spirit:vendorExtensions>
@@ -1264,7 +1260,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_LATENCY</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">36</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LATENCY">15</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>ALGORITHM_TYPE</spirit:name>
@@ -1300,7 +1296,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_THROTTLE_SCHEME</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_THROTTLE_SCHEME">3</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_THROTTLE_SCHEME">4</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_TLAST_RESOLUTION</spirit:name>
@@ -1760,16 +1756,16 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
     <spirit:fileSet>
       <spirit:name>xilinx_externalfiles_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>IP_Divide_div_gen_0_0_stub.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>USED_IN_synth_blackbox_stub</spirit:userFileType>
+        <spirit:name>IP_Divide_div_gen_0_0.dcp</spirit:name>
+        <spirit:userFileType>dcp</spirit:userFileType>
+        <spirit:userFileType>USED_IN_implementation</spirit:userFileType>
+        <spirit:userFileType>USED_IN_synthesis</spirit:userFileType>
         <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
       <spirit:file>
-        <spirit:name>IP_Divide_div_gen_0_0_sim_netlist.v</spirit:name>
+        <spirit:name>IP_Divide_div_gen_0_0_stub.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>USED_IN_simulation</spirit:userFileType>
-        <spirit:userFileType>USED_IN_single_language</spirit:userFileType>
+        <spirit:userFileType>USED_IN_synth_blackbox_stub</spirit:userFileType>
         <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
       <spirit:file>
@@ -1779,10 +1775,10 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
       <spirit:file>
-        <spirit:name>IP_Divide_div_gen_0_0.dcp</spirit:name>
-        <spirit:userFileType>dcp</spirit:userFileType>
-        <spirit:userFileType>USED_IN_implementation</spirit:userFileType>
-        <spirit:userFileType>USED_IN_synthesis</spirit:userFileType>
+        <spirit:name>IP_Divide_div_gen_0_0_sim_netlist.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:userFileType>USED_IN_simulation</spirit:userFileType>
+        <spirit:userFileType>USED_IN_single_language</spirit:userFileType>
         <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
       <spirit:file>
@@ -1858,7 +1854,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>FlowControl</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.FlowControl" spirit:choiceRef="choice_pairs_08e5ea6d" spirit:order="16">NonBlocking</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.FlowControl" spirit:choiceRef="choice_pairs_08e5ea6d" spirit:order="16">Blocking</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>OptimizeGoal</spirit:name>
@@ -1874,11 +1870,11 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>latency_configuration</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.latency_configuration" spirit:choiceRef="choice_list_93ab811d" spirit:order="20">Automatic</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.latency_configuration" spirit:choiceRef="choice_list_93ab811d" spirit:order="20">Manual</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>latency</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.latency" spirit:order="21" spirit:minimum="36" spirit:maximum="36" spirit:rangeType="long">36</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.latency" spirit:order="21" spirit:minimum="1" spirit:maximum="37" spirit:rangeType="long">15</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>ACLKEN</spirit:name>
@@ -1918,7 +1914,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.FREQ_HZ" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TKEEP" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TLAST" xilinx:valuePermission="bd"/>
-        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TREADY" xilinx:valuePermission="bd"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TREADY" xilinx:valueSource="auto" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.HAS_TSTRB" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.LAYERED_METADATA" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVIDEND.PHASE" xilinx:valuePermission="bd"/>
@@ -1930,7 +1926,7 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.FREQ_HZ" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TKEEP" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TLAST" xilinx:valuePermission="bd"/>
-        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TREADY" xilinx:valuePermission="bd"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TREADY" xilinx:valueSource="auto" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.HAS_TSTRB" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.LAYERED_METADATA" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.PHASE" xilinx:valuePermission="bd"/>
@@ -1938,12 +1934,14 @@ false}}}}}}} TUSER_WIDTH 0}</spirit:value>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.TDEST_WIDTH" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.TID_WIDTH" xilinx:valueSource="constant" xilinx:valuePermission="bd"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_DIVISOR.TUSER_WIDTH" xilinx:valuePermission="bd"/>
+        <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.FlowControl" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.dividend_and_quotient_width" xilinx:valueSource="user" xilinx:valuePermission="bd_and_user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.dividend_tuser_width" xilinx:valuePermission="bd_and_user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.divisor_tuser_width" xilinx:valuePermission="bd_and_user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.divisor_width" xilinx:valueSource="user" xilinx:valuePermission="bd_and_user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.fractional_width" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.latency" xilinx:valueSource="user"/>
+        <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.latency_configuration" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.operand_sign" xilinx:valueSource="user" xilinx:valuePermission="bd_and_user"/>
       </xilinx:configElementInfos>
     </xilinx:coreExtensions>
