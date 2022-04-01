@@ -46,7 +46,8 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 				(pc | 1) |
 				(uint64_t(inst) << 32);
 		};
-		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__clear = 0xffffffff;
+		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__next = 1;
+		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1;
 	}
 
 	int32_t time = 0;

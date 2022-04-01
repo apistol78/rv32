@@ -40,17 +40,17 @@ module CPU_DCache #(
 		WRITE_WAIT		= 6,
 		READ_SETUP		= 7,
 		READ_WB_WAIT	= 8,
-		READ_BUS_WAIT	= 9
+		READ_BUS_WAIT	= 9,
+		INITIALIZE		= 10
 	} state_t;
 
-	(* synthesis, fsm_state = "onehot" *) logic [9:0] state = 1 << IDLE;
-	(* synthesis, fsm_state = "onehot" *) logic [9:0] next = 1 << IDLE;
+	(* synthesis, fsm_state = "onehot" *) logic [10:0] state = 1 << INITIALIZE;
+	(* synthesis, fsm_state = "onehot" *) logic [10:0] next = 1 << INITIALIZE;
 
 	logic [SIZE:0] flush_address = 0;
 	logic [SIZE:0] next_flush_address = 0;
 
 	// Cache memory.
-	wire cache_initialized;
 	logic cache_rw = 0;
 	logic [SIZE - 1:0] cache_address = 0;
 	logic [63:0] cache_wdata;
@@ -58,15 +58,12 @@ module CPU_DCache #(
 
 	// One cycle latency, important since
 	// we rely on address only.
-	BRAM_clear #(
+	BRAM #(
 		.WIDTH(64),
 		.SIZE(RANGE),
-		.ADDR_LSH(0),
-		.CLEAR_VALUE(32'hffff_fff0)
+		.ADDR_LSH(0)
 	) cache(
-		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.o_initialized(cache_initialized),
 		.i_request(1'b1),
 		.i_rw(cache_rw),
 		.i_address(cache_address),
@@ -113,16 +110,10 @@ module CPU_DCache #(
 			state[IDLE]: begin
 				if (i_request) begin
 					if (i_flush) begin
-						if (cache_initialized) begin
-							next_flush_address = 0;
-							next[FLUSH_SETUP] = 1;
-						end
-						else begin
-							o_ready = 1;
-							next[IDLE] = 1;
-						end
+						next_flush_address = 0;
+						next[FLUSH_SETUP] = 1;
 					end
-					else if (cache_initialized && i_cacheable) begin
+					else if (i_cacheable) begin
 						if (!i_rw)
 							next[READ_SETUP] = 1;
 						else begin
@@ -158,7 +149,7 @@ module CPU_DCache #(
 
 			state[FLUSH_CHECK]: begin
 				cache_address = flush_address;
-				if (/*cache_entry_valid && */cache_entry_dirty) begin
+				if (cache_entry_dirty) begin
 					o_bus_rw = 1;
 					o_bus_address = cache_entry_address;
 					o_bus_request = 1;
@@ -305,6 +296,24 @@ module CPU_DCache #(
 				end
 				else begin
 					next[READ_BUS_WAIT] = 1;
+				end
+			end
+
+			// ================
+			// INITIALIZE
+			// ================
+
+			state[INITIALIZE]: begin
+				if (flush_address < RANGE) begin
+					cache_rw = 1'b1;
+					cache_wdata = 32'hffff_fff0;
+					cache_address = flush_address;
+					next_flush_address = flush_address + 1;
+					next[INITIALIZE] = 1;
+				end
+				else begin
+					next_flush_address = 0;
+					next[IDLE] = 1;
 				end
 			end
 		endcase

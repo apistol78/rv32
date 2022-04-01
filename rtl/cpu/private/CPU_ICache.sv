@@ -28,14 +28,17 @@ module CPU_ICache#(
 	{
 		IDLE		= 0,
 		READ_SETUP	= 1,
-		READ_BUS	= 2
+		READ_BUS	= 2,
+		INITIALIZE	= 3
 	} state_t;
 
-	logic [2:0] next = 1 << IDLE;
-	logic [2:0] state = 1 << IDLE;
+	(* synthesis, fsm_state = "onehot" *) logic [3:0] next = 1 << INITIALIZE;
+	(* synthesis, fsm_state = "onehot" *) logic [3:0] state = 1 << INITIALIZE;
+
+	logic [SIZE:0] clear_address = 0;
+	logic [SIZE:0] next_clear_address = 0;
 
 	// Cache memory.
-	wire cache_initialized;
 	logic cache_rw = 0;
 	logic [63:0] cache_wdata = 0;
 	wire [63:0] cache_rdata;
@@ -44,14 +47,12 @@ module CPU_ICache#(
 
 	// One cycle latency, important since
 	// we rely on address only.
-	BRAM_clear #(
+	BRAM #(
 		.WIDTH(64),
 		.SIZE(RANGE),
 		.ADDR_LSH(0)
 	) cache(
-		.i_reset(i_reset),
 		.i_clock(i_clock),
-		.o_initialized(cache_initialized),
 		.i_request(1'b1),
 		.i_rw(cache_rw),
 		.i_address(cache_label),
@@ -68,10 +69,12 @@ module CPU_ICache#(
 
 	always_ff @(posedge i_clock) begin
 		state <= next;
+		clear_address <= next_clear_address;
 	end
 	
 	always_comb begin
 		next = 0;
+		next_clear_address = clear_address;
 	
 		o_ready = 0;
 		o_rdata = 32'h0;
@@ -85,15 +88,11 @@ module CPU_ICache#(
 			state[IDLE]: begin
 				if (!i_stall) begin
 `ifdef ENABLE_ICACHE				
-					if (cache_initialized) begin
-						next[READ_SETUP] = 1;
-					end
-					else
+					next[READ_SETUP] = 1;
+`else
+					o_bus_request = 1;
+					next[READ_BUS] = 1;
 `endif
-					begin
-						o_bus_request = 1;
-						next[READ_BUS] = 1;
-					end
 				end
 				else begin
 					next[IDLE] = 1;
@@ -130,6 +129,20 @@ module CPU_ICache#(
 				else begin
 					next[READ_BUS] = 1;
 				end
+			end
+
+			state[INITIALIZE]: begin
+				if (clear_address < RANGE) begin
+					cache_rw = 1;
+					cache_wdata = 32'h0000_0000;
+					cache_pc = { clear_address, 2'b00 };
+					next_clear_address = clear_address + 1;
+					next[INITIALIZE] = 1;
+				end
+				else begin
+					next_clear_address = 0;
+					next[IDLE] = 1;
+				end				
 			end
 		endcase
 	end
