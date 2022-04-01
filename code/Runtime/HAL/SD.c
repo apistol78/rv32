@@ -2,8 +2,7 @@
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/CRC.h"
 #include "Runtime/HAL/Interrupt.h"
-
-#define SD_4BIT_MODE
+#include "Runtime/HAL/Timer.h"
 
 /*
 |x|x|x|x|x|x|x|x|dat|dat|dat|dat|cmd|dat dir|cmd dir|clk|
@@ -37,6 +36,8 @@
 #define SD_VHS_2V7_3V6				0x01
 #define CMD8_DEFAULT_TEST_PATTERN	0xaa
 
+#define SD_SHORT_DELAY()
+
 typedef enum
 {
     SD_STATE_IDLE = 0,
@@ -46,26 +47,20 @@ typedef enum
     SD_STATE_TRAN    
 } SD_CURRENT_STATE;
 
-void __attribute__ ((noinline)) sd_half_cycle()
-{
-	for (int i = 0; i < 40; ++i)
-		__asm__ volatile ( "nop" );
-}
-
-#define SD_HALF_CYCLE() // sd_half_cycle()
+static int32_t s_dataBits = 4;
 
 static void sd_dummy_clock(uint32_t clockCnt)
 {
 	for (uint32_t i = 0; i < clockCnt; ++i)
 	{
         SD_WR_CLK_LOW();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
         SD_WR_CLK_HIGH();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
     }
 }
 
-void sd_send_cmd(uint8_t cmd[6], int32_t cmdLen)
+static void sd_send_cmd(uint8_t cmd[6], int32_t cmdLen)
 {
 	uint8_t mask, data;
 	SD_WR_CMD_DIR_OUT();
@@ -80,15 +75,15 @@ void sd_send_cmd(uint8_t cmd[6], int32_t cmdLen)
 				{ SD_WR_CMD_HIGH(); }
 			else
 				{ SD_WR_CMD_LOW(); }
-			SD_HALF_CYCLE();
+			SD_SHORT_DELAY();
 			SD_WR_CLK_HIGH();  
 			mask >>= 1;
-			SD_HALF_CYCLE();
+			SD_SHORT_DELAY();
 		}
 	}
 }
 
-int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
+static int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 {
 	const int32_t maxCnt = 40;
 
@@ -98,9 +93,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	for (int32_t cnt = 0;;)
 	{
 		SD_WR_CLK_LOW();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
 		SD_WR_CLK_HIGH();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
 		if (!SD_RD_CMD())
 			break;
 		else if (cnt++ > maxCnt)
@@ -108,9 +103,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	}
   
 	SD_WR_CLK_LOW();
-	SD_HALF_CYCLE();
+	SD_SHORT_DELAY();
 	SD_WR_CLK_HIGH();
-	SD_HALF_CYCLE();
+	SD_SHORT_DELAY();
 
 	if (SD_RD_CMD())
 		return 0;
@@ -120,9 +115,9 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	for (int32_t index = 0; index < responseLen; )
 	{
 		SD_WR_CLK_LOW();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
 		SD_WR_CLK_HIGH();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
 		if (SD_RD_CMD())
 			value |= 0x80 >> bit;
 		if (bit >= 7)
@@ -140,7 +135,7 @@ int32_t sd_get_response(uint8_t* outResponse, int32_t responseLen)
 	return 1;	
 }
 
-int32_t sd_cmd0()
+static int32_t sd_cmd0()
 {
 	uint8_t cmd[] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t response[1];
@@ -154,7 +149,7 @@ int32_t sd_cmd0()
 	return 1;
 }
 
-int32_t sd_cmd8(uint8_t voltId, uint8_t testPattern)
+static int32_t sd_cmd8(uint8_t voltId, uint8_t testPattern)
 {
 	const uint8_t c_cmd = 8;
 
@@ -186,7 +181,7 @@ int32_t sd_cmd8(uint8_t voltId, uint8_t testPattern)
 	return 1;
 }
 
-int32_t sd_cmd55(uint16_t rca16)
+static int32_t sd_cmd55(uint16_t rca16)
 {
 	const uint8_t c_cmd = 55;
 
@@ -217,7 +212,7 @@ int32_t sd_cmd55(uint16_t rca16)
 	return 1;
 }
 
-int32_t sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
+static int32_t sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
 {
 	const uint8_t c_cmd = 41;
 
@@ -258,7 +253,7 @@ int32_t sd_acmd41(uint32_t hostOCR32, uint32_t* outOCR)
 	return 1;
 }
 
-int32_t sd_cmd2(uint8_t* cid, int32_t cidLen)
+static int32_t sd_cmd2(uint8_t* cid, int32_t cidLen)
 {
 	const uint8_t c_cmd = 2;
 
@@ -286,7 +281,7 @@ int32_t sd_cmd2(uint8_t* cid, int32_t cidLen)
 	return 1;
 }
 
-int32_t sd_cmd3(uint16_t* outRCA16)
+static int32_t sd_cmd3(uint16_t* outRCA16)
 {
 	const uint8_t c_cmd = 3;
 
@@ -306,7 +301,7 @@ int32_t sd_cmd3(uint16_t* outRCA16)
 	return 1;
 }
 
-int32_t sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int32_t CSDLen)
+static int32_t sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int32_t CSDLen)
 {
 	const uint8_t c_cmd = 9;
 
@@ -339,7 +334,7 @@ int32_t sd_cmd9(uint16_t RCA16, uint8_t* outCSD, int32_t CSDLen)
 	return 1;
 }
 
-int32_t sd_cmd7(uint16_t RCA16)
+static int32_t sd_cmd7(uint16_t RCA16)
 {
 	const uint8_t c_cmd = 7;
 
@@ -363,7 +358,7 @@ int32_t sd_cmd7(uint16_t RCA16)
 	return 1;
 }
 
-int32_t sd_cmd16(uint32_t blockLength)
+static int32_t sd_cmd16(uint32_t blockLength)
 {
 	const uint8_t c_cmd = 16;
 
@@ -389,7 +384,7 @@ int32_t sd_cmd16(uint32_t blockLength)
 	return 1;
 }
 
-int32_t sd_cmd17(uint32_t addr)
+static int32_t sd_cmd17(uint32_t addr)
 {
 	const uint8_t c_cmd = 17;
 
@@ -412,7 +407,7 @@ int32_t sd_cmd17(uint32_t addr)
 	return 1;
 }
 
-int32_t sd_acmd6(int32_t bus4)
+static int32_t sd_acmd6(int32_t bus4)
 {
 	const uint8_t c_cmd = 6;
 
@@ -435,7 +430,7 @@ int32_t sd_acmd6(int32_t bus4)
 	return 1;
 }
 
-int32_t sd_acmd42(int32_t bus4)
+static int32_t sd_acmd42(int32_t bus4)
 {
 	const uint8_t c_cmd = 42;
 
@@ -478,15 +473,22 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	while(1)
 	{
         SD_WR_CLK_LOW();
-		SD_HALF_CYCLE();
+		SD_SHORT_DELAY();
         SD_WR_CLK_HIGH();
-		SD_HALF_CYCLE();
-#ifdef SD_4BIT_MODE
-		if((SD_RD_DAT() & 0x0F) == 0x00) // check start bits (zero is expected)
-#else      
-		if((SD_RD_DAT() & 0x01) == 0x00) // check start bits (zero is expected)
-#endif      
-			break;
+		SD_SHORT_DELAY();
+
+		// Check start bits (zero is expected).
+		if (s_dataBits == 4)
+		{
+			if((SD_RD_DAT() & 0x0f) == 0x00) 
+				break;
+		}
+		else if (s_dataBits == 1)
+		{
+			if((SD_RD_DAT() & 0x01) == 0x00)
+				break;
+		}
+
 		if (try++ > 9000)
 		{
 			interrupt_enable();
@@ -498,29 +500,30 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	for(uint32_t i = 0; i < bufferLen; i++)
 	{
 		uint8_t Data8 = 0;
-#ifdef SD_4BIT_MODE
-		for(int32_t j = 0; j < 2; j++)
+		if (s_dataBits == 4)
 		{
-			SD_WR_CLK_LOW();
-			SD_HALF_CYCLE();
-			SD_WR_CLK_HIGH();
-			SD_HALF_CYCLE();
-			Data8 <<= 4; 
-			Data8 |= (SD_RD_DAT() & 0x0F);
+			for(int32_t j = 0; j < 2; j++)
+			{
+				SD_WR_CLK_LOW();
+				SD_SHORT_DELAY();
+				SD_WR_CLK_HIGH();
+				SD_SHORT_DELAY();
+				Data8 <<= 4; 
+				Data8 |= (SD_RD_DAT() & 0x0f);
+			}
 		}
-#else      
-		for(int32_t j = 0; j < 8; j++)
+		else if (s_dataBits == 1)
 		{
-			SD_WR_CLK_LOW();
-			SD_HALF_CYCLE();
-			SD_WR_CLK_HIGH();
-			SD_HALF_CYCLE();
-			Data8 <<= 1; 
-			if (SD_RD_DAT() & 0x01)  // check bit0
-				Data8 |= 0x01;
-		} 
-#endif  
-
+			for(int32_t j = 0; j < 8; j++)
+			{
+				SD_WR_CLK_LOW();
+				SD_SHORT_DELAY();
+				SD_WR_CLK_HIGH();
+				SD_SHORT_DELAY();
+				Data8 <<= 1; 
+				Data8 |= (SD_RD_DAT() & 0x01);
+			}
+		}
 		buffer[i] = Data8;
 	}
 
@@ -532,12 +535,17 @@ int32_t sd_init()
 {
 	*SD_BASE = 0x0000ff00;
 
+	// Determine data width from device id.
+	s_dataBits = 4;
+	if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2 || timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
+		s_dataBits = 1;
+
 	SD_WR_CMD_DIR_OUT();
 	SD_WR_DAT_DIR_IN();
 	SD_WR_CLK_HIGH();
-	SD_HALF_CYCLE();
+	SD_SHORT_DELAY();
 	SD_WR_CMD_HIGH();
-	SD_HALF_CYCLE();
+	SD_SHORT_DELAY();
 	SD_WR_DAT(0x0);
 
 	sd_dummy_clock(100);
@@ -562,9 +570,7 @@ int32_t sd_init()
 		{
 			if (count > 10)
 				return 1;
-
-			for (int i = 0; i < 100000; ++i)
-				__asm__ volatile ("nop");
+			timer_wait_ms(2);
 		}
 		else
 			break;
@@ -589,11 +595,13 @@ int32_t sd_init()
 	// Select block length.
 	sd_cmd16(512);
 
-	// If (4bit)
-	// Set bus width.
-	sd_cmd55(RCA16);
-	sd_acmd6(1);
-	sd_cmd55(RCA16);
-	sd_acmd42(1);
+	// If 4 bit, set bus width.
+	if (s_dataBits == 4)
+	{
+		sd_cmd55(RCA16);
+		sd_acmd6(1);
+		sd_cmd55(RCA16);
+		sd_acmd42(1);
+	}
 	return 0;
 }

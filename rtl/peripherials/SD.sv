@@ -2,34 +2,34 @@
 `timescale 1ns/1ns
 
 module SD (
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 	
-	input wire i_request,
-	input wire i_rw,
-	input wire [31:0] i_wdata,
+	input i_request,
+	input i_rw,
+	input [31:0] i_wdata,
 	output reg [31:0] o_rdata,
 	output reg o_ready,
 
-    output wire SD_CLK,
+    output SD_CLK,
 `ifndef __VERILATOR__
-      inout wire SD_CMD,
-      inout wire [3:0]  SD_DAT
+      inout SD_CMD,
+      inout [3:0] SD_DAT
 `else
-      input wire SD_CMD_in,
-      input wire [3:0]  SD_DAT_in,
-      output wire SD_CMD_out,
-      output wire [3:0] SD_DAT_out
+      input SD_CMD_in,
+      input [3:0] SD_DAT_in,
+      output SD_CMD_out,
+      output [3:0] SD_DAT_out
 `endif
 );
 	localparam DIR_IN = 1'b0;
 	localparam DIR_OUT = 1'b1;
 	
-	reg clk = 1'b0;
-	reg cdir = DIR_IN;
-	reg ddir = DIR_IN;
-	reg cmd;
-	reg [3:0] dat;
+	logic clk = 1'b0;
+	logic cdir = DIR_IN;
+	logic ddir = DIR_IN;
+	logic cmd;
+	logic [3:0] dat;
 
 	wire [7:0] mask = i_wdata[15:8];
 	wire [7:0] write = i_wdata[7:0];
@@ -52,7 +52,7 @@ module SD (
 	wire [3:0] dat_in = SD_DAT_in;
 `endif
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			clk <= 1'b0;
 			cdir <= DIR_IN;
@@ -71,7 +71,7 @@ module SD (
 						clk
 					};
 				end
-				else begin	// write
+				else begin
 					clk  <= ( clk & ~mask[0]  ) | write[0];
 					cdir <= (cdir & ~mask[1]  ) | write[1];
 					ddir <= (ddir & ~mask[2]  ) | write[2];
@@ -82,7 +82,7 @@ module SD (
 		end
 	end
 	
-	always @(posedge i_clock)
+	always_ff @(posedge i_clock)
 		o_ready <= i_request;
 		
 endmodule
