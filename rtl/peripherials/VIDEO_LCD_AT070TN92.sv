@@ -8,13 +8,12 @@ module VIDEO_LCD_AT070NTN92 #(
 	parameter HLINE = 1056,
 	parameter HBACK = 46,
 	parameter HFRONT = 210,
-	parameter HPULSE = 1,
 	parameter VLINE = 525,
 	parameter VBACK = 23,
-	parameter VFRONT = 22,
-	parameter VPULSE = 1
+	parameter VFRONT = 22
 )(
 	input i_clock,
+	input i_clock_out,
 
 	// Video output.
 	output logic o_vga_clock,
@@ -22,18 +21,9 @@ module VIDEO_LCD_AT070NTN92 #(
 	output logic [10:0] o_pos_x,
 	output logic [10:0] o_pos_y
 );
-	// Configuration
-	localparam cfg_prescale = SYSTEM_FREQUENCY / VGA_FREQUENCY;
-	localparam cfg_hline = HLINE;
-	localparam cfg_hback = HBACK;
-	localparam cfg_hfront = HFRONT;
-	localparam cfg_hpulse = HPULSE;
-	localparam cfg_vline = VLINE;
-	localparam cfg_vback = VBACK;
-	localparam cfg_vfront = VFRONT;
-	localparam cfg_vpulse = VPULSE;
 
-	logic [7:0] prescale = 0;
+	localparam PRESCALE = SYSTEM_FREQUENCY / VGA_FREQUENCY;
+
 	logic [10:0] vga_h = 0;
 	logic [10:0] vga_v = 0;
 
@@ -44,39 +34,56 @@ module VIDEO_LCD_AT070NTN92 #(
 		o_vga_clock = 0;
 	end
 
-	always_ff @(posedge i_clock) begin
-		prescale <= prescale + 1;
-		if (prescale >= cfg_prescale - 1) begin
-			if (vga_h == cfg_hline - 1) begin
+	generate if (PRESCALE <= 1) begin
+		always_ff @(posedge i_clock) begin
+			if (vga_h == HLINE - 1) begin
 				vga_h <= 0;
-				if (vga_v == cfg_vline - 1)
+				if (vga_v == VLINE - 1)
 					vga_v <= 0;
 				else
 					vga_v <= vga_v + 1;
 			end
 			else
 				vga_h <= vga_h + 1;
-			prescale <= 0;
 		end
-		o_vga_clock <= prescale[0];
-	end
-	
-	// assign o_hsync = (vga_h < cfg_hpulse) ? 0 : 1;
-	// assign o_vsync = (vga_v < cfg_vpulse) ? 0 : 1;
-	
-	assign o_data_enable = (vga_h >= cfg_hback && vga_h < cfg_hline - cfg_hfront && vga_v >= cfg_vback && vga_v < cfg_vline - cfg_vfront);
+
+		always_comb begin
+			o_vga_clock <= i_clock;
+		end
+	end endgenerate
+
+	generate if (PRESCALE > 1)  begin
+
+		logic [7:0] prescale = 0;
+
+		always_ff @(posedge i_clock) begin
+			prescale <= prescale + 1;
+			if (prescale >= PRESCALE - 1) begin
+				if (vga_h == HLINE - 1) begin
+					vga_h <= 0;
+					if (vga_v == VLINE - 1)
+						vga_v <= 0;
+					else
+						vga_v <= vga_v + 1;
+				end
+				else
+					vga_h <= vga_h + 1;
+				prescale <= 0;
+			end
+			o_vga_clock <= prescale[0];
+		end
+	end endgenerate
+
+	assign o_data_enable = (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
 
 	logic [10:0] pl_pos_x;
 	logic [10:0] pl_pos_y;
 
-	always @(posedge i_clock) begin
-
-		pl_pos_x <= (vga_h - cfg_hback);
-		pl_pos_y <= (vga_v - cfg_vback);
-
+	always @(posedge i_clock_out) begin
+		pl_pos_x <= (vga_h - HBACK);
+		pl_pos_y <= (vga_v - VBACK);
 		o_pos_x <= pl_pos_x;
 		o_pos_y <= pl_pos_y;
-
 	end
 
 endmodule

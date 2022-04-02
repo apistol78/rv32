@@ -6,13 +6,20 @@ module SoC(
     input sys_clk,
     input sys_rst,	// SW1, pulled high
 
-    output led_1,
-    output led_2,
-    output led_3,
+    //output led_1,
+    //output led_2,
+    //output led_3,
 
     input uart_rx,
     output uart_tx,
     
+	output lcd_bkl,
+	output lcd_clk,
+	output lcd_de,
+	output [7:0] lcd_r,
+	output [7:0] lcd_g,
+	output [7:0] lcd_b,
+
 	inout [15:0] ddr3_dq,
 	inout [1:0] ddr3_dqs_n,
 	inout [1:0] ddr3_dqs_p,
@@ -31,9 +38,11 @@ module SoC(
 
     wire clock;
 	wire clock_ref;
+	wire clock_video;
     IP_Clock ipclk(
         .clk_out1(clock),		// 100 MHz
 		.clk_out2(clock_ref),	// 200 MHz
+		.clk_out3(clock_video),	// 26.6 MHz
         .reset(~sys_rst),
         .locked(),
         .clk_in1(sys_clk)
@@ -61,21 +70,21 @@ module SoC(
 	always_ff @(posedge clock)
 	   counter <= counter + 1;
 
+/*
     assign led_1 = ~led_led[0];
     assign led_2 = ~led_led[1];
     assign led_3 = counter[23]; // ~led_led[2];
+*/
 
 	//=====================================
 	// VIDEO
 
-	assign lcd_bkl = cont[11];		// Backlight PWM controlled
+	assign lcd_bkl = counter[15];	// Backlight PWM controlled
 	assign lcd_clk = vga_clock;
 	assign lcd_de = vga_enable;
-	assign lcd_r = 8'h0; // vbus_rdata[23:16];
-	assign lcd_g = 8'h0; // vbus_rdata[15:8];
-	assign lcd_b = 8'h0; // vbus_rdata[7:0];
-	assign lcd_vsync = 1'b0;
-	assign lcd_hsync = 1'b0;
+	assign lcd_r = vmode_video_rdata[23:16];
+	assign lcd_g = vmode_video_rdata[15:8];
+	assign lcd_b = vmode_video_rdata[7:0];
 
 	// Video signal generator.
 	wire vga_enable;
@@ -83,23 +92,26 @@ module SoC(
 	wire [10:0] vga_pos_y;
 	wire vga_clock;
 	VIDEO_LCD_AT070NTN92 #(
-		.SYSTEM_FREQUENCY(`FREQUENCY),
-		.VGA_FREQUENCY(33_300_000),
-		.HLINE(1056),
+		.SYSTEM_FREQUENCY(26_600_000),
+		.VGA_FREQUENCY(26_600_000),
+		.HLINE(862),
 		.HBACK(46),
-		.HFRONT(210),
-		.HPULSE(1),
-		.VLINE(525),
+		.HFRONT(16),
+		.VLINE(510),
 		.VBACK(23),
-		.VFRONT(22),
-		.VPULSE(1)
+		.VFRONT(7)
 	) vga(
-		.i_clock(clock),
+		.i_clock(clock_video),
+		.i_clock_out(clock),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y),
 		.o_vga_clock(vga_clock)
 	);
+
+	// Scale resolution to 640*400.
+	wire [10:0] vga_pos_x_scale = (vga_pos_x * 640) / 800;
+	wire [10:0] vga_pos_y_scale = (vga_pos_y * 400) / 480;
 	
 	// Video memory.
 	wire vram_pa_request;
@@ -118,7 +130,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*400*240),
+		.SIZE(2*320*200),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),
@@ -143,9 +155,10 @@ module SoC(
 	wire [31:0] vram_address;
 	wire [31:0] vram_rdata;
 	wire vram_ready;	
+	wire [31:0] vmode_video_rdata;
 
 	VMODE_chunky #(
-		.PPITCH(400)
+		.PPITCH(320)
 	) vmode_chunky(
 		.i_clock(clock),
 		
@@ -159,9 +172,9 @@ module SoC(
 		
 		// Video signal interface.
 		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x[9:1]),
-		.i_video_pos_y(vga_pos_y[9:1]),
-		.o_video_rdata(), // HDMI_TX_D),
+		.i_video_pos_x(vga_pos_x_scale[9:1]),
+		.i_video_pos_y(vga_pos_y_scale[9:1]),
+		.o_video_rdata(vmode_video_rdata),
 		
 		// Video RAM interface.
 		.o_vram_pa_request(vram_pa_request),
@@ -180,7 +193,7 @@ module SoC(
 	);
 
 	//=====================================
-	// ROM
+	// ROM ($00000000)
 
 	wire rom_select;
 	wire [31:0] rom_address;
@@ -195,7 +208,7 @@ module SoC(
 	);
 	
 	//=====================================
-	// RAM
+	// RAM ($10000000 - $10001000)
 
 	wire ram_select;
 	wire [31:0] ram_address;
@@ -203,7 +216,7 @@ module SoC(
 	wire ram_ready;
 	BRAM #(
 		.WIDTH(32),
-		.SIZE(32'h200),
+		.SIZE(32'h400),
 		.ADDR_LSH(2)
 	) ram(
 		.i_clock(clock),
@@ -216,7 +229,7 @@ module SoC(
 	);
 
 	//=====================================
-    // SDRAM
+    // SDRAM ($20000000)
 
 	wire sdram_select;
 	wire [31:0] sdram_address;
@@ -448,10 +461,7 @@ module SoC(
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_fault;
 
-	CPU #(
-		.ICACHE_SIZE(14),
-		.DCACHE_SIZE(14)
-	) cpu(
+	CPU cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
