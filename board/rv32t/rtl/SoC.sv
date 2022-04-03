@@ -743,14 +743,11 @@ module SoC(
 	assign bus_rdata =
 		rom_select ? rom_rdata			:
 		ram_select ? ram_rdata			:
-`ifdef SOC_ENABLE_SRAM
-		sram_select ? sram_rdata		:
+`ifdef SOC_ENABLE_SDRAM
+		sdram_select ? sdram_rdata		:
 `endif
 `ifdef SOC_ENABLE_VGA		
 		vram_select ? vram_rdata		:
-`endif
-`ifdef SOC_ENABLE_SDRAM
-		sdram_select ? sdram_rdata		:
 `endif
 `ifdef SOC_ENABLE_UART
 		uart_0_select ? uart_0_rdata	:
