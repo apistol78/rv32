@@ -15,7 +15,7 @@ SD::SD()
 	m_stream = FileSystem::getInstance().open(L"FS.img", File::FmRead);
 }
 
-void SD::eval(VSoC* soc, uint32_t time)
+void SD::eval(VSoC* soc, uint64_t /*time*/)
 {
 	auto& clk = soc->SD_CLK;
 	auto& cmd = soc->SD_CMD_out;

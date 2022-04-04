@@ -9,5 +9,5 @@ class Device : public traktor::Object
     T_RTTI_CLASS;
 
 public:
-    virtual void eval(VSoC* soc, uint32_t time) = 0;
+    virtual void eval(VSoC* soc, uint64_t time) = 0;
 };

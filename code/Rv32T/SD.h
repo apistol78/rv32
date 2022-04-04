@@ -12,7 +12,7 @@ class SD : public Device
 public:
 	SD();
 
-	virtual void eval(VSoC* soc, uint32_t time) override final;
+	virtual void eval(VSoC* soc, uint64_t time) override final;
 
 private:
 	int32_t m_mode = 0;

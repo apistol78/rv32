@@ -10,55 +10,41 @@
 
 module SoC(
 
-      ///////// ADC ///////// 1.2 V ///////
-      output             ADC_CONVST,
-      output             ADC_SCK,
-      output             ADC_SDI,
-      input              ADC_SDO,
+	output AUDIO_PWM,
 
-      ///////// AUD ///////// 2.5 V ///////
-      input              AUD_ADCDAT,
-      inout              AUD_ADCLRCK,
-      inout              AUD_BCLK,
-      output             AUD_DACDAT,
-      inout              AUD_DACLRCK,
-      output             AUD_XCK,
+	///////// CLOCK /////////
+	input CLOCK_125_p, ///LVDS
+	input CLOCK_50_B5B, ///3.3-V LVTTL
+	input CLOCK_50_B6A,
+	input CLOCK_50_B7A, ///2.5 V
+	input CLOCK_50_B8A,
 
-      ///////// CLOCK /////////
-      input              CLOCK_125_p, ///LVDS
-      input              CLOCK_50_B5B, ///3.3-V LVTTL
-      input              CLOCK_50_B6A,
-      input              CLOCK_50_B7A, ///2.5 V
-      input              CLOCK_50_B8A,
-
-      ///////// CPU /////////
-      input              CPU_RESET_n, ///3.3V LVTTL
+	///////// CPU /////////
+	input CPU_RESET_n, ///3.3V LVTTL
 
 `ifdef ENABLE_DDR2LP
-      ///////// DDR2LP ///////// 1.2-V HSUL ///////
-      output      [9:0]  DDR2LP_CA,
-      output      [1:0]  DDR2LP_CKE,
-      output             DDR2LP_CK_n, ///DIFFERENTIAL 1.2-V HSUL
-      output             DDR2LP_CK_p, ///DIFFERENTIAL 1.2-V HSUL
-      output      [1:0]  DDR2LP_CS_n,
-      output      [3:0]  DDR2LP_DM,
-      inout       [31:0] DDR2LP_DQ,
-      inout       [3:0]  DDR2LP_DQS_n, ///DIFFERENTIAL 1.2-V HSUL
-      inout       [3:0]  DDR2LP_DQS_p, ///DIFFERENTIAL 1.2-V HSUL
-      input              DDR2LP_OCT_RZQ, ///1.2 V
+	///////// DDR2LP ///////// 1.2-V HSUL ///////
+	output [9:0] DDR2LP_CA,
+	output [1:0] DDR2LP_CKE,
+	output DDR2LP_CK_n, ///DIFFERENTIAL 1.2-V HSUL
+	output DDR2LP_CK_p, ///DIFFERENTIAL 1.2-V HSUL
+	output [1:0] DDR2LP_CS_n,
+	output [3:0] DDR2LP_DM,
+	inout [31:0] DDR2LP_DQ,
+	inout [3:0] DDR2LP_DQS_n, ///DIFFERENTIAL 1.2-V HSUL
+	inout [3:0] DDR2LP_DQS_p, ///DIFFERENTIAL 1.2-V HSUL
+	input DDR2LP_OCT_RZQ, ///1.2 V
 `endif /*ENABLE_DDR2LP*/
 
 `ifdef ENABLE_GPIO
-      ///////// GPIO ///////// 3.3-V LVTTL ///////
-      inout       [35:0] GPIO,
+	///////// GPIO ///////// 3.3-V LVTTL ///////
+	inout [35:0] GPIO,
 `else	
-      ///////// HEX2 ///////// 1.2 V ///////
-      output      [6:0]  HEX2,
+	///////// HEX2 ///////// 1.2 V ///////
+	output [6:0] HEX2,
 
-      ///////// HEX3 ///////// 1.2 V ///////
-      output      [6:0]  HEX3,		
-		
-		
+	///////// HEX3 ///////// 1.2 V ///////
+	output [6:0] HEX3,		
 `endif /*ENABLE_GPIO*/
 
       ///////// HDMI /////////
@@ -480,7 +466,7 @@ module SoC(
 		.i_clock(clock),
 		.o_busy(audio_pwm_output_busy),
 		.i_sample(audio_pwm_output_sample),
-		.o_pwm(GPIO[0])
+		.o_pwm(AUDIO_PWM)
 	);
 
 	wire audio_select;

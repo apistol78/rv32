@@ -13,7 +13,7 @@ TraceEXE::TraceEXE(OutputStream* os)
 {
 }
 
-void TraceEXE::eval(VSoC* soc, uint32_t time)
+void TraceEXE::eval(VSoC* soc, uint64_t time)
 {
 	if (soc->SoC__DOT__execute_debug_tag != m_lastTraceTag)
 	{

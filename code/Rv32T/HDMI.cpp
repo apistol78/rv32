@@ -17,7 +17,7 @@ HDMI::HDMI()
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f)); 
 }
 
-void HDMI::eval(VSoC* soc, uint32_t time)
+void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 {
 	auto& clk = soc->HDMI_TX_CLK;
 	auto& de = soc->HDMI_TX_DE;

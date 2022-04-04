@@ -9,7 +9,7 @@ class TraceEXE : public Device
 public:
     explicit TraceEXE(traktor::OutputStream* os);
 
-	virtual void eval(VSoC* soc, uint32_t time) override final;
+	virtual void eval(VSoC* soc, uint64_t time) override final;
 
 private:
 	traktor::Ref< traktor::OutputStream > m_os;

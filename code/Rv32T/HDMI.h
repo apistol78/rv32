@@ -11,7 +11,7 @@ class HDMI : public Device
 public:
 	HDMI();
 
-	virtual void eval(VSoC* soc, uint32_t time) override final;
+	virtual void eval(VSoC* soc, uint64_t time) override final;
 
 	traktor::drawing::Image* getImage() { return m_image; }
 

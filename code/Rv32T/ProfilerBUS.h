@@ -11,7 +11,7 @@ public:
 
     virtual ~ProfilerBUS();
 
-	virtual void eval(VSoC* soc, uint32_t time) override final;
+	virtual void eval(VSoC* soc, uint64_t time) override final;
 
 private:
     uint32_t m_active[13];

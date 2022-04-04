@@ -7,7 +7,7 @@ using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"UART_TX", UART_TX, Device)
 
-void UART_TX::eval(VSoC* soc, uint32_t time)
+void UART_TX::eval(VSoC* soc, uint64_t /*time*/)
 {
 	const int32_t T = 100000000 / 115200;
 

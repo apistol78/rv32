@@ -13,7 +13,7 @@ TraceWB::TraceWB(OutputStream* os)
 {
 }
 
-void TraceWB::eval(VSoC* soc, uint32_t time)
+void TraceWB::eval(VSoC* soc, uint64_t time)
 {
 	if (soc->SoC__DOT__writeback_debug_tag != m_lastTraceTag)
 	{

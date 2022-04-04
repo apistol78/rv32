@@ -13,7 +13,7 @@ TracePC::TracePC(OutputStream* os)
 {
 }
 
-void TracePC::eval(VSoC* soc, uint32_t time)
+void TracePC::eval(VSoC* soc, uint64_t time)
 {
 	if (soc->SoC__DOT__cpu__DOT__fetch__DOT__pc != m_lastTracePC)
 	{

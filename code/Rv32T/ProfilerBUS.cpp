@@ -45,7 +45,7 @@ ProfilerBUS::~ProfilerBUS()
 	}
 }
 
-void ProfilerBUS::eval(VSoC* soc, uint32_t time)
+void ProfilerBUS::eval(VSoC* soc, uint64_t time)
 {
 	if (soc->SoC__DOT__debug_request)
 	{

@@ -35,6 +35,7 @@
 #elif defined(__LINUX__) || defined(__RPI__)
 #	include <Ui/X11/WidgetFactoryX11.h>
 #endif
+#include "Rv32T/AUDIO.h"
 #include "Rv32T/ELF.h"
 #include "Rv32T/HDMI.h"
 #include "Rv32T/LEDR.h"
@@ -283,12 +284,17 @@ int main(int argc, const char **argv)
 
 	// Create devices.
 	HDMI hdmi;
+	AUDIO audio;
 
 	RefArray< Device > devices;
 	devices.push_back(&hdmi);
 	devices.push_back(new LEDR());
 	devices.push_back(new UART_TX());
 	devices.push_back(new SD());
+
+	// Add audio device to record PWM audio.
+	//if (!cmdLine.hasOption(L"mute-audio"))
+		devices.push_back(&audio);
 
 	// Create trace devices.
 	if (cmdLine.hasOption(L"trace-pc"))
@@ -332,10 +338,10 @@ int main(int argc, const char **argv)
 
 	devices.push_back(new ProfilerBUS());
 
-	uint32_t time = 0;
-	uint32_t lastCycles = 0;
-	uint32_t lastRetired = 0;
-	uint32_t lastStarve = 0;
+	uint64_t time = 0;
+	uint64_t lastCycles = 0;
+	uint64_t lastRetired = 0;
+	uint64_t lastStarve = 0;
 	Measure busActive;
 	Measure busCPUandDMA;
 	Measure busSDRAM;
@@ -352,13 +358,13 @@ int main(int argc, const char **argv)
 				break;
 		}
 
-		uint32_t Tc = (uint32_t)(timer.getElapsedTime() * 1000);
-		uint32_t count = slow ? std::min< int32_t >(Tc - Tp, 1000) : 50000;
+		uint64_t Tc = (uint64_t)(timer.getElapsedTime() * 1000);
+		uint64_t count = slow ? std::min< uint64_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
 
 		bool shouldDraw = false;
 		
-		for (int32_t i = 0; i < count; ++i)
+		for (uint64_t i = 0; i < count; ++i)
 		{
 			if (trace)
 			{
@@ -384,7 +390,7 @@ int main(int argc, const char **argv)
 			if (tfp)
 				tfp->dump(time);
 
-			++time;
+			//++time;
 			soc->CLOCK_125_p = 1;
 			soc->CPU_RESET_n = reset ? 0 : 1;
 			soc->KEY |= key1 ? 2 : 0;
@@ -501,6 +507,7 @@ int main(int argc, const char **argv)
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
 					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
 					//str(L"%d BP HIT", soc->SoC__DOT__cpu__DOT__fetch__DOT__bp_debug_hit) <<
+					str(L"%d SAMPLES", audio.written()) <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
