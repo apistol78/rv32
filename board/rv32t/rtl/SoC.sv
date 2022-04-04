@@ -287,59 +287,50 @@ module SoC(
 
 `ifdef SOC_ENABLE_SDRAM
 	// SDRAM
+	wire w_sdram_request;
+	wire w_sdram_rw;
+	wire [31:0] w_sdram_address;
+	wire [127:0] w_sdram_wdata;
+	wire [127:0] w_sdram_rdata;
+	wire w_sdram_ready;
+
+	BRAM_latency #(
+		.WIDTH(128),
+		.SIZE(32'h1000000 / 16),
+		.ADDR_LSH(4),
+		.LATENCY(16)
+	) sdram(
+		.i_clock(clock),
+		.i_request(w_sdram_request),
+		.i_rw(w_sdram_rw),
+		.i_address(w_sdram_address),
+		.i_wdata(w_sdram_wdata),
+		.o_rdata(w_sdram_rdata),
+		.o_ready(w_sdram_ready)
+	);
+
 	wire sdram_select;
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	BRAM_latency #(
-		.WIDTH(32),
-		.SIZE(32'h1000000 / 4),
-		.ADDR_LSH(2),
-		.LATENCY(16)
-	) sdram(
+	LRU_cache sdram_lru(
 		.i_clock(clock),
-		.i_request(l2cache_bus_request),
-		.i_rw(l2cache_bus_rw),
-		.i_address(l2cache_bus_address),
-		.i_wdata(l2cache_bus_wdata),
-		.o_rdata(l2cache_bus_rdata),
-		.o_ready(l2cache_bus_ready)
-	);
-
-	wire l2cache_bus_rw;
-	wire l2cache_bus_request;
-	wire l2cache_bus_ready;
-	wire [31:0] l2cache_bus_address;
-	wire [31:0] l2cache_bus_rdata;
-	wire [31:0] l2cache_bus_wdata;
-`ifdef SOC_ENABLE_SDRAM_L2CACHE
-	CPU_L2_Cache l2cache(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		.o_bus_rw(l2cache_bus_rw),
-		.o_bus_request(l2cache_bus_request),
-		.i_bus_ready(l2cache_bus_ready),
-		.o_bus_address(l2cache_bus_address),
-		.i_bus_rdata(l2cache_bus_rdata),
-		.o_bus_wdata(l2cache_bus_wdata),
 
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(sdram_address),
 		.i_wdata(bus_wdata),
 		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready)
+		.o_ready(sdram_ready),
+
+		.o_sdram_request(w_sdram_request),
+		.o_sdram_rw(w_sdram_rw),
+		.o_sdram_address(w_sdram_address),
+		.o_sdram_wdata(w_sdram_wdata),
+		.i_sdram_rdata(w_sdram_rdata),
+		.i_sdram_ready(w_sdram_ready)
 	);
-`else
-	assign l2cache_bus_request = sdram_select && bus_request;
-	assign l2cache_bus_rw = bus_rw;
-	assign sdram_ready = l2cache_bus_ready;
-	assign l2cache_bus_address = sdram_address;
-	assign sdram_rdata = l2cache_bus_rdata;
-	assign l2cache_bus_wdata = bus_wdata;
-`endif
 
 `endif
 
