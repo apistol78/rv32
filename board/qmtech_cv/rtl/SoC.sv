@@ -16,8 +16,6 @@ module SoC(
 	
 	output lcd_bkl,
 	output lcd_clk,
-	output lcd_hsync,
-	output lcd_vsync,
 	output lcd_de,
 	output [7:0] lcd_r,
 	output [7:0] lcd_g,
@@ -38,13 +36,13 @@ module SoC(
 
 	wire clock;				// 100MHz
 	wire clock_sdram;		// 100MHz, phase shifted 9375 ps.
-	//wire clock_video;		// 26.4MHz
+	wire clock_video;		// 26.6MHz
 	IP_PLL_Clk pll_clk(
 		.refclk(sys_clk),
 		.rst(!sys_reset_n),
 		.outclk_0(clock),
 		.outclk_1(clock_sdram),
-		.outclk_2(), //clock_video),
+		.outclk_2(clock_video),
 		.locked()
 	);
 	
@@ -64,98 +62,130 @@ module SoC(
 	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
 	wire reset = !start_n;
 	
-	assign led_1 = led_led[0];
+	assign led_1 = !led_led[0];
 
+	reg [31:0] counter = 0;
+	always_ff @(posedge clock)
+	   counter <= counter + 1;
+	   
 	//=====================================
 
 	// VIDEO
 
-	assign lcd_bkl = cont[11];		// Backlight PWM controlled
+	assign lcd_bkl = counter[15];		// Backlight PWM controlled
 	assign lcd_clk = vga_clock;
 	assign lcd_de = vga_enable;
-	assign lcd_r = vbus_rdata[23:16];
-	assign lcd_g = vbus_rdata[15:8];
-	assign lcd_b = vbus_rdata[7:0];
-	assign lcd_vsync = 1'b0;
-	assign lcd_hsync = 1'b0;
+	assign lcd_r = vmode_video_rdata[23:16];
+	assign lcd_g = vmode_video_rdata[15:8];
+	assign lcd_b = vmode_video_rdata[7:0];
 
-	// Video memory.
-	wire video_sram_request;
-	wire video_sram_rw;
-	wire [31:0] video_sram_address;
-	wire [31:0] video_sram_wdata;
-	wire [31:0] video_sram_rdata;
-	wire video_sram_ready;
-	BRAM #(
-		.WIDTH(32),
-		.SIZE(400*240/4),
-		.ADDR_LSH(2)
-	) video_sram(
-		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready)
-	);
-
-	// Video mode; chunky 8-bit palette.
-	wire vbus_select;
-	wire [31:0] vbus_address;
-	wire vbus_ready;
-	wire vbus_fifo_full;
-	wire [31:0] vbus_rdata;
-	VMODE_chunky #(
-		.PPITCH(400),
-		.FIFO_DEPTH(8)
-	) vmode_chunky(
-		.i_clock(clock),
-		
-		.i_cpu_request(vbus_select && bus_request),
-		.i_cpu_address(vbus_address),
-		.i_cpu_wdata(bus_wdata),
-		.o_cpu_ready(vbus_ready),
-		
-		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x[9:1]),	// 0 - 399
-		.i_video_pos_y(vga_pos_y[9:1]),	// 0 - 239
-		.o_video_rdata(vbus_rdata),
-		
-		.o_mem_request(video_sram_request),
-		.o_mem_rw(video_sram_rw),
-		.o_mem_address(video_sram_address),
-		.o_mem_wdata(video_sram_wdata),
-		.i_mem_rdata(video_sram_rdata),
-		.i_mem_ready(video_sram_ready),
-		
-		.o_fifo_full(vbus_fifo_full)
-	);
-
-	// 800*480
+	// Video signal generator.
 	wire vga_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
 	wire vga_clock;
 	VIDEO_LCD_AT070NTN92 #(
-		.SYSTEM_FREQUENCY(`FREQUENCY),
-		.VGA_FREQUENCY(33_300_000),
-		.HLINE(1056),
+		.SYSTEM_FREQUENCY(26_600_000),
+		.VGA_FREQUENCY(26_600_000),
+		.HLINE(862),
 		.HBACK(46),
-		.HFRONT(210),
-		.HPULSE(1),
-		.VLINE(525),
+		.HFRONT(16),
+		.VLINE(510),
 		.VBACK(23),
-		.VFRONT(22),
-		.VPULSE(1)
+		.VFRONT(7)
 	) vga(
-		.i_clock(clock),
+		.i_reset(reset),
+		.i_clock(clock_video),
+		.i_clock_out(clock),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y),
 		.o_vga_clock(vga_clock)
 	);
 	
+	// Scale resolution to 640*400.
+	wire [10:0] vga_pos_x_scale = (vga_pos_x >> 2) + (vga_pos_x >> 1) + (vga_pos_x >> 4); // (vga_pos_x * 640) / 800;
+	wire [10:0] vga_pos_y_scale = (vga_pos_y >> 2) + (vga_pos_y >> 1) + (vga_pos_y >> 4); // (vga_pos_y * 400) / 480;
+	
+	// Video memory.
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	BRAM_dual #(
+		.WIDTH(32),
+		.SIZE((320*200)/4),
+		.ADDR_LSH(2)
+	) vram(
+		.i_clock(clock),
+
+		.i_pa_request(vram_pa_request),
+		.i_pa_rw(vram_pa_rw),
+		.i_pa_address(vram_pa_address),
+		.i_pa_wdata(vram_pa_wdata),
+		.o_pa_rdata(vram_pa_rdata),
+		.o_pa_ready(vram_pa_ready),
+
+		.i_pb_request(vram_pb_request),
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_address(vram_pb_address),
+		.i_pb_wdata(vram_pb_wdata),
+		.o_pb_rdata(vram_pb_rdata),
+		.o_pb_ready(vram_pb_ready)
+	);
+
+	// Video mode; chunky 8-bit palette.
+	wire vram_select;
+	wire [31:0] vram_address;
+	wire [31:0] vram_rdata;
+	wire vram_ready;	
+	wire [31:0] vmode_video_rdata;
+
+	VMODE_chunky #(
+		.PPITCH(320)
+	) vmode_chunky(
+		.i_clock(clock),
+		
+		// CPU interface.
+		.i_cpu_request(vram_select && bus_request),
+		.i_cpu_rw(bus_rw),
+		.i_cpu_address(vram_address),
+		.i_cpu_wdata(bus_wdata),
+		.o_cpu_rdata(vram_rdata),
+		.o_cpu_ready(vram_ready),
+		
+		// Video signal interface.
+		.i_video_request(vga_enable),
+		.i_video_pos_x(vga_pos_x_scale[9:1]),
+		.i_video_pos_y(vga_pos_y_scale[9:1]),
+		.o_video_rdata(vmode_video_rdata),
+		
+		// Video RAM interface.
+		.o_vram_pa_request(vram_pa_request),
+		.o_vram_pa_rw(vram_pa_rw),
+		.o_vram_pa_address(vram_pa_address),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.i_vram_pa_rdata(vram_pa_rdata),
+		.i_vram_pa_ready(vram_pa_ready),
+
+		.o_vram_pb_request(vram_pb_request),
+		.o_vram_pb_rw(vram_pb_rw),
+		.o_vram_pb_address(vram_pb_address),
+		.o_vram_pb_wdata(vram_pb_wdata),
+		.i_vram_pb_rdata(vram_pb_rdata),
+		.i_vram_pb_ready(vram_pb_ready)
+	);
+
 	//=====================================
 
 	// ROM
@@ -291,7 +321,7 @@ module SoC(
 		.o_ready(dma_ready),
 
 		// System
-		.i_stall(vbus_fifo_full),
+		.i_stall(1'b0),
 		
 		// Bus
 		.o_bus_rw(dma_bus_rw),
@@ -423,8 +453,8 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
-		.ICACHE_SIZE(10),
-		.DCACHE_SIZE(8)
+		.ICACHE_SIZE(4),
+		.DCACHE_SIZE(4)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -462,8 +492,8 @@ module SoC(
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
 	
-	assign vbus_select = bus_address[31:28] == 4'h3;
-	assign vbus_address = { 4'h0, bus_address[27:0] };
+	assign vram_select = bus_address[31:28] == 4'h3;
+	assign vram_address = { 4'h0, bus_address[27:0] };
 
 	assign led_select = bus_address[31:28] == 4'h4;
 
@@ -485,6 +515,7 @@ module SoC(
 		rom_select ? rom_rdata :
 		ram_select ? ram_rdata :
 		sdram_select ? sdram_rdata :
+		vram_select ? vram_rdata :
 		uart_0_select ? uart_0_rdata :
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
@@ -495,7 +526,7 @@ module SoC(
 		rom_select ? rom_ready :
 		ram_select ? ram_ready :
 		sdram_select ? sdram_ready :
-		vbus_select ? vbus_ready :
+		vram_select ? vram_ready :
 		led_select ? led_ready :
 		uart_0_select ? uart_0_ready :
 		dma_select ? dma_ready :

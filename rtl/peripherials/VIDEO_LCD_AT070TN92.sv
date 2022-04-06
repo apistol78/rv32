@@ -12,6 +12,7 @@ module VIDEO_LCD_AT070NTN92 #(
 	parameter VBACK = 23,
 	parameter VFRONT = 22
 )(
+	input i_reset,
 	input i_clock,
 	input i_clock_out,
 
@@ -36,15 +37,21 @@ module VIDEO_LCD_AT070NTN92 #(
 
 	generate if (PRESCALE <= 1) begin
 		always_ff @(posedge i_clock) begin
-			if (vga_h == HLINE - 1) begin
+			if (i_reset) begin
 				vga_h <= 0;
-				if (vga_v == VLINE - 1)
-					vga_v <= 0;
-				else
-					vga_v <= vga_v + 1;
+				vga_v <= 0;
 			end
-			else
-				vga_h <= vga_h + 1;
+			else begin
+				if (vga_h == HLINE - 1) begin
+					vga_h <= 0;
+					if (vga_v == VLINE - 1)
+						vga_v <= 0;
+					else
+						vga_v <= vga_v + 1;
+				end
+				else
+					vga_h <= vga_h + 1;
+			end
 		end
 
 		always_comb begin
@@ -57,33 +64,52 @@ module VIDEO_LCD_AT070NTN92 #(
 		logic [7:0] prescale = 0;
 
 		always_ff @(posedge i_clock) begin
-			prescale <= prescale + 1;
-			if (prescale >= PRESCALE - 1) begin
-				if (vga_h == HLINE - 1) begin
-					vga_h <= 0;
-					if (vga_v == VLINE - 1)
-						vga_v <= 0;
-					else
-						vga_v <= vga_v + 1;
-				end
-				else
-					vga_h <= vga_h + 1;
+			if (i_reset) begin
 				prescale <= 0;
+				vga_h <= 0;
+				vga_v <= 0;
 			end
-			o_vga_clock <= prescale[0];
+			else begin
+				prescale <= prescale + 1;
+				if (prescale >= PRESCALE - 1) begin
+					if (vga_h == HLINE - 1) begin
+						vga_h <= 0;
+						if (vga_v == VLINE - 1)
+							vga_v <= 0;
+						else
+							vga_v <= vga_v + 1;
+					end
+					else
+						vga_h <= vga_h + 1;
+					prescale <= 0;
+				end
+				o_vga_clock <= prescale[0];
+			end
 		end
 	end endgenerate
 
-	assign o_data_enable = (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
-
-	logic [10:0] pl_pos_x;
-	logic [10:0] pl_pos_y;
+	// Cross clock domains of data enable to scan out positions.
+	logic pl_data_enable_a = 0;
+	logic pl_data_enable_b = 0;
+	
+	always @(posedge i_clock_out) begin
+		pl_data_enable_a <= (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
+		pl_data_enable_b <= pl_data_enable_a;
+		o_data_enable <= pl_data_enable_b;
+	end
+	
+	logic [10:0] pl_pos_x_a = 0;
+	logic [10:0] pl_pos_y_a = 0;
+	logic [10:0] pl_pos_x_b = 0;
+	logic [10:0] pl_pos_y_b = 0;
 
 	always @(posedge i_clock_out) begin
-		pl_pos_x <= (vga_h - HBACK);
-		pl_pos_y <= (vga_v - VBACK);
-		o_pos_x <= pl_pos_x;
-		o_pos_y <= pl_pos_y;
+		pl_pos_x_a <= vga_h;
+		pl_pos_y_a <= vga_v;
+		pl_pos_x_b <= pl_pos_x_a - HBACK;
+		pl_pos_y_b <= pl_pos_y_a - VBACK;
+		o_pos_x <= pl_pos_x_b;
+		o_pos_y <= pl_pos_y_b;
 	end
 
 endmodule
