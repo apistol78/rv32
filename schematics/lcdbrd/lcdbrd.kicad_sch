@@ -1504,14 +1504,14 @@
     (uuid fecceda7-75f9-4740-8dec-49f0847712ff)
   )
 
-  (text "B0 - W22\nB1 - Y22\nB2 - Y21\nB3 - W21\nB4 - U22\nB5 - V21\nB6 - V20\nB7 - W19"
+  (text "B0 - F7\nB1 - E7\nB2 - D6\nB3 - C6\nB4 - E9\nB5 - D9\nB6 - B5\nB7 - A5"
     (at -43.18 124.46 0)
-    (effects (font (size 1.27 1.27) bold) (justify left bottom))
+    (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 0bad6e34-dc02-48d2-b188-18882c095640)
   )
-  (text "R0 - AA14\nR1 - AA13\nR2 - AA15\nR3 - AB15\nR4 - Y15\nR5 - Y14\nR6 - AB18\nR7 - AB17"
+  (text "R0 - AA2\nR1 - AA1\nR2 - Y3\nR3 - W2\nR4 - U1\nR5 - U2\nR6 - N1\nR7 - N2"
     (at -43.18 81.28 0)
-    (effects (font (size 1.27 1.27) bold) (justify left bottom))
+    (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 4641bd03-bdbd-4fb2-b638-5de9c68c7ae9)
   )
   (text "DE - C17\nCLK - C19\nBKL - D19" (at 66.04 185.42 0)
@@ -1533,17 +1533,17 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid af4594b7-ad3f-4cfb-a457-4ecc14bbfaa6)
   )
-  (text "DE - T22\nCLK - T19\nBKL - N21" (at -22.86 96.52 0)
-    (effects (font (size 1.27 1.27) bold) (justify left bottom))
+  (text "DE - A8\nCLK - C9\nBKL - B11" (at -22.86 96.52 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid cfa82190-a0ae-430f-bfc8-4113205faaf4)
   )
   (text "K7" (at 43.18 166.37 0)
     (effects (font (size 1.27 1.27) (thickness 0.254) bold) (justify left bottom))
     (uuid e02d64bd-a4e1-40bf-a7c0-e910a89f0d32)
   )
-  (text "G0 - AA18\nG1 - AA17\nG2 - AA20\nG3 - AA19\nG4 - Y20\nG5 - Y19\nG6 - AB21\nG7 - AB20"
+  (text "G0 - G1\nG1 - G2\nG2 - E2\nG3 - D3\nG4 - C1\nG5 - C2\nG6 - G6\nG7 - H6"
     (at -43.18 102.87 0)
-    (effects (font (size 1.27 1.27) bold) (justify left bottom))
+    (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid eca1af2b-ff9c-422c-941c-5d9be7a4ca4d)
   )
 
