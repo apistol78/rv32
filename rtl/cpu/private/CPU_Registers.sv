@@ -64,7 +64,7 @@ module CPU_Registers #(
 		// Float point registers.   
 	end
 
-	always_ff @(posedge i_clock, posedge i_reset)
+	always_ff @(posedge i_clock)
 	begin
 		if (i_reset) begin
 			rs1 <= 0;
