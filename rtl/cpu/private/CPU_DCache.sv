@@ -50,6 +50,14 @@ module CPU_DCache #(
 	logic [SIZE:0] flush_address = 0;
 	logic [SIZE:0] next_flush_address = 0;
 
+	// Debug, only for verilated.
+`ifdef __VERILATOR__
+	logic [31:0] hit = 0;
+	logic [31:0] next_hit = 0;
+	logic [31:0] miss = 0;
+	logic [31:0] next_miss = 0;
+`endif
+
 	// Cache memory.
 	logic cache_rw = 0;
 	logic [SIZE - 1:0] cache_address = 0;
@@ -88,6 +96,11 @@ module CPU_DCache #(
 	always_ff @(posedge i_clock) begin
 		state <= next;
 		flush_address <= next_flush_address;
+
+`ifdef __VERILATOR__
+		hit <= next_hit;
+		miss <= next_miss;
+`endif		
 	end
 
 	always_comb begin
@@ -106,6 +119,11 @@ module CPU_DCache #(
 		cache_wdata = 0;
 		cache_address = i_address[(SIZE - 1) + 2:2];
 		
+`ifdef __VERILATOR__
+		next_hit = hit;
+		next_miss = miss;
+`endif
+
 		case (1'b1)	// synthesis full_case
 			state[IDLE]: begin
 				if (i_request) begin
@@ -213,12 +231,18 @@ module CPU_DCache #(
 					o_bus_request = 1;
 					o_bus_wdata = cache_entry_data;
 					next[WRITE_WAIT] = 1;
+`ifdef __VERILATOR__
+					next_miss = miss + 1;
+`endif
 				end
 				else begin
 					cache_rw = 1;
 					cache_wdata = { i_wdata, i_address[31:2], 2'b11 };
 					o_ready = 1;
 					next[IDLE] = 1;
+`ifdef __VERILATOR__
+					next_hit = hit + 1;
+`endif
 				end
 			end
 
@@ -249,6 +273,9 @@ module CPU_DCache #(
 				if (cache_entry_valid && cache_entry_address == i_address) begin
 					o_ready = 1;
 					next[IDLE] = 1;
+`ifdef __VERILATOR__
+					next_hit = hit + 1;
+`endif
 				end
 				else begin
 					if (/* cache_entry_valid && */ cache_entry_dirty) begin
@@ -263,6 +290,9 @@ module CPU_DCache #(
 						o_bus_request = 1;
 						next[READ_BUS_WAIT] = 1;
 					end
+`ifdef __VERILATOR__
+					next_miss = miss + 1;
+`endif
 				end
 			end
 

@@ -293,7 +293,7 @@ int main(int argc, const char **argv)
 	devices.push_back(new SD());
 
 	// Add audio device to record PWM audio.
-	//if (!cmdLine.hasOption(L"mute-audio"))
+	if (cmdLine.hasOption(L"record-audio"))
 		devices.push_back(&audio);
 
 	// Create trace devices.
@@ -405,12 +405,12 @@ int main(int argc, const char **argv)
 				device->eval(soc, time);
 
 			// Count number of cycles bus is active.
-			if (soc->SoC__DOT__cpu_ibus_request /* || soc->SoC__DOT__cpu_dbus_request*/)
+			if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 				busActive++;
 			// if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
 			// 	busCPUandDMA++;
-			if (soc->SoC__DOT__l2cache_bus_request)
-				busSDRAM++;
+			if (soc->SoC__DOT__w_sdram_request)
+			 	busSDRAM++;
 
 			if (soc->SoC__DOT__cpu__DOT__execute_busy)
 				stallExecute++;
@@ -494,19 +494,23 @@ int main(int argc, const char **argv)
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 				uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
 
-				// double l2 = ((double)soc->SoC__DOT__l2cache__DOT__hit * 100.0) / (soc->SoC__DOT__l2cache__DOT__hit + soc->SoC__DOT__l2cache__DOT__miss);
+				uint32_t ich = soc->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__hit;
+				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__miss;
+				double icr = (ich * 100.0) / (ich + icm);
+
+				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__hit;
+				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__miss;
+				double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
 					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
-					// str(L"%.2f%% L2", l2) << L", " <<
-					// str(L"%d", soc->SoC__DOT__l2cache__DOT__hit) << L", " <<
-					// str(L"%d", soc->SoC__DOT__l2cache__DOT__miss) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
 					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
-					//str(L"%d BP HIT", soc->SoC__DOT__cpu__DOT__fetch__DOT__bp_debug_hit) <<
+					str(L"%.2f%% I$ HIT", icr) << L", " <<
+					str(L"%.2f%% D$ HIT", dcr) << L", " <<
 					str(L"%d SAMPLES", audio.written()) <<
 					Endl;
 

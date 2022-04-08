@@ -38,6 +38,14 @@ module CPU_ICache#(
 	logic [SIZE:0] clear_address = 0;
 	logic [SIZE:0] next_clear_address = 0;
 
+	// Debug, only for verilated.
+`ifdef __VERILATOR__
+	logic [31:0] hit = 0;
+	logic [31:0] next_hit = 0;
+	logic [31:0] miss = 0;
+	logic [31:0] next_miss = 0;
+`endif
+
 	// Cache memory.
 	logic cache_rw = 0;
 	logic [63:0] cache_wdata = 0;
@@ -70,6 +78,11 @@ module CPU_ICache#(
 	always_ff @(posedge i_clock) begin
 		state <= next;
 		clear_address <= next_clear_address;
+
+`ifdef __VERILATOR__
+		hit <= next_hit;
+		miss <= next_miss;
+`endif		
 	end
 	
 	always_comb begin
@@ -83,7 +96,12 @@ module CPU_ICache#(
 		cache_rw = 0;
 		cache_wdata = 0;
 		cache_pc = i_input_pc;
-	
+
+`ifdef __VERILATOR__
+		next_hit = hit;
+		next_miss = miss;
+`endif
+
 		case (1'b1)
 			state[IDLE]: begin
 				if (!i_stall) begin
@@ -106,10 +124,16 @@ module CPU_ICache#(
 						o_rdata = cache_rdata[63:32];
 						cache_pc = i_input_pc + 4;
 						next[READ_SETUP] = 1;
+`ifdef __VERILATOR__
+						next_hit = hit + 1;
+`endif
 					end
 					else begin
 						o_bus_request = 1;
 						next[READ_BUS] = 1;
+`ifdef __VERILATOR__
+						next_miss = miss + 1;
+`endif
 					end
 				end
 				else begin
