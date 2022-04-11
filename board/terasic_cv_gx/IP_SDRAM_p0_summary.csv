@@ -3,28 +3,28 @@ Path, Setup Margin, Hold Margin
 "Address Command (Slow 1100mV 85C Model)",0.18,0.161
 "Bus Turnaround Time (Slow 1100mV 85C Model)",5.492,--
 "Core (Slow 1100mV 85C Model)",0.441,0.16
-"Core Recovery/Removal (Slow 1100mV 85C Model)",8.612,0.509
+"Core Recovery/Removal (Slow 1100mV 85C Model)",9.058,0.232
 "DQS vs CK (Slow 1100mV 85C Model)",1.194,0.57
 "Read Capture (Slow 1100mV 85C Model)",0.123,0.076
 "Write (Slow 1100mV 85C Model)",0.176,0.218
 "Address Command (Slow 1100mV 0C Model)",0.164,0.139
 "Bus Turnaround Time (Slow 1100mV 0C Model)",5.534,--
 "Core (Slow 1100mV 0C Model)",0.518,0.21
-"Core Recovery/Removal (Slow 1100mV 0C Model)",8.731,0.335
+"Core Recovery/Removal (Slow 1100mV 0C Model)",9.215,0.294
 "DQS vs CK (Slow 1100mV 0C Model)",1.234,0.611
 "Read Capture (Slow 1100mV 0C Model)",0.134,0.087
 "Write (Slow 1100mV 0C Model)",0.191,0.223
 "Address Command (Fast 1100mV 85C Model)",0.239,0.041
 "Bus Turnaround Time (Fast 1100mV 85C Model)",5.856,--
 "Core (Fast 1100mV 85C Model)",1.49,0.147
-"Core Recovery/Removal (Fast 1100mV 85C Model)",10.288,0.225
+"Core Recovery/Removal (Fast 1100mV 85C Model)",10.728,0.3
 "DQS vs CK (Fast 1100mV 85C Model)",1.541,0.907
 "Read Capture (Fast 1100mV 85C Model)",0.297,0.25
 "Write (Fast 1100mV 85C Model)",0.302,0.302
 "Address Command (Fast 1100mV 0C Model)",0.23,0.059
 "Bus Turnaround Time (Fast 1100mV 0C Model)",5.867,--
-"Core (Fast 1100mV 0C Model)",1.576,0.132
-"Core Recovery/Removal (Fast 1100mV 0C Model)",10.555,0.17
+"Core (Fast 1100mV 0C Model)",1.576,0.135
+"Core Recovery/Removal (Fast 1100mV 0C Model)",10.876,0.27
 "DQS vs CK (Fast 1100mV 0C Model)",1.537,0.917
 "Read Capture (Fast 1100mV 0C Model)",0.301,0.254
 "Write (Fast 1100mV 0C Model)",0.312,0.312

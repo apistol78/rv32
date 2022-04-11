@@ -55,7 +55,6 @@ static const struct {
 
 static void* primary_target = 0;
 static void* secondary_target = 0;
-static uint32_t need_fence = 0;
 
 static void reg_update_bits(int reg, int mask, int data)
 {
@@ -115,7 +114,6 @@ int32_t video_init()
 	{
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
-		need_fence = 0;
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
 	{
@@ -127,21 +125,17 @@ int32_t video_init()
 		}
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
-		need_fence = 0;
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
 	{
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
-		need_fence = 0;
 	}
 	else
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		if ((secondary_target = malloc(320 * 200)) == 0)
 			return 1;
-
-		need_fence = 1;
 	}
 
 	return 0;
@@ -175,12 +169,10 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	if (need_fence)
-	{
-		// Ensure data is written from DCACHE to VRAM before DMA.
-		__asm__ volatile ("fence");
-	}
+	// Ensure data is written from DCACHE to VRAM before DMA.
+	__asm__ volatile ("fence");
 
+	// Begin copying from secondary to primary target.
 	dma_copy(
 		primary_target,
 		secondary_target,

@@ -169,6 +169,12 @@ module CPU_ICache#(
 				end				
 			end
 		endcase
+
+		// Re-initialize cache at reset.
+		if (i_reset) begin
+			next = 1 << INITIALIZE;
+			next_clear_address = 0;
+		end
 	end
 
 endmodule

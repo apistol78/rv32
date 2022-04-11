@@ -25,7 +25,7 @@ int32_t __attribute__((used)) runtime_init()
 	printf("** FREQUENCY: %d MHz **\n", timer_get_frequency() / 1000000);
 
 	printf("** Initialize IRQ handler **\n");
-	interrupt_init();
+	//interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)

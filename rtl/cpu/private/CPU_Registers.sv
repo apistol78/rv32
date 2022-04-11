@@ -64,11 +64,12 @@ module CPU_Registers #(
 		// Float point registers.   
 	end
 
-	always_ff @(posedge i_clock)
+	always_ff @(posedge i_clock, posedge i_reset)
 	begin
 		if (i_reset) begin
 			rs1 <= 0;
 			rs2 <= 0;
+			rs3 <= 0;
 
 			write_tag <= 0;
 

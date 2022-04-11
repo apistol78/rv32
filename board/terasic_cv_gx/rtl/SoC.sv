@@ -159,10 +159,13 @@ module SoC(
 `define SOC_ENABLE_AUDIO
 
 	wire clock;
+	wire clock_video;
+	
 	IP_PLL_Clk pll_clk(
 		.refclk(CLOCK_125_p),
 		.rst(!CPU_RESET_n),
 		.outclk_0(clock),
+		.outclk_1(clock_video),
 		.locked()
 	);
 
@@ -187,24 +190,30 @@ module SoC(
 `ifdef SOC_ENABLE_VGA
 
 	assign HDMI_TX_DE = vga_enable;
-	assign HDMI_TX_CLK = vga_clock;
+	assign HDMI_TX_CLK = clock_video;
 
 	// Video signal generator
 	wire vga_enable;
-	wire vga_clock;
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
 
 	VGA #(
-		.SYSTEM_FREQUENCY(`FREQUENCY)
+		.HLINE(800),
+		.HBACK(144),
+		.HFRONT(16),
+		.HPULSE(96),
+		.VLINE(449),
+		.VBACK(36),
+		.VFRONT(13),
+		.VPULSE(2)
 	) vga(
-		.i_clock(clock),
+		.i_clock(clock_video),
+		.i_clock_out(clock),
 		.o_hsync(HDMI_TX_HS),
 		.o_vsync(HDMI_TX_VS),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
-		.o_pos_y(vga_pos_y),
-		.o_vga_clock(vga_clock)
+		.o_pos_y(vga_pos_y)
 	);
 	
 	// Video physical memory.
@@ -250,7 +259,7 @@ module SoC(
 	wire vram_pb_ready;
 
 	BusAccess #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) vram_bus(
 		.i_reset(reset),
 		.i_clock(clock),
