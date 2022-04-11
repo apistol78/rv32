@@ -4,38 +4,41 @@
 module BusAccess #(
 	parameter [0:0] REGISTERED = 1'b1
 )(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Bus
 	output reg o_bus_rw,				// Data read/write
-	output wire o_bus_request,			// IO request.
-	input wire i_bus_ready,				// IO request ready.
+	output o_bus_request,				// IO request.
+	input i_bus_ready,					// IO request ready.
 	output reg [31:0] o_bus_address,	// Address
-	input wire [31:0] i_bus_rdata,		// Read data
+	input [31:0] i_bus_rdata,			// Read data
 	output reg [31:0] o_bus_wdata,		// Write data,
 
 	// Port A (Read only)
-	input wire i_pa_request,
-	output wire o_pa_ready,
-	input wire [31:0] i_pa_address,
-	output wire [31:0] o_pa_rdata,
+	input i_pa_request,
+	output o_pa_ready,
+	input [31:0] i_pa_address,
+	output [31:0] o_pa_rdata,
+	output o_pa_busy,
 
 	// Port B
-	input wire i_pb_rw,
-	input wire i_pb_request,
-	output wire o_pb_ready,
-	input wire [31:0] i_pb_address,
-	output wire [31:0] o_pb_rdata,
-	input wire [31:0] i_pb_wdata,
+	input i_pb_rw,
+	input i_pb_request,
+	output o_pb_ready,
+	input [31:0] i_pb_address,
+	output [31:0] o_pb_rdata,
+	input [31:0] i_pb_wdata,
+	output o_pb_busy,
 
 	// Port C
-	input wire i_pc_rw,
-	input wire i_pc_request,
-	output wire o_pc_ready,
-	input wire [31:0] i_pc_address,
-	output wire [31:0] o_pc_rdata,
-	input wire [31:0] i_pc_wdata
+	input i_pc_rw,
+	input i_pc_request,
+	output o_pc_ready,
+	input [31:0] i_pc_address,
+	output [31:0] o_pc_rdata,
+	input [31:0] i_pc_wdata,
+	output o_pc_busy
 );
 
 	reg [1:0] state = 0;
@@ -56,6 +59,10 @@ module BusAccess #(
 		assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
 		assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
 		assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+
+		assign o_pa_busy = (state == 2'd1);
+		assign o_pb_busy = (state == 2'd2);
+		assign o_pc_busy = (state == 2'd3);
 
 		assign o_bus_request = i_pa_request | i_pb_request | i_pc_request;
 
@@ -134,6 +141,10 @@ module BusAccess #(
 		assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
 		assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
 		assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+
+		assign o_pa_busy = (state == 2'd1);
+		assign o_pb_busy = (state == 2'd2);
+		assign o_pc_busy = (state == 2'd3);
 
 		assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
 
