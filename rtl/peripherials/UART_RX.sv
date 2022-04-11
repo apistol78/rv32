@@ -24,16 +24,16 @@ module UART_RX #(
 	
 	// FIFO
 	wire rx_fifo_empty;
-	//wire rx_fifo_full;
 	reg rx_fifo_write = 0;
 	reg rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
-	FIFO #(
-		.DEPTH(4)
+	FIFO64 #(
+		.DEPTH(4),
+		.WIDTH(8)
 	) rx_fifo(
 		.i_clock(i_clock),
 		.o_empty(rx_fifo_empty),
-		.o_full(/*rx_fifo_full*/),
+		.o_full(),
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
 		.i_read(rx_fifo_read),
@@ -53,6 +53,7 @@ module UART_RX #(
 			o_rdata <= 32'h0;
 		end
 		else begin
+			rx_fifo_read <= 0;
 			if (i_request) begin
 				if (i_address == 2'h0) begin	// Read byte from fifo.
 					case (rds)
@@ -79,7 +80,6 @@ module UART_RX #(
 				end
 			end
 			else begin
-				rx_fifo_read <= 0;
 				rds <= 0;
 			end
 		end

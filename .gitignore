@@ -4,6 +4,7 @@
 /board/terasic_cv_gx/db
 /board/terasic_cv_gx/output_files
 /board/terasic_cv_gx/incremental*
+/board/terasic_cv_gx/greybox_tmp
 
 /board/qmtech_cv/db
 /board/qmtech_cv/output_files
@@ -15,6 +16,7 @@
 *.jou
 
 /board/terasic_cv_gx/simulation
+*.qws
 
 /code/Doom/doomgeneric/build
 /code/Rv32T/SoC

@@ -25,8 +25,9 @@ module UART_TX #(
 	logic tx_fifo_write = 0;
 	logic tx_fifo_read = 0;
 	wire [7:0] tx_fifo_rdata;
-	FIFO #(
-		.DEPTH(64)
+	FIFO64 #(
+		.DEPTH(64),
+		.WIDTH(8)
 	) tx_fifo(
 		.i_clock(i_clock),
 		.o_empty(tx_fifo_empty),
