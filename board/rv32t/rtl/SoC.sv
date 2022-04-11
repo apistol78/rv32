@@ -153,24 +153,21 @@ module SoC(
 `ifdef SOC_ENABLE_VGA
 
 	assign HDMI_TX_DE = vga_enable;
-	assign HDMI_TX_CLK = vga_clock;
+	assign HDMI_TX_CLK = clock;
 
 	// Video signal generator.
 	wire vga_enable;
-	wire vga_clock;
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
 
-	VGA #(
-		.SYSTEM_FREQUENCY(`FREQUENCY)
-	) vga(
+	VGA vga(
 		.i_clock(clock),
+		.i_clock_out(clock),
 		.o_hsync(HDMI_TX_HS),
 		.o_vsync(HDMI_TX_VS),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
-		.o_pos_y(vga_pos_y),
-		.o_vga_clock(vga_clock)
+		.o_pos_y(vga_pos_y)
 	);
 	
 	// Video memory.
@@ -599,6 +596,7 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
+		.o_pa_busy(),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
@@ -607,6 +605,7 @@ module SoC(
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
 		.i_pb_wdata(cpu_dbus_wdata),
+		.o_pb_busy(),
 
 		// Port C (DMA)
 		.i_pc_rw(dma_bus_rw),
@@ -614,7 +613,8 @@ module SoC(
 		.o_pc_ready(dma_bus_ready),
 		.i_pc_address(dma_bus_address),
 		.o_pc_rdata(dma_bus_rdata),
-		.i_pc_wdata(dma_bus_wdata)
+		.i_pc_wdata(dma_bus_wdata),
+		.o_pc_busy()
 	);
 
 	// CPU
