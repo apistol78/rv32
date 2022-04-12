@@ -169,24 +169,24 @@ module SoC(
 		.locked()
 	);
 
-	reg [31:0] cont = 0;
-	always@(posedge clock)
-		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
+	//=====================================
 
-	reg[4:0] sample = 0;
-	always @(posedge clock)
-	begin
-		if (cont == 32'd4_000_000)
-			sample[4:0] = { sample[3:0], KEY[0] };
-		else 
-			sample[4:0] = sample[4:0];
-	end
+	wire soft_reset;
+	wire global_reset;
+	wire reset;
+	RESET rst(
+		.i_clock(clock),
+		.i_reset_sw(KEY[0]),
+		.o_reset_0(soft_reset),
+		.o_reset_1(global_reset),
+		.o_reset_2(reset)
+	);
 
-	wire soft_reset_n = (sample[1:0] == 2'b10) ? 1'b0 : 1'b1;
-	wire global_reset_n = (sample[3:2] == 2'b10) ? 1'b0 : 1'b1;
-	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	wire reset = !start_n;
-  
+	wire soft_reset_n = !soft_reset;
+	wire global_reset_n = !global_reset;
+
+	//=====================================
+
 `ifdef SOC_ENABLE_VGA
 
 	assign HDMI_TX_DE = vga_enable;

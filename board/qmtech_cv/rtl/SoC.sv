@@ -7,7 +7,7 @@ module SoC(
 	input sys_clk,		// 50 MHz oscillator
 	input sys_reset_n,
 	
-	input key_1,
+	input key_1,		// Active low.
 	
 	output led_1,
 	
@@ -46,25 +46,22 @@ module SoC(
 		.locked()
 	);
 	
-	reg [31:0] cont = 0;
-	always@(posedge clock)
-		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
+	//=====================================
 
-	reg[4:0] sample = 0;
-	always @(posedge clock)
-	begin
-		if (cont == 32'd4_000_000)
-			sample[4:0] = { sample[3:0], key_1 };
-		else 
-			sample[4:0] = sample[4:0];
-	end
+	wire reset;
+	RESET rst(
+		.i_clock(clock),
+		.i_reset_sw(!key_1),
+		.o_reset_0(),
+		.o_reset_1(),
+		.o_reset_2(reset)
+	);
 
-	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	wire reset = !start_n;
-	
+	//=====================================
+
 	assign led_1 = !led_led[0];
 
-	reg [31:0] counter = 0;
+	logic [31:0] counter = 0;
 	always_ff @(posedge clock)
 	   counter <= counter + 1;
 	   
@@ -421,6 +418,7 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
+		.o_pa_busy(),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
@@ -429,6 +427,7 @@ module SoC(
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
 		.i_pb_wdata(cpu_dbus_wdata),
+		.o_pb_busy(),
 
 		// Port C (DMA)
 		.i_pc_rw(dma_bus_rw),
@@ -436,7 +435,8 @@ module SoC(
 		.o_pc_ready(dma_bus_ready),
 		.i_pc_address(dma_bus_address),
 		.o_pc_rdata(dma_bus_rdata),
-		.i_pc_wdata(dma_bus_wdata)
+		.i_pc_wdata(dma_bus_wdata),
+		.o_pc_busy()
 	);
 
 	// CPU
