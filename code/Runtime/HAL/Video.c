@@ -126,6 +126,11 @@ int32_t video_init()
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
 	}
+	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
+	{
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
 	{
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
