@@ -31,7 +31,7 @@ module  IP_PLL_Clk_0002(
 		.output_clock_frequency1("100.000000 MHz"),
 		.phase_shift1("9375 ps"),
 		.duty_cycle1(50),
-		.output_clock_frequency2("26.666666 MHz"),
+		.output_clock_frequency2("28.000000 MHz"),
 		.phase_shift2("0 ps"),
 		.duty_cycle2(50),
 		.output_clock_frequency3("0 MHz"),

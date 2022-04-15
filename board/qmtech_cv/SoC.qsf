@@ -67,8 +67,8 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to key_1
 set_location_assignment PIN_D17 -to led_1
 
 #set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_tx
-set_location_assignment PIN_AA15 -to uart_tx
-set_location_assignment PIN_AA14 -to uart_rx
+set_location_assignment PIN_AB18 -to uart_tx
+set_location_assignment PIN_AB17 -to uart_rx
 #set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_rx
 
 set_location_assignment PIN_AB11 -to sdram_clk
@@ -213,33 +213,19 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lcd_b[3]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lcd_b[2]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lcd_b[1]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lcd_b[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[7]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[6]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_b[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_bkl
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_clk
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_de
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[7]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[6]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_g[0]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[7]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[6]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to lcd_r[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_1
+set_location_assignment PIN_AA14 -to sd_dat[3]
+set_location_assignment PIN_AA13 -to sd_dat[2]
+set_location_assignment PIN_Y15 -to sd_dat[1]
+set_location_assignment PIN_Y14 -to sd_dat[0]
+set_location_assignment PIN_AA15 -to sd_clk
+set_location_assignment PIN_AB15 -to sd_cmd
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dat[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_clk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_cmd
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dat[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dat[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sd_dat[1]
 set_global_assignment -name VERILOG_FILE ip/wbsdram.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SDRAM_interface_2.sv
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedMultiply.qip
@@ -253,10 +239,12 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_clear
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_dual.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_latency.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO64.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/PLIC.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/RESET.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SD.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SRAM_interface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/Timer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_TX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_RX.sv
@@ -294,5 +282,84 @@ set_global_assignment -name SDC_FILE SoC.sdc
 set_global_assignment -name QIP_FILE ip/IP_PLL_Clk.qip
 set_global_assignment -name SIP_FILE ip/IP_PLL_Clk.sip
 set_global_assignment -name SIGNALTAP_FILE SoC.stp
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_1
+set_location_assignment PIN_P16 -to sram_a[17]
+set_location_assignment PIN_N21 -to sram_a[16]
+set_location_assignment PIN_N20 -to sram_a[15]
+set_location_assignment PIN_L17 -to sram_a[14]
+set_location_assignment PIN_K21 -to sram_a[13]
+set_location_assignment PIN_K22 -to sram_a[12]
+set_location_assignment PIN_N16 -to sram_a[11]
+set_location_assignment PIN_M16 -to sram_a[10]
+set_location_assignment PIN_Y20 -to sram_a[9]
+set_location_assignment PIN_AB20 -to sram_a[8]
+set_location_assignment PIN_AB21 -to sram_a[7]
+set_location_assignment PIN_AB22 -to sram_a[6]
+set_location_assignment PIN_AA22 -to sram_a[5]
+set_location_assignment PIN_W21 -to sram_a[4]
+set_location_assignment PIN_Y21 -to sram_a[3]
+set_location_assignment PIN_V21 -to sram_a[2]
+set_location_assignment PIN_U22 -to sram_a[1]
+set_location_assignment PIN_W19 -to sram_a[0]
+set_location_assignment PIN_W22 -to sram_ce_n
+set_location_assignment PIN_M18 -to sram_d[15]
+set_location_assignment PIN_L19 -to sram_d[14]
+set_location_assignment PIN_L18 -to sram_d[13]
+set_location_assignment PIN_L22 -to sram_d[12]
+set_location_assignment PIN_M22 -to sram_d[11]
+set_location_assignment PIN_K17 -to sram_d[10]
+set_location_assignment PIN_P17 -to sram_d[9]
+set_location_assignment PIN_T20 -to sram_d[8]
+set_location_assignment PIN_T19 -to sram_d[7]
+set_location_assignment PIN_P22 -to sram_d[6]
+set_location_assignment PIN_R21 -to sram_d[5]
+set_location_assignment PIN_R22 -to sram_d[4]
+set_location_assignment PIN_T22 -to sram_d[3]
+set_location_assignment PIN_U21 -to sram_d[2]
+set_location_assignment PIN_U20 -to sram_d[1]
+set_location_assignment PIN_V20 -to sram_d[0]
+set_location_assignment PIN_N19 -to sram_lb_n
+set_location_assignment PIN_M20 -to sram_oe_n
+set_location_assignment PIN_M21 -to sram_ub_n
+set_location_assignment PIN_Y22 -to sram_we_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[17]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[16]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[15]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[14]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[13]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[12]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[11]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[10]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_a[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_ce_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[15]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[14]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[13]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[12]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[11]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[10]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_d[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_lb_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_oe_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_ub_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR OFF -to sram_d[15]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to sram_d[15]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
