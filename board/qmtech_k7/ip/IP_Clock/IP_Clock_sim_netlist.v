@@ -1,7 +1,7 @@
 // Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2021.2 (lin64) Build 3367213 Tue Oct 19 02:47:39 MDT 2021
-// Date        : Sat Apr  2 22:45:13 2022
+// Date        : Thu Apr 14 16:41:56 2022
 // Host        : pn-conan-ws running 64-bit Pop!_OS 21.10
 // Command     : write_verilog -force -mode funcsim
 //               /home/apistol/private/rv32/board/qmtech_k7/ip/IP_Clock/IP_Clock_sim_netlist.v
@@ -18,20 +18,17 @@ module IP_Clock
     clk_out2,
     clk_out3,
     reset,
-    locked,
     clk_in1);
   output clk_out1;
   output clk_out2;
   output clk_out3;
   input reset;
-  output locked;
   input clk_in1;
 
   (* IBUF_LOW_PWR *) wire clk_in1;
   wire clk_out1;
   wire clk_out2;
   wire clk_out3;
-  wire locked;
   wire reset;
 
   IP_Clock_clk_wiz inst
@@ -39,7 +36,6 @@ module IP_Clock
         .clk_out1(clk_out1),
         .clk_out2(clk_out2),
         .clk_out3(clk_out3),
-        .locked(locked),
         .reset(reset));
 endmodule
 
@@ -48,13 +44,11 @@ module IP_Clock_clk_wiz
     clk_out2,
     clk_out3,
     reset,
-    locked,
     clk_in1);
   output clk_out1;
   output clk_out2;
   output clk_out3;
   input reset;
-  output locked;
   input clk_in1;
 
   wire clk_in1;
@@ -67,7 +61,6 @@ module IP_Clock_clk_wiz
   wire clk_out3_IP_Clock;
   wire clkfbout_IP_Clock;
   wire clkfbout_buf_IP_Clock;
-  wire locked;
   wire reset;
   wire NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED;
@@ -81,6 +74,7 @@ module IP_Clock_clk_wiz
   wire NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED;
   wire NLW_mmcm_adv_inst_DRDY_UNCONNECTED;
+  wire NLW_mmcm_adv_inst_LOCKED_UNCONNECTED;
   wire NLW_mmcm_adv_inst_PSDONE_UNCONNECTED;
   wire [15:0]NLW_mmcm_adv_inst_DO_UNCONNECTED;
 
@@ -112,7 +106,7 @@ module IP_Clock_clk_wiz
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(16.000000),
+    .CLKFBOUT_MULT_F(20.000000),
     .CLKFBOUT_PHASE(0.000000),
     .CLKFBOUT_USE_FINE_PS("FALSE"),
     .CLKIN1_PERIOD(20.000000),
@@ -121,11 +115,11 @@ module IP_Clock_clk_wiz
     .CLKOUT0_DUTY_CYCLE(0.500000),
     .CLKOUT0_PHASE(0.000000),
     .CLKOUT0_USE_FINE_PS("FALSE"),
-    .CLKOUT1_DIVIDE(4),
+    .CLKOUT1_DIVIDE(5),
     .CLKOUT1_DUTY_CYCLE(0.500000),
     .CLKOUT1_PHASE(0.000000),
     .CLKOUT1_USE_FINE_PS("FALSE"),
-    .CLKOUT2_DIVIDE(30),
+    .CLKOUT2_DIVIDE(38),
     .CLKOUT2_DUTY_CYCLE(0.500000),
     .CLKOUT2_PHASE(0.000000),
     .CLKOUT2_USE_FINE_PS("FALSE"),
@@ -186,7 +180,7 @@ module IP_Clock_clk_wiz
         .DO(NLW_mmcm_adv_inst_DO_UNCONNECTED[15:0]),
         .DRDY(NLW_mmcm_adv_inst_DRDY_UNCONNECTED),
         .DWE(1'b0),
-        .LOCKED(locked),
+        .LOCKED(NLW_mmcm_adv_inst_LOCKED_UNCONNECTED),
         .PSCLK(1'b0),
         .PSDONE(NLW_mmcm_adv_inst_PSDONE_UNCONNECTED),
         .PSEN(1'b0),

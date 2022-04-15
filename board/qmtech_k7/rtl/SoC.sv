@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-`define FREQUENCY 100000000
+`define FREQUENCY 125_000_000
 
 module SoC(
     input sys_clk,
@@ -13,6 +13,10 @@ module SoC(
     input uart_rx,
     output uart_tx,
     
+	output sd_clk,
+	inout sd_cmd,
+	inout [3:0] sd_dat,
+
 	output lcd_bkl,
 	output lcd_clk,
 	output lcd_de,
@@ -40,33 +44,27 @@ module SoC(
 	wire clock_ref;
 	wire clock_video;
     IP_Clock ipclk(
-        .clk_out1(clock),		// 100 MHz
+        .clk_out1(clock),		// 125 MHz
 		.clk_out2(clock_ref),	// 200 MHz
 		.clk_out3(clock_video),	// 26.6 MHz
         .reset(~sys_rst),
-        .locked(),
         .clk_in1(sys_clk)
     );
     
-	reg [31:0] cont = 0;
-	always@(posedge clock)
-		cont <= (cont == 32'd4_000_001 ) ? 32'd0 : cont + 1'b1;
+	//=====================================
 
-	reg [4:0] sample = 0;
-	always @(posedge clock)
-	begin
-		if (cont == 32'd4_000_000)
-			sample[4:0] <= { sample[3:0], ~sys_rst };
-		else 
-			sample[4:0] <= sample[4:0];
-	end
-
-	wire start_n = (sample[4:3] == 2'b01) ? 1'b0 : 1'b1;
-	wire reset = !start_n;
+	wire reset;
+	RESET rst(
+		.i_clock(clock),
+		.i_reset_sw(!key_1),
+		.o_reset_0(),
+		.o_reset_1(),
+		.o_reset_2(reset)
+	);
 	
 	//=====================================
 	
-	reg [31:0] counter = 0;
+	logic [31:0] counter = 0;
 	always_ff @(posedge clock)
 	   counter <= counter + 1;
 
@@ -82,10 +80,10 @@ module SoC(
 	assign lcd_bkl = counter[15];	// Backlight PWM controlled
 	assign lcd_clk = vga_clock;
 	assign lcd_de = vga_enable;
-	assign lcd_r = vmode_video_rdata[23:16];
-	assign lcd_g = vmode_video_rdata[15:8];
-	assign lcd_b = vmode_video_rdata[7:0];
-
+	assign lcd_r = vga_enable_scale ? vmode_video_rdata[23:16] : 8'h0;
+	assign lcd_g = vga_enable_scale ? vmode_video_rdata[15:8] : 8'h0;
+	assign lcd_b = vga_enable_scale ? vmode_video_rdata[7:0] : 8'h0;
+	
 	// Video signal generator.
 	wire vga_enable;
 	wire [10:0] vga_pos_x;
@@ -109,9 +107,12 @@ module SoC(
 		.o_vga_clock(vga_clock)
 	);
 
-	// Scale resolution to 640*400.
-	wire [10:0] vga_pos_x_scale = (vga_pos_x * 640) / 800;
-	wire [10:0] vga_pos_y_scale = (vga_pos_y * 400) / 480;
+	// Center into view.
+	// (800-640)/2 = 80
+	// (480-400)/2 = 40
+	wire [10:0] vga_pos_x_scale = vga_pos_x - 80;
+	wire [10:0] vga_pos_y_scale = vga_pos_y - 40;
+	wire vga_enable_scale = vga_enable && (vga_pos_x >= 80 && vga_pos_x < 640+80 && vga_pos_y >= 40 && vga_pos_y < 400+40);
 	
 	// Video memory.
 	wire vram_pa_request;
@@ -171,7 +172,7 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		// Video signal interface.
-		.i_video_request(vga_enable),
+		.i_video_request(vga_enable_scale),
 		.i_video_pos_x(vga_pos_x_scale[9:1]),
 		.i_video_pos_y(vga_pos_y_scale[9:1]),
 		.o_video_rdata(vmode_video_rdata),
@@ -231,23 +232,38 @@ module SoC(
 	//=====================================
     // SDRAM ($20000000)
 
+	wire w_sdram_request;
+	wire w_sdram_rw;
+	wire [31:0] w_sdram_address;
+	wire [127:0] w_sdram_wdata;
+	wire [127:0] w_sdram_rdata;
+	wire w_sdram_ready;
+	
 	wire sdram_select;
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
-	wire sdram_ready;
+	wire sdram_ready;	
 
     SDRAM_interface sdram(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_clock_ref(clock_ref),
 
+/*
+		.i_request(w_sdram_request),
+		.i_rw(w_sdram_rw),
+		.i_address(w_sdram_address),
+		.i_wdata(w_sdram_wdata),
+		.o_rdata(w_sdram_rdata),
+		.o_ready(w_sdram_ready),
+*/		
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(sdram_address),
 		.i_wdata(bus_wdata),
 		.o_rdata(sdram_rdata),
 		.o_ready(sdram_ready),
-
+		
 		.ddr3_dq(ddr3_dq),
 		.ddr3_dqs_n(ddr3_dqs_n),
 		.ddr3_dqs_p(ddr3_dqs_p),
@@ -263,6 +279,26 @@ module SoC(
 		.ddr3_dm(ddr3_dm),
 		.ddr3_odt(ddr3_odt)
     );
+
+/*
+	LRU_cache sdram_lru(
+		.i_clock(clock),
+
+		.i_request(sdram_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(sdram_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready),
+
+		.o_sdram_request(w_sdram_request),
+		.o_sdram_rw(w_sdram_rw),
+		.o_sdram_address(w_sdram_address),
+		.o_sdram_wdata(w_sdram_wdata),
+		.i_sdram_rdata(w_sdram_rdata),
+		.i_sdram_ready(w_sdram_ready)
+	);
+*/
 
 	//=====================================
 	// LEDS
@@ -300,6 +336,26 @@ module SoC(
 		// ---
 		.UART_RX(uart_rx),
 		.UART_TX(uart_tx)
+	);
+
+	//=====================================
+
+	// SD
+	wire sd_select;
+	wire [31:0] sd_rdata;
+	wire sd_ready;
+	SD sd(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(sd_select && bus_request),
+		.i_rw(bus_rw),
+		.i_wdata(bus_wdata),
+		.o_rdata(sd_rdata),
+		.o_ready(sd_ready),
+		// ---
+		.SD_CLK(sd_clk),
+		.SD_CMD(sd_cmd),
+		.SD_DAT(sd_dat)
 	);
 
 	//=====================================
@@ -506,6 +562,8 @@ module SoC(
 	assign uart_0_select = bus_address[31:24] == 8'h50;
 	assign uart_0_address = bus_address[3:2];
 
+	assign sd_select = bus_address[31:28] == 4'h8;
+
 	assign dma_select = bus_address[31:28] == 4'h9;
 	assign dma_address = bus_address[3:2];
 
@@ -523,6 +581,7 @@ module SoC(
 		sdram_select ? sdram_rdata :
 		vram_select ? vram_rdata :
 		uart_0_select ? uart_0_rdata :
+		sd_select ? sd_rdata :
 		dma_select ? dma_rdata :
 		timer_select ? timer_rdata :
 		plic_select ? plic_rdata :
@@ -535,6 +594,7 @@ module SoC(
 		vram_select ? vram_ready :
 		led_select ? led_ready :
 		uart_0_select ? uart_0_ready :
+		sd_select ? sd_ready :
 		dma_select ? dma_ready :
 		timer_select ? timer_ready :
 		plic_select ? plic_ready :

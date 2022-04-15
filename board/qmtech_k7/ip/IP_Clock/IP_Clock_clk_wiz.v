@@ -56,9 +56,9 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__100.00000______0.000______50.0______186.330____144.334
-// clk_out2__200.00000______0.000______50.0______161.087____144.334
-// clk_out3__26.66667______0.000______50.0______254.699____144.334
+// clk_out1__125.00000______0.000______50.0______154.207____164.985
+// clk_out2__200.00000______0.000______50.0______142.107____164.985
+// clk_out3__26.31579______0.000______50.0______232.437____164.985
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -76,7 +76,6 @@ module IP_Clock_clk_wiz
   output        clk_out3,
   // Status and control signals
   input         reset,
-  output        locked,
   input         clk_in1
  );
   // Input buffering
@@ -130,18 +129,18 @@ wire clk_in2_IP_Clock;
     .COMPENSATION         ("ZHOLD"),
     .STARTUP_WAIT         ("FALSE"),
     .DIVCLK_DIVIDE        (1),
-    .CLKFBOUT_MULT_F      (16.000),
+    .CLKFBOUT_MULT_F      (20.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
     .CLKOUT0_DIVIDE_F     (8.000),
     .CLKOUT0_PHASE        (0.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
-    .CLKOUT1_DIVIDE       (4),
+    .CLKOUT1_DIVIDE       (5),
     .CLKOUT1_PHASE        (0.000),
     .CLKOUT1_DUTY_CYCLE   (0.500),
     .CLKOUT1_USE_FINE_PS  ("FALSE"),
-    .CLKOUT2_DIVIDE       (30),
+    .CLKOUT2_DIVIDE       (38),
     .CLKOUT2_PHASE        (0.000),
     .CLKOUT2_DUTY_CYCLE   (0.500),
     .CLKOUT2_USE_FINE_PS  ("FALSE"),
@@ -189,7 +188,6 @@ wire clk_in2_IP_Clock;
     .RST                 (reset_high));
   assign reset_high = reset; 
 
-  assign locked = locked_int;
 // Clock Monitor clock assigning
 //--------------------------------------
  // Output buffering

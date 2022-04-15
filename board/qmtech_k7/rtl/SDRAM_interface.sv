@@ -8,8 +8,13 @@ module SDRAM_interface(
 	input i_request,
 	input i_rw,
 	input [31:0] i_address,
+/*	
+	input [127:0] i_wdata,
+	output logic [127:0] o_rdata,
+*/
 	input [31:0] i_wdata,
 	output logic [31:0] o_rdata,
+	
 	output logic o_ready,
 	
 	// Chip
@@ -134,9 +139,15 @@ module SDRAM_interface(
 						app_en <= 1;
 						app_wdf_wren <= 1;
 						app_addr <= { i_address[25:2], 1'b0, 3'b000 };
+						
+						//app_wdf_mask <= 16'h0000;
 						app_wdf_mask <= 16'hfff0;	// Only write 32 bit.
+						
 						app_cmd <= CMD_WRITE;
+						
+						//app_wdf_data <= i_wdata;
 						app_wdf_data <= { 96'b0, i_wdata };
+						
 						state <= WAIT_WRITE;
 					end
 				end
@@ -147,7 +158,10 @@ module SDRAM_interface(
 			if (app_rdy && app_en)
 				app_en <= 0;
 			if (app_rd_data_valid) begin
+				
+				//o_rdata <= app_rd_data;
 				o_rdata <= app_rd_data[31:0];
+				
 				o_ready <= 1;
 				state <= WAIT_END_REQUEST;
 			end
