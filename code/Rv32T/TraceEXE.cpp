@@ -24,7 +24,7 @@ void TraceEXE::eval(VSoC* soc, uint64_t time)
 
 		*m_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs1);
 		*m_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs2);
-		*m_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs3);
+		// *m_os << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__forward__DOT__rs3);
 
 		*m_os << Endl;
 		m_lastTraceTag = soc->SoC__DOT__execute_debug_tag;

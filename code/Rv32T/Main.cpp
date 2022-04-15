@@ -409,8 +409,8 @@ int main(int argc, const char **argv)
 				busActive++;
 			// if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
 			// 	busCPUandDMA++;
-			if (soc->SoC__DOT__w_sdram_request)
-			 	busSDRAM++;
+			// if (soc->SoC__DOT__sdram_request)
+			//  	busSDRAM++;
 
 			if (soc->SoC__DOT__cpu__DOT__execute_busy)
 				stallExecute++;
