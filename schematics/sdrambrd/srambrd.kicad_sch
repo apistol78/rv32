@@ -1948,6 +1948,11 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 60d26db4-b138-46b0-b681-4276ebd1d4cf)
   )
+  (text "A0 - W19\nA1 - U22\nA2 - V21\nA3 - Y21\nA4 - W21 ?\nA5 - AA22\nA6 - AB22\nA7 - AB21\nA8 - AB20\nA9 - Y20\nA10 - M16\nA11 - N16\nA12 - K22\nA13 - K21\nA14 - L17\nA15 - N20\nA16 - N21\nA17 - P16\n\nCE_N - W22\nUB_N - M21\nWE_N - Y22\nOE_N - M20\nLB_N - N19\n\nD0 - V20\nD1 - U20\nD2 - U21\nD3 - T22\nD4 - R22\nD5 - P21 or R21\nD6 - P22\nD7 - T19 ?\nD8 - T20\nD9 - P17\nD10 - K17\nD11 - M22\nD12 - L22\nD13 - L18\nD14 - L19\nD15 - M18\n\n\n"
+    (at -30.48 110.49 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 7e011950-a3cc-4e75-9a13-7c672e770701)
+  )
 
   (global_label "LB_N" (shape input) (at 194.31 116.84 180) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
