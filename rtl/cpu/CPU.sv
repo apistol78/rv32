@@ -93,7 +93,7 @@ module CPU #(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
-		.i_fetch_data(fetch_data),
+		.i_fetch_data(predecode_data),
 		.o_rs1(rs1),
 		.o_rs2(rs2),
 		.o_rs3(rs3),
@@ -156,6 +156,37 @@ module CPU #(
 	);
 
 	//====================================================
+	// PRE DECODE
+
+	fetch_data_t predecode_data_0;
+
+	CPU_PreDecode predecode(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		
+		// Input
+		.i_data(fetch_data),
+
+		// Output
+		.o_data(predecode_data_0)
+	);
+
+	fetch_data_t predecode_data;
+
+	CPU_SkidBuffer #(
+		.DW($bits(fetch_data_t))
+	) predecode_skid(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+
+		.i_data(predecode_data_0),
+		.o_busy(),
+
+		.o_data(predecode_data),
+		.i_busy(execute_busy)	
+	);
+
+	//====================================================
 	// DECODE
 
 	wire decode_fault;
@@ -168,7 +199,7 @@ module CPU #(
 
 		// Input
 		.i_execute_busy(execute_busy),
-		.i_data(fetch_data),
+		.i_data(predecode_data),
 
 		// Output
 		.o_data(decode_data)

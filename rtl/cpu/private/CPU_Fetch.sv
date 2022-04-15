@@ -38,14 +38,14 @@ module CPU_Fetch #(
 	} state_t;
 
 	state_t state = WAIT_ICACHE;
-	reg [31:0] pc = RESET_VECTOR;
+	logic [31:0] pc = RESET_VECTOR;
 	fetch_data_t data = 0;
-	reg [31:0] starve = 0;
+	logic [31:0] starve = 0;
 
 	// ICache
 	wire [31:0] icache_rdata;
 	wire icache_ready;
-	reg icache_stall;
+	logic icache_stall;
 
 	CPU_ICache #(
 		.SIZE(ICACHE_SIZE)
@@ -72,11 +72,6 @@ module CPU_Fetch #(
 	`undef INSTRUCTION
 	`define INSTRUCTION icache_rdata
 	`include "private/generated/Instructions_decode.sv"
-
-	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR | is_R4;
-	wire have_RS2 = is_B | is_R | is_S | is_R4;
-	wire have_RS3 = is_R4;
-	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR | is_R4;
 
 	assign o_data = data;
 
@@ -110,14 +105,6 @@ module CPU_Fetch #(
 							data.tag <= data.tag + 1;
 							data.instruction <= icache_rdata;
 							data.pc <= pc;
-
-							// Decode register indices here since we
-							// need those for fetching registers while
-							// we are decoding rest of instruction.
-							data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 6'h0);
-							data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 6'h0);
-							data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 6'h0);
-							data.inst_rd  <= register_t'(have_RD  ? { RD_bank , `INSTRUCTION[ 11:7] } : 6'h0);
 
 							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
 								// Branch instruction, need to wait
