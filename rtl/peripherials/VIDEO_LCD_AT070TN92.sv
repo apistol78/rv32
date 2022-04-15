@@ -27,6 +27,7 @@ module VIDEO_LCD_AT070NTN92 #(
 
 	logic [10:0] vga_h = 0;
 	logic [10:0] vga_v = 0;
+	logic vga_clock = 0;
 
 	initial begin
 		o_data_enable = 0;
@@ -55,7 +56,7 @@ module VIDEO_LCD_AT070NTN92 #(
 		end
 
 		always_comb begin
-			o_vga_clock <= i_clock;
+			vga_clock <= i_clock;
 		end
 	end endgenerate
 
@@ -83,7 +84,7 @@ module VIDEO_LCD_AT070NTN92 #(
 						vga_h <= vga_h + 1;
 					prescale <= 0;
 				end
-				o_vga_clock <= prescale[0];
+				vga_clock <= prescale[0];
 			end
 		end
 	end endgenerate
@@ -92,10 +93,17 @@ module VIDEO_LCD_AT070NTN92 #(
 	logic pl_data_enable_a = 0;
 	logic pl_data_enable_b = 0;
 	
+	logic pl_vga_clock_a = 0;
+	logic pl_vga_clock_b = 0;
+
 	always @(posedge i_clock_out) begin
 		pl_data_enable_a <= (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
 		pl_data_enable_b <= pl_data_enable_a;
 		o_data_enable <= pl_data_enable_b;
+
+		pl_vga_clock_a <= vga_clock;
+		pl_vga_clock_b <= pl_vga_clock_a;
+		o_vga_clock <= pl_vga_clock_b;
 	end
 	
 	logic [10:0] pl_pos_x_a = 0;

@@ -66,7 +66,7 @@ module VMODE_chunky #(
 		.o_pb_ready()
 	);
 
-	logic [2:0] state = 0;
+	logic [0:0] state = 0;
 	logic [31:0] quad = 0;
 	logic [31:0] next_quad = 0;
 
@@ -136,12 +136,12 @@ module VMODE_chunky #(
 	
 		o_vram_pb_request <= 0;
 		o_vram_pb_rw <= 0;
-		o_vram_pb_address <= ((i_video_pos_x + 2) & ~3) + (i_video_pos_y * PPITCH);
 		o_vram_pb_wdata <= 0;
 	
 		case (state)
 			0: begin
-				if (((i_video_pos_x + 2) & 3) == 0) begin
+				if ((i_video_pos_x & 3) == 0) begin
+					o_vram_pb_address <= (i_video_pos_x & ~3) + (i_video_pos_y * PPITCH);
 					o_vram_pb_request <= 1;
 					state <= 1;
 				end
@@ -152,13 +152,8 @@ module VMODE_chunky #(
 				if (i_vram_pb_ready) begin
 					o_vram_pb_request <= 0;
 					next_quad <= i_vram_pb_rdata;
-					state <= 2;
-				end
-			end
-
-			2: begin
-				if (((i_video_pos_x + 1) & 3) == 3)
 					state <= 0;
+				end
 			end
 		endcase
 	end

@@ -35,6 +35,7 @@ module LRU_cache(
 	logic [127:0] line;
 	logic valid = 0;
 	logic dirty = 0;
+	logic ready = 0;
 
 	wire [27:0] input_address_page = i_address[31:4];
 	wire [1:0] input_address_dword = i_address[3:2];
@@ -42,6 +43,10 @@ module LRU_cache(
 	initial begin
 		o_ready = 0;
 		o_sdram_request = 0;
+	end
+	
+	always_comb begin
+	    o_ready = ready && i_request;
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -102,13 +107,13 @@ module LRU_cache(
 					endcase
 					dirty <= 1;
 				end						
-				o_ready <= 1;
+				ready <= 1;
 				state <= WAIT_END;			
 			end
 
 			WAIT_END: begin
 				if (!i_request) begin
-					o_ready <= 0;
+					ready <= 0;
 					state <= IDLE;
 				end
 			end

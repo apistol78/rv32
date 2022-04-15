@@ -2,38 +2,39 @@
 `timescale 1ns/1ns
 
 module SRAM_interface(
-	input wire i_reset,
-	input wire i_clock,
-	input wire i_request,
-	input wire i_rw,
-	input wire [31:0] i_address,
-	input wire [31:0] i_wdata,
+	input i_reset,
+	input i_clock,
+	input i_request,
+	input i_rw,
+	input [31:0] i_address,
+	input [31:0] i_wdata,
 	output reg [31:0] o_rdata,
-	output wire o_ready,
+	output o_ready,
 
 	output reg [17:0] SRAM_A,
-	inout wire [15:0] SRAM_D,
-	output reg SRAM_CE_n,
-	output wire SRAM_OE_n,
+	inout [15:0] SRAM_D,
+	output SRAM_CE_n,
+	output SRAM_OE_n,
 	output reg SRAM_WE_n,
-	output reg SRAM_LB_n,
-	output reg SRAM_UB_n
+	output SRAM_LB_n,
+	output SRAM_UB_n
 );
 	// Number of cycles for entire transaction, must to be multiple of 2.
 	// 50 MHz -> 8
 	localparam CYCLES = 8;
 
-	reg [15:0] count;
-	reg [15:0] wdata;
+	logic [15:0] count;
+	logic [15:0] wdata;
 	
 	initial begin
 		count = 0;
 		SRAM_A = 18'h0;
-		SRAM_CE_n = 0;
 		SRAM_WE_n = 1;
-		SRAM_LB_n = 0;
-		SRAM_UB_n = 0;
 	end
+
+	assign SRAM_CE_n = 1'b0;
+	assign SRAM_LB_n = 1'b0;
+	assign SRAM_UB_n = 1'b0;
 	
 	// Output 
 	assign SRAM_D = (i_request && i_rw) ? wdata : 16'hz;
@@ -48,7 +49,7 @@ module SRAM_interface(
 	assign o_ready = i_request && count >= (CYCLES - 1);
 
 	// Output 16-bit SRAM address, first low then high parts.
-	always @(*) begin
+	always_comb begin
 		SRAM_A = 32'h0;
 		
 		if (i_request) begin
@@ -60,7 +61,7 @@ module SRAM_interface(
 	end
 
 	// Output SRAM write enable, memory is stored on positive edge.
-	always @(*) begin
+	always_comb begin
 		SRAM_WE_n = 1;
 
 		if (i_request && i_rw) begin
@@ -72,7 +73,7 @@ module SRAM_interface(
 	end
 
 	// Output 16-bit SRAM data, first low the high part.
-	always @(*) begin
+	always_comb begin
 		wdata = 32'h0;
 
 		if (i_request && i_rw) begin
@@ -84,7 +85,7 @@ module SRAM_interface(
 	end
 
 	// Increment counter, store data read from SRAM.
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			count <= 0;
 		end
