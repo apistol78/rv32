@@ -47,9 +47,9 @@ enum
 	RISCV_EXCP_STORE_AMO_PAGE_FAULT = 15,			/* Store/AMO page fault */
 };
 
-#define PLIC_ENABLE		(volatile uint32_t*)0xb0002000
-#define PLIC_CLAIM_0	(volatile uint32_t*)0xb0200004
-#define PLIC_COMPLETE_0	(volatile uint32_t*)0xb0200004
+#define PLIC_ENABLE		(volatile uint32_t*)(PLIC_BASE + 0x00002000)
+#define PLIC_CLAIM_0	(volatile uint32_t*)(PLIC_BASE + 0x00200004)
+#define PLIC_COMPLETE_0	(volatile uint32_t*)(PLIC_BASE + 0x00200004)
 
 irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0, 0 };
 uint32_t g_interrupt_enable = 0;

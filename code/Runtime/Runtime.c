@@ -45,16 +45,4 @@ int32_t __attribute__((used)) runtime_init()
 
 void runtime_update()
 {
-	if (uart_rx_empty(1))
-		return;
-
-	uint8_t cmd = uart_rx_u8(1);
-	if (cmd == 0x01)	// key state
-		;
-	else if (cmd == 0x02)	// mouse move
-		;
-	else if (cmd == 0x03)	// gamepad digital state
-		;
-	else if (cmd == 0x04)	// gamepad analog move
-		;
 }

@@ -39,12 +39,13 @@ static void uart_tx_printHex(uint32_t v)
 
 static void fatal_error(uint8_t error)
 {
+	volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
 	for (;;)
 	{
-		*LED_BASE = 0x80 | error;
+		*led = 0x80 | error;
 		for (uint32_t i = 0; i < 1000000; ++i)
 			__asm__ volatile ("nop");
-		*LED_BASE = 0x00 | error;
+		*led = 0x00 | error;
 		for (uint32_t i = 0; i < 1000000; ++i)
 			__asm__ volatile ("nop");
 	}
@@ -52,6 +53,38 @@ static void fatal_error(uint8_t error)
 
 void main()
 {
+	volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
+	
+	*led = 0x00;
+
+	// Welcome
+	for (uint32_t I = 0; I < 4; ++I)
+	{
+		for (uint32_t lv = 0; lv < 256; ++lv)
+		{
+			for (uint32_t i = 0; i < 10; ++i)
+			{
+				for (uint32_t j = 0; j < 256; ++j)
+				{
+					*led = (j < lv) ? 0xff : 0x00;
+					__asm__ volatile ( "nop" );
+				}
+			}
+		}
+		for (uint32_t lv = 0; lv < 256; ++lv)
+		{
+			for (uint32_t i = 0; i < 10; ++i)
+			{
+				for (uint32_t j = 0; j < 256; ++j)
+				{
+					*led = (j > lv) ? 0xff : 0x00;
+					__asm__ volatile ( "nop" );
+				}
+			}
+		}		
+	}
+
+/*
 	// Initialize data.
 	{
 		extern uint32_t _data_rom;
@@ -151,13 +184,12 @@ void main()
 		fatal_error(3);
 	}
 	else	// No kernal.elf found, fall back to UART.
+*/
 	{
-		uart_tx_print("No KERNAL found, waiting for UART...\n");
-
 		for (;;)
 		{
 			uint8_t cmd = uart_rx_u8(0);
-			*LED_BASE = (uint32_t)cmd;
+			*led = (uint32_t)cmd;
 
 			// poke
 			if (cmd == 0x01)
@@ -223,6 +255,9 @@ void main()
 					continue;
 				}
 
+				// Ensure DCACHE is flushed.
+				__asm__ volatile ("fence");
+
 				uart_tx_u8(0, 0x80);	// Ok
 
 				for (uint8_t i = 0; i < nb; ++i)
@@ -258,7 +293,7 @@ void main()
 				{
 					uart_tx_u8(0, 0x80);	// Ok
 
-					// Ensure all data is written to SDRAM before calling user program.
+					// Ensure DCACHE is flushed.
 					__asm__ volatile ("fence");
 					
 					if (sp != 0)
@@ -279,7 +314,6 @@ void main()
 			// echo
 			else
 				uart_tx_u8(0, cmd);
-
 		}
 	}
 }

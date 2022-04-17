@@ -1,7 +1,7 @@
 -- Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2021.2 (lin64) Build 3367213 Tue Oct 19 02:47:39 MDT 2021
--- Date        : Thu Apr 14 16:41:56 2022
+-- Date        : Sat Apr 16 12:11:10 2022
 -- Host        : pn-conan-ws running 64-bit Pop!_OS 21.10
 -- Command     : write_vhdl -force -mode synth_stub
 --               /home/apistol/private/rv32/board/qmtech_k7/ip/IP_Clock/IP_Clock_stub.vhdl

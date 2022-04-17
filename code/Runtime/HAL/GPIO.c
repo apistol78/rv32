@@ -1,5 +1,8 @@
 #include "Runtime/HAL/GPIO.h"
 
+#define GPIO_CTRL	(volatile uint32_t*)(GPIO_BASE)
+#define GPIO_IO		(volatile uint32_t*)(GPIO_BASE + 0x04)
+
 void gpio_set_direction(int pin, int direction)
 {
 	uint32_t gc = *GPIO_CTRL;

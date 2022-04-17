@@ -23,7 +23,7 @@ module ClockDivider #(
 			o_clock <= 0;
 		end
 		else begin
-			if (counter >= MAX_RATE[CNT_WIDTH - 1:0]) begin
+			if (counter >= MAX_RATE) begin
 				counter <= 0;
 				o_clock <= ~o_clock;
 			end else begin

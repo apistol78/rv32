@@ -1,13 +1,13 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
 
-#define TIMER_MS            (volatile uint32_t*)0xa0000000
-#define TIMER_CYCLES_L      (volatile uint32_t*)0xa0000004
-#define TIMER_CYCLES_H      (volatile uint32_t*)0xa0000008
-#define TIMER_COMPARE_L     (volatile uint32_t*)0xa000000c
-#define TIMER_COMPARE_H     (volatile uint32_t*)0xa0000010
-#define TIMER_FREQUENCY     (volatile uint32_t*)0xa0000014
-#define TIMER_DEVICE_ID     (volatile uint32_t*)0xa0000018
+#define TIMER_MS            (volatile uint32_t*)(TIMER_BASE)
+#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x04)
+#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x08)
+#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x0c)
+#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x10)
+#define TIMER_FREQUENCY     (volatile uint32_t*)(TIMER_BASE + 0x14)
+#define TIMER_DEVICE_ID     (volatile uint32_t*)(TIMER_BASE + 0x18)
 
 uint32_t timer_get_ms()
 {

@@ -85,6 +85,7 @@ module LRU_cache(
 					page <= input_address_page;
 					line <= i_sdram_rdata;
 					valid <= 1;
+					dirty <= 0;
 					state <= PROCESS;
 				end
 			end
@@ -112,6 +113,7 @@ module LRU_cache(
 			end
 
 			WAIT_END: begin
+				ready <= 1;
 				if (!i_request) begin
 					ready <= 0;
 					state <= IDLE;

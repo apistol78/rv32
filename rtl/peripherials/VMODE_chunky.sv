@@ -66,9 +66,11 @@ module VMODE_chunky #(
 		.o_pb_ready()
 	);
 
-	logic [0:0] state = 0;
-	logic [31:0] quad = 0;
-	logic [31:0] next_quad = 0;
+	logic [3:0] state = 0;
+//	logic [31:0] quad = 0;
+//	logic [31:0] next_quad = 0;
+
+	logic [31:0] quad [3:0];
 
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 
@@ -113,25 +115,15 @@ module VMODE_chunky #(
 	//===============================
 	// Video
 
-	always_comb begin
-		palette_video_address = 0;
-		o_video_rdata = 0;
-		if (i_video_request) begin
-			case (byte_index)
-				0: palette_video_address = quad[7:0];
-				1: palette_video_address = quad[15:8];
-				2: palette_video_address = quad[23:16];
-				3: palette_video_address = quad[31:24];
-			endcase
-			o_video_rdata = palette_video_rdata;
-		end
-	end
-	
 	always_ff @(posedge i_clock) begin
-	 	if ((i_video_pos_x & 3) == 0)
-	 		quad <= next_quad;
-	 end
-	
+		case (i_video_pos_x & 3)
+		0: o_video_rdata <= quad[0];
+		1: o_video_rdata <= quad[1];
+		2: o_video_rdata <= quad[2];
+		3: o_video_rdata <= quad[3];
+		endcase
+	end
+
 	always_ff @(posedge i_clock) begin
 	
 		o_vram_pb_request <= 0;
@@ -151,9 +143,32 @@ module VMODE_chunky #(
 				o_vram_pb_request <= 1;
 				if (i_vram_pb_ready) begin
 					o_vram_pb_request <= 0;
-					next_quad <= i_vram_pb_rdata;
-					state <= 0;
+					palette_video_address = i_vram_pb_rdata[7:0];
+					state <= 2;
 				end
+			end
+
+			2: begin
+				quad[0] <= palette_video_rdata;
+				palette_video_address = i_vram_pb_rdata[15:8];
+				state <= 3;
+			end
+
+			3: begin
+				quad[1] <= palette_video_rdata;
+				palette_video_address = i_vram_pb_rdata[23:16];
+				state <= 4;
+			end
+
+			4: begin
+				quad[2] <= palette_video_rdata;
+				palette_video_address = i_vram_pb_rdata[31:24];
+				state <= 5;
+			end
+
+			5: begin
+				quad[3] <= palette_video_rdata;
+				state <= 0;
 			end
 		endcase
 	end

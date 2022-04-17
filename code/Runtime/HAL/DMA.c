@@ -1,6 +1,11 @@
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Interrupt.h"
 
+#define DMA_FROM    (volatile uint32_t*)(DMA_BASE)
+#define DMA_TO		(volatile uint32_t*)(DMA_BASE + 0x04)
+#define DMA_COUNT	(volatile uint32_t*)(DMA_BASE + 0x08)
+#define DMA_RUN		(volatile uint32_t*)(DMA_BASE + 0x0c)
+
 uint32_t dma_write(void* dst, uint32_t count, uint32_t value)
 {
 	interrupt_disable();

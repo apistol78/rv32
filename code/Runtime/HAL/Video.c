@@ -175,7 +175,7 @@ void* video_get_secondary_target()
 void video_swap()
 {
 	// Ensure data is written from DCACHE to VRAM before DMA.
-	__asm__ volatile ("fence");
+	// __asm__ volatile ("fence");
 
 	// Begin copying from secondary to primary target.
 	dma_copy(

@@ -74,7 +74,7 @@ module CPU_Memory #(
 	wire dcache_need_flush;
 
 	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
-	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2) || (i_data.mem_address[31:28] == 4'h3);
+	wire dcache_cacheable = (i_data.mem_address[31:28] == 4'h2); // || (i_data.mem_address[31:28] == 4'h3);
 
 	generate
 		if (DCACHE_SIZE > 0) begin

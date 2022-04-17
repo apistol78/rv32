@@ -1,19 +1,21 @@
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
 
+#define I2C_CTRL (volatile uint32_t*)(I2C_BASE)
+
 #define I2C_RD_SDA() \
-	((*I2C_BASE & 1) == 1)
+	((*I2C_CTRL & 1) == 1)
 #define I2C_WR_SDA_LOW() \
-	{ *I2C_BASE = 0x0010; }
+	{ *I2C_CTRL = 0x0010; }
 #define I2C_WR_SDA_HIGH() \
-	{ *I2C_BASE = 0x0011; }
+	{ *I2C_CTRL = 0x0011; }
 
 #define I2C_RD_SCL() \
-	((*I2C_BASE & 2) == 2)
+	((*I2C_CTRL & 2) == 2)
 #define I2C_WR_SCL_LOW() \
-	{ *I2C_BASE = 0x0020; }
+	{ *I2C_CTRL = 0x0020; }
 #define I2C_WR_SCL_HIGH() \
-	{ *I2C_BASE = 0x0022; }
+	{ *I2C_CTRL = 0x0022; }
 
 void i2c_dly()
 {

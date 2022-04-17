@@ -4,34 +4,36 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
 
+#define SD_CTRL (volatile uint32_t*)(SD_BASE)
+
 /*
 |x|x|x|x|x|x|x|x|dat|dat|dat|dat|cmd|dat dir|cmd dir|clk|
 */
 #define SD_WR_CLK_LOW() \
-	{ *SD_BASE = 0x00000100; }
+	{ *SD_CTRL = 0x00000100; }
 #define SD_WR_CLK_HIGH() \
-	{ *SD_BASE = 0x00000101; }
+	{ *SD_CTRL = 0x00000101; }
 
 #define SD_WR_CMD_DIR_IN() \
-	{ *SD_BASE = 0x00000200; }
+	{ *SD_CTRL = 0x00000200; }
 #define SD_WR_CMD_DIR_OUT() \
-	{ *SD_BASE = 0x00000202; }
+	{ *SD_CTRL = 0x00000202; }
 
 #define SD_WR_CMD_LOW() \
-	{ *SD_BASE = 0x00000800; }
+	{ *SD_CTRL = 0x00000800; }
 #define SD_WR_CMD_HIGH() \
-	{ *SD_BASE = 0x00000808; }
+	{ *SD_CTRL = 0x00000808; }
 #define SD_RD_CMD() \
-	( (*SD_BASE & 0x00000008) == 0x00000008 )
+	( (*SD_CTRL & 0x00000008) == 0x00000008 )
 
 #define SD_WR_DAT_DIR_IN() \
-	{ *SD_BASE = 0x00000400; }
+	{ *SD_CTRL = 0x00000400; }
 #define SD_WR_DAT_DIR_OUT() \
-	{ *SD_BASE = 0x00000404; }
+	{ *SD_CTRL = 0x00000404; }
 #define SD_WR_DAT(d4) \
-	{ *SD_BASE = 0x0000f000 | ((d4 & 15) << 4); }
+	{ *SD_CTRL = 0x0000f000 | ((d4 & 15) << 4); }
 #define SD_RD_DAT() \
-	( (*SD_BASE & 0x000000f0) >> 4 )
+	( (*SD_CTRL & 0x000000f0) >> 4 )
 
 #define SD_VHS_2V7_3V6				0x01
 #define CMD8_DEFAULT_TEST_PATTERN	0xaa
@@ -533,7 +535,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 
 int32_t sd_init()
 {
-	*SD_BASE = 0x0000ff00;
+	*SD_CTRL = 0x0000ff00;
 
 	// Determine data width from device id.
 	s_dataBits = 4;

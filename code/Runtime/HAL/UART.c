@@ -2,14 +2,14 @@
 
 static volatile uint32_t* c_base[] =
 {
-	(volatile uint32_t*)0x50000000,
-	(volatile uint32_t*)0x51000000
+	(volatile uint32_t*)UART_0_BASE,
+	(volatile uint32_t*)UART_1_BASE
 };
 
 static volatile uint32_t* c_status[] =
 {
-	(volatile uint32_t*)0x50000004,
-	(volatile uint32_t*)0x51000004
+	(volatile uint32_t*)(UART_0_BASE + 0x04),
+	(volatile uint32_t*)(UART_1_BASE + 0x04)
 };
 
 void uart_tx_u8(uint8_t port, uint8_t data)
