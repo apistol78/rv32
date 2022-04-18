@@ -255,14 +255,7 @@ module SoC(
 		.i_wdata(w_sdram_wdata),
 		.o_rdata(w_sdram_rdata),
 		.o_ready(w_sdram_ready),
-/*
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
-*/		
+		
 		.ddr3_dq(ddr3_dq),
 		.ddr3_dqs_n(ddr3_dqs_n),
 		.ddr3_dqs_p(ddr3_dqs_p),
@@ -288,6 +281,7 @@ module SoC(
 		.i_wdata(bus_wdata),
 		.o_rdata(sdram_rdata),
 		.o_ready(sdram_ready),
+		.i_oddeven(bus_pa_busy),	// Instruction or data request
 
 		.o_sdram_request(w_sdram_request),
 		.o_sdram_rw(w_sdram_rw),
@@ -295,14 +289,6 @@ module SoC(
 		.o_sdram_wdata(w_sdram_wdata),
 		.i_sdram_rdata(w_sdram_rdata),
 		.i_sdram_ready(w_sdram_ready)
-	);
-	
-	ila_0 dbg(
-	   .clk(clock),
-	   .probe0(sdram_select && bus_request),
-	   .probe1(sdram_ready),
-	   .probe2(w_sdram_request),
-	   .probe3(w_sdram_ready)
 	);
 	
 	//====================================================
@@ -320,6 +306,7 @@ module SoC(
 	wire bus_pa_ready;
 	wire [31:0] bus_pa_address;
 	wire [31:0] bus_pa_rdata;
+	wire bus_pa_busy;
 
 	wire bus_pb_rw;
 	wire bus_pb_request;
@@ -345,6 +332,7 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
+		.o_pa_busy(bus_pa_busy),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
