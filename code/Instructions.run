@@ -491,6 +491,10 @@ local instructions = {
 		name = "FADD",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) + FR(f.rs2);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.ADD
 		},
@@ -504,6 +508,10 @@ local instructions = {
 		name = "FCVT_W_S",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R(f.rd) = (int32_t)FR(f.rs1);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.F2I
 		},
@@ -516,6 +524,10 @@ local instructions = {
 		name = "FCVT_S_W",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = (float)R(f.rs1);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.I2F
 		},
@@ -529,6 +541,10 @@ local instructions = {
 		name = "FCVT_S_WU",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = (float)R(f.rs1);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.UI2F
 		},
@@ -542,6 +558,10 @@ local instructions = {
 		name = "FDIV",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) / FR(f.rs2);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.DIV
 		},
@@ -572,6 +592,10 @@ local instructions = {
 		name = "FEQ",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.CMP_EQUAL
 		},
@@ -641,6 +665,10 @@ local instructions = {
 		name = "FMADD",
 		format = "R4",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR4(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2) + FR(f.rs3);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MADD
 		},
@@ -655,6 +683,10 @@ local instructions = {
 		name = "FMSUB",
 		format = "R4",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR4(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2) - FR(f.rs3);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MSUB
 		},
@@ -669,6 +701,10 @@ local instructions = {
 		name = "FNMADD",
 		format = "R4",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR4(word);
+			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) - FR(f.rs3);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.NMADD
 		},
@@ -683,6 +719,10 @@ local instructions = {
 		name = "FNMSUB",
 		format = "R4",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR4(word);
+			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) + FR(f.rs3);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.NMSUB
 		},
@@ -723,6 +763,10 @@ local instructions = {
 		name = "FMUL",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MUL
 		},
@@ -736,6 +780,10 @@ local instructions = {
 		name = "FMV_X_W",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R(f.rd) = FR_u(f.rs1);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MOV
 		},
@@ -749,6 +797,10 @@ local instructions = {
 		name = "FMV_W_X",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR_u(f.rd) = R(f.rs1);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MOV
 		},
@@ -768,6 +820,12 @@ local instructions = {
 		name = "FSGNJ",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | (tmp2 & 0x80000000);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.SGNJ
 		},
@@ -781,6 +839,12 @@ local instructions = {
 		name = "FSGNJN",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ 0x80000000);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.SGNJN
 		},
@@ -794,6 +858,12 @@ local instructions = {
 		name = "FSGNJX",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ (tmp1 & 0x80000000));
+		]],		
 		verilog_fpu = {
 			operation = fpu_operations.SGNJX
 		},
@@ -807,6 +877,10 @@ local instructions = {
 		name = "FSUB",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) - FR(f.rs2);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.SUB
 		},

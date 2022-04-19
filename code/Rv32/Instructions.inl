@@ -236,28 +236,38 @@ else if ((word & 0xffffffff) == 0x00000073)
 }
 else if ((word & 0xfe00007f) == 0x00000053)
 {
-	log::error << L"FADD not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) + FR(f.rs2);
+		
+	return true;
 }
 else if ((word & 0xfff0007f) == 0xc0000053)
 {
-	log::error << L"FCVT_W_S not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			R(f.rd) = (int32_t)FR(f.rs1);
+		
+	return true;
 }
 else if ((word & 0xfff0007f) == 0xd0000053)
 {
-	log::error << L"FCVT_S_W not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = (float)R(f.rs1);
+		
+	return true;
 }
 else if ((word & 0xfff0007f) == 0xd0100053)
 {
-	log::error << L"FCVT_S_WU not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = (float)R(f.rs1);
+		
+	return true;
 }
 else if ((word & 0xfe00007f) == 0x18000053)
 {
-	log::error << L"FDIV not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) / FR(f.rs2);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
@@ -271,8 +281,10 @@ else if ((word & 0x0000707f) == 0x0000100f)
 }
 else if ((word & 0xfe00707f) == 0xa0002053)
 {
-	log::error << L"FEQ not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00003007)
 {
@@ -298,23 +310,31 @@ else if ((word & 0x0000707f) == 0x00002007)
 }
 else if ((word & 0x0600007f) == 0x00000043)
 {
-	log::error << L"FMADD not implemented." << Endl;
-	return false;
+			auto f = parseFormatR4(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2) + FR(f.rs3);
+		
+	return true;
 }
 else if ((word & 0x0600007f) == 0x00000047)
 {
-	log::error << L"FMSUB not implemented." << Endl;
-	return false;
+			auto f = parseFormatR4(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2) - FR(f.rs3);
+		
+	return true;
 }
 else if ((word & 0x0600007f) == 0x0000004f)
 {
-	log::error << L"FNMADD not implemented." << Endl;
-	return false;
+			auto f = parseFormatR4(word);
+			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) - FR(f.rs3);
+		
+	return true;
 }
 else if ((word & 0x0600007f) == 0x0000004b)
 {
-	log::error << L"FNMSUB not implemented." << Endl;
-	return false;
+			auto f = parseFormatR4(word);
+			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) + FR(f.rs3);
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x28000053)
 {
@@ -328,18 +348,24 @@ else if ((word & 0xfe00707f) == 0x28001053)
 }
 else if ((word & 0xfe00007f) == 0x10000053)
 {
-	log::error << L"FMUL not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) * FR(f.rs2);
+		
+	return true;
 }
 else if ((word & 0xfff0707f) == 0xe0000053)
 {
-	log::error << L"FMV_X_W not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			R(f.rd) = FR_u(f.rs1);
+		
+	return true;
 }
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
-	log::error << L"FMV_W_X not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR_u(f.rd) = R(f.rs1);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00003027)
 {
@@ -348,23 +374,37 @@ else if ((word & 0x0000707f) == 0x00003027)
 }
 else if ((word & 0xfe00707f) == 0x20000053)
 {
-	log::error << L"FSGNJ not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | (tmp2 & 0x80000000);
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x20001053)
 {
-	log::error << L"FSGNJN not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ 0x80000000);
+		
+	return true;
 }
 else if ((word & 0xfe00707f) == 0x20002053)
 {
-	log::error << L"FSGNJX not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			uint32_t tmp1 = FR_u(f.rs1);
+			uint32_t tmp2 = FR_u(f.rs2);
+			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ (tmp1 & 0x80000000));
+		
+	return true;
 }
 else if ((word & 0xfe00007f) == 0x08000053)
 {
-	log::error << L"FSUB not implemented." << Endl;
-	return false;
+			auto f = parseFormatR(word);
+			FR(f.rd) = FR(f.rs1) - FR(f.rs2);
+		
+	return true;
 }
 else if ((word & 0x0000707f) == 0x00002027)
 {

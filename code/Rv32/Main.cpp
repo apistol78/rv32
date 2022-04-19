@@ -36,6 +36,7 @@
 #include "Rv32/LoadELF.h"
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
+#include "Rv32/Timer.h"
 #include "Rv32/UART.h"
 #include "Rv32/Unknown.h"
 #include "Rv32/Video.h"
@@ -102,11 +103,10 @@ int main(int argc, const char** argv)
 	Unknown led(L"LED", false);
 	UART uart1;
 	UART uart2;
-	Unknown gpio(L"GPIO", true);
 	Unknown i2c(L"I2C", true);
 	Unknown sd(L"SD", true);
 	Unknown dma(L"DMA", true);
-	Unknown tmr(L"TIMER", true);
+	TimerD tmr;
 	Unknown plic(L"PLIC", true);
 
 	Bus bus;
@@ -114,15 +114,14 @@ int main(int argc, const char** argv)
 	bus.map(0x10000000, 0x20000000, &ram);
 	bus.map(0x20000000, 0x30000000, &sdram);
 	bus.map(0x30000000, 0x40000000, &video);
-	bus.map(0x40000000, 0x50000000, &led);
-	bus.map(0x50000000, 0x50000100, &uart1);
-	bus.map(0x51000000, 0x51000100, &uart2);
-	bus.map(0x60000000, 0x70000000, &gpio);
-	bus.map(0x70000000, 0x80000000, &i2c);
-	bus.map(0x80000000, 0x90000000, &sd);
-	bus.map(0x90000000, 0xa0000000, &dma);
-	bus.map(0xa0000000, 0xb0000000, &tmr);
-	bus.map(0xb0000000, 0xc0000000, &plic);
+	bus.map(0x50000000, 0x50000100, &led);
+	bus.map(0x51000000, 0x51000100, &uart1);
+	bus.map(0x52000000, 0x52000100, &uart2);
+	bus.map(0x53000000, 0x53000100, &i2c);
+	bus.map(0x54000000, 0x54000100, &sd);
+	bus.map(0x55000000, 0x55000100, &tmr);
+	bus.map(0x57000000, 0x57000100, &dma);
+	bus.map(0x58000000, 0x58000100, &plic);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))

@@ -19,6 +19,7 @@ int32_t __attribute__((used)) runtime_init()
 		case 2: printf("** DEVICE: Terasic Cyclone V GX **\n"); break;
 		case 3: printf("** DEVICE: QMTech Cyclone V **\n"); break;
 		case 4: printf("** DEVICE: QMTech Kintex-7 **\n"); break;
+		case 5: printf("** DEVICE: Rv32 **\n"); break;
 		default: printf("** DEVICE: UNKNOWN **\n"); break;
 	}
 

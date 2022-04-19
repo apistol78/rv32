@@ -35,16 +35,22 @@ bool Video::writeU16(uint32_t address, uint16_t value)
 
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
-	if (address < (320 * 200) * 4)
+	if (address >= 0x01000000)
 	{
-		uint32_t offset = address / 4;
-
-		uint32_t x = offset % 320;
-		uint32_t y = offset / 320;
-
-		m_image->setPixel(x, y, Color4f::fromColor4ub(
+		m_palette[(address / 4) & 255] = Color4f::fromColor4ub(
 			Color4ub(value)
-		));
+		);
+	}
+	else if (address < (320 * 200) * 4)
+	{
+		const uint32_t offset = address;
+		const uint32_t x = offset % 320;
+		const uint32_t y = offset / 320;
+
+		m_image->setPixel(x + 3, y, m_palette[(value & 0xff000000) >> 24]);
+		m_image->setPixel(x + 2, y, m_palette[(value & 0x00ff0000) >> 16]);
+		m_image->setPixel(x + 1, y, m_palette[(value & 0x0000ff00) >> 8]);
+		m_image->setPixel(x + 0, y, m_palette[(value & 0x000000ff)]);
 	}
 	return true;
 }

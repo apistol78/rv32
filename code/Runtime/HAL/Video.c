@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
@@ -178,11 +179,18 @@ void video_swap()
 	// __asm__ volatile ("fence");
 
 	// Begin copying from secondary to primary target.
-	dma_copy(
-		primary_target,
-		secondary_target,
-		(320 * 200) / 4
-	);
+	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
+	{
+		memcpy(primary_target, secondary_target, 320 * 200);
+	}
+	else
+	{
+		dma_copy(
+			primary_target,
+			secondary_target,
+			(320 * 200) / 4
+		);
+	}
 }
 
 void video_swap_wait()

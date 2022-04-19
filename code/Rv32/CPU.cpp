@@ -141,6 +141,24 @@ FormatU parseFormatU(uint32_t word)
 	return f;
 }
 
+struct FormatR4
+{
+	uint32_t rd;
+	uint32_t rs1;
+	uint32_t rs2;
+	uint32_t rs3;
+};
+
+FormatR4 parseFormatR4(uint32_t word)
+{
+	return FormatR4 {
+		(word >> 7) & 0x1f,
+		(word >> 15) & 0x1f,
+		(word >> 20) & 0x1f,
+		(word >> 27) & 0x1f
+	};
+}
+
 #define PC m_pc
 #define PC_NEXT m_next
 
@@ -192,23 +210,23 @@ void CPU::setSP(uint32_t sp)
 
 bool CPU::tick(bool interrupt)
 {
-	// Check if CPU in low power mode and
-	// are waiting for interrupt.
-	if (m_waitForInterrupt && !interrupt)
-		return true;
+	// // Check if CPU in low power mode and
+	// // are waiting for interrupt.
+	// if (m_waitForInterrupt && !interrupt)
+	// 	return true;
 
-	if (interrupt)
-	{
-		log::info << str(L"%08x", m_pc) << Endl;
+	// if (interrupt)
+	// {
+	// 	log::info << str(L"%08x", m_pc) << Endl;
 
-		writeCSR(CSR::MEPC, m_pc);
-		writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
+	// 	writeCSR(CSR::MEPC, m_pc);
+	// 	writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
 
-		const uint32_t mtvec = readCSR(CSR::MTVEC);
-		m_pc = mtvec;
+	// 	const uint32_t mtvec = readCSR(CSR::MTVEC);
+	// 	m_pc = mtvec;
 
-		m_waitForInterrupt = false;
-	}
+	// 	m_waitForInterrupt = false;
+	// }
 
 	uint32_t word = m_icache->readU32(m_pc);
 
@@ -230,7 +248,7 @@ bool CPU::tick(bool interrupt)
 
 	if (!decode(word))
 	{
-		log::error << L"Decode failed at PC " << str(L"%08x", m_pc) << Endl;
+		log::error << L"Decode (" << str(L"%08x", word) << L") failed at PC " << str(L"%08x", m_pc) << Endl;
 		return false;
 	}
 

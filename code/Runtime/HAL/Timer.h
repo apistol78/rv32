@@ -6,6 +6,7 @@
 #define TIMER_DEVICE_ID_T_CV_GX 2
 #define TIMER_DEVICE_ID_Q_CV_2  3
 #define TIMER_DEVICE_ID_Q_T7    4
+#define TIMER_DEVICE_ID_RV32    5
 
 EXTERN_C uint32_t timer_get_ms();
 
