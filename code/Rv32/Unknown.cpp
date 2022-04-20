@@ -54,7 +54,7 @@ uint32_t Unknown::readU32(uint32_t address) const
 	return 0;
 }
 
-bool Unknown::tick()
+bool Unknown::tick(CPU* cpu)
 {
 	return true;
 }

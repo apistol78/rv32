@@ -40,7 +40,7 @@ uint32_t UART::readU32(uint32_t address) const
 	return 0;
 }
 
-bool UART::tick()
+bool UART::tick(CPU* cpu)
 {
 	return true;
 }

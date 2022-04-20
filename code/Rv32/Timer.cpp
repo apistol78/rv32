@@ -1,4 +1,5 @@
 #include <Core/Log/Log.h>
+#include "Rv32/CPU.h"
 #include "Rv32/Timer.h"
 
 using namespace traktor;
@@ -41,9 +42,9 @@ uint32_t TimerD::readU32(uint32_t address) const
 	case 0x08:
 		return (uint32_t)(m_tick >> 32);	// cycles high
 	case 0x0c:
-		return 0;	// compare low
+		return (uint32_t)m_compare;	// compare low
 	case 0x10:
-		return 0;	// compare high
+		return (uint32_t)(m_compare >> 32);	// compare high
 	case 0x14:
 		return 100000000;	// frequency
 	case 0x18:
@@ -52,8 +53,12 @@ uint32_t TimerD::readU32(uint32_t address) const
 	return 0;
 }
 
-bool TimerD::tick()
+bool TimerD::tick(CPU* cpu)
 {
-	m_tick++;
+	if (++m_tick == m_compare)
+	{
+		log::info << L"Timer compare interrupt" << Endl;
+		cpu->interrupt();
+	}
 	return true;
 }

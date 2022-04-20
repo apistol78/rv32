@@ -22,9 +22,10 @@ public:
 
 	virtual uint32_t readU32(uint32_t address) const override final;
 
-	virtual bool tick() override final;
+	virtual bool tick(CPU* cpu) override final;
 
 private:
     traktor::Timer m_timer;
 	uint64_t m_tick = 0;
+	uint64_t m_compare = 0;
 };

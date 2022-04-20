@@ -191,6 +191,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 ,	m_icache(new ICache(bus))
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
+,	m_interrupt(false)
 ,	m_waitForInterrupt(false)
 {
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
@@ -209,25 +210,25 @@ void CPU::setSP(uint32_t sp)
 	m_registers[2] = sp;
 }
 
-bool CPU::tick(bool interrupt)
+bool CPU::tick()
 {
-	// // Check if CPU in low power mode and
-	// // are waiting for interrupt.
-	// if (m_waitForInterrupt && !interrupt)
-	// 	return true;
+	// Check if CPU in low power mode and
+	// are waiting for interrupt.
+	if (m_waitForInterrupt && !m_interrupt)
+		return true;
 
-	// if (interrupt)
-	// {
-	// 	log::info << str(L"%08x", m_pc) << Endl;
+	if (m_interrupt)
+	{
+		log::info << str(L"%08x", m_pc) << Endl;
 
-	// 	writeCSR(CSR::MEPC, m_pc);
-	// 	writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
+		writeCSR(CSR::MEPC, m_pc);
+		writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
 
-	// 	const uint32_t mtvec = readCSR(CSR::MTVEC);
-	// 	m_pc = mtvec;
+		const uint32_t mtvec = readCSR(CSR::MTVEC);
+		m_pc = mtvec;
 
-	// 	m_waitForInterrupt = false;
-	// }
+		m_waitForInterrupt = false;
+	}
 
 	uint32_t word = m_icache->readU32(m_pc);
 
@@ -255,10 +256,15 @@ bool CPU::tick(bool interrupt)
 
 	m_pc = m_next;
 
-	if (!m_bus->tick())
+	if (!m_bus->tick(this))
 		return false;
 
 	return true;
+}
+
+void CPU::interrupt()
+{
+	m_interrupt = true;
 }
 
 bool CPU::decode(uint32_t word)

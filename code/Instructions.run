@@ -1,5 +1,11 @@
+--[[
 
--- https://github.com/takahirox/riscv-rust/blob/master/src/cpu.rs
+Instruction generation template
+===================================================================
+Copyright (C) 2021 - Anders Pistol
+All rights reserved.
+
+]]
 
 local insttype = {
 	ARITHMETIC = "ARITHMETIC",

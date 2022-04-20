@@ -69,11 +69,8 @@ uint32_t SD::readU32(uint32_t address) const
 	return (uint32_t)v;
 }
 
-bool SD::tick()
+bool SD::tick(CPU* cpu)
 {
-
-	//log::info << L"SD TICK, clk " << m_r_clk << Endl;
-
 	bool& cmd = m_r_cmd;
 	uint8_t& dat = m_r_dat;
 

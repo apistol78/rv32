@@ -2,6 +2,8 @@
 
 #include <Core/Object.h>
 
+class CPU;
+
 class Device : public traktor::Object
 {
 	T_RTTI_CLASS;
@@ -19,5 +21,5 @@ public:
 
 	virtual uint32_t readU32(uint32_t address) const = 0;
 
-	virtual bool tick() = 0;
+	virtual bool tick(CPU* cpu) = 0;
 };

@@ -11,10 +11,6 @@ Memory::Memory(uint32_t capacity)
 :	m_capacity(capacity)
 {
 	m_data.reset(new uint8_t [capacity]);
-	//std::memset(m_data.ptr(), 0, capacity);
-
-	// for (uint32_t i = 0; i < capacity; ++i)
-	// 	m_data[i] = (uint8_t)rand();
 }
 
 void Memory::setReadOnly(bool readOnly)
@@ -79,7 +75,7 @@ uint32_t Memory::readU32(uint32_t address) const
 	return *(const uint32_t*)(m_data.c_ptr() + address);
 }
 
-bool Memory::tick()
+bool Memory::tick(CPU* cpu)
 {
 	return true;
 }

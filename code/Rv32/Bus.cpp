@@ -108,11 +108,11 @@ uint32_t Bus::readU32(uint32_t address) const
 	}
 }
 
-bool Bus::tick()
+bool Bus::tick(CPU* cpu)
 {
 	for (auto& mappedDevice : m_mappedDevices)
 	{
-		if (!mappedDevice.device->tick())
+		if (!mappedDevice.device->tick(cpu))
 			return false;
 	}
 	return true;

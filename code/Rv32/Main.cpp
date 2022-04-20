@@ -123,7 +123,7 @@ int main(int argc, const char** argv)
 	bus.map(0x54000000, 0x54000100, &sd);
 	bus.map(0x55000000, 0x55000100, &tmr);
 	bus.map(0x57000000, 0x57000100, &dma);
-	bus.map(0x58000000, 0x58000100, &plic);
+	bus.map(0x58000000, 0x58004000, &plic);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -205,13 +205,11 @@ int main(int argc, const char** argv)
 
 			for (int32_t i = 0; i < 10000; ++i)
 			{
-				bool interrupt = (i == 10000 - 1);
-
 				if (dbg_pc.full())
 					dbg_pc.pop_front();
 				dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
-				if (!cpu.tick(interrupt))
+				if (!cpu.tick())
 				{
 					g_going = false;
 					break;
@@ -236,7 +234,7 @@ int main(int argc, const char** argv)
 				dbg_pc.pop_front();
 			dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
-			if (!cpu.tick(false))
+			if (!cpu.tick())
 			{
 				g_going = false;
 				break;
