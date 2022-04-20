@@ -1,16 +1,12 @@
 if ((word & 0xfe00707f) == 0x00000033)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x00000013)
 {
-			auto f = parseFormatI(word);
-			R_s(f.rd) = R_s(f.rs1) + f.imm;
-        
-	return true;
+	auto f = parseFormatI(word);
+	R_s(f.rd) = R_s(f.rs1) + f.imm;
 }
 else if ((word & 0x0000707f) == 0x0000001b)
 {
@@ -74,144 +70,110 @@ else if ((word & 0xf800707f) == 0x0800202f)
 }
 else if ((word & 0xfe00707f) == 0x00007033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x00007013)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = R_u(f.rs1) & f.imm;
-        
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = R_u(f.rs1) & f.imm;
 }
 else if ((word & 0x0000007f) == 0x00000017)
 {
-			auto f = parseFormatU(word);
-			R_u(f.rd) = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatU(word);
+	R_u(f.rd) = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00000063)
 {
-			auto f = parseFormatB(word);
-			if (R_s(f.rs1) == R_s(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_s(f.rs1) == R_s(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00005063)
 {
-			auto f = parseFormatB(word);
-			if (R_s(f.rs1) >= R_s(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_s(f.rs1) >= R_s(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00007063)
 {
-			auto f = parseFormatB(word);
-			if (R_u(f.rs1) >= R_u(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_u(f.rs1) >= R_u(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00004063)
 {
-			auto f = parseFormatB(word);
-			if (R_s(f.rs1) < R_s(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_s(f.rs1) < R_s(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00006063)
 {
-			auto f = parseFormatB(word);
-			if (R_u(f.rs1) < R_u(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_u(f.rs1) < R_u(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00001063)
 {
-			auto f = parseFormatB(word);
-			if (R_s(f.rs1) != R_s(f.rs2))
-				PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatB(word);
+	if (R_s(f.rs1) != R_s(f.rs2))
+		PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00003073)
 {
-			auto f = parseFormatCSR(word);
-			uint32_t data = readCSR(f.csr);
-			uint32_t tmp = R_u(f.rs1);
-			R_u(f.rd) = data;
-			writeCSR(f.csr, R_u(f.rd) & ~tmp);
-		
-	return true;
+	auto f = parseFormatCSR(word);
+	uint32_t data = readCSR(f.csr);
+	uint32_t tmp = R_u(f.rs1);
+	R_u(f.rd) = data;
+	writeCSR(f.csr, R_u(f.rd) & ~tmp);
 }
 else if ((word & 0x0000707f) == 0x00007073)
 {
-			log::info << L"CSRRCI" << Endl;
-		
-	return true;
+	log::info << L"CSRRCI" << Endl;
 }
 else if ((word & 0x0000707f) == 0x00002073)
 {
-			auto f = parseFormatCSR(word);
-			uint32_t data = readCSR(f.csr);
-			uint32_t tmp = R_u(f.rs1);
-			R_u(f.rd) = data;
-			writeCSR(f.csr, R_u(f.rd) | tmp);
-		
-	return true;
+	auto f = parseFormatCSR(word);
+	uint32_t data = readCSR(f.csr);
+	uint32_t tmp = R_u(f.rs1);
+	R_u(f.rd) = data;
+	writeCSR(f.csr, R_u(f.rd) | tmp);
 }
 else if ((word & 0x0000707f) == 0x00006073)
 {
-			log::info << L"CSRRSI" << Endl;
-		
-	return true;
+	log::info << L"CSRRSI" << Endl;
 }
 else if ((word & 0x0000707f) == 0x00001073)
 {
-			auto f = parseFormatCSR(word);
-			R_s(f.rd) = readCSR(f.csr);
-			writeCSR(f.csr, R_s(f.rs1));
-		
-	return true;
+	auto f = parseFormatCSR(word);
+	R_s(f.rd) = readCSR(f.csr);
+	writeCSR(f.csr, R_s(f.rs1));
 }
 else if ((word & 0x0000707f) == 0x00005073)
 {
-			log::info << L"CSRRWI" << Endl;
-		
-	return true;
+	log::info << L"CSRRWI" << Endl;
 }
 else if ((word & 0xfe00707f) == 0x02004033)
 {
-			auto f = parseFormatR(word);
-			int32_t dividend = R_s(f.rs1);
-			int32_t divisor = R_s(f.rs2);
-			if (divisor == 0)
-				R_s(f.rd) = -1;
-			else if (dividend == -std::numeric_limits< int32_t >::max() && divisor == -1)
-				R_s(f.rd) = dividend;
-			else
-				R_s(f.rd) = dividend / divisor;
-		
-	return true;
+	auto f = parseFormatR(word);
+	int32_t dividend = R_s(f.rs1);
+	int32_t divisor = R_s(f.rs2);
+	if (divisor == 0)
+		R_s(f.rd) = -1;
+	else if (dividend == -std::numeric_limits< int32_t >::max() && divisor == -1)
+		R_s(f.rd) = dividend;
+	else
+		R_s(f.rd) = dividend / divisor;
 }
 else if ((word & 0xfe00707f) == 0x02005033)
 {
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
-			if (divisor ==  0)
-				R_s(f.rd) = -1;
-			else		
-				R_u(f.rd) = dividend / divisor;
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint32_t dividend = R_u(f.rs1);
+	uint32_t divisor = R_u(f.rs2);
+	if (divisor ==  0)
+		R_s(f.rd) = -1;
+	else		
+		R_u(f.rd) = dividend / divisor;
 }
 else if ((word & 0xfe00707f) == 0x0200503b)
 {
@@ -225,49 +187,35 @@ else if ((word & 0xfe00707f) == 0x0200403b)
 }
 else if ((word & 0xffffffff) == 0x00100073)
 {
-			return false;
-		
-	return true;
+	return false;
 }
 else if ((word & 0xffffffff) == 0x00000073)
 {
-		
-	return true;
 }
 else if ((word & 0xfe00007f) == 0x00000053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = FR(f.rs1) + FR(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = FR(f.rs1) + FR(f.rs2);
 }
 else if ((word & 0xfff0007f) == 0xc0000053)
 {
-			auto f = parseFormatR(word);
-			R(f.rd) = (int32_t)FR(f.rs1);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R(f.rd) = (int32_t)FR(f.rs1);
 }
 else if ((word & 0xfff0007f) == 0xd0000053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = (float)R(f.rs1);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = (float)R(f.rs1);
 }
 else if ((word & 0xfff0007f) == 0xd0100053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = (float)R(f.rs1);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = (float)R(f.rs1);
 }
 else if ((word & 0xfe00007f) == 0x18000053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = FR(f.rs1) / FR(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = FR(f.rs1) / FR(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
@@ -281,10 +229,8 @@ else if ((word & 0x0000707f) == 0x0000100f)
 }
 else if ((word & 0xfe00707f) == 0xa0002053)
 {
-			auto f = parseFormatR(word);
-			R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
 }
 else if ((word & 0x0000707f) == 0x00003007)
 {
@@ -293,79 +239,63 @@ else if ((word & 0x0000707f) == 0x00003007)
 }
 else if ((word & 0xfe00707f) == 0xa0000053)
 {
-	log::error << L"FLE not implemented." << Endl;
-	return false;
+	auto f = parseFormatR(word);
+	R(f.rd) = (FR(f.rs1) <= FR(f.rs2) ? 1 : 0);
 }
 else if ((word & 0xfe00707f) == 0xa0001053)
 {
-	log::error << L"FLT not implemented." << Endl;
-	return false;
+	auto f = parseFormatR(word);
+	R(f.rd) = (FR(f.rs1) < FR(f.rs2) ? 1 : 0);
 }
 else if ((word & 0x0000707f) == 0x00002007)
 {
-			auto f = parseFormatI(word);
-			FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
-		
-	return true;
+	auto f = parseFormatI(word);
+	FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
 }
 else if ((word & 0x0600007f) == 0x00000043)
 {
-			auto f = parseFormatR4(word);
-			FR(f.rd) = FR(f.rs1) * FR(f.rs2) + FR(f.rs3);
-		
-	return true;
+	auto f = parseFormatR4(word);
+	FR(f.rd) = FR(f.rs1) * FR(f.rs2) + FR(f.rs3);
 }
 else if ((word & 0x0600007f) == 0x00000047)
 {
-			auto f = parseFormatR4(word);
-			FR(f.rd) = FR(f.rs1) * FR(f.rs2) - FR(f.rs3);
-		
-	return true;
+	auto f = parseFormatR4(word);
+	FR(f.rd) = FR(f.rs1) * FR(f.rs2) - FR(f.rs3);
 }
 else if ((word & 0x0600007f) == 0x0000004f)
 {
-			auto f = parseFormatR4(word);
-			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) - FR(f.rs3);
-		
-	return true;
+	auto f = parseFormatR4(word);
+	FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) - FR(f.rs3);
 }
 else if ((word & 0x0600007f) == 0x0000004b)
 {
-			auto f = parseFormatR4(word);
-			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) + FR(f.rs3);
-		
-	return true;
+	auto f = parseFormatR4(word);
+	FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) + FR(f.rs3);
 }
 else if ((word & 0xfe00707f) == 0x28000053)
 {
-	log::error << L"FMIN not implemented." << Endl;
-	return false;
+	auto f = parseFormatR(word);
+	FR(f.rd) = std::min(FR(f.rs1), FR(f.rs2));
 }
 else if ((word & 0xfe00707f) == 0x28001053)
 {
-	log::error << L"FMAX not implemented." << Endl;
-	return false;
+	auto f = parseFormatR(word);
+	FR(f.rd) = std::max(FR(f.rs1), FR(f.rs2));
 }
 else if ((word & 0xfe00007f) == 0x10000053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = FR(f.rs1) * FR(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = FR(f.rs1) * FR(f.rs2);
 }
 else if ((word & 0xfff0707f) == 0xe0000053)
 {
-			auto f = parseFormatR(word);
-			R(f.rd) = FR_u(f.rs1);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R(f.rd) = FR_u(f.rs1);
 }
 else if ((word & 0xfff0707f) == 0xf0000053)
 {
-			auto f = parseFormatR(word);
-			FR_u(f.rd) = R(f.rs1);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR_u(f.rd) = R(f.rs1);
 }
 else if ((word & 0x0000707f) == 0x00003027)
 {
@@ -374,74 +304,56 @@ else if ((word & 0x0000707f) == 0x00003027)
 }
 else if ((word & 0xfe00707f) == 0x20000053)
 {
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
-			FR_u(f.rd) = (tmp1 & 0x7fffffff) | (tmp2 & 0x80000000);
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint32_t tmp1 = FR_u(f.rs1);
+	uint32_t tmp2 = FR_u(f.rs2);
+	FR_u(f.rd) = (tmp1 & 0x7fffffff) | (tmp2 & 0x80000000);
 }
 else if ((word & 0xfe00707f) == 0x20001053)
 {
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
-			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ 0x80000000);
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint32_t tmp1 = FR_u(f.rs1);
+	uint32_t tmp2 = FR_u(f.rs2);
+	FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ 0x80000000);
 }
 else if ((word & 0xfe00707f) == 0x20002053)
 {
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
-			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ (tmp1 & 0x80000000));
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint32_t tmp1 = FR_u(f.rs1);
+	uint32_t tmp2 = FR_u(f.rs2);
+	FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ (tmp1 & 0x80000000));
 }
 else if ((word & 0xfe00007f) == 0x08000053)
 {
-			auto f = parseFormatR(word);
-			FR(f.rd) = FR(f.rs1) - FR(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	FR(f.rd) = FR(f.rs1) - FR(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x00002027)
 {
-			auto f = parseFormatS(word);
-			MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
-		
-	return true;
+	auto f = parseFormatS(word);
+	MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
 }
 else if ((word & 0x0000007f) == 0x0000006f)
 {
-			auto f = parseFormatJ(word);
-			R_u(f.rd) = PC_NEXT;
-			PC_NEXT = PC + f.imm;
-		
-	return true;
+	auto f = parseFormatJ(word);
+	R_u(f.rd) = PC_NEXT;
+	PC_NEXT = PC + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00000067)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = PC_NEXT;
-			PC_NEXT = R(f.rs1) + f.imm;
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = PC_NEXT;
+	PC_NEXT = R(f.rs1) + f.imm;
 }
 else if ((word & 0x0000707f) == 0x00000003)
 {
-			auto f = parseFormatI(word);
-			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 }
 else if ((word & 0x0000707f) == 0x00004003)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 }
 else if ((word & 0x0000707f) == 0x00003003)
 {
@@ -450,17 +362,13 @@ else if ((word & 0x0000707f) == 0x00003003)
 }
 else if ((word & 0x0000707f) == 0x00001003)
 {
-			auto f = parseFormatI(word);
-			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 }
 else if ((word & 0x0000707f) == 0x00005003)
 {
-			auto f = parseFormatI(word);
-			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
-		
-	return true;
+	auto f = parseFormatI(word);
+	R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 }
 else if ((word & 0xf9f0707f) == 0x1000302f)
 {
@@ -474,17 +382,13 @@ else if ((word & 0xf9f0707f) == 0x1000202f)
 }
 else if ((word & 0x0000007f) == 0x00000037)
 {
-			auto f = parseFormatU(word);
-			R_s(f.rd) = f.imm;
-		
-	return true;
+	auto f = parseFormatU(word);
+	R_s(f.rd) = f.imm;
 }
 else if ((word & 0x0000707f) == 0x00002003)
 {
-			auto f = parseFormatI(word);
-			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 }
 else if ((word & 0x0000707f) == 0x00006003)
 {
@@ -493,28 +397,22 @@ else if ((word & 0x0000707f) == 0x00006003)
 }
 else if ((word & 0xfe00707f) == 0x02000033)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 }
 else if ((word & 0xfe00707f) == 0x02001033)
 {
-			auto f = parseFormatR(word);
-			int64_t lh = (int64_t)R_s(f.rs1);
-			int64_t rh = (int64_t)R_s(f.rs2);
-			R_s(f.rd) = (lh * rh) >> 32;
-		
-	return true;
+	auto f = parseFormatR(word);
+	int64_t lh = (int64_t)R_s(f.rs1);
+	int64_t rh = (int64_t)R_s(f.rs2);
+	R_s(f.rd) = (lh * rh) >> 32;
 }
 else if ((word & 0xfe00707f) == 0x02003033)
 {
-			auto f = parseFormatR(word);
-			uint64_t lh = (uint64_t)R(f.rs1);
-			uint64_t rh = (uint64_t)R(f.rs2);
-			R(f.rd) = (lh * rh) >> 32;
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint64_t lh = (uint64_t)R(f.rs1);
+	uint64_t rh = (uint64_t)R(f.rs2);
+	R(f.rd) = (lh * rh) >> 32;
 }
 else if ((word & 0xfe00707f) == 0x02002033)
 {
@@ -528,48 +426,38 @@ else if ((word & 0xfe00707f) == 0x0200003b)
 }
 else if ((word & 0xffffffff) == 0x30200073)
 {
-			PC_NEXT = readCSR(CSR::MEPC);
-			log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
-		
-	return true;
+	PC_NEXT = readCSR(CSR::MEPC);
+	log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
 }
 else if ((word & 0xfe00707f) == 0x00006033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x00006013)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = R_u(f.rs1) | f.imm;
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = R_u(f.rs1) | f.imm;
 }
 else if ((word & 0xfe00707f) == 0x02006033)
 {
-			auto f = parseFormatR(word);
-			int32_t dividend = R_s(f.rs1);
-			int32_t divisor = R_s(f.rs2);
-			if (divisor == 0)
-				R_s(f.rd) = dividend;
-			else
-				R_s(f.rd) = dividend % divisor;
-		
-	return true;
+	auto f = parseFormatR(word);
+	int32_t dividend = R_s(f.rs1);
+	int32_t divisor = R_s(f.rs2);
+	if (divisor == 0)
+		R_s(f.rd) = dividend;
+	else
+		R_s(f.rd) = dividend % divisor;
 }
 else if ((word & 0xfe00707f) == 0x02007033)
 {
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
-			if (divisor == 0)
-				R_u(f.rd) = dividend;
-			else
-				R_u(f.rd) = dividend % divisor;
-		
-	return true;
+	auto f = parseFormatR(word);
+	uint32_t dividend = R_u(f.rs1);
+	uint32_t divisor = R_u(f.rs2);
+	if (divisor == 0)
+		R_u(f.rd) = dividend;
+	else
+		R_u(f.rd) = dividend % divisor;
 }
 else if ((word & 0xfe00707f) == 0x0200703b)
 {
@@ -583,10 +471,8 @@ else if ((word & 0xfe00707f) == 0x0200603b)
 }
 else if ((word & 0x0000707f) == 0x00000023)
 {
-			auto f = parseFormatS(word);
-			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
-		
-	return true;
+	auto f = parseFormatS(word);
+	MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 }
 else if ((word & 0xf800707f) == 0x1800302f)
 {
@@ -610,24 +496,18 @@ else if ((word & 0xfe007fff) == 0x12000073)
 }
 else if ((word & 0x0000707f) == 0x00001023)
 {
-			auto f = parseFormatS(word);
-			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
-		
-	return true;
+	auto f = parseFormatS(word);
+	MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 }
 else if ((word & 0xfe00707f) == 0x00001033)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 }
 else if ((word & 0xfc00707f) == 0x00001013)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 }
 else if ((word & 0xfe00707f) == 0x0000101b)
 {
@@ -641,45 +521,33 @@ else if ((word & 0xfe00707f) == 0x0000103b)
 }
 else if ((word & 0xfe00707f) == 0x00002033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 }
 else if ((word & 0x0000707f) == 0x00002013)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 }
 else if ((word & 0x0000707f) == 0x00003013)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 }
 else if ((word & 0xfe00707f) == 0x00003033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 }
 else if ((word & 0xfe00707f) == 0x40005033)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
 }
 else if ((word & 0xfc00707f) == 0x40005013)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 }
 else if ((word & 0xfc00707f) == 0x4000501b)
 {
@@ -698,17 +566,13 @@ else if ((word & 0xffffffff) == 0x10200073)
 }
 else if ((word & 0xfe00707f) == 0x00005033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 }
 else if ((word & 0xfc00707f) == 0x00005013)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 }
 else if ((word & 0xfc00707f) == 0x0000501b)
 {
@@ -722,10 +586,8 @@ else if ((word & 0xfe00707f) == 0x0000503b)
 }
 else if ((word & 0xfe00707f) == 0x40000033)
 {
-			auto f = parseFormatR(word);
-			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 }
 else if ((word & 0xfe00707f) == 0x4000003b)
 {
@@ -734,10 +596,8 @@ else if ((word & 0xfe00707f) == 0x4000003b)
 }
 else if ((word & 0x0000707f) == 0x00002023)
 {
-			auto f = parseFormatS(word);
-			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
-		
-	return true;
+	auto f = parseFormatS(word);
+	MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 }
 else if ((word & 0xffffffff) == 0x00200073)
 {
@@ -746,26 +606,21 @@ else if ((word & 0xffffffff) == 0x00200073)
 }
 else if ((word & 0xffffffff) == 0x10500073)
 {
-			m_waitForInterrupt = true;
-		
-	return true;
+	m_waitForInterrupt = true;
 }
 else if ((word & 0xfe00707f) == 0x00004033)
 {
-			auto f = parseFormatR(word);
-			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
-		
-	return true;
+	auto f = parseFormatR(word);
+	R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 }
 else if ((word & 0x0000707f) == 0x00004013)
 {
-			auto f = parseFormatI(word);
-			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
-		
-	return true;
+	auto f = parseFormatI(word);
+	R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 }
 else
 {
 	log::error << L"Unknown instruction." << Endl;
 	return false;
 }
+return true;

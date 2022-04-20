@@ -53,3 +53,8 @@ uint32_t Unknown::readU32(uint32_t address) const
 		log::info << m_deviceName << L" : READ U32, address " << str(L"%08x", address) << Endl;
 	return 0;
 }
+
+bool Unknown::tick()
+{
+	return true;
+}

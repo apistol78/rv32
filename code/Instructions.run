@@ -615,6 +615,10 @@ local instructions = {
 		name = "FLE",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R(f.rd) = (FR(f.rs1) <= FR(f.rs2) ? 1 : 0);
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.CMP_LEQUAL
 		},
@@ -628,6 +632,10 @@ local instructions = {
 		name = "FLT",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R(f.rd) = (FR(f.rs1) < FR(f.rs2) ? 1 : 0);
+		]],		
 		verilog_fpu = {
 			operation = fpu_operations.CMP_LESS
 		},
@@ -737,6 +745,10 @@ local instructions = {
 		name = "FMIN",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = std::min(FR(f.rs1), FR(f.rs2));
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MIN
 		},
@@ -750,6 +762,10 @@ local instructions = {
 		name = "FMAX",
 		format = "R",
 		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			FR(f.rd) = std::max(FR(f.rs1), FR(f.rs2));
+		]],
 		verilog_fpu = {
 			operation = fpu_operations.MAX
 		},
@@ -1671,8 +1687,20 @@ function main(argv)
 			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
 			stdout:printLn("{")
 			if inst.cpp ~= nil then
-				stdout:printLn(inst.cpp)
-				stdout:printLn("\treturn true;")
+				local lns = iter2tbl(lines(inst.cpp))
+				while #lns > 0 and trim(lns[1]) == "" do
+					table.remove(lns, 1)
+				end
+				while #lns > 0 and trim(lns[#lns]) == "" do
+					table.remove(lns, #lns)
+				end
+				local ind = 80
+				for _, ln in pairs(lns) do
+					ind = math.min(ind, indent(ln))
+				end
+				for _, ln in pairs(lns) do
+					stdout:printLn("\t" .. ln:sub(ind + 1))
+				end
 			else
 				stdout:printLn("\tlog::error << L\"" .. inst.name .. " not implemented.\" << Endl;")
 				stdout:printLn("\treturn false;")
@@ -1684,6 +1712,7 @@ function main(argv)
 		stdout:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
 		stdout:printLn("\treturn false;")
 		stdout:printLn("}")
+		stdout:printLn("return true;")
 
 	elseif language == "verilog_decode" then
 		local P < const > = { "B", "I", "J", "R", "R4", "S", "U", "CSR" }

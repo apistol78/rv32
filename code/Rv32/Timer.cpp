@@ -37,9 +37,9 @@ uint32_t TimerD::readU32(uint32_t address) const
 	case 0x00:
 		return (uint32_t)(m_timer.getElapsedTime() * 1000.0);	// milliseconds
 	case 0x04:
-		return 0;	// cycles low
+		return (uint32_t)m_tick;	// cycles low
 	case 0x08:
-		return 0;	// cycles high
+		return (uint32_t)(m_tick >> 32);	// cycles high
 	case 0x0c:
 		return 0;	// compare low
 	case 0x10:
@@ -50,4 +50,10 @@ uint32_t TimerD::readU32(uint32_t address) const
 		return 5;			// device id
 	}
 	return 0;
+}
+
+bool TimerD::tick()
+{
+	m_tick++;
+	return true;
 }

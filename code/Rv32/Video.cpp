@@ -69,3 +69,8 @@ uint32_t Video::readU32(uint32_t address) const
 {
 	return 0;
 }
+
+bool Video::tick()
+{
+	return true;
+}

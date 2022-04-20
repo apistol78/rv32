@@ -22,7 +22,7 @@ ICache::~ICache()
 
 uint32_t ICache::readU32(uint32_t address)
 {
-	uint32_t tag = address & 63;
+	uint32_t tag = (address >> 2) & 63;
 
     if (m_valid[tag] && m_data[tag][0] == address)
     {

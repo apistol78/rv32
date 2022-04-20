@@ -24,6 +24,8 @@ public:
 
 	virtual uint32_t readU32(uint32_t address) const override final;
 
+	virtual bool tick() override final;
+
 private:
 	traktor::AutoArrayPtr< uint8_t > m_data;
 	uint32_t m_capacity;

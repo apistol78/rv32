@@ -39,3 +39,8 @@ uint32_t UART::readU32(uint32_t address) const
 {
 	return 0;
 }
+
+bool UART::tick()
+{
+	return true;
+}

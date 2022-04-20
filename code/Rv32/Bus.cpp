@@ -1,12 +1,11 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32/Bus.h"
-#include "Rv32/Device.h"
 #include "Rv32/Memory.h"
 
 using namespace traktor;
 
-T_IMPLEMENT_RTTI_CLASS(L"Bus", Bus, Object)
+T_IMPLEMENT_RTTI_CLASS(L"Bus", Bus, Device)
 
 void Bus::map(uint32_t start, uint32_t end, Device* device)
 {
@@ -22,7 +21,7 @@ Device* Bus::device(uint32_t address) const
 		return nullptr;	
 }
 
-void Bus::writeU8(uint32_t address, uint8_t value)
+bool Bus::writeU8(uint32_t address, uint8_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
@@ -35,9 +34,10 @@ void Bus::writeU8(uint32_t address, uint8_t value)
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%02x", value) << L"." << Endl;
 		m_error = true;
 	}
+	return !m_error;
 }
 
-void Bus::writeU16(uint32_t address, uint16_t value)
+bool Bus::writeU16(uint32_t address, uint16_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
@@ -50,9 +50,10 @@ void Bus::writeU16(uint32_t address, uint16_t value)
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%04x", value) << L"." << Endl;
 		m_error = true;
 	}
+	return !m_error;
 }
 
-void Bus::writeU32(uint32_t address, uint32_t value)
+bool Bus::writeU32(uint32_t address, uint32_t value)
 {
 	auto mappedDevice = findMappedDevice(address);
 	if (mappedDevice)
@@ -65,6 +66,7 @@ void Bus::writeU32(uint32_t address, uint32_t value)
 		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to write 0x" << str(L"%08x", value) << L"." << Endl;
 		m_error = true;
 	}
+	return !m_error;
 }
 
 uint8_t Bus::readU8(uint32_t address) const
@@ -104,6 +106,16 @@ uint32_t Bus::readU32(uint32_t address) const
 		m_error = true;
 		return 0;
 	}
+}
+
+bool Bus::tick()
+{
+	for (auto& mappedDevice : m_mappedDevices)
+	{
+		if (!mappedDevice.device->tick())
+			return false;
+	}
+	return true;
 }
 
 const Bus::MappedDevice* Bus::findMappedDevice(uint32_t address) const

@@ -88,7 +88,6 @@ uint16_t DCache::readU16(uint32_t address) const
 		return (r >> 16) & 0xffff;
 	}
 	return 0;	
-//	return m_bus->readU16(address);
 }
 
 uint32_t DCache::readU32(uint32_t address) const

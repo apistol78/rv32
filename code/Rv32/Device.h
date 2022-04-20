@@ -18,4 +18,6 @@ public:
 	virtual uint16_t readU16(uint32_t address) const = 0;
 
 	virtual uint32_t readU32(uint32_t address) const = 0;
+
+	virtual bool tick() = 0;
 };

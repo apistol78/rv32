@@ -19,6 +19,7 @@
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
 #include <Core/Timer/Timer.h>
+#include <Drawing/Image.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
 #include <Ui/Image.h>
@@ -36,6 +37,7 @@
 #include "Rv32/LoadELF.h"
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
+#include "Rv32/SD.h"
 #include "Rv32/Timer.h"
 #include "Rv32/UART.h"
 #include "Rv32/Unknown.h"
@@ -104,7 +106,7 @@ int main(int argc, const char** argv)
 	UART uart1;
 	UART uart2;
 	Unknown i2c(L"I2C", true);
-	Unknown sd(L"SD", true);
+	SD sd;
 	Unknown dma(L"DMA", true);
 	TimerD tmr;
 	Unknown plic(L"PLIC", true);
@@ -221,7 +223,6 @@ int main(int argc, const char** argv)
 				}
 			}
 
-			// if (video.shouldPresent() && video.getImage())
 			if (timer.getElapsedTime() > 1.0f/60.0f && video.getImage())
 			{
 				uiImage->copyImage(video.getImage());
@@ -248,6 +249,8 @@ int main(int argc, const char** argv)
 		}
 	}
 
+	video.getImage()->save(L"Rv32.png");
+
 	if (form)
 	{
 		form->destroy();
@@ -256,4 +259,6 @@ int main(int argc, const char** argv)
 
 	for (int i = 0; i < dbg_pc.size(); ++i)
 		log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;
+
+	return 0;
 }

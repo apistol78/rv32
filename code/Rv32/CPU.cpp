@@ -1,6 +1,7 @@
 #include <Core/Io/OutputStream.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
+#include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
 #include "Rv32/DCache.h"
 #include "Rv32/Helpers.h"
@@ -18,7 +19,7 @@ struct FormatCSR
 	uint16_t csr;
 };
 
-FormatCSR parseFormatCSR(uint32_t word)
+inline FormatCSR parseFormatCSR(uint32_t word)
 {
 	return FormatCSR {
 		(word >> 7) & 0x1f,
@@ -34,7 +35,7 @@ struct FormatI
 	int32_t imm;
 };
 
-FormatI parseFormatI(uint32_t word)
+inline FormatI parseFormatI(uint32_t word)
 {
 	FormatI f = {
 		(word >> 7) & 0x1f,
@@ -54,7 +55,7 @@ struct FormatJ
 	int32_t imm;
 };
 
-FormatJ parseFormatJ(uint32_t word)
+inline FormatJ parseFormatJ(uint32_t word)
 {
 	FormatJ f = {
 		(word >> 7) & 0x1f,
@@ -74,7 +75,7 @@ struct FormatR
 	uint32_t rs2;
 };
 
-FormatR parseFormatR(uint32_t word)
+inline FormatR parseFormatR(uint32_t word)
 {
 	return FormatR {
 		(word >> 7) & 0x1f,
@@ -90,7 +91,7 @@ struct FormatS
 	int32_t imm;
 };
 
-FormatS parseFormatS(uint32_t word)
+inline FormatS parseFormatS(uint32_t word)
 {
 	FormatS f = {
 		(word >> 15) & 0x1f,
@@ -111,7 +112,7 @@ struct FormatB
 	int32_t imm;
 };
 
-FormatB parseFormatB(uint32_t word)
+inline FormatB parseFormatB(uint32_t word)
 {
 	FormatB f = {
 		(word >> 15) & 0x1f,
@@ -131,7 +132,7 @@ struct FormatU
 	int32_t imm;
 };
 
-FormatU parseFormatU(uint32_t word)
+inline FormatU parseFormatU(uint32_t word)
 {
 	FormatU f = {
 		(word >> 7) & 0x1f,
@@ -149,7 +150,7 @@ struct FormatR4
 	uint32_t rs3;
 };
 
-FormatR4 parseFormatR4(uint32_t word)
+inline FormatR4 parseFormatR4(uint32_t word)
 {
 	return FormatR4 {
 		(word >> 7) & 0x1f,
@@ -253,6 +254,10 @@ bool CPU::tick(bool interrupt)
 	}
 
 	m_pc = m_next;
+
+	if (!m_bus->tick())
+		return false;
+
 	return true;
 }
 
@@ -263,12 +268,12 @@ bool CPU::decode(uint32_t word)
 
 uint32_t CPU::readCSR(uint16_t csr) const
 {
-	log::info << L"read CSR " << str(L"%03x", csr) << Endl;
+	//log::info << L"read CSR " << str(L"%03x", csr) << Endl;
 	return m_csr[csr];
 }
 
 void CPU::writeCSR(uint16_t csr, uint32_t value)
 {
-	log::info << L"write CSR " << str(L"%03x", csr) << L" <= " << str(L"%08x", value) << Endl;
+	//log::info << L"write CSR " << str(L"%03x", csr) << L" <= " << str(L"%08x", value) << Endl;
 	m_csr[csr] = value;
 }

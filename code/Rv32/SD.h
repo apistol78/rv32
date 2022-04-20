@@ -2,17 +2,16 @@
 
 #include <Core/Ref.h>
 #include <Core/Containers/AlignedVector.h>
+#include <Core/Io/IStream.h>
 #include "Rv32/Device.h"
 
-class Bus : public Device
+class SD : public Device
 {
 	T_RTTI_CLASS;
 
 public:
-	void map(uint32_t start, uint32_t end, Device* device);
-
-	Device* device(uint32_t address) const;
-
+	SD();
+	
 	virtual bool writeU8(uint32_t address, uint8_t value) override final;
 
 	virtual bool writeU16(uint32_t address, uint16_t value) override final;
@@ -27,18 +26,27 @@ public:
 
 	virtual bool tick() override final;
 
-	bool error() const { return m_error; }
-
 private:
-	struct MappedDevice
-	{
-		uint32_t start;
-		uint32_t end;
-		traktor::Ref< Device > device;
-	};
+	bool m_r_clk = false;
+	bool m_r_cdir = false;
+	bool m_r_ddir = false;
+	bool m_r_cmd = false;
+	uint8_t m_r_dat = 0;
 
-	traktor::AlignedVector< MappedDevice > m_mappedDevices;
-	mutable bool m_error = false;
+	int32_t m_mode = 0;
+	int32_t m_bit = 0;
+	int32_t m_data = 0;
+	bool m_lstclk = true;
+	bool m_lstcmd = false;
+	traktor::AlignedVector< uint8_t > m_cmd;
+	uint8_t m_response[1024];
+	int32_t m_send = 0;
+	int32_t m_rspcnt = 0;
+	int32_t m_rspbit = 0;
+	int32_t m_blockOutputCount = 0;
+	int32_t m_dly = 0;
+	uint8_t m_block[512];
+	traktor::Ref< traktor::IStream > m_stream;
 
-	const MappedDevice* findMappedDevice(uint32_t address) const;
+	void process();
 };
