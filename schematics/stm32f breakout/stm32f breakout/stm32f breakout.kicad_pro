@@ -33,9 +33,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 0.0,
+          "height": 1.475,
+          "width": 0.3
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -49,27 +49,7 @@
         }
       },
       "diff_pair_dimensions": [],
-      "drc_exclusions": [
-        "clearance|121658903|80432399|6db89b44-cefd-428f-91c0-a1d215182cc3|68e56945-7e9e-457e-b3bb-3ecb018d2c36",
-        "clearance|121658903|80932401|68e56945-7e9e-457e-b3bb-3ecb018d2c36|5c74babd-9872-45d3-8e0c-b538227de94c",
-        "clearance|121658903|81432400|5c74babd-9872-45d3-8e0c-b538227de94c|ce068ac9-be78-4865-b2e2-ef2bd66e9d57",
-        "clearance|121658903|81932399|ce068ac9-be78-4865-b2e2-ef2bd66e9d57|9e300eea-c49c-4338-95f6-a56345350b66",
-        "clearance|125958599|80627601|fb5b62ba-5cc7-47ce-ae3b-65accb90d9a2|1b4c87a9-c9ba-4fff-808a-fc14435235d5",
-        "clearance|125958599|81127600|1a399ffa-1f17-4e60-aeca-4fa2d412036d|fb5b62ba-5cc7-47ce-ae3b-65accb90d9a2",
-        "clearance|125958599|81627599|d024ee91-8b05-4913-a3e6-ff3756815e24|1a399ffa-1f17-4e60-aeca-4fa2d412036d",
-        "clearance|125958599|82127601|6818506f-d134-48b2-a396-779c2f5f5cee|d024ee91-8b05-4913-a3e6-ff3756815e24",
-        "malformed_courtyard|121404901|79873600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|121404901|82686400|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|122707400|79527400|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|122707400|79873600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|122707400|83032600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|126212600|79527400|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|126212600|79873600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|126212600|82686400|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|126212600|83032600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|127515099|79873600|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000",
-        "malformed_courtyard|127515099|82686400|c45c34ae-e0d6-4235-93d4-79279ab799fd|00000000-0000-0000-0000-000000000000"
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -353,7 +333,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "qm k7 aux brd.kicad_pro",
+    "filename": "stm32f breakout.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -432,7 +412,7 @@
   },
   "sheets": [
     [
-      "db8a60a1-6c78-42ba-b45c-08cf72ddf99e",
+      "332922e8-a81c-42dc-8a99-9ad227c5a3a0",
       ""
     ]
   ],
