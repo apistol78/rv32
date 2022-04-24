@@ -5,38 +5,38 @@
 
 typedef enum bit [`REG_ID_SIZE]
 {
-	ZERO = 6'd0,
-	RA = 6'd1,
-	SP = 6'd2,
-	GP = 6'd3,
-	TP = 6'd4,
-	T0 = 6'd5,
-	T1 = 6'd6,
-	T2 = 6'd7,
-	S0 = 6'd8,
-	S1 = 6'd9,
-	A0 = 6'd10,
-	A1 = 6'd11,
-	A2 = 6'd12,
-	A3 = 6'd13,
-	A4 = 6'd14,
-	A5 = 6'd15,
-	A6 = 6'd16,
-	A7 = 6'd17,
-	S2 = 6'd18,
-	S3 = 6'd19,
-	S4 = 6'd20,
-	S5 = 6'd21,
-	S6 = 6'd22,
-	S7 = 6'd23,
-	S8 = 6'd24,
-	S9 = 6'd25,
-	S10 = 6'd26,
-	S11 = 6'd27,
-	T3 = 6'd28,
-	T4 = 6'd29,
-	T5 = 6'd30,
-	T6 = 6'd31
+	ZERO = 5'd0,
+	RA = 5'd1,
+	SP = 5'd2,
+	GP = 5'd3,
+	TP = 5'd4,
+	T0 = 5'd5,
+	T1 = 5'd6,
+	T2 = 5'd7,
+	S0 = 5'd8,
+	S1 = 5'd9,
+	A0 = 5'd10,
+	A1 = 5'd11,
+	A2 = 5'd12,
+	A3 = 5'd13,
+	A4 = 5'd14,
+	A5 = 5'd15,
+	A6 = 5'd16,
+	A7 = 5'd17,
+	S2 = 5'd18,
+	S3 = 5'd19,
+	S4 = 5'd20,
+	S5 = 5'd21,
+	S6 = 5'd22,
+	S7 = 5'd23,
+	S8 = 5'd24,
+	S9 = 5'd25,
+	S10 = 5'd26,
+	S11 = 5'd27,
+	T3 = 5'd28,
+	T4 = 5'd29,
+	T5 = 5'd30,
+	T6 = 5'd31
 }
 register_t;
 
@@ -59,7 +59,7 @@ typedef struct packed
 	logic [2:0] have_rs;
 	register_t inst_rs1;			//!< Index source register 1.
 	register_t inst_rs2;			//!< Index source register 2.
-	register_t inst_rs3;			//!< Index source register 3.
+	register_t inst_rs3;			//!< Index source register 3 (FP only).
 	register_t inst_rd;				//!< Index destination register.
 	logic [31:0] imm;				//!< Immediate number.
 	logic arithmetic;				//!< Arithmetic instruction.

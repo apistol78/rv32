@@ -6,7 +6,7 @@
 `define TAG_SIZE                    1:0
 
 // Size of register index.
-`define REG_ID_SIZE					5:0
+`define REG_ID_SIZE					4:0
 
 // Multiply and divide
 `ifndef __VERILATOR__

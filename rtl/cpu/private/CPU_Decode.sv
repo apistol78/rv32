@@ -33,7 +33,7 @@ module CPU_Decode(
 	`define PC	3'd3
 	`define IMM 3'd4
 	`include "private/generated/Instructions_alu.sv"
-	`include "private/generated/Instructions_fpu.sv"
+//	`include "private/generated/Instructions_fpu.sv"
 	`include "private/generated/Instructions_memory.sv"
 
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
@@ -95,7 +95,9 @@ module CPU_Decode(
 				data.complx <= is_COMPLEX;
 				data.jump <= is_JUMP;
 				data.jump_conditional <= is_JUMP_CONDITIONAL;
-				data.fpu <= is_FPU;
+
+//				data.fpu <= is_FPU;
+				data.fpu <= 1'b0;
 
 				data.alu_operation <= alu_operation;
 				data.alu_operand1 <= alu_operand1;
@@ -106,7 +108,8 @@ module CPU_Decode(
 				data.memory_width <= memory_width;
 				data.memory_signed <= memory_signed;
 				
-				data.fpu_operation <= fpu_operation;
+//				data.fpu_operation <= fpu_operation;
+				data.fpu_operation <= 0;
 
 				`define OP data.op
 				`include "private/generated/Instructions_decode_ops.sv"
@@ -118,8 +121,8 @@ module CPU_Decode(
 					is_COMPLEX ||
 					is_JUMP ||
 					is_JUMP_CONDITIONAL ||
-					is_MEMORY ||
-					is_FPU
+					is_MEMORY/* ||
+					is_FPU*/
 				) begin
 					data.tag <= i_data.tag;
 				end

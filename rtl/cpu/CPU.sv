@@ -85,7 +85,6 @@ module CPU #(
 
 	wire [31:0] rs1;
 	wire [31:0] rs2;
-	wire [31:0] rs3;
 
 	CPU_Registers #(
 		.STACK_POINTER(STACK_POINTER)
@@ -96,7 +95,6 @@ module CPU #(
 		.i_fetch_data(predecode_data),
 		.o_rs1(rs1),
 		.o_rs2(rs2),
-		.o_rs3(rs3),
 
 		.i_memory_data(memory_data)
 	);
@@ -210,8 +208,6 @@ module CPU #(
 
 	wire [31:0] forward_rs1;
 	wire [31:0] forward_rs2;
-	wire [31:0] forward_rs3;
-	// wire forward_memory_raw;
 
 	CPU_Forward forward(
 		.i_decode_data(decode_data),
@@ -221,13 +217,9 @@ module CPU #(
 
 		.i_rs1(rs1),
 		.i_rs2(rs2),
-		.i_rs3(rs3),
 
 		.o_rs1(forward_rs1),
-		.o_rs2(forward_rs2),
-		.o_rs3(forward_rs3)
-
-		// .o_memory_raw(forward_memory_raw)
+		.o_rs2(forward_rs2)
 	);
 
 	//====================================================
@@ -259,11 +251,9 @@ module CPU #(
 
 		// Input
 		.o_busy(execute_busy),
-		// .i_memory_raw(forward_memory_raw),
 		.i_data(decode_data),
 		.i_rs1(forward_rs1),
 		.i_rs2(forward_rs2),
-		.i_rs3(forward_rs3),
 	
 		// Output
 		.i_memory_busy(memory_busy),
