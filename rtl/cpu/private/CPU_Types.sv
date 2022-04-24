@@ -68,7 +68,6 @@ typedef struct packed
 	logic complx;					//!< Complex instruction.
 	logic jump;						//!< Jump instruction.
 	logic jump_conditional;			//!< Conditional jump instruction.
-	logic fpu;						//!< FPU instruction.
 	logic [3:0] alu_operation;		//!< ALU operation code.
 	logic [2:0] alu_operand1;		//!< ALU operand 1 index.
 	logic [2:0] alu_operand2;		//!< ALU operand 2 index.
@@ -77,7 +76,8 @@ typedef struct packed
 	logic [2:0] memory_width;		//!< Memory access width (1, 2, or 4) in bytes.
 	logic memory_signed;			//!< Signed extended memory access.
 	logic [4:0] op;					//!< Complex instruction operation code.
-	logic [4:0] fpu_operation;		//!< FPU operation code.
+	// logic fpu;						//!< FPU instruction.
+	// logic [4:0] fpu_operation;		//!< FPU operation code.
 }
 decode_data_t;
 

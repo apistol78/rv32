@@ -172,7 +172,8 @@ module CPU_Execute (
 			i_memory_busy ||
 			(
 				(i_data.tag != data.tag) &&
-				(i_data.complx || i_data.fpu)
+				//(i_data.complx || i_data.fpu)
+				i_data.complx
 			);
 	end
 

@@ -96,9 +96,6 @@ module CPU_Decode(
 				data.jump <= is_JUMP;
 				data.jump_conditional <= is_JUMP_CONDITIONAL;
 
-//				data.fpu <= is_FPU;
-				data.fpu <= 1'b0;
-
 				data.alu_operation <= alu_operation;
 				data.alu_operand1 <= alu_operand1;
 				data.alu_operand2 <= alu_operand2;
@@ -108,8 +105,8 @@ module CPU_Decode(
 				data.memory_width <= memory_width;
 				data.memory_signed <= memory_signed;
 				
+//				data.fpu <= is_FPU;
 //				data.fpu_operation <= fpu_operation;
-				data.fpu_operation <= 0;
 
 				`define OP data.op
 				`include "private/generated/Instructions_decode_ops.sv"
