@@ -1,0 +1,11 @@
+
+
+/home/apistol/private/rv32/board/terasic_cv_gx/ip/IP_PLL_Clk.v
+
+Apr 21 01PM:31:53>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+/home/apistol/private/rv32/board/terasic_cv_gx/ip/IP_PLL_Clk.v
+
+Apr 21 01PM:37:15>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted

@@ -11,7 +11,7 @@ set ::GLOBAL_IP_SDRAM_p0_dqs_group_size 8
 set ::GLOBAL_IP_SDRAM_p0_number_of_ck_pins 1
 set ::GLOBAL_IP_SDRAM_p0_number_of_dm_pins 4
 set ::GLOBAL_IP_SDRAM_p0_dqs_delay_chain_length 0
-set ::GLOBAL_IP_SDRAM_p0_uniphy_temp_ver_code 1732410995
+set ::GLOBAL_IP_SDRAM_p0_uniphy_temp_ver_code 1872319570
 # PLL Parameters
 
 #USER W A R N I N G !
@@ -22,47 +22,47 @@ set ::GLOBAL_IP_SDRAM_p0_uniphy_temp_ver_code 1732410995
 #USER apply those changes to the PLL parameters in this file
 
 set ::GLOBAL_IP_SDRAM_p0_num_pll_clock 7
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(0) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(0) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(0) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(0) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_AFI_CLK) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_AFI_CLK) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_AFI_CLK) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_AFI_CLK) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(1) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(1) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(1) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(1) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_MEM_CLK) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_MEM_CLK) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_MEM_CLK) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_MEM_CLK) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(2) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(2) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(2) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(2) 270.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_WRITE_CLK) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_WRITE_CLK) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_WRITE_CLK) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_WRITE_CLK) 270.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(3) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(3) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(3) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(3) 270.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_ADDR_CMD_CLK) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_ADDR_CMD_CLK) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_ADDR_CMD_CLK) 1000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_ADDR_CMD_CLK) 270.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(4) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(4) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(4) 2000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(4) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_AFI_HALF_CLK) 4000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_AFI_HALF_CLK) 2400000
 set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_AFI_HALF_CLK) 2000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_AFI_HALF_CLK) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(5) 4000000
-set ::GLOBAL_IP_SDRAM_p0_pll_div(5) 6000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(5) 2400000
+set ::GLOBAL_IP_SDRAM_p0_pll_div(5) 5000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(5) 355.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_NIOS_CLK) 4000000
-set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_NIOS_CLK) 6000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_NIOS_CLK) 2400000
+set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_NIOS_CLK) 5000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_NIOS_CLK) 355.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(6) 4000000
-set ::GLOBAL_IP_SDRAM_p0_pll_div(6) 18000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(6) 2400000
+set ::GLOBAL_IP_SDRAM_p0_pll_div(6) 15000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(6) 0.0
-set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_CONFIG_CLK) 4000000
-set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_CONFIG_CLK) 18000000
+set ::GLOBAL_IP_SDRAM_p0_pll_mult(PLL_CONFIG_CLK) 2400000
+set ::GLOBAL_IP_SDRAM_p0_pll_div(PLL_CONFIG_CLK) 15000000
 set ::GLOBAL_IP_SDRAM_p0_pll_phase(PLL_CONFIG_CLK) 0.0
 
 set ::GLOBAL_IP_SDRAM_p0_leveling_capture_phase 90.0

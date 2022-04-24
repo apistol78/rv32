@@ -150,12 +150,13 @@ module SoC(
 
 	wire clock;
 	wire clock_video;
+	wire clock_sdram_ref = CLOCK_125_p;
 	
 	IP_PLL_Clk pll_clk(
 		.refclk(CLOCK_125_p),
 		.rst(!CPU_RESET_n),
-		.outclk_0(clock),
-		.outclk_1(clock_video),
+		.outclk_0(clock),		// 100 MHz
+		.outclk_1(clock_video),	// 25 MHz
 		.locked()
 	);
 
@@ -369,7 +370,7 @@ module SoC(
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
-		.i_clock_pll_ref(clock),
+		.i_clock_pll_ref(clock_sdram_ref),
 		
 		// ---
 		.i_reset(reset),

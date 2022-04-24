@@ -22,3 +22,7 @@ set_false_path -from {CPU:cpu|CPU_Memory:memory|data.inst_rd[*]} -to {CPU:cpu|CP
 set_false_path -from {CPU:cpu|CPU_Decode:decode|data.inst_rs1[*]} -to {CPU:cpu|CPU_Execute:execute|data.rd[*]}
 set_false_path -from {CPU:cpu|CPU_Decode:decode|data.inst_rs2[*]} -to {CPU:cpu|CPU_Execute:execute|data.rd[*]}
 set_false_path -from {CPU:cpu|CPU_Writeback:writeback|data.inst_rd[*]} -to {CPU:cpu|CPU_Execute:execute|data.rd[*]}
+
+set_false_path -from {CPU:cpu|CPU_Execute:execute|data.inst_rd[*]} -to {CPU:cpu|CPU_Execute:execute|o_jump_pc[*]}
+set_false_path -from {CPU:cpu|CPU_Memory:memory|data.inst_rd[*]} -to {CPU:cpu|CPU_Execute:execute|o_jump_pc[*]}
+set_false_path -from {CPU:cpu|CPU_Writeback:writeback|data.inst_rd[*]~DUPLICATE} -to {CPU:cpu|CPU_Execute:execute|o_jump_pc[*]}

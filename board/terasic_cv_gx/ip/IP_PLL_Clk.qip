@@ -53,7 +53,7 @@ set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_C
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2FjdHVhbF9waGFzZV9zaGlmdDA=::MA==::QWN0dWFsIFBoYXNlIFNoaWZ0"
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2R1dHlfY3ljbGUw::NTA=::RHV0eSBDeWNsZQ=="
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2Nhc2NhZGVfY291bnRlcjE=::ZmFsc2U=::TWFrZSB0aGlzIGEgY2FzY2FkZSBjb3VudGVy"
-set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX291dHB1dF9jbG9ja19mcmVxdWVuY3kx::MjUuMTc1::RGVzaXJlZCBGcmVxdWVuY3k="
+set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX291dHB1dF9jbG9ja19mcmVxdWVuY3kx::MjUuMA==::RGVzaXJlZCBGcmVxdWVuY3k="
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2RpdmlkZV9mYWN0b3JfYzE=::MQ==::RGl2aWRlIEZhY3RvciAoQy1Db3VudGVyKQ=="
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2FjdHVhbF9tdWx0aXBseV9mYWN0b3Ix::MTI=::QWN0dWFsIE11bHRpcGx5IEZhY3Rvcg=="
 set_global_assignment -entity "IP_PLL_Clk_0002" -library "IP_PLL_Clk" -name IP_COMPONENT_PARAMETER "Z3VpX2FjdHVhbF9mcmFjX211bHRpcGx5X2ZhY3RvcjE=::MQ==::QWN0dWFsIEZyYWN0aW9uYWwgTXVsdGlwbHkgRmFjdG9yIChLKQ=="
