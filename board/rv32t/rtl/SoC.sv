@@ -87,7 +87,7 @@ module SoC(
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
 
-	VGA vga(
+	VIDEO_VGA vga(
 		.i_clock(vga_clock),
 		.i_clock_out(clock),
 		.o_hsync(HDMI_TX_HS),

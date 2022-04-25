@@ -189,7 +189,7 @@ module SoC(
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
 
-	VGA #(
+	VIDEO_VGA #(
 		.HLINE(800),
 		.HBACK(144),
 		.HFRONT(16),

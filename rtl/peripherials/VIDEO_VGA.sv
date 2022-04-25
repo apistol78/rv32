@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 // 640 * 400
-module VGA #(
+module VIDEO_VGA #(
 	parameter HLINE = 800,
 	parameter HBACK = 144,
 	parameter HFRONT = 16,
