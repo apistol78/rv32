@@ -1,7 +1,6 @@
 
 `timescale 1ns/1ns
 
-// 640 * 400
 module VIDEO_VGA #(
 	parameter HLINE = 800,
 	parameter HBACK = 144,
@@ -12,8 +11,8 @@ module VIDEO_VGA #(
 	parameter VFRONT = 13,
 	parameter VPULSE = 2
 )(
-	input i_clock,
-	inout i_clock_out,
+	input i_clock,				//!< VGA timing clock.
+	inout i_clock_out,			//!< Signal output clock domain.
 
 	output logic o_hsync,
 	output logic o_vsync,
