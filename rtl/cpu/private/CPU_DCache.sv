@@ -141,7 +141,7 @@ module CPU_DCache #(
 					else begin
 						o_bus_rw = i_rw;
 						o_bus_address = i_address;
-						o_bus_request = 1;
+						o_bus_request = i_request;
 						o_bus_wdata = i_wdata;
 						o_rdata = i_bus_rdata;
 						next = PASS_THROUGH;
@@ -202,9 +202,7 @@ module CPU_DCache #(
 				o_bus_request = i_request;
 				o_bus_wdata = i_wdata;
 				o_rdata = i_bus_rdata;
-				if (i_bus_ready) begin
-					o_ready = 1;
-				end
+				o_ready = i_bus_ready;
 				if (!i_request) begin
 					next = IDLE;
 				end
@@ -334,12 +332,10 @@ module CPU_DCache #(
 		endcase
 
 		// Re-initialize cache at reset.
-		/*
 		if (i_reset) begin
 			next = INITIALIZE;
 			next_flush_address = 0;
 		end
-		*/
 	end
 
 endmodule
