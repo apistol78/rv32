@@ -7,8 +7,8 @@
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
-#define VIDEO_DATA_BASE     0x30000000
-#define VIDEO_PALETTE_BASE  0x31000000
+#define VIDEO_DATA_BASE     VIDEO_BASE
+#define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
 
 #define ADV7513_REG_CHIP_REVISION	0x00
 #define ADV7513_REG_CHIP_ID_HIGH	0xf5

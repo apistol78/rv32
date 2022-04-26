@@ -13,6 +13,7 @@
 #define DMA_BASE	0x57000000
 #define PLIC_BASE	0x58000000
 #define GPIO_BASE	0x59000000
+#define VIDEO_BASE  0x5a000000
 
 #define NO_OPTIMIZE	__attribute__((optimize("O0")))
 

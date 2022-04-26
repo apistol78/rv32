@@ -155,14 +155,14 @@ module CPU_Execute (
 	assign o_csr_index = i_data.imm;
 	assign o_data = data;
 
-	logic [4:0] cycle = 0;
+	logic [3:0] cycle = 0;
 	execute_data_t data = 0;
 
 	initial begin
 		o_csr_wdata_wr = 0;
-		o_csr_wdata = 0;
+		//o_csr_wdata = 0;
 		o_jump = 0;
-		o_jump_pc = 0;
+		//o_jump_pc = 0;
 		o_ecall = 0;
 		o_fault = 0;
 	end
@@ -182,9 +182,9 @@ module CPU_Execute (
 			cycle <= 0;
 			data <= 0;
 			o_csr_wdata_wr <= 0;
-			o_csr_wdata <= 0;
+			//o_csr_wdata <= 0;
 			o_jump <= 0;
-			o_jump_pc <= 0;
+			//o_jump_pc <= 0;
 			o_ecall <= 0;
 			o_fault <= 0;			
 		end

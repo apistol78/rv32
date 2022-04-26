@@ -29,7 +29,7 @@ module CPU_DCache #(
 
 	localparam RANGE = 1 << SIZE;
 
-	typedef enum
+	typedef enum bit [3:0]
 	{
 		IDLE			= 0,
 		FLUSH_SETUP		= 1,
@@ -44,8 +44,8 @@ module CPU_DCache #(
 		INITIALIZE		= 10
 	} state_t;
 
-	(* synthesis, fsm_state = "onehot" *) logic [10:0] state = 1 << INITIALIZE;
-	(* synthesis, fsm_state = "onehot" *) logic [10:0] next = 1 << INITIALIZE;
+	state_t state = INITIALIZE;
+	state_t next = INITIALIZE;
 
 	logic [SIZE:0] flush_address = 0;
 	logic [SIZE:0] next_flush_address = 0;
@@ -104,7 +104,7 @@ module CPU_DCache #(
 	end
 
 	always_comb begin
-		next = 0;
+		next = state;
 		next_flush_address = flush_address;
 
 		o_bus_rw = 0;
@@ -124,18 +124,18 @@ module CPU_DCache #(
 		next_miss = miss;
 `endif
 
-		case (1'b1)	// synthesis full_case
-			state[IDLE]: begin
+		case (state)
+			IDLE: begin
 				if (i_request) begin
 					if (i_flush) begin
 						next_flush_address = 0;
-						next[FLUSH_SETUP] = 1;
+						next = FLUSH_SETUP;
 					end
 					else if (i_cacheable) begin
 						if (!i_rw)
-							next[READ_SETUP] = 1;
+							next = READ_SETUP;
 						else begin
-							next[WRITE_SETUP] = 1;
+							next = WRITE_SETUP;
 						end
 					end
 					else begin
@@ -144,43 +144,40 @@ module CPU_DCache #(
 						o_bus_request = 1;
 						o_bus_wdata = i_wdata;
 						o_rdata = i_bus_rdata;
-						next[PASS_THROUGH] = 1;
+						next = PASS_THROUGH;
 					end
-				end
-				else begin
-					next[IDLE] = 1;
 				end
 			end
 
 			// ================
 			// FLUSH
 			// ================
-			state[FLUSH_SETUP]: begin
+			FLUSH_SETUP: begin
 				cache_address = flush_address;
 				if (flush_address < RANGE)
-					next[FLUSH_CHECK] = 1;
+					next = FLUSH_CHECK;
 				else begin
 					o_ready = 1;
-					next[IDLE] = 1;
+					next = IDLE;
 				end
 			end
 
-			state[FLUSH_CHECK]: begin
+			FLUSH_CHECK: begin
 				cache_address = flush_address;
 				if (cache_entry_dirty) begin
 					o_bus_rw = 1;
 					o_bus_address = cache_entry_address;
 					o_bus_request = 1;
 					o_bus_wdata = cache_entry_data;
-					next[FLUSH_WRITE] = 1;
+					next = FLUSH_WRITE;
 				end
 				else begin
 					next_flush_address = flush_address + 1;
-					next[FLUSH_SETUP] = 1;
+					next = FLUSH_SETUP;
 				end
 			end
 
-			state[FLUSH_WRITE]: begin
+			FLUSH_WRITE: begin
 				cache_address = flush_address;
 				o_bus_rw = 1;
 				o_bus_address = cache_entry_address;
@@ -190,10 +187,7 @@ module CPU_DCache #(
 					cache_rw = 1;
 					cache_wdata = { cache_entry_data, cache_entry_address[31:2], 2'b01 };
 					next_flush_address = flush_address + 1;
-					next[FLUSH_SETUP] = 1;
-				end
-				else begin
-					next[FLUSH_WRITE] = 1;
+					next = FLUSH_SETUP;
 				end
 			end
 
@@ -202,7 +196,7 @@ module CPU_DCache #(
 			// ================
 
 			// Cache not initialized, pass through to bus.
-			state[PASS_THROUGH]: begin
+			PASS_THROUGH: begin
 				o_bus_rw = i_rw;
 				o_bus_address = i_address;
 				o_bus_request = i_request;
@@ -211,11 +205,8 @@ module CPU_DCache #(
 				if (i_bus_ready) begin
 					o_ready = 1;
 				end
-				if (i_request) begin
-					next[PASS_THROUGH] = 1;
-				end
-				else begin
-					next[IDLE] = 1;
+				if (!i_request) begin
+					next = IDLE;
 				end
 			end
 
@@ -224,13 +215,13 @@ module CPU_DCache #(
 			// ================
 
 			// Write, write back if necessary.
-			state[WRITE_SETUP]: begin
+			WRITE_SETUP: begin
 				if (cache_entry_dirty && cache_entry_address != i_address) begin
 					o_bus_rw = 1;
 					o_bus_address = cache_entry_address;
 					o_bus_request = 1;
 					o_bus_wdata = cache_entry_data;
-					next[WRITE_WAIT] = 1;
+					next = WRITE_WAIT;
 `ifdef __VERILATOR__
 					next_miss = miss + 1;
 `endif
@@ -239,7 +230,7 @@ module CPU_DCache #(
 					cache_rw = 1;
 					cache_wdata = { i_wdata, i_address[31:2], 2'b11 };
 					o_ready = 1;
-					next[IDLE] = 1;
+					next = IDLE;
 `ifdef __VERILATOR__
 					next_hit = hit + 1;
 `endif
@@ -247,7 +238,7 @@ module CPU_DCache #(
 			end
 
 			// Wait until write back finish.
-			state[WRITE_WAIT]: begin
+			WRITE_WAIT: begin
 				o_bus_rw = 1;
 				o_bus_address = cache_entry_address;
 				o_bus_request = 1;
@@ -256,10 +247,7 @@ module CPU_DCache #(
 					cache_rw = 1;
 					cache_wdata = { i_wdata, i_address[31:2], 2'b11 };
 					o_ready = 1;
-					next[IDLE] = 1;
-				end
-				else begin
-					next[WRITE_WAIT] = 1;
+					next = IDLE;
 				end
 			end
 
@@ -268,11 +256,11 @@ module CPU_DCache #(
 			// ================
 
 			// Check if cache entry valid, if not then read from bus.
-			state[READ_SETUP]: begin
+			READ_SETUP: begin
 				o_rdata = cache_entry_data;
 				if (cache_entry_valid && cache_entry_address == i_address) begin
 					o_ready = 1;
-					next[IDLE] = 1;
+					next = IDLE;
 `ifdef __VERILATOR__
 					next_hit = hit + 1;
 `endif
@@ -283,12 +271,12 @@ module CPU_DCache #(
 						o_bus_address = cache_entry_address;
 						o_bus_request = 1;
 						o_bus_wdata = cache_entry_data;
-						next[READ_WB_WAIT] = 1;
+						next = READ_WB_WAIT;
 					end
 					else begin
 						o_bus_address = i_address;
 						o_bus_request = 1;
-						next[READ_BUS_WAIT] = 1;
+						next = READ_BUS_WAIT;
 					end
 `ifdef __VERILATOR__
 					next_miss = miss + 1;
@@ -297,7 +285,7 @@ module CPU_DCache #(
 			end
 
 			// Write previous entry back to bus.
-			state[READ_WB_WAIT]: begin
+			READ_WB_WAIT: begin
 				o_bus_rw = 1;
 				o_bus_address = cache_entry_address;
 				o_bus_request = 1;
@@ -305,15 +293,12 @@ module CPU_DCache #(
 				if (i_bus_ready) begin
 					o_bus_rw = 0;
 					o_bus_address = i_address;
-					next[READ_BUS_WAIT] = 1;
+					next = READ_BUS_WAIT;
 				end
-				else begin
-					next[READ_WB_WAIT] = 1;
-				end		
 			end
 
 			// Wait until new data read from bus.
-			state[READ_BUS_WAIT]: begin
+			READ_BUS_WAIT: begin
 				o_bus_rw = 0;
 				o_bus_address = i_address;
 				o_bus_request = 1;
@@ -322,10 +307,7 @@ module CPU_DCache #(
 					cache_rw = 1;
 					cache_wdata = { i_bus_rdata, i_address[31:2], 2'b01 };
 					o_ready = 1;
-					next[IDLE] = 1;
-				end
-				else begin
-					next[READ_BUS_WAIT] = 1;
+					next = IDLE;
 				end
 			end
 
@@ -333,26 +315,31 @@ module CPU_DCache #(
 			// INITIALIZE
 			// ================
 
-			state[INITIALIZE]: begin
+			INITIALIZE: begin
 				if (flush_address < RANGE) begin
 					cache_rw = 1'b1;
 					cache_wdata = 32'hffff_fff0;
 					cache_address = flush_address;
 					next_flush_address = flush_address + 1;
-					next[INITIALIZE] = 1;
 				end
 				else begin
 					next_flush_address = 0;
-					next[IDLE] = 1;
+					next = IDLE;
 				end
+			end
+
+			default: begin
+				next = IDLE;
 			end
 		endcase
 
 		// Re-initialize cache at reset.
+		/*
 		if (i_reset) begin
-			next = 1 << INITIALIZE;
+			next = INITIALIZE;
 			next_flush_address = 0;
 		end
+		*/
 	end
 
 endmodule

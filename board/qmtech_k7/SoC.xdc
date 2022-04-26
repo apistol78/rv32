@@ -1,3 +1,8 @@
+
+# create async clock groups from system clock and video clock.
+#set_clock_groups -asynchronous -group [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -group [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[2].gpll~PLL_OUTPUT_COUNTER|divclk}]
+set_false_path -from [get_clocks -of_objects [get_pins ipclk/inst/mmcm_adv_inst/CLKOUT2]] -to [get_clocks -of_objects [get_pins ipclk/inst/mmcm_adv_inst/CLKOUT0]]
+
 # PMOD, pin 1
 set_property IOSTANDARD LVCMOS33 [get_ports {uart_rx}]
 set_property PACKAGE_PIN Y22 [get_ports {uart_rx}]

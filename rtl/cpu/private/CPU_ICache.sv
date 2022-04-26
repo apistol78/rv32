@@ -24,7 +24,7 @@ module CPU_ICache#(
 
 	localparam RANGE = 1 << SIZE;
 
-	typedef enum
+	typedef enum bit [1:0]
 	{
 		IDLE		= 0,
 		READ_SETUP	= 1,
@@ -32,8 +32,8 @@ module CPU_ICache#(
 		INITIALIZE	= 3
 	} state_t;
 
-	(* synthesis, fsm_state = "onehot" *) logic [3:0] next = 1 << INITIALIZE;
-	(* synthesis, fsm_state = "onehot" *) logic [3:0] state = 1 << INITIALIZE;
+	state_t next = INITIALIZE;
+	state_t state = INITIALIZE;
 
 	logic [SIZE:0] clear_address = 0;
 	logic [SIZE:0] next_clear_address = 0;
@@ -86,7 +86,7 @@ module CPU_ICache#(
 	end
 	
 	always_comb begin
-		next = 0;
+		next = state;
 		next_clear_address = clear_address;
 	
 		o_ready = 0;
@@ -102,79 +102,73 @@ module CPU_ICache#(
 		next_miss = miss;
 `endif
 
-		case (1'b1)
-			state[IDLE]: begin
+		case (state)
+			IDLE: begin
 				if (!i_stall) begin
 `ifdef ENABLE_ICACHE				
-					next[READ_SETUP] = 1;
+					next = READ_SETUP;
 `else
 					o_bus_request = 1;
-					next[READ_BUS] = 1;
+					next = READ_BUS;
 `endif
-				end
-				else begin
-					next[IDLE] = 1;
 				end
 			end
 			
-			state[READ_SETUP]: begin
+			READ_SETUP: begin
 				if (!i_stall) begin
 					if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
 						o_ready = 1;
 						o_rdata = cache_rdata[63:32];
 						cache_pc = i_input_pc + 4;
-						next[READ_SETUP] = 1;
 `ifdef __VERILATOR__
 						next_hit = hit + 1;
 `endif
 					end
 					else begin
 						o_bus_request = 1;
-						next[READ_BUS] = 1;
+						next = READ_BUS;
 `ifdef __VERILATOR__
 						next_miss = miss + 1;
 `endif
 					end
 				end
 				else begin
-					next[IDLE] = 1;		// We need to go back to IDLE, seems to become unstable if we stay.
+					next = IDLE;		// We need to go back to IDLE, seems to become unstable if we stay.
 				end
 			end
 
-			state[READ_BUS]: begin
+			READ_BUS: begin
 				o_bus_request = 1;
 				if (i_bus_ready) begin
 					cache_rw = 1;
 					cache_wdata = { i_bus_rdata, { i_input_pc[31:2], 2'b01 } };
 					o_ready = 1;
 					o_rdata = i_bus_rdata;
-					next[IDLE] = 1;
-				end
-				else begin
-					next[READ_BUS] = 1;
+					next = IDLE;
 				end
 			end
 
-			state[INITIALIZE]: begin
+			INITIALIZE: begin
 				if (clear_address < RANGE) begin
 					cache_rw = 1;
 					cache_wdata = 32'h0000_0000;
 					cache_pc = { clear_address, 2'b00 };
 					next_clear_address = clear_address + 1;
-					next[INITIALIZE] = 1;
 				end
 				else begin
 					next_clear_address = 0;
-					next[IDLE] = 1;
+					next = IDLE;
 				end				
 			end
 		endcase
 
 		// Re-initialize cache at reset.
+		/*
 		if (i_reset) begin
-			next = 1 << INITIALIZE;
+			next = INITIALIZE;
 			next_clear_address = 0;
 		end
+		*/
 	end
 
 endmodule

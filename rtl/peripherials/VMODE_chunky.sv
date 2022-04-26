@@ -92,8 +92,8 @@ module VMODE_chunky #(
 
 	generate if (!REGISTERED_CPU_ACCESS) begin
 
-		wire cpu_vram_request = i_cpu_request && (i_cpu_address < 32'h01000000);
-		wire cpu_palette_request = i_cpu_request && (i_cpu_address >= 32'h01000000);
+		wire cpu_vram_request = i_cpu_request && (i_cpu_address < 32'h00800000);
+		wire cpu_palette_request = i_cpu_request && (i_cpu_address >= 32'h00800000);
 
 		always_comb begin
 			o_vram_pa_request = cpu_vram_request;
@@ -103,7 +103,7 @@ module VMODE_chunky #(
 
 			palette_cpu_request = cpu_palette_request;
 			palette_cpu_wdata = i_cpu_wdata[23:0];
-			palette_cpu_address = (i_cpu_address - 32'h01000000) >> 2;
+			palette_cpu_address = (i_cpu_address - 32'h00800000) >> 2;
 
 			o_cpu_rdata = i_vram_pa_rdata;
 			o_cpu_ready = 
@@ -122,7 +122,7 @@ module VMODE_chunky #(
 			o_cpu_ready <= 0;
 
 			if (i_cpu_request) begin
-				if (i_cpu_address < 32'h01000000) begin
+				if (i_cpu_address < 32'h00800000) begin
 					o_vram_pa_address <= i_cpu_address;
 					o_vram_pa_request <= 1;
 					o_vram_pa_rw <= i_cpu_rw;
@@ -130,9 +130,9 @@ module VMODE_chunky #(
 					o_cpu_rdata = i_vram_pa_rdata;
 					o_cpu_ready <= i_vram_pa_ready;
 				end
-				else /*if (i_cpu_address >= 32'h01000000)*/ begin
+				else /*if (i_cpu_address >= 32'h00800000)*/ begin
 					palette_cpu_request <= 1;
-					palette_cpu_address <= (i_cpu_address - 32'h01000000) >> 2;
+					palette_cpu_address <= (i_cpu_address - 32'h00800000) >> 2;
 					palette_cpu_wdata <= i_cpu_wdata[23:0];
 					o_cpu_ready <= 1;
 				end
