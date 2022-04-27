@@ -5,11 +5,11 @@
 `timescale 1ns/1ns
 
 module CPU_Multiply(
-	input wire i_clock,
-	input wire i_signed,
-	input wire [31:0] i_op1,
-	input wire [31:0] i_op2,
-	output wire [63:0] o_result
+	input i_clock,
+	input i_signed,
+	input [31:0] i_op1,
+	input [31:0] i_op2,
+	output [63:0] o_result
 );
 
 `ifndef __TESTBENCH__
@@ -34,12 +34,12 @@ module CPU_Multiply(
 
 `else
 
-    reg [63:0] p1;
-	reg [63:0] p2;
+    logic [63:0] p1;
+	logic [63:0] p2;
 	
 	assign o_result = p2;
 
-    always @(posedge i_clock)
+    always_ff @(posedge i_clock)
     begin
         if (i_signed)
             p1 <= $signed(i_op1) * $signed(i_op2);

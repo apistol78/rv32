@@ -3,8 +3,8 @@
 `timescale 1ns/1ns
 
 module CPU_Decode(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 	output reg o_fault,
 
 	// Input

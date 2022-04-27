@@ -3,15 +3,15 @@
 `timescale 1ns/1ns
 
 module CPU_ALU(
-	input wire [3:0] i_op,
+	input [3:0] i_op,
 
-	input wire [31:0] i_op1,
-	input wire [31:0] i_op2,
+	input [31:0] i_op1,
+	input [31:0] i_op2,
 
-	output wire [31:0] o_result,
-	output wire [31:0] o_shift_result,
-	output wire [31:0] o_signed_sum_result,
-	output wire o_compare_result
+	output [31:0] o_result,
+	output [31:0] o_shift_result,
+	output [31:0] o_signed_sum_result,
+	output o_compare_result
 );
 
 	wire [31:0] signed_sum = $signed(i_op1) + $signed(i_op2);

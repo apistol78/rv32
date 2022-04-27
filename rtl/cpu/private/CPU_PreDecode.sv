@@ -3,8 +3,8 @@
 `timescale 1ns/1ns
 
 module CPU_PreDecode(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Input
 	input fetch_data_t i_data,
