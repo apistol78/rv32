@@ -2,8 +2,7 @@
 `timescale 1ns/1ns
 
 module VMODE_chunky #(
-	parameter PPITCH = 320,
-	parameter [0:0] REGISTERED_CPU_ACCESS = 1'b1
+	parameter PPITCH = 320
 )(
 	input i_clock,
 
@@ -69,6 +68,8 @@ module VMODE_chunky #(
 
 	logic [3:0] state = 0;
 	logic [31:0] quad [3:0];
+	logic [31:0] cpu_offset = 0;
+	logic [31:0] vram_offset = 0;
 
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 
@@ -90,56 +91,35 @@ module VMODE_chunky #(
 	//===============================
 	// CPU
 
-	generate if (!REGISTERED_CPU_ACCESS) begin
+	always_ff @(posedge i_clock) begin
+		palette_cpu_request <= 0;
+		o_vram_pa_request <= 0;
+		o_cpu_ready <= 0;
 
-		wire cpu_vram_request = i_cpu_request && (i_cpu_address < 32'h00800000);
-		wire cpu_palette_request = i_cpu_request && (i_cpu_address >= 32'h00800000);
-
-		always_comb begin
-			o_vram_pa_request = cpu_vram_request;
-			o_vram_pa_rw = i_cpu_rw;
-			o_vram_pa_address = i_cpu_address;
-			o_vram_pa_wdata = i_cpu_wdata;
-
-			palette_cpu_request = cpu_palette_request;
-			palette_cpu_wdata = i_cpu_wdata[23:0];
-			palette_cpu_address = (i_cpu_address - 32'h00800000) >> 2;
-
-			o_cpu_rdata = i_vram_pa_rdata;
-			o_cpu_ready = 
-				cpu_vram_request ? i_vram_pa_ready :
-				cpu_palette_request ? 1'b1 :
-				1'b0;
-		end
-
-	end endgenerate
-
-	generate if (REGISTERED_CPU_ACCESS) begin
-
-		always_ff @(posedge i_clock) begin
-			palette_cpu_request <= 0;
-			o_vram_pa_request <= 0;
-			o_cpu_ready <= 0;
-
-			if (i_cpu_request) begin
-				if (i_cpu_address < 32'h00800000) begin
-					o_vram_pa_address <= i_cpu_address;
-					o_vram_pa_request <= 1;
-					o_vram_pa_rw <= i_cpu_rw;
-					o_vram_pa_wdata <= i_cpu_wdata;
-					o_cpu_rdata = i_vram_pa_rdata;
-					o_cpu_ready <= i_vram_pa_ready;
-				end
-				else /*if (i_cpu_address >= 32'h00800000)*/ begin
-					palette_cpu_request <= 1;
-					palette_cpu_address <= (i_cpu_address - 32'h00800000) >> 2;
-					palette_cpu_wdata <= i_cpu_wdata[23:0];
-					o_cpu_ready <= 1;
-				end
+		if (i_cpu_request) begin
+			if (i_cpu_address < 32'h00800000) begin
+				o_vram_pa_address <= cpu_offset + i_cpu_address;
+				o_vram_pa_request <= 1;
+				o_vram_pa_rw <= i_cpu_rw;
+				o_vram_pa_wdata <= i_cpu_wdata;
+				o_cpu_rdata = i_vram_pa_rdata;
+				o_cpu_ready <= i_vram_pa_ready;
+			end
+			else if (i_cpu_address < 32'h00810000) begin
+				palette_cpu_request <= 1;
+				palette_cpu_address <= (i_cpu_address - 32'h00800000) >> 2;
+				palette_cpu_wdata <= i_cpu_wdata[23:0];
+				o_cpu_ready <= 1;
+			end
+			else begin
+				if (i_cpu_address[3:0] == 0)
+					vram_offset <= i_cpu_wdata;
+				else if (i_cpu_address[3:0] == 4)
+					cpu_offset <= i_cpu_wdata;
+				o_cpu_ready <= 1;
 			end
 		end
-
-	end endgenerate
+	end
 
 	//===============================
 	// Video
@@ -162,7 +142,7 @@ module VMODE_chunky #(
 		case (state)
 			0: begin
 				if ((i_video_pos_x & 3) == 0) begin
-					o_vram_pb_address <= (i_video_pos_x & ~3) + (i_video_pos_y * PPITCH);
+					o_vram_pb_address <= vram_offset + (i_video_pos_x & ~3) + (i_video_pos_y * PPITCH);
 					o_vram_pb_request <= 1;
 					state <= 1;
 				end

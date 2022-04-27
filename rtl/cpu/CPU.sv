@@ -12,7 +12,8 @@ module CPU #(
 	parameter IMPID = 32'h0,
 	parameter HARTID = 32'h0,
 	parameter ICACHE_SIZE = 13,
-	parameter DCACHE_SIZE = 14
+	parameter DCACHE_SIZE = 14,
+	parameter DCACHE_REGISTERED = 1
 )(
 	input i_reset,
 	input i_clock,					// CPU clock
@@ -267,7 +268,8 @@ module CPU #(
 	memory_data_t memory_data;
 
 	CPU_Memory #(
-		.DCACHE_SIZE(DCACHE_SIZE)
+		.DCACHE_SIZE(DCACHE_SIZE),
+		.DCACHE_REGISTERED(DCACHE_REGISTERED)
 	) memory(
 		.i_reset(i_reset),
 		.i_clock(i_clock),

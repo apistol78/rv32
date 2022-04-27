@@ -219,8 +219,6 @@ else if ((word & 0xfe00007f) == 0x18000053)
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
-	log::error << L"FENCE not implemented." << Endl;
-	return false;
 }
 else if ((word & 0x0000707f) == 0x0000100f)
 {

@@ -235,7 +235,9 @@ module SoC(
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_fault;
 
-	CPU cpu(
+	CPU #(
+		.DCACHE_REGISTERED(0)
+	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
@@ -272,9 +274,6 @@ module SoC(
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
 	
-	assign vram_select = bus_address[31:28] == 4'h3;
-	assign vram_address = { 4'h0, bus_address[27:0] };
-
 	assign bridge_select = bus_address[31:28] == 4'h5;
 
 	//=====================================
@@ -283,7 +282,6 @@ module SoC(
 		rom_select		? rom_rdata		:
 		ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
-		vram_select		? vram_rdata	:
 		bridge_select 	? bridge_rdata	:
 		32'h00000000;
 		
@@ -291,19 +289,9 @@ module SoC(
 		rom_select		? rom_ready		:
 		ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
-		vram_select		? vram_ready	:
 		bridge_select	? bridge_ready	:
 		1'b0;	
 	
-
-	// ila_0 ila(
-	// 	.clk(clock),
-	// 	.probe0(cpu_fault),
-	// 	.probe1(bridge_select),
-	// 	.probe2(bridge_ready),
-	// 	.probe3(bus_request)
-	// );	
-
 
 	//=====================================
 	// "NORTH" BRIDGE
@@ -533,8 +521,7 @@ module SoC(
 	wire [31:0] vmode_video_rdata;
 
 	VMODE_chunky #(
-		.PPITCH(320),
-		.REGISTERED_CPU_ACCESS(0)
+		.PPITCH(320)
 	) vmode_chunky(
 		.i_clock(clock),
 		

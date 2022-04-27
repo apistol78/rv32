@@ -454,6 +454,10 @@ int main(int argc, const char **argv)
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 
+				uint32_t ich = soc->SoC__DOT__sdram_lru__DOT__hit;
+				uint32_t icm = soc->SoC__DOT__sdram_lru__DOT__miss;
+				double icr = (ich * 100.0) / (ich + icm);
+
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				
 				statusBar->setText(1,
@@ -468,13 +472,20 @@ int main(int argc, const char **argv)
 
 				statusBar->setText(2, 
 					str(
-						L"%.2f%% / %.2f%% STALL X/M",
+						L"%.2f%% / %.2f%% STALL X/M, %.2f%% LRU",
 						((double)stallExecute.delta() * 100.0) / dc,
-						((double)stallMemory.delta() * 100.0) / dc
+						((double)stallMemory.delta() * 100.0) / dc,
+						icr
 					)
 				);
 
-				statusBar->setText(3, str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc));
+				statusBar->setText(
+					3,
+					str(
+						L"%08x PC",
+						soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
+					)
+				);
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;

@@ -542,8 +542,7 @@ module SoC(
 	wire vram_ready;	
 
 	VMODE_chunky #(
-		.PPITCH(320),
-		.REGISTERED_CPU_ACCESS(0)
+		.PPITCH(320)
 	) vmode_chunky(
 		.i_clock(clock),
 		

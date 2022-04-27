@@ -5,6 +5,8 @@
 #include "verilated_fst_c.h"
 #include "SoC/VSoC.h"
 
+//#define CHECK_FPU
+
 using namespace traktor;
 
 bool g_primeICache = true;
@@ -1335,6 +1337,8 @@ bool verify_PIPELINE_MEMORY_B(const char* trace)
 	return true;
 }
 
+#if defined(CHECK_FPU)
+
 bool verify_FADD(const char* trace)
 {
 	const float v1 = rndf();
@@ -1888,6 +1892,8 @@ bool verify_FMIN_FMAX(const char* trace)
 	return true;
 }
 
+#endif
+
 bool verify_CSRRS(const char* trace)
 {
 	auto tb = create_soc();
@@ -2018,6 +2024,9 @@ int main(int argc, char **argv)
 	CHECK(verify_PIPELINE);
 	CHECK(verify_PIPELINE_MEMORY);
 	CHECK(verify_PIPELINE_MEMORY_B);
+
+#if defined(CHECK_FPU)
+
 	CHECK(verify_FADD);
 	CHECK(verify_FSUB);
 	CHECK(verify_FMUL);
@@ -2039,6 +2048,9 @@ int main(int argc, char **argv)
 	CHECK(verify_FMIN);
 	CHECK(verify_FMAX);
 	CHECK(verify_FMIN_FMAX);
+
+#endif
+
 	CHECK(verify_CSRRS);
 
 	if (success)

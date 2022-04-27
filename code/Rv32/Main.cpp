@@ -115,7 +115,6 @@ int main(int argc, const char** argv)
 	bus.map(0x00000000, 0x00010000, &rom);
 	bus.map(0x10000000, 0x20000000, &ram);
 	bus.map(0x20000000, 0x30000000, &sdram);
-	bus.map(0x30000000, 0x40000000, &video);
 	bus.map(0x50000000, 0x50000100, &led);
 	bus.map(0x51000000, 0x51000100, &uart1);
 	bus.map(0x52000000, 0x52000100, &uart2);
@@ -124,6 +123,7 @@ int main(int argc, const char** argv)
 	bus.map(0x55000000, 0x55000100, &tmr);
 	bus.map(0x57000000, 0x57000100, &dma);
 	bus.map(0x58000000, 0x58004000, &plic);
+	bus.map(0x5a000000, 0x5b000000, &video);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))

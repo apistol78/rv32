@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/Timer.h"
@@ -9,6 +8,7 @@
 
 #define VIDEO_DATA_BASE     VIDEO_BASE
 #define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
+#define VIDEO_CONTROL_BASE  (VIDEO_BASE + 0x00810000)
 
 #define ADV7513_REG_CHIP_REVISION	0x00
 #define ADV7513_REG_CHIP_ID_HIGH	0xf5
@@ -56,6 +56,7 @@ static const struct {
 
 static void* primary_target = 0;
 static void* secondary_target = 0;
+static int32_t current = 0;
 
 static void reg_update_bits(int reg, int mask, int data)
 {
@@ -113,8 +114,7 @@ int32_t video_init()
 {
 	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32T)
 	{
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
 	{
@@ -124,25 +124,31 @@ int32_t video_init()
 			adv7513_power_up();
 			interrupt_set_handler(1, adv7513_interrupt_handler);
 		}
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
 	{
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		secondary_target = (uint32_t*)(VIDEO_DATA_BASE + 320 * 200 * 4);
+		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 	}
-	else
+	else if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		if ((secondary_target = malloc(320 * 200)) == 0)
 			return 1;
 	}
+	else
+	{
+		printf("Unknown device, unable to initialize video.\n");
+		return 1;
+	}
+
+	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
+	control[0] = 0;			// GPU read offset
+	control[1] = 320 * 200;	// CPU write offset
 
 	return 0;
 }
@@ -159,13 +165,8 @@ int32_t video_get_resolution_height()
 
 void video_set_palette(uint8_t index, uint32_t color)
 {
-	uint32_t* palette = (uint32_t*)VIDEO_PALETTE_BASE;
+	volatile uint32_t* palette = (volatile uint32_t*)VIDEO_PALETTE_BASE;
 	palette[index] = color;
-}
-
-void* video_get_primary_target()
-{
-	return primary_target;
 }
 
 void* video_get_secondary_target()
@@ -175,25 +176,23 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	// Ensure data is written from DCACHE to VRAM before DMA.
-	// __asm__ volatile ("fence");
-
-	// Begin copying from secondary to primary target.
 	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
 	{
 		memcpy(primary_target, secondary_target, 320 * 200);
 	}
 	else
 	{
-		dma_copy(
-			primary_target,
-			secondary_target,
-			(320 * 200) / 4
-		);
+		volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
+		if (current == 0)
+		{
+			control[0] = 320 * 200;	// GPU read offset
+			control[1] = 0;			// CPU write offset
+		}
+		else
+		{
+			control[0] = 0;			// GPU read offset
+			control[1] = 320 * 200;	// CPU write offset
+		}
+		current = 1 - current;
 	}
-}
-
-void video_swap_wait()
-{
-	dma_wait();
 }

@@ -8,10 +8,6 @@ EXTERN_C int32_t video_get_resolution_height();
 
 EXTERN_C void video_set_palette(uint8_t index, uint32_t color);
 
-EXTERN_C void* video_get_primary_target();
-
 EXTERN_C void* video_get_secondary_target();
 
 EXTERN_C void video_swap();
-
-EXTERN_C void video_swap_wait();

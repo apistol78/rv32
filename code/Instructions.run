@@ -581,6 +581,8 @@ local instructions = {
 		name = "FENCE",
 		format = "I",
 		type = insttype.COMPLEX,
+		cpp = [[
+		]],
 		verilog_text = [[
 			`MEM_FLUSH <= 1;
 			`EXECUTE_DONE;

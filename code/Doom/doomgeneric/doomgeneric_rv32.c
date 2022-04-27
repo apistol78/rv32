@@ -30,7 +30,6 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 	for (uint32_t i = 0; i < 256; ++i)
 		video_set_palette(i, colors[i]);
 
-	video_swap_wait();
 	video_swap();
 }
 

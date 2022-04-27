@@ -35,7 +35,11 @@ bool Video::writeU16(uint32_t address, uint16_t value)
 
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
-	if (address >= 0x01000000)
+	if (address >= 0x00810000)
+	{
+		// GPU read offset.
+	}
+	else if (address >= 0x00800000)
 	{
 		m_palette[(address / 4) & 255] = Color4f::fromColor4ub(
 			Color4ub(value)
