@@ -103,10 +103,37 @@ module CPU_DCache_Reg #(
 						state <= FLUSH_SETUP;
 					end
 					else if (i_cacheable) begin
-						if (!i_rw)
-							state <= READ_SETUP;
+						if (!i_rw) begin
+
+							// Check "super hot" cache line first, since
+							// RMW pattern access same address multiple times
+							// it's a high probability this will be true.
+							if (cache_entry_valid && cache_entry_address == i_address) begin
+								o_rdata <= cache_entry_data;
+								o_ready <= 1'b1;
+`ifdef __VERILATOR__
+								hit <= hit + 1;
+`endif
+							end
+							else
+								state <= READ_SETUP;
+
+						end
 						else begin
-							state <= WRITE_SETUP;
+
+							// Check "super hot" cache line here as well,
+							// see comment above.
+							if (cache_entry_valid && cache_entry_address == i_address) begin
+								cache_rw <= 1'b1;
+								cache_wdata <= { i_wdata, i_address[31:2], 2'b11 };
+								o_ready <= 1'b1;
+`ifdef __VERILATOR__
+								hit <= hit + 1;
+`endif
+							end
+							else
+								state <= WRITE_SETUP;
+
 						end
 					end
 					else begin
