@@ -1880,6 +1880,11 @@
     (uuid fefb50b8-ac49-47bd-b903-58069e968994)
   )
 
+  (text "TX - Y22\nRX - Y23\n\nSD_DAT1 - AC23\nSD_DAT0 - AA25\nSD_CLK - AE22\nSD_CMD - AE23\nSD_DAT3 - AF24\nSD_DAT2 - AD26\n\nI2S_SDIN - AA22\nI2S_SCLK - AA24\nI2S_LRCK - AC24\nI2S_MCLK - AB25"
+    (at 303.53 114.3 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 04cc0c9d-6dc8-4408-8a26-8e18e7dafc31)
+  )
   (text "5V at 63 & 64 from board" (at 222.25 125.73 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 60d26db4-b138-46b0-b681-4276ebd1d4cf)

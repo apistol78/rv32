@@ -20,7 +20,7 @@ module AUDIO_controller(
 	logic output_fifo_wr = 0;
 	logic output_fifo_rd = 0;
 	FIFO64 #(
-		.DEPTH(32),
+		.DEPTH(64),
 		.WIDTH(16)
 	) output_fifo(
         .i_clock(i_clock),
@@ -48,8 +48,8 @@ module AUDIO_controller(
 		end
 	end
 
-	always_comb begin
-		output_fifo_rd = !i_output_busy && !output_fifo_empty;
+	always_ff @(posedge i_clock) begin
+		output_fifo_rd <= !i_output_busy && !output_fifo_empty;
 	end
 
 endmodule

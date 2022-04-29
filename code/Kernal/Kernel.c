@@ -45,6 +45,7 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"sw		x29, 116(sp)		\n"
 		"sw		x30, 120(sp)		\n"
 		"sw		x31, 124(sp)		\n"
+		/*
 		"fsw	f0, 128(sp)			\n"
 		"fsw	f1, 132(sp)			\n"
 		"fsw	f2, 136(sp)			\n"
@@ -77,6 +78,7 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"fsw	f29, 244(sp)		\n"
 		"fsw	f30, 248(sp)		\n"
 		"fsw	f31, 252(sp)		\n"
+		*/
 	);
 
 	// Save current interrupt return address and stack pointer.
@@ -150,6 +152,7 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"lw		x29, 116(sp)		\n"
 		"lw		x30, 120(sp)		\n"
 		"lw		x31, 124(sp)		\n"
+		/*
 		"flw	f0, 128(sp)			\n"
 		"flw	f1, 132(sp)			\n"
 		"flw	f2, 136(sp)			\n"
@@ -182,6 +185,7 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"flw	f29, 244(sp)		\n"
 		"flw	f30, 248(sp)		\n"
 		"flw	f31, 252(sp)		\n"
+		*/
 		"addi	sp, sp, 256			\n"
 	);
 

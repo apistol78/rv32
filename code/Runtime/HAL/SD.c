@@ -539,8 +539,6 @@ int32_t sd_init()
 
 	// Determine data width from device id.
 	s_dataBits = 4;
-	if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2 || timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
-		s_dataBits = 1;
 
 	SD_WR_CMD_DIR_OUT();
 	SD_WR_DAT_DIR_IN();

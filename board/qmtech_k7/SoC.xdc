@@ -5,11 +5,11 @@ set_false_path -from [get_clocks -of_objects [get_pins ipclk/inst/mmcm_adv_inst/
 
 # PMOD, pin 1
 set_property IOSTANDARD LVCMOS33 [get_ports {uart_rx}]
-set_property PACKAGE_PIN Y22 [get_ports {uart_rx}]
+set_property PACKAGE_PIN Y23 [get_ports {uart_rx}]
 
 # PMOD, pin 2
 set_property IOSTANDARD LVCMOS33 [get_ports {uart_tx}]
-set_property PACKAGE_PIN Y23 [get_ports {uart_tx}]
+set_property PACKAGE_PIN Y22 [get_ports {uart_tx}]
 
 # SD
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_clk}]
@@ -17,13 +17,24 @@ set_property PACKAGE_PIN AE22 [get_ports {sd_clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_cmd}]
 set_property PACKAGE_PIN AE23 [get_ports {sd_cmd}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_dat[0]}]
-set_property PACKAGE_PIN AD26 [get_ports {sd_dat[0]}]
+set_property PACKAGE_PIN AA25 [get_ports {sd_dat[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_dat[1]}]
-set_property PACKAGE_PIN AF24 [get_ports {sd_dat[1]}]
+set_property PACKAGE_PIN AC23 [get_ports {sd_dat[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_dat[2]}]
-set_property PACKAGE_PIN AA25 [get_ports {sd_dat[2]}]
+set_property PACKAGE_PIN AD26 [get_ports {sd_dat[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sd_dat[3]}]
-set_property PACKAGE_PIN AC23 [get_ports {sd_dat[3]}]
+set_property PACKAGE_PIN AF24 [get_ports {sd_dat[3]}]
+
+# I2S
+set_property IOSTANDARD LVCMOS33 [get_ports {i2s_sdout}]
+set_property PACKAGE_PIN AA22 [get_ports {i2s_sdout}]
+set_property IOSTANDARD LVCMOS33 [get_ports {i2s_sclk}]
+set_property PACKAGE_PIN AA24 [get_ports {i2s_sclk}]
+set_property IOSTANDARD LVCMOS33 [get_ports {i2s_lrck}]
+set_property PACKAGE_PIN AC24 [get_ports {i2s_lrck}]
+set_property IOSTANDARD LVCMOS33 [get_ports {i2s_mclk}]
+set_property PACKAGE_PIN AB25 [get_ports {i2s_mclk}]
+
 
 #set_property IOSTANDARD LVCMOS33 [get_ports {led_1}]
 #set_property PACKAGE_PIN B14 [get_ports {led_1}]

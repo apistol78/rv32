@@ -13,7 +13,7 @@ module ClockDivider #(
 	localparam MAX_RATE = CLOCK_RATE / (2 * BAUD_RATE);
 	localparam CNT_WIDTH = $clog2(MAX_RATE);
 
-	reg [CNT_WIDTH - 1:0] counter = 0;
+	logic [CNT_WIDTH:0] counter = 0;
 
 	initial o_clock = 0;
 

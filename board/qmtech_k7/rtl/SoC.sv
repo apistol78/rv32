@@ -4,7 +4,7 @@
 
 module SoC(
     input sys_clk,
-    input sys_rst,	// SW1, pulled high
+    input sys_rst,	// SW2, pulled high
 
     //output led_1,
     //output led_2,
@@ -16,6 +16,11 @@ module SoC(
 	output sd_clk,
 	inout sd_cmd,
 	inout [3:0] sd_dat,
+
+    output i2s_sdout,
+    output i2s_sclk,
+    output i2s_lrck,
+    output i2s_mclk,
 
 	output lcd_bkl,
 	output lcd_clk,
@@ -47,7 +52,7 @@ module SoC(
         .clk_out1(clock),		// 125 MHz
 		.clk_out2(clock_ref),	// 200 MHz
 		.clk_out3(clock_video),	// ~28 MHz
-        .reset(~sys_rst),
+        .reset(1'b0),
         .clk_in1(sys_clk)
     );
     
@@ -371,6 +376,38 @@ module SoC(
 		.o_interrupt(timer_interrupt)
 	);
 
+	// AUDIO
+	wire audio_output_busy;
+	wire [15:0] audio_output_sample;
+
+	AUDIO_i2s_output #(
+		.FREQUENCY(`FREQUENCY)
+	) audio_i2s_output(
+		.i_clock(clock),
+		
+		.o_busy(audio_output_busy),
+		.i_sample(audio_output_sample),
+
+		.o_i2s_sdout(i2s_sdout),
+		.o_i2s_sclk(i2s_sclk),
+		.o_i2s_lrck(i2s_lrck),
+		.o_i2s_mclk(i2s_mclk)
+	);
+
+	wire audio_select;
+	wire audio_ready;
+	AUDIO_controller audio_controller(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_request(audio_select && bridge_far_request),
+		.i_wdata(bridge_far_wdata[15:0]),
+		.o_ready(audio_ready),
+
+		.i_output_busy(audio_output_busy),
+		.o_output_sample(audio_output_sample)
+	);
+
 	// DMA
 	wire dma_select;
 	wire [1:0] dma_address;
@@ -599,6 +636,8 @@ module SoC(
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
 	assign timer_address = bridge_far_address[4:2];
 
+	assign audio_select = bridge_far_address[27:24] == 4'h6;
+
 	assign dma_select = bridge_far_address[27:24] == 4'h7;
 	assign dma_address = bridge_far_address[3:2];
 
@@ -622,6 +661,7 @@ module SoC(
 		uart_0_select	? uart_0_ready	:
 		sd_select		? sd_ready		:
 		timer_select	? timer_ready	:
+		audio_ready		? audio_ready	:
 		dma_select		? dma_ready		:
 		plic_select		? plic_ready	:
 		vram_select		? vram_ready	:
