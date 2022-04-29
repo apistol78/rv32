@@ -17,7 +17,7 @@ void AUDIO::eval(VSoC* soc, uint64_t time)
 {
 	auto& pwm = soc->AUDIO_PWM;
 
-	const float f = 0.001f;
+	const float f = 0.01f;
 	m_value = m_value * (1.0f - f) + (pwm ? 1.0f : -1.0f) * f;
 
 	const uint64_t ticks = 100000000ULL / 44100ULL;

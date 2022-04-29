@@ -7,7 +7,9 @@ module AUDIO_controller(
 
 	// CPU interface.
 	input i_request,
+	input i_rw,
 	input [15:0] i_wdata,
+	output logic [31:0] o_rdata,
 	output logic o_ready,
 
 	// Audio output
@@ -19,8 +21,9 @@ module AUDIO_controller(
 	wire output_fifo_full;
 	logic output_fifo_wr = 0;
 	logic output_fifo_rd = 0;
+	wire [7:0] output_fifo_queued;
 	FIFO64 #(
-		.DEPTH(64),
+		.DEPTH(256),
 		.WIDTH(16)
 	) output_fifo(
         .i_clock(i_clock),
@@ -29,22 +32,28 @@ module AUDIO_controller(
 		.i_write(output_fifo_wr),
 		.i_wdata(i_wdata),
 		.i_read(output_fifo_rd),
-		.o_rdata(o_output_sample)
+		.o_rdata(o_output_sample),
+		.o_queued(output_fifo_queued)
 	);
 
     initial o_ready = 0;
 
 	always_ff @(posedge i_clock) begin
 		output_fifo_wr <= 0;
-		if (!o_ready) begin
-			if (i_request && !output_fifo_full) begin
-				output_fifo_wr <= 1;
+		if (i_request && !o_ready) begin
+			if (!i_rw) begin
+				o_rdata <= { 24'b0, output_fifo_queued };
 				o_ready <= 1;
 			end
+			else begin
+				if (!output_fifo_full) begin
+					output_fifo_wr <= 1;
+					o_ready <= 1;
+				end
+			end
 		end
-		else begin
-			if (!i_request)
-				o_ready <= 0;
+		else if (!i_request) begin
+			o_ready <= 0;
 		end
 	end
 

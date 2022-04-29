@@ -71,7 +71,8 @@ module DMA(
 		.i_write(queue_write),
 		.i_wdata(wr_command),
 		.i_read(queue_read),
-		.o_rdata(queue_rdata)
+		.o_rdata(queue_rdata),
+		.o_queued()
 	);
 
 	dma_command_t wr_command;

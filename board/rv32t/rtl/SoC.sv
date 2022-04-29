@@ -383,27 +383,31 @@ module SoC(
 	);
 
 	// AUDIO
-	wire audio_pwm_output_busy;
-	wire [15:0] audio_pwm_output_sample;
+	wire audio_output_busy;
+	wire [15:0] audio_output_sample;
+
 	AUDIO_pwm_output audio_pwm_output(
 		.i_clock(clock),
-		.o_busy(audio_pwm_output_busy),
-		.i_sample(audio_pwm_output_sample),
+		.o_busy(audio_output_busy),
+		.i_sample(audio_output_sample),
 		.o_pwm(AUDIO_PWM)
 	);
 
 	wire audio_select;
+	wire [31:0] audio_rdata;
 	wire audio_ready;
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
 
 		.i_request(audio_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
 		.i_wdata(bridge_far_wdata[15:0]),
+		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
 
-		.i_output_busy(audio_pwm_output_busy),
-		.o_output_sample(audio_pwm_output_sample)
+		.i_output_busy(audio_output_busy),
+		.o_output_sample(audio_output_sample)
 	);
 
 	// DMA
@@ -634,13 +638,14 @@ module SoC(
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };
 
 	assign bridge_far_rdata =
-		uart_0_select ? uart_0_rdata	:
-		i2c_select ? i2c_rdata			:
-		sd_select ? sd_rdata			:
-		timer_select ? timer_rdata		:
-		dma_select ? dma_rdata			:
-		plic_select ? plic_rdata		:
-		vram_select ? vram_rdata		:
+		uart_0_select	? uart_0_rdata	:
+		i2c_select		? i2c_rdata		:
+		sd_select		? sd_rdata		:
+		timer_select	? timer_rdata	:
+		audio_select	? audio_rdata	:
+		dma_select		? dma_rdata		:
+		plic_select		? plic_rdata	:
+		vram_select		? vram_rdata	:
 		32'h00000000;
 	
 	assign bridge_far_ready =

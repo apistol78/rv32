@@ -37,7 +37,8 @@ module UART_RX #(
 		.i_write(rx_fifo_write),
 		.i_wdata(data),
 		.i_read(rx_fifo_read),
-		.o_rdata(rx_fifo_rdata)
+		.o_rdata(rx_fifo_rdata),
+		.o_queued()
 	);
 	
 	initial begin

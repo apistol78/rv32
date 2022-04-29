@@ -35,7 +35,8 @@ module UART_TX #(
 		.i_write(tx_fifo_write),
 		.i_wdata(i_wdata[7:0]),
 		.i_read(tx_fifo_read),
-		.o_rdata(tx_fifo_rdata)
+		.o_rdata(tx_fifo_rdata),
+		.o_queued()
 	);
 
 	initial begin

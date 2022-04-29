@@ -11,7 +11,8 @@ module FIFO64 #(
 	input i_write,
 	input [WIDTH-1:0] i_wdata,
 	input i_read,
-	output [WIDTH-1:0] o_rdata
+	output [WIDTH-1:0] o_rdata,
+	output [$clog2(DEPTH) - 1:0] o_queued
 );
 
 	logic [WIDTH-1:0] rdata = 0;
@@ -22,6 +23,7 @@ module FIFO64 #(
 	assign o_empty = (in == out) ? 1'b1 : 1'b0;
 	assign o_full = (((in + 1) & (DEPTH - 1)) == out) ? 1'b1 : 1'b0;
 	assign o_rdata = rdata;
+	assign o_queued = (in >= out) ? in - out : (DEPTH - out) + in;
 
 	always @ (posedge i_clock) begin
 		if (i_write) begin
