@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "SII9022ACNU")(type "KiCad")(uri "${KIPRJMOD}/SII9022ACNU.kicad_sym")(options "")(descr ""))
+  (lib (name "685119134923")(type "Legacy")(uri "${KIPRJMOD}/parts/hdmi connector/685119134923.lib")(options "")(descr ""))
+)
