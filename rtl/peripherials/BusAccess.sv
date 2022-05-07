@@ -56,15 +56,15 @@ module BusAccess #(
 		assign o_pb_ready = i_pb_request && (state == 2'd2) ? i_bus_ready : 1'b0;
 		assign o_pc_ready = i_pc_request && (state == 2'd3) ? i_bus_ready : 1'b0;
 
-		assign o_pa_rdata = i_pa_request && (state == 2'd1) ? i_bus_rdata : 32'hz;
-		assign o_pb_rdata = i_pb_request && i_pb_rw == 1'b0 && (state == 2'd2) ? i_bus_rdata : 32'hz;
-		assign o_pc_rdata = i_pc_request && i_pc_rw == 1'b0 && (state == 2'd3) ? i_bus_rdata : 32'hz;
+		assign o_pa_rdata = i_bus_rdata;
+		assign o_pb_rdata = i_bus_rdata;
+		assign o_pc_rdata = i_bus_rdata;
 
 		assign o_pa_busy = (state == 2'd1);
 		assign o_pb_busy = (state == 2'd2);
 		assign o_pc_busy = (state == 2'd3);
 
-		assign o_bus_request = i_pa_request | i_pb_request | i_pc_request;
+		assign o_bus_request = (state != 2'd0) & (i_pa_request | i_pb_request | i_pc_request);
 
 		always_ff @(posedge i_clock) begin
 			state <= next_state;

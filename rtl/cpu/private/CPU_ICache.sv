@@ -26,10 +26,10 @@ module CPU_ICache#(
 
 	typedef enum bit [1:0]
 	{
-		IDLE		= 0,
-		READ_SETUP	= 1,
-		READ_BUS	= 2,
-		INITIALIZE	= 3
+		IDLE		= 2'd0,
+		READ_SETUP	= 2'd1,
+		READ_BUS	= 2'd2,
+		INITIALIZE	= 2'd3
 	} state_t;
 
 	state_t next = INITIALIZE;

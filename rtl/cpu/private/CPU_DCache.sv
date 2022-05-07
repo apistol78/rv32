@@ -31,17 +31,17 @@ module CPU_DCache #(
 
 	typedef enum bit [3:0]
 	{
-		IDLE			= 0,
-		FLUSH_SETUP		= 1,
-		FLUSH_CHECK		= 2,
-		FLUSH_WRITE		= 3,
-		PASS_THROUGH	= 4,
-		WRITE_SETUP		= 5,
-		WRITE_WAIT		= 6,
-		READ_SETUP		= 7,
-		READ_WB_WAIT	= 8,
-		READ_BUS_WAIT	= 9,
-		INITIALIZE		= 10
+		IDLE			= 4'd0,
+		FLUSH_SETUP		= 4'd1,
+		FLUSH_CHECK		= 4'd2,
+		FLUSH_WRITE		= 4'd3,
+		PASS_THROUGH	= 4'd4,
+		WRITE_SETUP		= 4'd5,
+		WRITE_WAIT		= 4'd6,
+		READ_SETUP		= 4'd7,
+		READ_WB_WAIT	= 4'd8,
+		READ_BUS_WAIT	= 4'd9,
+		INITIALIZE		= 4'd10
 	} state_t;
 
 	state_t state = INITIALIZE;
