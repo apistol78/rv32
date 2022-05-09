@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include "Runtime/Runtime.h"
+#include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
@@ -207,12 +208,7 @@ int main()
 			file_seek(fp, 0, 0);
 			continue;
 		}
-
-		for (int i = 0; i < 256; ++i)
-		{
-			*audio = buf[i];
-			*audio = buf[i];
-		}
+		audio_play_mono(buf, 256);
 	}
 
 /*
