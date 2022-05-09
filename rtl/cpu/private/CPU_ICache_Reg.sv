@@ -11,12 +11,12 @@ module CPU_ICache_Reg #(
 	input i_clock,
 	
 	input [31:0] i_input_pc,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 	input i_stall,
 
 	// Bus
-	output logic o_bus_request,
+	output bit o_bus_request,
 	input i_bus_ready,
 	output [31:0] o_bus_address,
 	input [31:0] i_bus_rdata
@@ -34,19 +34,19 @@ module CPU_ICache_Reg #(
 
 	state_t state = INITIALIZE;
 
-	logic [SIZE:0] clear_address = 0;
+	bit [SIZE:0] clear_address = 0;
 
 	// Debug, only for verilated.
 `ifdef __VERILATOR__
-	logic [31:0] hit = 0;
-	logic [31:0] miss = 0;
+	bit [31:0] hit = 0;
+	bit [31:0] miss = 0;
 `endif
 
 	// Cache memory.
-	logic cache_rw = 0;
-	logic [63:0] cache_wdata = 0;
+	bit cache_rw = 0;
+	bit [63:0] cache_wdata = 0;
 	wire [63:0] cache_rdata;
-	logic [31:0] cache_pc;
+	bit [31:0] cache_pc;
 	wire [SIZE - 1:0] cache_label = cache_pc[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
 
 	// One cycle latency, important since

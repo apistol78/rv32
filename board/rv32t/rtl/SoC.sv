@@ -309,6 +309,7 @@ module SoC(
 	wire [1:0] uart_0_address;
 	wire [31:0] uart_0_rdata;
 	wire uart_0_ready;
+	wire uart_0_interrupt;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8))
 	) uart_0(
@@ -320,6 +321,7 @@ module SoC(
 		.i_wdata(bridge_far_wdata),
 		.o_rdata(uart_0_rdata),
 		.o_ready(uart_0_ready),
+		.o_interrupt(uart_0_interrupt),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
@@ -461,7 +463,7 @@ module SoC(
 
 		.i_interrupt_0(0),					// Video
 		.i_interrupt_1(audio_interrupt),	// Audio
-		.i_interrupt_2(0),					// UART
+		.i_interrupt_2(uart_0_interrupt),	// UART
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),

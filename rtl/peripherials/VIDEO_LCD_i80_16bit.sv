@@ -8,9 +8,9 @@ module VIDEO_LCD_i80_16bit(
 	input i_request,
 	input i_rw,
 	input [1:0] i_address,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	input [31:0] i_wdata,
-	output logic o_ready,
+	output bit o_ready,
 
 	output o_lcd_rst,
 	output o_lcd_cs,
@@ -28,15 +28,15 @@ module VIDEO_LCD_i80_16bit(
 	assign o_lcd_rw = rw_n;			// write strobe	(inverted)
 	assign o_lcd_rs = rs;			// register select, 0 = select index or status, 1 = select control
 
-	logic cs_n = 1;
-	logic rd_n = 0;
-	logic rw_n = 0;
-	logic rs = 0;
-	logic [15:0] db_w = 0;
+	bit cs_n = 1;
+	bit rd_n = 0;
+	bit rw_n = 0;
+	bit rs = 0;
+	bit [15:0] db_w = 0;
 	wire [15:0] db_r;
 
-	logic [7:0] state = 0;
-	logic [15:0] dly = 0;
+	bit [7:0] state = 0;
+	bit [15:0] dly = 0;
 
 	initial begin
 		o_rdata = 0;

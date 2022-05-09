@@ -34,8 +34,8 @@ module CPU_Multiply(
 
 `else
 
-    logic [63:0] p1;
-	logic [63:0] p2;
+    bit [63:0] p1;
+	bit [63:0] p2;
 	
 	assign o_result = p2;
 

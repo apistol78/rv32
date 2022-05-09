@@ -11,35 +11,35 @@ module VMODE_chunky #(
 	input i_cpu_rw,
 	input [31:0] i_cpu_address,
 	input [31:0] i_cpu_wdata,
-	output reg [31:0] o_cpu_rdata,
-	output reg o_cpu_ready,
+	output bit [31:0] o_cpu_rdata,
+	output bit o_cpu_ready,
 
 	// Video
 	input i_video_request,
 	input [8:0] i_video_pos_x,
 	input [8:0] i_video_pos_y,
-	output reg [31:0] o_video_rdata,
+	output bit [31:0] o_video_rdata,
 
 	// Memory
-	output reg o_vram_pa_request,
-	output reg o_vram_pa_rw,
-	output reg [31:0] o_vram_pa_address,
-	output reg [31:0] o_vram_pa_wdata,
+	output bit o_vram_pa_request,
+	output bit o_vram_pa_rw,
+	output bit [31:0] o_vram_pa_address,
+	output bit [31:0] o_vram_pa_wdata,
 	input [31:0] i_vram_pa_rdata,
 	input i_vram_pa_ready,
 
-	output reg o_vram_pb_request,
-	output reg o_vram_pb_rw,
-	output reg [31:0] o_vram_pb_address,
-	output reg [31:0] o_vram_pb_wdata,
+	output bit o_vram_pb_request,
+	output bit o_vram_pb_rw,
+	output bit [31:0] o_vram_pb_address,
+	output bit [31:0] o_vram_pb_wdata,
 	input [31:0] i_vram_pb_rdata,
 	input i_vram_pb_ready
 );
 
-	logic palette_cpu_request = 0;
-	logic [7:0] palette_cpu_address = 0;
-	logic [23:0] palette_cpu_wdata = 0;
-	logic [7:0] palette_video_address = 0;
+	bit palette_cpu_request = 0;
+	bit [7:0] palette_cpu_address = 0;
+	bit [23:0] palette_cpu_wdata = 0;
+	bit [7:0] palette_video_address = 0;
 	wire [23:0] palette_video_rdata;
 
 	BRAM_dual #(
@@ -66,10 +66,10 @@ module VMODE_chunky #(
 		.o_pb_ready()
 	);
 
-	logic [3:0] state = 0;
-	logic [31:0] quad [3:0];
-	logic [31:0] cpu_offset = 0;
-	logic [31:0] vram_offset = 0;
+	bit [3:0] state = 0;
+	bit [31:0] quad [3:0];
+	bit [31:0] cpu_offset = 0;
+	bit [31:0] vram_offset = 0;
 
 	wire [1:0] byte_index = i_video_pos_x[1:0];
 

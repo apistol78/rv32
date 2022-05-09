@@ -40,10 +40,10 @@ module CPU_Divide(
 	
 `else
 
-    logic [31:0] p1_result;
-    logic [31:0] p1_remainder;
-	logic [31:0] p2_result;
-    logic [31:0] p2_remainder;
+    bit [31:0] p1_result;
+    bit [31:0] p1_remainder;
+	bit [31:0] p2_result;
+    bit [31:0] p2_remainder;
 	
 	assign o_result = p2_result;
     assign o_remainder = p2_remainder;

@@ -8,22 +8,22 @@ module UART_TX #(
 	input i_clock,
 	input i_request,
 	input [31:0] i_wdata,
-	output logic o_ready,
+	output bit o_ready,
 
-	output logic UART_TX
+	output bit UART_TX
 );
 	localparam MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
-	logic [1:0] state = 0;
-	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
-	logic [8:0] data = 0;
-	logic [3:0] bidx = 0;
+	bit [1:0] state = 0;
+	bit [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
+	bit [8:0] data = 0;
+	bit [3:0] bidx = 0;
 
 	// FIFO
 	wire tx_fifo_empty;
 	wire tx_fifo_full;
-	logic tx_fifo_write = 0;
-	logic tx_fifo_read = 0;
+	bit tx_fifo_write = 0;
+	bit tx_fifo_read = 0;
 	wire [7:0] tx_fifo_rdata;
 	FIFO64 #(
 		.DEPTH(64),

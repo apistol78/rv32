@@ -11,7 +11,7 @@ module VIDEO_LCD_i80_SPI(
 	input i_request,
 	input i_rw,
 	input [1:0] i_address,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	input [31:0] i_wdata,
 	output o_ready,
 
@@ -32,19 +32,19 @@ module VIDEO_LCD_i80_SPI(
 	assign o_lcd_sck = sck;
 	assign o_ready = i_request && ready;
 
-	logic cs_n = 1;
-	logic rs = 0;
-	logic mosi = 0;
-	logic sck = 0;
+	bit cs_n = 1;
+	bit rs = 0;
+	bit mosi = 0;
+	bit sck = 0;
 
 	wire miso = i_lcd_miso;
 
-	logic [7:0] rdata = 0;
-	logic [7:0] wdata = 0;
-	logic [7:0] state = 0;
-	logic [15:0] dly = 0;
-	logic [3:0] cnt = 0;
-	logic ready = 0;
+	bit [7:0] rdata = 0;
+	bit [7:0] wdata = 0;
+	bit [7:0] state = 0;
+	bit [15:0] dly = 0;
+	bit [3:0] cnt = 0;
+	bit ready = 0;
 
 	initial begin
 		o_rdata = 0;

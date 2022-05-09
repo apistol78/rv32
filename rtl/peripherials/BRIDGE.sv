@@ -10,8 +10,8 @@ module BRIDGE (
 	input i_rw,
 	input [27:0] i_address,
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 
 	// Far
 	output o_far_request,
@@ -22,10 +22,10 @@ module BRIDGE (
 	input i_far_ready
 );
 
-	logic request = 0;
-	logic rw;
-	logic [27:0] address;
-	logic [31:0] wdata;
+	bit request = 0;
+	bit rw;
+	bit [27:0] address;
+	bit [31:0] wdata;
 
 	assign o_far_request = request;
 	assign o_far_rw = rw;

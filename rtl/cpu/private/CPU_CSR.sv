@@ -20,7 +20,7 @@ module CPU_CSR #(
 
 	// Instruction I/O access.
 	input [11:0] i_index,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	input i_wdata_wr,
 	input [31:0] i_wdata,
 
@@ -28,22 +28,22 @@ module CPU_CSR #(
 	output [31:0] o_epc,
 
 	// Pending interrupt output.
-	output logic o_irq_pending,
-	output logic [31:0] o_irq_pc,
+	output bit o_irq_pending,
+	output bit [31:0] o_irq_pc,
 	input i_irq_dispatched,
 	input [31:0] i_irq_epc
 );
 
-	logic mstatus_mie = 0;
-	logic mie_meie = 0; 
-	logic mie_mtie = 0;
-	logic mie_msie = 0;
-	logic [31:0] mtvec = 0;
-	logic [31:0] mepc = 0;
-	logic [31:0] mcause = 0;
-	logic mip_meip = 0;
-	logic mip_mtip = 0;
-	logic mip_msip = 0;
+	bit mstatus_mie = 0;
+	bit mie_meie = 0; 
+	bit mie_mtie = 0;
+	bit mie_msie = 0;
+	bit [31:0] mtvec = 0;
+	bit [31:0] mepc = 0;
+	bit [31:0] mcause = 0;
+	bit mip_meip = 0;
+	bit mip_mtip = 0;
+	bit mip_msip = 0;
 
 	wire [31:0] mstatus = { 28'b0, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
@@ -76,8 +76,8 @@ module CPU_CSR #(
 			o_rdata = HARTID;
 	end
 
-	logic [2:0] issued = 0;
-	logic rd = 0;
+	bit [2:0] issued = 0;
+	bit rd = 0;
 
 	always @(posedge i_clock) begin
 		if (i_reset) begin

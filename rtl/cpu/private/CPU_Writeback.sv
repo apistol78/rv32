@@ -3,8 +3,8 @@
 `timescale 1ns/1ns
 
 module CPU_Writeback(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Input
 	input memory_data_t i_data,
@@ -17,7 +17,7 @@ module CPU_Writeback(
 	assign o_retired = retired;
 
 	writeback_data_t data = 0;
-	logic [31:0] retired = 0;
+	bit [31:0] retired = 0;
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin

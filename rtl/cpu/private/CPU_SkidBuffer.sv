@@ -9,13 +9,13 @@ module CPU_SkidBuffer #(
 	input i_clock,
 
 	input [DW-1:0] i_data,
-	output logic o_busy,
+	output bit o_busy,
 
-	output logic [DW-1:0] o_data,
+	output bit [DW-1:0] o_data,
 	input i_busy
 );
 
-	logic [DW-1:0] r_data = 0;
+	bit [DW-1:0] r_data = 0;
 
 	always_comb begin
 		o_busy = i_busy;

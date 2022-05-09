@@ -5,7 +5,7 @@
 module CPU_Decode(
 	input i_reset,
 	input i_clock,
-	output reg o_fault,
+	output bit o_fault,
 
 	// Input
 	input i_execute_busy,

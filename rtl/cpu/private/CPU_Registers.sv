@@ -17,11 +17,11 @@ module CPU_Registers #(
 	assign o_rs1 = rs1;
 	assign o_rs2 = rs2;
 
-	logic [`TAG_SIZE] write_tag = 0;
+	bit [`TAG_SIZE] write_tag = 0;
 
-	logic [31:0] r[31:0];
-	logic [31:0] rs1 = 0;
-	logic [31:0] rs2 = 0;
+	bit [31:0] r[31:0];
+	bit [31:0] rs1 = 0;
+	bit [31:0] rs2 = 0;
 
 	initial begin
 		// Integer registers.

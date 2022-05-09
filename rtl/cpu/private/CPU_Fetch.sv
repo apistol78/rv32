@@ -17,8 +17,8 @@ module CPU_Fetch #(
 	// Interrupt
 	input i_irq_pending,
 	input [31:0] i_irq_pc,
-	output reg o_irq_dispatched,
-	output reg [31:0] o_irq_epc,
+	output bit o_irq_dispatched,
+	output bit [31:0] o_irq_epc,
 
 	// Bus
 	output o_bus_request,
@@ -39,14 +39,14 @@ module CPU_Fetch #(
 	} state_t;
 
 	state_t state = WAIT_ICACHE;
-	logic [31:0] pc = RESET_VECTOR;
+	bit [31:0] pc = RESET_VECTOR;
 	fetch_data_t data = 0;
-	logic [31:0] starve = 0;
+	bit [31:0] starve = 0;
 
 	// ICache
 	wire [31:0] icache_rdata;
 	wire icache_ready;
-	logic icache_stall;
+	bit icache_stall;
 
 	generate if (ICACHE_REGISTERED != 0) begin
 

@@ -9,20 +9,20 @@ module CPU_DCache_None #(
 	input i_clock,
 
 	// Bus
-	output logic o_bus_rw,
-	output logic o_bus_request,
+	output bit o_bus_rw,
+	output bit o_bus_request,
 	input i_bus_ready,
-	output logic [31:0] o_bus_address,
+	output bit [31:0] o_bus_address,
 	input [31:0] i_bus_rdata,
-	output logic [31:0] o_bus_wdata,
+	output bit [31:0] o_bus_wdata,
 
 	// Input
 	input i_rw,
 	input i_request,
 	input i_flush,
-	output logic o_ready,
+	output bit o_ready,
 	input [31:0] i_address,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	input [31:0] i_wdata,
 	input i_cacheable
 );

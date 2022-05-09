@@ -17,17 +17,17 @@ module VIDEO_LCD_AT070NTN92 #(
 	input i_clock_out,
 
 	// Video output.
-	output logic o_vga_clock,
-	output logic o_data_enable,
-	output logic [10:0] o_pos_x,
-	output logic [10:0] o_pos_y
+	output bit o_vga_clock,
+	output bit o_data_enable,
+	output bit [10:0] o_pos_x,
+	output bit [10:0] o_pos_y
 );
 
 	localparam PRESCALE = SYSTEM_FREQUENCY / VGA_FREQUENCY;
 
-	logic [10:0] vga_h = 0;
-	logic [10:0] vga_v = 0;
-	logic vga_clock = 0;
+	bit [10:0] vga_h = 0;
+	bit [10:0] vga_v = 0;
+	bit vga_clock = 0;
 
 	initial begin
 		o_data_enable = 0;
@@ -90,11 +90,11 @@ module VIDEO_LCD_AT070NTN92 #(
 	end endgenerate
 
 	// Cross clock domains of data enable to scan out positions.
-	logic pl_data_enable_a = 0;
-	logic pl_data_enable_b = 0;
+	bit pl_data_enable_a = 0;
+	bit pl_data_enable_b = 0;
 	
-	logic pl_vga_clock_a = 0;
-	logic pl_vga_clock_b = 0;
+	bit pl_vga_clock_a = 0;
+	bit pl_vga_clock_b = 0;
 
 	always @(posedge i_clock_out) begin
 		pl_data_enable_a <= (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
@@ -106,10 +106,10 @@ module VIDEO_LCD_AT070NTN92 #(
 		o_vga_clock <= pl_vga_clock_b;
 	end
 	
-	logic [10:0] pl_pos_x_a = 0;
-	logic [10:0] pl_pos_y_a = 0;
-	logic [10:0] pl_pos_x_b = 0;
-	logic [10:0] pl_pos_y_b = 0;
+	bit [10:0] pl_pos_x_a = 0;
+	bit [10:0] pl_pos_y_a = 0;
+	bit [10:0] pl_pos_x_b = 0;
+	bit [10:0] pl_pos_y_b = 0;
 
 	always @(posedge i_clock_out) begin
 		pl_pos_x_a <= vga_h;

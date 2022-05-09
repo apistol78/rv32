@@ -5,22 +5,22 @@
 module CPU_Execute (
 	input i_reset,
 	input i_clock,
-	output logic o_fault,
+	output bit o_fault,
 
 	// CSR
 	output [11:0] o_csr_index,
 	input [31:0] i_csr_rdata,
-	output logic o_csr_wdata_wr,
-	output logic [31:0] o_csr_wdata,
+	output bit o_csr_wdata_wr,
+	output bit [31:0] o_csr_wdata,
 	input [31:0] i_epc,
 
 	// Control
-	output logic o_jump,
-	output logic [31:0] o_jump_pc,
-	output logic o_ecall,
+	output bit o_jump,
+	output bit [31:0] o_jump_pc,
+	output bit o_ecall,
 
 	// Input
-	output logic o_busy,
+	output bit o_busy,
 	input decode_data_t i_data,
 	input [31:0] i_rs1,
 	input [31:0] i_rs2,
@@ -155,7 +155,7 @@ module CPU_Execute (
 	assign o_csr_index = i_data.imm;
 	assign o_data = data;
 
-	logic [3:0] cycle = 0;
+	bit [3:0] cycle = 0;
 	execute_data_t data = 0;
 
 	initial begin

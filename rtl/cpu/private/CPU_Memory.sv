@@ -65,13 +65,13 @@ module CPU_Memory #(
 	);
 `endif
 
-	reg dcache_rw = 0;
-	reg dcache_request = 0;
-	reg dcache_flush = 0;
+	bit dcache_rw = 0;
+	bit dcache_request = 0;
+	bit dcache_flush = 0;
 	wire dcache_ready;
 	wire [31:0] dcache_address;
 	wire [31:0] dcache_rdata;
-	reg [31:0] dcache_wdata = 0;
+	bit [31:0] dcache_wdata = 0;
 	wire dcache_need_flush;
 
 	// Only access SDRAM using DCACHE, since other are fast enough or periferials.
@@ -172,10 +172,10 @@ module CPU_Memory #(
 	wire [7:0] bus_rdata_byte = dcache_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = dcache_rdata >> (address_byte_index * 8);
 
-	logic busy;
+	bit busy;
 	memory_data_t data = 0;
 	state_t state = IDLE;
-	logic [31:0] rmw_rdata = 0;
+	bit [31:0] rmw_rdata = 0;
 
 	always_comb begin
 		busy = (i_data.tag != data.tag) && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);

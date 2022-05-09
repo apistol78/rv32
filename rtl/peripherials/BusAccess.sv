@@ -8,12 +8,12 @@ module BusAccess #(
 	input i_clock,
 
 	// Bus
-	output reg o_bus_rw,				// Data read/write
+	output bit o_bus_rw,				// Data read/write
 	output o_bus_request,				// IO request.
 	input i_bus_ready,					// IO request ready.
-	output reg [31:0] o_bus_address,	// Address
+	output bit [31:0] o_bus_address,	// Address
 	input [31:0] i_bus_rdata,			// Read data
-	output reg [31:0] o_bus_wdata,		// Write data,
+	output bit [31:0] o_bus_wdata,		// Write data,
 
 	// Port A (Read only)
 	input i_pa_request,
@@ -41,8 +41,8 @@ module BusAccess #(
 	output o_pc_busy
 );
 
-	reg [1:0] state = 0;
-	reg [1:0] next_state = 0;
+	bit [1:0] state = 0;
+	bit [1:0] next_state = 0;
 
 	initial begin
 		o_bus_rw = 1'b0;

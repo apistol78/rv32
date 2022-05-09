@@ -9,20 +9,20 @@ module CPU_DCache #(
 	input i_clock,
 
 	// Bus
-	output logic o_bus_rw,
-	output logic o_bus_request,
+	output bit o_bus_rw,
+	output bit o_bus_request,
 	input i_bus_ready,
-	output logic [31:0] o_bus_address,
+	output bit [31:0] o_bus_address,
 	input [31:0] i_bus_rdata,
-	output logic [31:0] o_bus_wdata,
+	output bit [31:0] o_bus_wdata,
 
 	// Input
 	input i_rw,
 	input i_request,
 	input i_flush,
-	output logic o_ready,
+	output bit o_ready,
 	input [31:0] i_address,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	input [31:0] i_wdata,
 	input i_cacheable
 );
@@ -47,21 +47,21 @@ module CPU_DCache #(
 	state_t state = INITIALIZE;
 	state_t next = INITIALIZE;
 
-	logic [SIZE:0] flush_address = 0;
-	logic [SIZE:0] next_flush_address = 0;
+	bit [SIZE:0] flush_address = 0;
+	bit [SIZE:0] next_flush_address = 0;
 
 	// Debug, only for verilated.
 `ifdef __VERILATOR__
-	logic [31:0] hit = 0;
-	logic [31:0] next_hit = 0;
-	logic [31:0] miss = 0;
-	logic [31:0] next_miss = 0;
+	bit [31:0] hit = 0;
+	bit [31:0] next_hit = 0;
+	bit [31:0] miss = 0;
+	bit [31:0] next_miss = 0;
 `endif
 
 	// Cache memory.
-	logic cache_rw = 0;
-	logic [SIZE - 1:0] cache_address = 0;
-	logic [63:0] cache_wdata;
+	bit cache_rw = 0;
+	bit [SIZE - 1:0] cache_address = 0;
+	bit [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 
 	// One cycle latency, important since

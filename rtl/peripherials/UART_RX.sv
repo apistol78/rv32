@@ -11,21 +11,23 @@ module UART_RX #(
 	input [1:0] i_address,
 	output logic [31:0] o_rdata,
     output o_ready,
+
+	output bit o_interrupt,
 	
     input UART_RX
 );
 	localparam MAX_PRESCALE_VALUE = (PRESCALE << 3);
 
-	logic [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
-	logic [7:0] data = 0;
-	logic [3:0] bidx = 0;
-	logic [3:0] rds = 0;
-	logic rx = 0;
+	bit [$clog2(MAX_PRESCALE_VALUE)-1:0] prescale = 0;
+	bit [7:0] data = 0;
+	bit [3:0] bidx = 0;
+	bit [3:0] rds = 0;
+	bit rx = 0;
 	
 	// FIFO
 	wire rx_fifo_empty;
-	reg rx_fifo_write = 0;
-	reg rx_fifo_read = 0;
+	bit rx_fifo_write = 0;
+	bit rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
 	FIFO64 #(
 		.DEPTH(4),
@@ -43,6 +45,7 @@ module UART_RX #(
 	
 	initial begin
 		o_rdata = 32'h0;
+		o_interrupt = 1'b0;
 	end
 	
 	assign o_ready = (rds == 5) && i_request;
@@ -90,6 +93,8 @@ module UART_RX #(
 	always_ff @(posedge i_clock) begin
 		rx_fifo_write <= 0;
 		rx <= UART_RX;
+
+		o_interrupt <= 1'b0;
 	
 		if (prescale > 0) begin
 			prescale <= prescale - 1;
@@ -119,6 +124,9 @@ module UART_RX #(
 				if (rx) begin
 					// Stop bit found, save data into fifo.
 					rx_fifo_write <= 1;
+
+					// Issue interrupt.
+					o_interrupt <= 1'b1;
 				end
 				// Else stop bit expected.
 			end

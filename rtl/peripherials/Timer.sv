@@ -11,20 +11,20 @@ module Timer#(
 	input i_rw,
 	input [2:0] i_address,
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 
-	output logic o_interrupt
+	output bit o_interrupt
 );
 
 	localparam PRESCALE = FREQUENCY / 1000;
 	localparam PRESCALE_WIDTH = $clog2(PRESCALE);
 
-	logic [PRESCALE_WIDTH - 1:0] prescale = 0;
-	logic [63:0] cycles = 0;
-	logic [63:0] compare = { 64{1'b1} };
-	logic [31:0] ms = 0;
-	logic request = 0;
+	bit [PRESCALE_WIDTH - 1:0] prescale = 0;
+	bit [63:0] cycles = 0;
+	bit [63:0] compare = { 64{1'b1} };
+	bit [31:0] ms = 0;
+	bit request = 0;
 
 	initial begin
 		o_ready = 1'b0;

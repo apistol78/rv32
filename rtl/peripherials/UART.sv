@@ -4,21 +4,22 @@
 module UART #(
     parameter PRESCALE = 50000000 / (9600 * 8)
 )(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
-	input wire i_request,
-	input wire i_rw,
-	input wire [1:0] i_address,
-	input wire [31:0] i_wdata,
-	output wire [31:0] o_rdata,
-    output wire o_ready,
+	input i_request,
+	input i_rw,
+	input [1:0] i_address,
+	input [31:0] i_wdata,
+	output [31:0] o_rdata,
+    output o_ready,
+	output o_interrupt,
 	
-    input wire UART_RX,
-    output wire UART_TX
+    input UART_RX,
+    output UART_TX
 );
 
-	logic rx_request;
+	bit rx_request;
 	wire rx_ready;
 	UART_RX #(
 		.PRESCALE(PRESCALE)
@@ -29,10 +30,11 @@ module UART #(
 		.i_address(i_address),
 		.o_rdata(o_rdata),
 		.o_ready(rx_ready),
+		.o_interrupt(o_interrupt),
 		.UART_RX(UART_RX)
 	);
 
-	logic tx_request;
+	bit tx_request;
 	wire tx_ready;
 	UART_TX #(
 		.PRESCALE(PRESCALE)

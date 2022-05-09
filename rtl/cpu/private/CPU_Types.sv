@@ -42,9 +42,9 @@ register_t;
 
 typedef struct packed
 {
-	logic [`TAG_SIZE] tag;
-	logic [31:0] instruction;
-	logic [31:0] pc;
+	bit [`TAG_SIZE] tag;
+	bit [31:0] instruction;
+	bit [31:0] pc;
 	register_t inst_rs1;
 	register_t inst_rs2;
 	register_t inst_rs3;
@@ -54,61 +54,61 @@ fetch_data_t;
 
 typedef struct packed
 {
-	logic [`TAG_SIZE] tag;
-	logic [31:0] pc;				//!< Program counter.
-	logic [2:0] have_rs;
+	bit [`TAG_SIZE] tag;
+	bit [31:0] pc;					//!< Program counter.
+	bit [2:0] have_rs;
 	register_t inst_rs1;			//!< Index source register 1.
 	register_t inst_rs2;			//!< Index source register 2.
 	register_t inst_rs3;			//!< Index source register 3 (FP only).
 	register_t inst_rd;				//!< Index destination register.
-	logic [31:0] imm;				//!< Immediate number.
-	logic arithmetic;				//!< Arithmetic instruction.
-	logic shift;					//!< Shift instruction.
-	logic compare;					//!< Compare instruction.
-	logic complx;					//!< Complex instruction.
-	logic jump;						//!< Jump instruction.
-	logic jump_conditional;			//!< Conditional jump instruction.
-	logic [3:0] alu_operation;		//!< ALU operation code.
-	logic [2:0] alu_operand1;		//!< ALU operand 1 index.
-	logic [2:0] alu_operand2;		//!< ALU operand 2 index.
-	logic memory_read;				//!< Memory read instruction.
-	logic memory_write;				//!< Memory write instruction.
-	logic [2:0] memory_width;		//!< Memory access width (1, 2, or 4) in bytes.
-	logic memory_signed;			//!< Signed extended memory access.
-	logic [4:0] op;					//!< Complex instruction operation code.
-	// logic fpu;						//!< FPU instruction.
-	// logic [4:0] fpu_operation;		//!< FPU operation code.
+	bit [31:0] imm;					//!< Immediate number.
+	bit arithmetic;					//!< Arithmetic instruction.
+	bit shift;						//!< Shift instruction.
+	bit compare;					//!< Compare instruction.
+	bit complx;						//!< Complex instruction.
+	bit jump;						//!< Jump instruction.
+	bit jump_conditional;			//!< Conditional jump instruction.
+	bit [3:0] alu_operation;		//!< ALU operation code.
+	bit [2:0] alu_operand1;			//!< ALU operand 1 index.
+	bit [2:0] alu_operand2;			//!< ALU operand 2 index.
+	bit memory_read;				//!< Memory read instruction.
+	bit memory_write;				//!< Memory write instruction.
+	bit [2:0] memory_width;			//!< Memory access width (1, 2, or 4) in bytes.
+	bit memory_signed;				//!< Signed extended memory access.
+	bit [4:0] op;					//!< Complex instruction operation code.
+	// bit fpu;						//!< FPU instruction.
+	// bit [4:0] fpu_operation;		//!< FPU operation code.
 }
 decode_data_t;
 
 typedef struct packed
 {
-	logic [`TAG_SIZE] tag;
+	bit [`TAG_SIZE] tag;
 	register_t inst_rd;
-	logic [31:0] rd;
-	logic mem_read;
-	logic mem_write;
-	logic mem_flush;
-	logic [2:0] mem_width;
-	logic mem_signed;
-	logic [31:0] mem_address;
+	bit [31:0] rd;
+	bit mem_read;
+	bit mem_write;
+	bit mem_flush;
+	bit [2:0] mem_width;
+	bit mem_signed;
+	bit [31:0] mem_address;
 	register_t mem_inst_rd;			//!< Memory load into register, separate from inst_rd since we cannot forward from execute on load.
 }
 execute_data_t;
 
 typedef struct packed
 {
-	logic [`TAG_SIZE] tag;
+	bit [`TAG_SIZE] tag;
 	register_t inst_rd;
-	logic [31:0] rd;
+	bit [31:0] rd;
 }
 memory_data_t;
 
 typedef struct packed
 {
-	logic [`TAG_SIZE] tag;
+	bit [`TAG_SIZE] tag;
 	register_t inst_rd;
-	logic [31:0] rd;
+	bit [31:0] rd;
 }
 writeback_data_t;
 

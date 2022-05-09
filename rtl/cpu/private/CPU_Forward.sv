@@ -17,8 +17,8 @@ module CPU_Forward (
 	assign o_rs1 = rs1;
 	assign o_rs2 = rs2;
 
-	logic [31:0] rs1;
-	logic [31:0] rs2;
+	bit [31:0] rs1;
+	bit [31:0] rs2;
 
 	// Forward RS1 from pipeline.
 	always_comb begin
