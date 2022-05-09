@@ -4,7 +4,8 @@
 
 module CPU_Fetch #(
 	parameter RESET_VECTOR,
-	parameter ICACHE_SIZE = 13
+	parameter ICACHE_SIZE,
+	parameter ICACHE_REGISTERED
 )(
 	input i_reset,
 	input i_clock,
@@ -47,26 +48,55 @@ module CPU_Fetch #(
 	wire icache_ready;
 	logic icache_stall;
 
-	CPU_ICache #(
-		.SIZE(ICACHE_SIZE)
-	) icache(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
+	generate if (ICACHE_REGISTERED != 0) begin
 
-		// Input
-		.i_input_pc(pc),
+		CPU_ICache_Reg #(
+			.SIZE(ICACHE_SIZE)
+		) icache(
+			.i_reset(i_reset),
+			.i_clock(i_clock),
 
-		// Output
-		.o_rdata(icache_rdata),
-		.o_ready(icache_ready),
-		.i_stall(icache_stall),
+			// Input
+			.i_input_pc(pc),
 
-		// Bus
-		.o_bus_request(o_bus_request),
-		.i_bus_ready(i_bus_ready),
-		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata)
-	);
+			// Output
+			.o_rdata(icache_rdata),
+			.o_ready(icache_ready),
+			.i_stall(icache_stall),
+
+			// Bus
+			.o_bus_request(o_bus_request),
+			.i_bus_ready(i_bus_ready),
+			.o_bus_address(o_bus_address),
+			.i_bus_rdata(i_bus_rdata)
+		);
+
+	end endgenerate
+
+	generate if (ICACHE_REGISTERED == 0) begin
+
+		CPU_ICache #(
+			.SIZE(ICACHE_SIZE)
+		) icache(
+			.i_reset(i_reset),
+			.i_clock(i_clock),
+
+			// Input
+			.i_input_pc(pc),
+
+			// Output
+			.o_rdata(icache_rdata),
+			.o_ready(icache_ready),
+			.i_stall(icache_stall),
+
+			// Bus
+			.o_bus_request(o_bus_request),
+			.i_bus_ready(i_bus_ready),
+			.o_bus_address(o_bus_address),
+			.i_bus_rdata(i_bus_rdata)
+		);
+
+	end endgenerate
 
 	// 
 	`undef INSTRUCTION

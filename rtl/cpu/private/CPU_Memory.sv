@@ -5,8 +5,8 @@
 //`define ENABLE_WBUFFER
 
 module CPU_Memory #(
-	parameter DCACHE_SIZE = 14,
-	parameter DCACHE_REGISTERED = 1
+	parameter DCACHE_SIZE,
+	parameter DCACHE_REGISTERED
 )(
 	input i_reset,
 	input i_clock,

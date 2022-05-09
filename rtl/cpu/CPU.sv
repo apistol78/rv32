@@ -12,6 +12,7 @@ module CPU #(
 	parameter IMPID = 32'h0,
 	parameter HARTID = 32'h0,
 	parameter ICACHE_SIZE = 13,
+	parameter ICACHE_REGISTERED = 0,
 	parameter DCACHE_SIZE = 14,
 	parameter DCACHE_REGISTERED = 1
 )(
@@ -113,7 +114,8 @@ module CPU #(
 	
 	CPU_Fetch #(
 		.RESET_VECTOR(RESET_VECTOR),
-		.ICACHE_SIZE(ICACHE_SIZE)
+		.ICACHE_SIZE(ICACHE_SIZE),
+		.ICACHE_REGISTERED(ICACHE_REGISTERED)
 	) fetch(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
