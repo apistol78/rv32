@@ -396,6 +396,7 @@ module SoC(
 	wire audio_select;
 	wire [31:0] audio_rdata;
 	wire audio_ready;
+	wire audio_interrupt;
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -405,6 +406,7 @@ module SoC(
 		.i_wdata(bridge_far_wdata[15:0]),
 		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
+		.o_interrupt(audio_interrupt),
 
 		.i_output_busy(audio_output_busy),
 		.o_output_sample(audio_output_sample)
@@ -457,9 +459,9 @@ module SoC(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0),
-		.i_interrupt_1(0),
-		.i_interrupt_2(0),
+		.i_interrupt_0(0),					// Video
+		.i_interrupt_1(audio_interrupt),	// Audio
+		.i_interrupt_2(0),					// UART
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),

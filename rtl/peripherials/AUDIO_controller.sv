@@ -11,6 +11,7 @@ module AUDIO_controller(
 	input [15:0] i_wdata,
 	output logic [31:0] o_rdata,
 	output logic o_ready,
+	output logic o_interrupt,
 
 	// Audio output
 	input i_output_busy,
@@ -36,7 +37,10 @@ module AUDIO_controller(
 		.o_queued(output_fifo_queued)
 	);
 
-    initial o_ready = 0;
+    initial begin
+		o_ready = 0;
+		o_interrupt = 0;
+	end
 
 	always_ff @(posedge i_clock) begin
 		output_fifo_wr <= 0;
@@ -59,6 +63,15 @@ module AUDIO_controller(
 
 	always_ff @(posedge i_clock) begin
 		output_fifo_rd <= !i_output_busy && !output_fifo_empty;
+	end
+
+	logic [1:0] last_queued = 2'b0;
+	always_ff @(posedge i_clock) begin
+		last_queued <= { last_queued[0], output_fifo_queued[7] };
+	end
+
+	always_comb begin
+		o_interrupt = (last_queued == 2'b10);
 	end
 
 endmodule

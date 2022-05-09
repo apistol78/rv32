@@ -106,16 +106,12 @@ int32_t file_open(const char* name)
 {
 	FIL* fp = file_alloc();
 	if (!fp)
-	{
-		printf("Unable to open file %s, out of file handles!\n", name);
 		return 0;
-	}
 
 	if (f_open(fp, name, FA_READ) == FR_OK)
 		return file_index(fp);
 	else
 	{
-		printf("Unable to open file %s, no such file!\n", name);
 		file_free(fp);
 		return 0;
 	}
@@ -129,8 +125,6 @@ void file_close(int32_t fd)
 		f_close(fp);
 		file_free(fp);
 	}
-	else
-		printf("File %d already closed.\n", fd);
 }
 
 int32_t file_size(int32_t fd)
@@ -139,10 +133,7 @@ int32_t file_size(int32_t fd)
 	if (fp)
 		return f_size(fp);
 	else
-	{
-		printf("File %d not opened.\n", fd);
 		return -1;
-	}
 }
 
 int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
@@ -151,10 +142,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	
 	FIL* fp = file_from_index(fd);
 	if (!fp)
-	{
-		printf("File %d not opened.\n", fd);
 		return -1;
-	}
 
 	if (from == 0)
 		result = f_lseek(fp, offset);
@@ -197,10 +185,7 @@ int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
 	FIL* fp = file_from_index(fd);
 	if (!fp)
-	{
-		printf("File %d not opened.\n", fd);
 		return -1;
-	}
 
 	UINT br = 0;
 	if (f_read(fp, ptr, len, &br) == FR_OK)

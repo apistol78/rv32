@@ -34,17 +34,5 @@ void dma_wait()
 		__asm__ volatile ( "nop" );
 		__asm__ volatile ( "nop" );
 		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
 	}
 }

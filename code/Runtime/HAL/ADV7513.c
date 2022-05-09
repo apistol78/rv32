@@ -106,7 +106,7 @@ int adv7513_init()
 
 	adv7513_kick_up();
 	adv7513_power_up();
-	interrupt_set_handler(1, adv7513_interrupt_handler);
+	interrupt_set_handler(IRQ_SOURCE_PLIC_0, adv7513_interrupt_handler);
 	
 	return 0;
 }
