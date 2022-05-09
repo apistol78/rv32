@@ -20,6 +20,10 @@
 #include <Core/Misc/SafeDestroy.h>
 #include <Core/Misc/String.h>
 #include <Core/Timer/Timer.h>
+#include <Net/Network.h>
+#include <Net/SocketAddressIPv4.h>
+#include <Net/SocketStream.h>
+#include <Net/UdpSocket.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
 #include <Ui/Button.h>
@@ -45,6 +49,7 @@
 #include "Rv32T/TraceEXE.h"
 #include "Rv32T/TracePC.h"
 #include "Rv32T/TraceWB.h"
+#include "Rv32T/UART_RX.h"
 #include "Rv32T/UART_TX.h"
 
 // Verilated SoC
@@ -141,6 +146,8 @@ int main(int argc, const char **argv)
 {
 	CommandLine cmdLine(argc, argv);
 	Timer timer;
+
+	net::Network::initialize();
 
 	if (!cmdLine.hasOption(L'h', L"headless"))
 	{
@@ -291,6 +298,20 @@ int main(int argc, const char **argv)
 	devices.push_back(new LEDR());
 	devices.push_back(new UART_TX());
 	devices.push_back(new SD());
+
+	// Create receiving UART.
+	if (cmdLine.hasOption(L"udp"))
+	{
+		Ref< net::UdpSocket > socket = new net::UdpSocket();
+		if (!socket->bind(net::SocketAddressIPv4(45123)))
+		{
+			log::error << L"Unable to bind socket to port." << Endl;
+			return 1;
+		}
+
+		Ref< IStream > target = new net::SocketStream(socket, true, true, 1000);
+		devices.push_back(new UART_RX(target));
+	}
 
 	// Add audio device to record PWM audio.
 	if (cmdLine.hasOption(L"record-audio"))
@@ -505,8 +526,8 @@ int main(int argc, const char **argv)
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 				uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
 
-				uint32_t ich = soc->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__hit;
-				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__miss;
+				uint32_t ich = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__hit;
+				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
 				double icr = (ich * 100.0) / (ich + icm);
 
 				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__hit;
