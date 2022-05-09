@@ -113,7 +113,9 @@ module SoC(
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_fault;
 
-	CPU cpu(
+	CPU #(
+		.DCACHE_SIZE(0)
+	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
