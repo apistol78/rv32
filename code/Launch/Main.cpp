@@ -17,25 +17,10 @@
 #include <Core/Thread/ThreadManager.h>
 #include <Core/Thread/Thread.h>
 
-#include <Ui/Application.h>
-#include <Ui/Button.h>
-#include <Ui/Edit.h>
-#include <Ui/FileDialog.h>
-#include <Ui/FloodLayout.h>
-#include <Ui/Form.h>
-#include <Ui/StyleSheet.h>
-#include <Ui/TableLayout.h>
-#include <Ui/Itf/IWidget.h>
-#include <Ui/LogList/LogList.h>
-#if defined(_WIN32)
-#	include <Ui/Win32/WidgetFactoryWin32.h>
-#elif defined(__APPLE__)
-#	include <Ui/Cocoa/WidgetFactoryCocoa.h>
-#elif defined(__LINUX__) || defined(__RPI__)
-#	include <Ui/X11/WidgetFactoryX11.h>
-#endif
-
-#include <Xml/XmlDeserializer.h>
+#include <Net/Network.h>
+#include <Net/SocketAddressIPv4.h>
+#include <Net/SocketStream.h>
+#include <Net/UdpSocket.h>
 
 #include "Launch/ELF.h"
 #include "Launch/Serial.h"
@@ -43,32 +28,32 @@
 using namespace traktor;
 
 template < typename T >
-void write(Serial& serial, T value)
+void write(IStream* target, T value)
 {
-	serial.write(&value, sizeof(T));
+	target->write(&value, sizeof(T));
 }
 
 template < typename T >
-void write(Serial& serial, const T* value, int32_t count)
+void write(IStream* target, const T* value, int32_t count)
 {
-	serial.write(value, count * sizeof(T));
+	target->write(value, count * sizeof(T));
 }
 
 template < typename T >
-T read(Serial& serial)
+T read(IStream* target)
 {
 	T value = 0;
-	serial.read(&value, sizeof(T));
+	target->read(&value, sizeof(T));
 	return value;
 }
 
 template < typename T >
-void read(Serial& serial, T* value, int32_t count)
+void read(IStream* target, T* value, int32_t count)
 {
-	serial.read(value, count * sizeof(T));
+	target->read(value, count * sizeof(T));
 }
 
-bool sendLine(Serial& serial, uint32_t base, const uint8_t* line, uint32_t length)
+bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
 {
 	uint8_t cs = 0;
 
@@ -83,13 +68,13 @@ bool sendLine(Serial& serial, uint32_t base, const uint8_t* line, uint32_t lengt
 	for (uint32_t i = 0; i < length; ++i)
 		cs ^= line[i];
 
-	write< uint8_t >(serial, 0x01);
-	write< uint32_t >(serial, base);
-	write< uint8_t >(serial, (uint8_t)length);
-	write< uint8_t >(serial, line, length);
-	write< uint8_t >(serial, cs);
+	write< uint8_t >(target, 0x01);
+	write< uint32_t >(target, base);
+	write< uint8_t >(target, (uint8_t)length);
+	write< uint8_t >(target, line, length);
+	write< uint8_t >(target, cs);
 
-	uint8_t reply = read< uint8_t >(serial);
+	uint8_t reply = read< uint8_t >(target);
 	if (reply != 0x80)
 	{
 		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
@@ -99,7 +84,7 @@ bool sendLine(Serial& serial, uint32_t base, const uint8_t* line, uint32_t lengt
 	return true;
 }
 
-bool sendJump(Serial& serial, uint32_t start, uint32_t sp)
+bool sendJump(IStream* target, uint32_t start, uint32_t sp)
 {
 	uint8_t cs = 0;
 
@@ -121,12 +106,12 @@ bool sendJump(Serial& serial, uint32_t start, uint32_t sp)
 		cs ^= p[3];				
 	}
 
-	write< uint8_t >(serial, 0x03);
-	write< uint32_t >(serial, start);
-	write< uint32_t >(serial, sp);
-	write< uint8_t >(serial, cs);
+	write< uint8_t >(target, 0x03);
+	write< uint32_t >(target, start);
+	write< uint32_t >(target, sp);
+	write< uint8_t >(target, cs);
 
-	uint8_t reply = read< uint8_t >(serial);
+	uint8_t reply = read< uint8_t >(target);
 	if (reply != 0x80)
 	{
 		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
@@ -136,7 +121,7 @@ bool sendJump(Serial& serial, uint32_t start, uint32_t sp)
 	return true;
 }
 
-bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
+bool uploadImage(IStream* target, const std::wstring& fileName, uint32_t offset)
 {
 	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 	if (!f)
@@ -155,7 +140,7 @@ bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
 
 		log::info << L"DATA " << str(L"%08x", linear) << L"..." << Endl;
 
-		if (!sendLine(serial, linear, data, 16))
+		if (!sendLine(target, linear, data, 16))
 			return false;
 
 		linear += 16;
@@ -165,7 +150,7 @@ bool uploadImage(Serial& serial, const std::wstring& fileName, uint32_t offset)
 	return true;
 }
 
-bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
+bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 {
 	AlignedVector< uint8_t > elf;
 	uint32_t start = -1;
@@ -214,7 +199,7 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 				{
 					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 128);
 					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
-					if (!sendLine(serial, addr + j, pbits + j, cnt))
+					if (!sendLine(target, addr + j, pbits + j, cnt))
 						return false;
 				}
 
@@ -244,14 +229,14 @@ bool uploadELF(Serial& serial, const std::wstring& fileName, uint32_t sp)
 		else
 			log::info << L"JUMP " << str(L"0x%08x", start) << Endl;
 
-		if (!sendJump(serial, start, sp))
+		if (!sendJump(target, start, sp))
 			return false;
 	}
 
 	return true;
 }
 
-bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
+bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 {
 	StaticVector< uint8_t, 16 > record;
 	std::wstring tmp;
@@ -310,7 +295,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 				record.push_back((uint8_t)v);
 			}
 
-			if (!sendLine(serial, linear, record.c_ptr(), record.size()))
+			if (!sendLine(target, linear, record.c_ptr(), record.size()))
 				return false;
 
 			addr += record.size();
@@ -341,7 +326,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 			else
 				log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
 
-			if (!sendJump(serial, linear, sp))
+			if (!sendJump(target, linear, sp))
 				return false;
 
 			// Cannot load more since target is executing.
@@ -355,7 +340,7 @@ bool uploadHEX(Serial& serial, const std::wstring& fileName, uint32_t sp)
 	return true;
 }
 
-bool memcheck(Serial& serial, uint32_t from, uint32_t to)
+bool memcheck(IStream* target, uint32_t from, uint32_t to)
 {
 	uint8_t utd[64];
 	uint8_t ind[64];
@@ -388,13 +373,13 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 		for (int32_t i = 0; i < nb; ++i)
 			cs ^= (uint8_t)utd[i];
 
-		write< uint8_t >(serial, 0x01);
-		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, nb);
-		write< uint8_t >(serial, utd, nb);
-		write< uint8_t >(serial, cs);
+		write< uint8_t >(target, 0x01);
+		write< uint32_t >(target, addr);
+		write< uint8_t >(target, nb);
+		write< uint8_t >(target, utd, nb);
+		write< uint8_t >(target, cs);
 
-		uint8_t reply = read< uint8_t >(serial);
+		uint8_t reply = read< uint8_t >(target);
 		if (reply != 0x80)
 		{
 			log::error << L"Error reply (write), got " << str(L"%02x", reply) << Endl;
@@ -409,17 +394,17 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 			utd[i] = (uint8_t)rnd.next();
 
 		// Read back data.
-		write< uint8_t >(serial, 0x02);
-		write< uint32_t >(serial, addr);
-		write< uint8_t >(serial, nb);
+		write< uint8_t >(target, 0x02);
+		write< uint32_t >(target, addr);
+		write< uint8_t >(target, nb);
 
-		uint8_t reply = read< uint8_t >(serial);
+		uint8_t reply = read< uint8_t >(target);
 		if (reply != 0x80)
 		{
 			log::error << L"Error reply (read), got " << str(L"%02x", reply) << Endl;
 			return false;
 		}
-		read< uint8_t >(serial, ind, nb);
+		read< uint8_t >(target, ind, nb);
 
 		log::info << L"R " << str(L"%08x", addr) << L": ";
 		for (int32_t i = 0; i < nb; ++i)
@@ -432,9 +417,6 @@ bool memcheck(Serial& serial, uint32_t from, uint32_t to)
 		}
 
 		log::info << Endl;
-
-//		if (error)
-//			break;
 	}
 
 	return error == 0;
@@ -447,324 +429,85 @@ uint8_t echoRnd()
 	return v;
 }
 
-class LogListTarget : public ILogTarget
-{
-public:
-	LogListTarget(ui::LogList* logList)
-	:	m_logList(logList)
-	{
-	}
-
-	virtual void log(uint32_t threadId, int32_t level, const wchar_t* str) override final
-	{
-		m_logList->add(threadId, (ui::LogList::LogLevel)(1 << level), str);
-	}
-
-private:
-	ui::LogList* m_logList;
-};
-
-
-Ref< ui::StyleSheet > loadStyleSheet(const Path& pathName)
-{
-	Ref< traktor::IStream > file = FileSystem::getInstance().open(pathName, traktor::File::FmRead);
-	if (file)
-	{
-		Ref< ui::StyleSheet > styleSheet = xml::XmlDeserializer(file, pathName.getPathName()).readObject< ui::StyleSheet >();
-		if (!styleSheet)
-			return nullptr;
-
-		auto includes = styleSheet->getInclude();
-		for (const auto& include : includes)
-		{
-			Ref< ui::StyleSheet > includeStyleSheet = loadStyleSheet(include);
-			if (!includeStyleSheet)
-				return nullptr;
-
-			styleSheet = includeStyleSheet->merge(styleSheet);
-			if (!styleSheet)
-				return nullptr;
-		}
-
-		return styleSheet;
-	}
-	else
-		return nullptr;
-}
-
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
-	Serial serial;
 
-	int32_t port = 0;
-	if (commandLine.hasOption('p', L"port"))
-		port = commandLine.getOption('p', L"port").getInteger();
+	Ref< Serial > serial;
+	Ref< net::UdpSocket > socket;
+	Ref< IStream > target;
 
-	Serial::Configuration configuration;
-	configuration.baudRate = 115200;
-	configuration.stopBits = 1;
-	configuration.parity = Serial::Parity::No;
-	configuration.byteSize = 8;
-	configuration.dtrControl = Serial::DtrControl::Disable;
-
-	if (!serial.open(port, configuration))
+	if (!commandLine.hasOption(L"udp"))
 	{
-		log::error << L"Unable to open serial port " << port << L"." << Endl;
-		return 1;
+		int32_t port = 0;
+		if (commandLine.hasOption('p', L"port"))
+			port = commandLine.getOption('p', L"port").getInteger();
+
+		Serial::Configuration configuration;
+		configuration.baudRate = 115200;
+		configuration.stopBits = 1;
+		configuration.parity = Serial::Parity::No;
+		configuration.byteSize = 8;
+		configuration.dtrControl = Serial::DtrControl::Disable;
+
+		serial = new Serial();
+		if (!serial->open(port, configuration))
+		{
+			log::error << L"Unable to open serial port " << port << L"." << Endl;
+			return 1;
+		}
+
+		target = serial;
+	}
+	else
+	{
+		net::Network::initialize();
+
+		socket = new net::UdpSocket();
+		if (!socket->bind(net::SocketAddressIPv4(45123)))
+		{
+			log::error << L"Unable to bind socket to port." << Endl;
+			return 1;
+		}
+
+		target = new net::SocketStream(socket, true, true, 1000);
 	}
 
 	if (commandLine.hasOption(L"memcheck"))
 	{
 		uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
 		uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
-		memcheck(serial, from, to);
+		memcheck(target, from, to);
 		return 0;
 	}
-
-#if defined(_WIN32)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryWin32(),
-		nullptr
-	);
-#elif defined(__APPLE__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryCocoa(),
-		nullptr
-	);
-#elif defined(__LINUX__) || defined(__RPI__)
-	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryX11(),
-		nullptr
-	);
-#endif
-
-	// Load default stylesheet.
-	std::wstring styleSheetName = L"$(TRAKTOR_HOME)/resources/runtime/themes/Light/StyleSheet.xss";
-	Ref< ui::StyleSheet > styleSheet = loadStyleSheet(styleSheetName);
-	if (!styleSheet)
-	{
-		log::error << L"Unable to load stylesheet " << styleSheetName << Endl;
-		return false;
-	}
-	ui::Application::getInstance()->setStyleSheet(styleSheet);
-
-	Ref< ui::Form > form = new ui::Form();
-	form->create(L"Launcher", ui::dpi96(640), ui::dpi96(480), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 4, 4));
-
-	Ref< ui::Container > top = new ui::Container();
-	top->create(form, ui::WsNone, new ui::TableLayout(L"100%,*", L"*", 0, 4));
-
-	std::wstring elf = L"";
-	if (commandLine.hasOption('e', L"elf"))
-		elf = commandLine.getOption('e', L"elf").getString();
-
-	Ref< ui::Edit > editFile = new ui::Edit();
-	editFile->create(top, elf);
-
-	Ref< ui::Button > buttonBrowse = new ui::Button();
-	buttonBrowse->create(top, L"...");
-	buttonBrowse->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-		ui::FileDialog fileDialog;
-		fileDialog.create(form, L"File", L"Select file to upload", L"All files (*.*);*.*");
-
-		Path path;
-		if (fileDialog.showModal(path))
-		{
-			editFile->setText(path.getPathNameNoVolume());
-			editFile->update();
-		}
-
-		fileDialog.destroy();
-	});
 
 	uint32_t sp = 0;
 	if (commandLine.hasOption('s', L"stack"))
 		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
 
-	Ref< ui::Edit > editStack = new ui::Edit();
-	editStack->create(top, str(L"0x%08x", sp));
-
-	Thread* threadUpload = nullptr;
-	bool running = false;
-
-	Ref< ui::Button > buttonUpload = new ui::Button();
-	buttonUpload->create(top, L"Run");
-	buttonUpload->addEventHandler< ui::ButtonClickEvent >([&](ui::ButtonClickEvent* event) {
-
-		if (threadUpload)
-		{
-			log::info << L"Upload already in progress." << Endl;
-			return;
-		}
-
-		running = false;
-
-		uint32_t sp = parseString< uint32_t >(editStack->getText());
-
-		threadUpload = ThreadManager::getInstance().create([&]() {
-			Path fileName(editFile->getText());
-			if (compareIgnoreCase(fileName.getExtension(), L"hex") == 0)
-			{
-				if (uploadHEX(serial, editFile->getText(), sp))
-					running = true;
-			}
-			else
-			{
-				if (uploadELF(serial, editFile->getText(), sp))
-					running = true;
-			}
-		});
-		threadUpload->start();
-		
-	});
-
-	Ref< ui::LogList > logList = new ui::LogList();
-	logList->create(form, ui::WsAccelerated, nullptr);
-
-	Ref< ILogTarget > defaultInfoLog = log::info.getGlobalTarget();
-	Ref< LogListTarget > logTarget = new LogListTarget(logList);
-	log::info.setGlobalTarget(new LogRedirectTarget(defaultInfoLog, logTarget));
-
-	form->update();
-	form->show();
-
-	bool keyStates[9] = {};
-
-	ui::Application::getInstance()->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
-
-		if (!running)
-			return;
-
-		uint8_t keyCode = 0;
-		switch (event->getVirtualKey())
-		{
-		case ui::VkA:
-		case ui::VkLeft:
-			keyCode = 1;
-			break;
-		
-		case ui::VkD:
-		case ui::VkRight:
-			keyCode = 2;
-			break;
-
-		case ui::VkW:
-		case ui::VkUp:
-			keyCode = 3;
-			break;
-
-		case ui::VkS:
-		case ui::VkDown:
-			keyCode = 4;
-			break;
-			
-		case ui::VkShift:
-			keyCode = 5;
-			break;
-
-		case ui::VkControl:
-			keyCode = 6;
-			break;
-
-		case ui::VkEscape:
-			keyCode = 7;
-			break;
-
-		case ui::VkReturn:
-			keyCode = 8;
-			break;
-			
-		default:
-			break;
-		}
-
-		if (keyCode != 0 && keyStates[keyCode] == false)
-		{
-			write< uint8_t >(serial, keyCode | 0x80);
-			keyStates[keyCode] = true;
-		}			
-	});
-	ui::Application::getInstance()->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
-
-		if (!running)
-			return;
-		if (event->isRepeat())
-			return;
-
-		uint8_t keyCode = 0;
-		switch (event->getVirtualKey())
-		{
-		case ui::VkA:
-		case ui::VkLeft:
-			keyCode = 1;
-			break;
-		
-		case ui::VkD:
-		case ui::VkRight:
-			keyCode = 2;
-			break;
-
-		case ui::VkW:
-		case ui::VkUp:
-			keyCode = 3;
-			break;
-
-		case ui::VkS:
-		case ui::VkDown:
-			keyCode = 4;
-			break;
-			
-		case ui::VkShift:
-			keyCode = 5;
-			break;
-
-		case ui::VkControl:
-			keyCode = 6;
-			break;
-
-		case ui::VkEscape:
-			keyCode = 7;
-			break;
-
-		case ui::VkReturn:
-			keyCode = 8;
-			break;
-
-		default:
-			break;
-		}
-
-		if (keyCode != 0 && keyStates[keyCode] == true)
-		{
-			write< uint8_t >(serial, keyCode);
-			keyStates[keyCode] = false;
-		}	
-	});
-
-	while (ui::Application::getInstance()->process())
+	if (commandLine.hasOption('e', L"elf"))
 	{
-		if (threadUpload != nullptr && threadUpload->wait(0))
+		std::wstring elf = commandLine.getOption('e', L"elf").getString();
+		if (!uploadELF(target, elf, sp))
 		{
-			ThreadManager::getInstance().destroy(threadUpload);
-			threadUpload = nullptr;
-		}
-
-		if (running)
-		{
-			if (serial.available() > 0)
-			{
-				uint8_t ch = read< uint8_t >(serial);
-				if (!iscntrl(ch))
-					log::info << wchar_t(ch);
-				else if (ch == '\n')
-					log::info << Endl;
-			}
+			log::error << L"Unable to load ELF." << Endl;
+			return 1;
 		}
 	}
 
-	form->destroy();
+	for (;;)
+	{
+		if (target->available() > 0)
+		{
+			uint8_t ch = read< uint8_t >(target);
+			if (!iscntrl(ch))
+				log::info << wchar_t(ch);
+			else if (ch == '\n')
+				log::info << Endl;
+		}
+		else
+			ThreadManager::getInstance().getCurrentThread()->sleep(100);
+	}
 
-	ui::Application::getInstance()->finalize();
 	return 0;
 }
