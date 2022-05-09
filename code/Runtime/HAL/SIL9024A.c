@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/SIL9024A.h"
 
@@ -6,7 +7,7 @@
 #define REGS1_ADDRESS 0x72
 #define REGS2_ADDRESS 0x7a
 
-static void sil9024a_reset()
+static int sil9024a_reset()
 {
 	uint8_t deviceId;
 	uint8_t deviceProdRevId;
