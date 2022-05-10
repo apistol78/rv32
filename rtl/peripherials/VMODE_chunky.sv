@@ -91,19 +91,38 @@ module VMODE_chunky #(
 	//===============================
 	// CPU
 
+	bit wbuffer_request = 0;
+	wire wbuffer_ready;
+
+	WriteBuffer wbuffer(
+		.i_reset(1'b0),
+		.i_clock(i_clock),
+
+		.o_bus_rw(o_vram_pa_rw),
+		.o_bus_request(o_vram_pa_request),
+		.i_bus_ready(i_vram_pa_ready),
+		.o_bus_address(o_vram_pa_address),
+		.i_bus_rdata(i_vram_pa_rdata),
+		.o_bus_wdata(o_vram_pa_wdata),
+
+		.i_rw(i_cpu_rw),
+		.i_request(wbuffer_request),
+		.o_ready(wbuffer_ready),
+		.i_address(cpu_offset + i_cpu_address),
+		.o_rdata(o_cpu_rdata),
+		.i_wdata(i_cpu_wdata)
+	);
+
 	always_ff @(posedge i_clock) begin
-		palette_cpu_request <= 0;
-		o_vram_pa_request <= 0;
 		o_cpu_ready <= 0;
+
+		palette_cpu_request <= 0;
+		wbuffer_request <= 0;
 
 		if (i_cpu_request) begin
 			if (i_cpu_address < 32'h00800000) begin
-				o_vram_pa_address <= cpu_offset + i_cpu_address;
-				o_vram_pa_request <= 1;
-				o_vram_pa_rw <= i_cpu_rw;
-				o_vram_pa_wdata <= i_cpu_wdata;
-				o_cpu_rdata = i_vram_pa_rdata;
-				o_cpu_ready <= i_vram_pa_ready;
+				wbuffer_request <= 1;
+				o_cpu_ready <= wbuffer_ready;
 			end
 			else if (i_cpu_address < 32'h00810000) begin
 				palette_cpu_request <= 1;

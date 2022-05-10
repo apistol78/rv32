@@ -15,17 +15,17 @@ module FIFO64 #(
 	output [$clog2(DEPTH) - 1:0] o_queued
 );
 
-	logic [WIDTH-1:0] rdata = 0;
-	logic [WIDTH-1:0] data [0:DEPTH - 1];
-	logic [$clog2(DEPTH) - 1:0] in = 0;
-	logic [$clog2(DEPTH) - 1:0] out = 0;
+	bit [WIDTH-1:0] rdata = 0;
+	bit [WIDTH-1:0] data [0:DEPTH - 1];
+	bit [$clog2(DEPTH) - 1:0] in = 0;
+	bit [$clog2(DEPTH) - 1:0] out = 0;
 
 	assign o_empty = (in == out) ? 1'b1 : 1'b0;
 	assign o_full = (((in + 1) & (DEPTH - 1)) == out) ? 1'b1 : 1'b0;
 	assign o_rdata = rdata;
 	assign o_queued = (in >= out) ? in - out : (DEPTH - out) + in;
 
-	always @ (posedge i_clock) begin
+	always_ff @ (posedge i_clock) begin
 		if (i_write) begin
 			data[in] <= i_wdata;
 			in <= (in + 1) & (DEPTH - 1);

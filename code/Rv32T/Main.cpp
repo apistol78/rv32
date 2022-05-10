@@ -368,6 +368,7 @@ int main(int argc, const char **argv)
 	Measure busSDRAM;
 	Measure stallExecute;
 	Measure stallMemory;
+	Measure stallVideo;
 	int32_t Tp = 0;
 
 	timer.reset();
@@ -437,6 +438,8 @@ int main(int argc, const char **argv)
 				stallExecute++;
 			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
 				stallMemory++;
+			if (soc->SoC__DOT__vmode_chunky__DOT__wbuffer__DOT__stall)
+				stallVideo++;
 
 			key1 = false;
 			reset = false;
@@ -539,6 +542,7 @@ int main(int argc, const char **argv)
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
+					str(L"%.2f%% STALL V", ((double)stallVideo.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
 					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
 					str(L"%.2f%% I$ HIT", icr) << L", " <<
@@ -554,6 +558,7 @@ int main(int argc, const char **argv)
 				busCPUandDMA.snapshot();
 				stallExecute.snapshot();
 				stallMemory.snapshot();
+				stallVideo.snapshot();
 			}	
 		}
 	}

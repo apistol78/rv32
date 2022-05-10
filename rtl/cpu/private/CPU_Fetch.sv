@@ -7,28 +7,28 @@ module CPU_Fetch #(
 	parameter ICACHE_SIZE,
 	parameter ICACHE_REGISTERED
 )(
-	input i_reset,
-	input i_clock,
+	input				i_reset,
+	input				i_clock,
 
 	// Control
-	input i_jump,
-	input [31:0] i_jump_pc,
+	input				i_jump,
+	input [31:0]		i_jump_pc,
 
 	// Interrupt
-	input i_irq_pending,
-	input [31:0] i_irq_pc,
-	output bit o_irq_dispatched,
-	output bit [31:0] o_irq_epc,
+	input				i_irq_pending,		//!< Interrupt pending.
+	input [31:0]		i_irq_pc,			//!< Interrupt handler vector.
+	output bit			o_irq_dispatched,	//!< Interrupt dispatched signal.
+	output bit [31:0]	o_irq_epc,			//!< Interrupt return vector.
 
 	// Bus
-	output o_bus_request,
-	input i_bus_ready,
-	output [31:0] o_bus_address,
-	input [31:0] i_bus_rdata,
+	output				o_bus_request,
+	input				i_bus_ready,
+	output [31:0]		o_bus_address,
+	input [31:0]		i_bus_rdata,
 
 	// Output
-	input i_decode_busy,
-	output fetch_data_t o_data
+	input				i_decode_busy,
+	output fetch_data_t	o_data
 );
 
 	typedef enum bit [1:0]
@@ -121,16 +121,12 @@ module CPU_Fetch #(
 					// Jump to interrupt if interrupt are pending, only do
 					// this in this state as we need to finish any pending
 					// branches first.
-					if (i_irq_pending) begin
-						if (!o_irq_dispatched) begin
-							o_irq_dispatched <= 1;
-							o_irq_epc <= pc;
-							pc <= i_irq_pc;
-						end
+					o_irq_dispatched <= i_irq_pending;
+					if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
+						o_irq_epc <= pc;
+						pc <= i_irq_pc;
 					end
 					else begin
-						o_irq_dispatched <= 0;
-						
 						if (icache_ready) begin
 							data.tag <= data.tag + 1;
 							data.instruction <= icache_rdata;
@@ -171,12 +167,12 @@ module CPU_Fetch #(
 
 				WAIT_IRQ: begin
 					// Wait for IRQ signal.
-					if (i_irq_pending && !o_irq_dispatched) begin
-						o_irq_dispatched <= 1;
+					o_irq_dispatched <= i_irq_pending;
+					if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
 						o_irq_epc <= pc + 4;
 						pc <= i_irq_pc;
 						state <= WAIT_ICACHE;
-					end
+					end					
 				end
 
 				default:
