@@ -186,7 +186,7 @@ int main(int argc, const char** argv)
 		form = new ui::Form();
 		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
 
-		uiImage = new ui::Bitmap(320, 200);
+		uiImage = new ui::Bitmap(320, 240);
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale);
