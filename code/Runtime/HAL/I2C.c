@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/Interrupt.h"
 
@@ -19,7 +20,7 @@
 
 void i2c_dly()
 {
-	for (uint32_t i = 0; i < 10; ++i)
+	for (uint32_t i = 0; i < 80; ++i)
 		__asm__ volatile ("nop");
 }
 
@@ -45,7 +46,7 @@ void i2c_stop()
 	i2c_dly();
 }
 
-uint8_t i2c_rx(uint8_t ack)
+static uint8_t i2c_rx(uint8_t ack)
 {
 	uint8_t x, d = 0;
 
@@ -62,6 +63,7 @@ uint8_t i2c_rx(uint8_t ack)
 		if (I2C_RD_SDA())
 			d |= 1;
 		I2C_WR_SCL_LOW();
+		i2c_dly();
 	} 
 
 	if (ack)
@@ -69,6 +71,7 @@ uint8_t i2c_rx(uint8_t ack)
 	else
 		{ I2C_WR_SDA_HIGH(); }
 
+	i2c_dly();
 	I2C_WR_SCL_HIGH();
 	i2c_dly();	// send (N)ACK bit
 	I2C_WR_SCL_LOW();
@@ -76,9 +79,61 @@ uint8_t i2c_rx(uint8_t ack)
 	return d;
 }
 
-uint8_t NO_OPTIMIZE i2c_tx(uint8_t d)
+static uint8_t NO_OPTIMIZE i2c_tx_addr(uint8_t d, uint8_t bits, uint8_t read)
 {
-	for (uint32_t i = 0; i < 8; ++i)
+	const uint8_t od = d;
+
+	for (uint8_t i = 0; i < bits; ++i)
+	{
+		if (d & 0x40)
+			{ I2C_WR_SDA_HIGH(); }
+		else
+			{ I2C_WR_SDA_LOW(); }
+
+		i2c_dly();
+
+		I2C_WR_SCL_HIGH();
+		i2c_dly();
+		I2C_WR_SCL_LOW();
+		i2c_dly();
+
+		d <<= 1;
+	}
+
+	// R/W bit
+	{
+		if (read)
+			{ I2C_WR_SDA_HIGH(); }
+		else
+			{ I2C_WR_SDA_LOW(); }
+
+		i2c_dly();
+
+		I2C_WR_SCL_HIGH();
+		i2c_dly();
+		I2C_WR_SCL_LOW();
+		i2c_dly();			
+	}
+
+	// ACK/NAK
+	I2C_WR_SDA_HIGH();
+	i2c_dly();
+	I2C_WR_SCL_HIGH();
+	i2c_dly();
+	uint8_t b = I2C_RD_SDA();
+	I2C_WR_SCL_LOW();
+	i2c_dly();
+
+	// High means NAK.
+	if (b)
+		printf("[%02x] no ack\n", od);
+
+	return b;
+}
+
+static uint8_t NO_OPTIMIZE i2c_tx_data(uint8_t d)
+{
+	for (uint8_t i = 0; i < 8; ++i)
 	{
 		if (d & 0x80)
 			{ I2C_WR_SDA_HIGH(); }
@@ -95,37 +150,40 @@ uint8_t NO_OPTIMIZE i2c_tx(uint8_t d)
 		d <<= 1;
 	}
 
+	// ACK/NAK
 	I2C_WR_SDA_HIGH();
 	i2c_dly();
 	I2C_WR_SCL_HIGH();
 	i2c_dly();
-	uint8_t b = I2C_RD_SDA();	// possible ACK bit
+	uint8_t b = I2C_RD_SDA();
 	I2C_WR_SCL_LOW();
 	i2c_dly();
 
 	return b;
 }
 
-void i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
+int32_t i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
 {
 	interrupt_disable();
 	i2c_start();
-	i2c_tx(deviceAddr);
-	i2c_tx(controlAddr);
-	i2c_tx(controlData);
+	i2c_tx_addr(deviceAddr, 7, 0);
+	i2c_tx_data(controlAddr);
+	i2c_tx_data(controlData);
 	i2c_stop();
 	interrupt_enable();
+	return 0;
 }
 
-void i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)
+int32_t i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)
 {
 	interrupt_disable();
 	i2c_start();
-	i2c_tx(deviceAddr);
-	i2c_tx(controlAddr);
+	i2c_tx_addr(deviceAddr, 7, 0);
+	i2c_tx_data(controlAddr);
 	i2c_start();  // restart
-	i2c_tx(deviceAddr | 1);
+	i2c_tx_addr(deviceAddr, 7, 1);
 	*outControlData = i2c_rx(0);  // read
 	i2c_stop();
 	interrupt_enable();
+	return 0;
 }

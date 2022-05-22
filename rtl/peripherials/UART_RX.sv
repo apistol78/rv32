@@ -30,7 +30,7 @@ module UART_RX #(
 	bit rx_fifo_read = 0;
 	wire [7:0] rx_fifo_rdata;
 	FIFO64 #(
-		.DEPTH(4),
+		.DEPTH(256),
 		.WIDTH(8)
 	) rx_fifo(
 		.i_clock(i_clock),

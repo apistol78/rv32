@@ -177,156 +177,6 @@ module SoC(
 	wire global_reset_n = !global_reset;
 
 	//=====================================
-	// VIDEO
-
-`ifdef SOC_ENABLE_VGA
-
-	assign HDMI_TX_DE = vga_enable;
-	assign HDMI_TX_CLK = clock_video;
-
-	// Video signal generator
-	wire vga_enable;
-	wire [9:0] vga_pos_x;
-	wire [9:0] vga_pos_y;
-
-	VIDEO_VGA #(
-		.HLINE(800),
-		.HBACK(144),
-		.HFRONT(16),
-		.HPULSE(96),
-		.VLINE(449),
-		.VBACK(36),
-		.VFRONT(13),
-		.VPULSE(2)
-	) vga(
-		.i_clock(clock_video),
-		.i_clock_out(clock),
-		.o_hsync(HDMI_TX_HS),
-		.o_vsync(HDMI_TX_VS),
-		.o_data_enable(vga_enable),
-		.o_pos_x(vga_pos_x),
-		.o_pos_y(vga_pos_y)
-	);
-	
-	// Video physical memory.
-	wire video_sram_request;
-	wire video_sram_rw;
-	wire [31:0] video_sram_address;
-	wire [31:0] video_sram_wdata;
-	wire [31:0] video_sram_rdata;
-	wire video_sram_ready;
-
-	SRAM_interface video_sram(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(video_sram_request),
-		.i_rw(video_sram_rw),
-		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
-		.o_rdata(video_sram_rdata),
-		.o_ready(video_sram_ready),
-		// ---
-		.SRAM_A(SRAM_A),
-		.SRAM_D(SRAM_D),
-		.SRAM_CE_n(SRAM_CE_n),
-		.SRAM_OE_n(SRAM_OE_n),
-		.SRAM_WE_n(SRAM_WE_n),
-		.SRAM_LB_n(SRAM_LB_n),
-		.SRAM_UB_n(SRAM_UB_n)
-	);
-
-	// Video memory dual port.
-	wire vram_pa_request;
-	wire vram_pa_rw;
-	wire [31:0] vram_pa_address;
-	wire [31:0] vram_pa_wdata;
-	wire [31:0] vram_pa_rdata;
-	wire vram_pa_ready;
-
-	wire vram_pb_request;
-	wire vram_pb_rw;
-	wire [31:0] vram_pb_address;
-	wire [31:0] vram_pb_wdata;
-	wire [31:0] vram_pb_rdata;
-	wire vram_pb_ready;
-
-	BusAccess #(
-		.REGISTERED(1)
-	) vram_bus(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		.o_bus_rw(video_sram_rw),
-		.o_bus_request(video_sram_request),
-		.i_bus_ready(video_sram_ready),
-		.o_bus_address(video_sram_address),
-		.i_bus_rdata(video_sram_rdata),
-		.o_bus_wdata(video_sram_wdata),
-
-		.i_pa_request(1'b0),
-		.o_pa_ready(),
-		.i_pa_address(32'h0),
-		.o_pa_rdata(),
-
-		.i_pb_rw(vram_pb_rw),
-		.i_pb_request(vram_pb_request),
-		.o_pb_ready(vram_pb_ready),
-		.i_pb_address(vram_pb_address),
-		.o_pb_rdata(vram_pb_rdata),
-		.i_pb_wdata(vram_pb_wdata),
-
-		.i_pc_rw(vram_pa_rw),
-		.i_pc_request(vram_pa_request),
-		.o_pc_ready(vram_pa_ready),
-		.i_pc_address(vram_pa_address),
-		.o_pc_rdata(vram_pa_rdata),
-		.i_pc_wdata(vram_pa_wdata)
-	);
-
-	// Video mode; chunky 8-bit palette.
-	wire vram_select;
-	wire [31:0] vram_address;
-	wire [31:0] vram_rdata;
-	wire vram_ready;
-
-	VMODE_chunky #(
-		.PPITCH(320)
-	) vmode_chunky(
-		.i_clock(clock),
-		
-		// CPU interface.
-		.i_cpu_request(vram_select && bus_request),
-		.i_cpu_rw(bus_rw),
-		.i_cpu_address(vram_address),
-		.i_cpu_wdata(bus_wdata),
-		.o_cpu_rdata(vram_rdata),
-		.o_cpu_ready(vram_ready),
-		
-		// Video signal interface.
-		.i_video_request(vga_enable),
-		.i_video_pos_x(vga_pos_x[9:1]),
-		.i_video_pos_y(vga_pos_y[9:1]),
-		.o_video_rdata(HDMI_TX_D),
-		
-		// Video RAM interface.
-		.o_vram_pa_request(vram_pa_request),
-		.o_vram_pa_rw(vram_pa_rw),
-		.o_vram_pa_address(vram_pa_address),
-		.o_vram_pa_wdata(vram_pa_wdata),
-		.i_vram_pa_rdata(vram_pa_rdata),
-		.i_vram_pa_ready(vram_pa_ready),
-
-		.o_vram_pb_request(vram_pb_request),
-		.o_vram_pb_rw(vram_pb_rw),
-		.o_vram_pb_address(vram_pb_address),
-		.o_vram_pb_wdata(vram_pb_wdata),
-		.i_vram_pb_rdata(vram_pb_rdata),
-		.i_vram_pb_ready(vram_pb_ready)
-	);
-  
-`endif
-	
-	//=====================================
 	// ROM
 	wire rom_select;
 	wire [31:0] rom_address;
@@ -452,7 +302,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -502,7 +352,9 @@ module SoC(
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_fault;
 
-	CPU cpu(
+	CPU #(
+		.DCACHE_REGISTERED(0)
+	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
@@ -541,9 +393,6 @@ module SoC(
 
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
-	
-	assign vram_select = bus_address[31:28] == 4'h3;
-	assign vram_address = { 4'h0, bus_address[27:0] };
 
 	assign bridge_select = bus_address[31:28] == 4'h5;
 
@@ -553,7 +402,6 @@ module SoC(
 		rom_select		? rom_rdata		:
 		ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
-		vram_select		? vram_rdata	:
 		bridge_select 	? bridge_rdata	:
 		32'h00000000;
 		
@@ -561,7 +409,6 @@ module SoC(
 		rom_select		? rom_ready		:
 		ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
-		vram_select		? vram_ready	:
 		bridge_select	? bridge_ready	:
 		1'b0;	
 
@@ -589,6 +436,7 @@ module SoC(
 	wire [1:0] uart_0_address;
 	wire [31:0] uart_0_rdata;
 	wire uart_0_ready;
+	wire uart_0_interrupt;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8))
 	) uart_0(
@@ -600,9 +448,33 @@ module SoC(
 		.i_wdata(bridge_far_wdata),
 		.o_rdata(uart_0_rdata),
 		.o_ready(uart_0_ready),
+		.o_interrupt(uart_0_interrupt),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)
+	);
+
+	// UART (SHID)
+	wire uart_1_select;
+	wire [1:0] uart_1_address;
+	wire [31:0] uart_1_rdata;
+	wire uart_1_ready;
+	wire uart_1_interrupt;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_1(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_1_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(uart_1_address),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(uart_1_rdata),
+		.o_ready(uart_1_ready),
+		.o_interrupt(uart_1_interrupt),
+		// ---
+		.UART_RX(GPIO[0]),
+		.UART_TX(GPIO[1])
 	);
 
 	// I2C
@@ -709,7 +581,7 @@ module SoC(
 
 		.i_interrupt_0(HDMI_TX_INT),
 		.i_interrupt_1(0),
-		.i_interrupt_2(0),
+		.i_interrupt_2(uart_0_interrupt | uart_1_interrupt),
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),
@@ -720,6 +592,148 @@ module SoC(
 		.i_wdata(bridge_far_wdata),
 		.o_rdata(plic_rdata),
 		.o_ready(plic_ready)
+	);
+
+	// VIDEO
+	assign HDMI_TX_DE = vga_enable;
+	assign HDMI_TX_CLK = clock_video;
+
+	// Video signal generator
+	wire vga_enable;
+	wire [9:0] vga_pos_x;
+	wire [9:0] vga_pos_y;
+	VIDEO_VGA #(
+		.HLINE(800),
+		.HBACK(144),
+		.HFRONT(16),
+		.HPULSE(96),
+		.VLINE(449),
+		.VBACK(36),
+		.VFRONT(13),
+		.VPULSE(2)
+	) vga(
+		.i_clock(clock_video),
+		.i_clock_out(clock),
+		.o_hsync(HDMI_TX_HS),
+		.o_vsync(HDMI_TX_VS),
+		.o_data_enable(vga_enable),
+		.o_pos_x(vga_pos_x),
+		.o_pos_y(vga_pos_y)
+	);
+	
+	// Video physical memory.
+	wire video_sram_request;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+	SRAM_interface video_sram(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready),
+		// ---
+		.SRAM_A(SRAM_A),
+		.SRAM_D(SRAM_D),
+		.SRAM_CE_n(SRAM_CE_n),
+		.SRAM_OE_n(SRAM_OE_n),
+		.SRAM_WE_n(SRAM_WE_n),
+		.SRAM_LB_n(SRAM_LB_n),
+		.SRAM_UB_n(SRAM_UB_n)
+	);
+
+	// Video memory dual port.
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	BusAccess #(
+		.REGISTERED(0)
+	) vram_bus(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(video_sram_rw),
+		.o_bus_request(video_sram_request),
+		.i_bus_ready(video_sram_ready),
+		.o_bus_address(video_sram_address),
+		.i_bus_rdata(video_sram_rdata),
+		.o_bus_wdata(video_sram_wdata),
+
+		.i_pa_request(1'b0),
+		.o_pa_ready(),
+		.i_pa_address(32'h0),
+		.o_pa_rdata(),
+
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_request(vram_pb_request),
+		.o_pb_ready(vram_pb_ready),
+		.i_pb_address(vram_pb_address),
+		.o_pb_rdata(vram_pb_rdata),
+		.i_pb_wdata(vram_pb_wdata),
+
+		.i_pc_rw(vram_pa_rw),
+		.i_pc_request(vram_pa_request),
+		.o_pc_ready(vram_pa_ready),
+		.i_pc_address(vram_pa_address),
+		.o_pc_rdata(vram_pa_rdata),
+		.i_pc_wdata(vram_pa_wdata)
+	);
+
+	// Video mode; chunky 8-bit palette.
+	wire vram_select;
+	wire [31:0] vram_address;
+	wire [31:0] vram_rdata;
+	wire vram_ready;
+
+	VMODE_chunky #(
+		.PPITCH(320)
+	) vmode_chunky(
+		.i_clock(clock),
+		
+		// CPU interface.
+		.i_cpu_request(vram_select && bridge_far_request),
+		.i_cpu_rw(bridge_far_rw),
+		.i_cpu_address(vram_address),
+		.i_cpu_wdata(bridge_far_wdata),
+		.o_cpu_rdata(vram_rdata),
+		.o_cpu_ready(vram_ready),
+		
+		// Video signal interface.
+		.i_video_request(vga_enable),
+		.i_video_pos_x(vga_pos_x[9:1]),
+		.i_video_pos_y(vga_pos_y[9:1]),
+		.o_video_rdata(HDMI_TX_D),
+		
+		// Video RAM interface.
+		.o_vram_pa_request(vram_pa_request),
+		.o_vram_pa_rw(vram_pa_rw),
+		.o_vram_pa_address(vram_pa_address),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.i_vram_pa_rdata(vram_pa_rdata),
+		.i_vram_pa_ready(vram_pa_ready),
+
+		.o_vram_pb_request(vram_pb_request),
+		.o_vram_pb_rw(vram_pb_rw),
+		.o_vram_pb_address(vram_pb_address),
+		.o_vram_pb_wdata(vram_pb_wdata),
+		.i_vram_pb_rdata(vram_pb_rdata),
+		.i_vram_pb_ready(vram_pb_ready)
 	);
 
 	// Bridge controller.
@@ -761,6 +775,9 @@ module SoC(
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
 
+	assign uart_1_select = bridge_far_address[27:24] == 4'h2;
+	assign uart_1_address = bridge_far_address[3:2];
+
 	assign i2c_select = bridge_far_address[27:24] == 4'h3;
 
 	assign sd_select = bridge_far_address[27:24] == 4'h4;
@@ -774,23 +791,30 @@ module SoC(
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 
+	assign vram_select = bridge_far_address[27:24] == 4'ha;
+	assign vram_address = { 8'h0, bridge_far_address[23:0] };
+
 	assign bridge_far_rdata =
 		uart_0_select	? uart_0_rdata	:
+		uart_1_select	? uart_1_rdata	:
 		i2c_select		? i2c_rdata		:
 		sd_select		? sd_rdata		:
 		timer_select	? timer_rdata	:
 		dma_select		? dma_rdata		:
 		plic_select		? plic_rdata	:
+		vram_select 	? vram_rdata	:
 		32'h00000000;
 	
 	assign bridge_far_ready =
 		led_select		? led_ready		:
 		uart_0_select	? uart_0_ready	:
+		uart_1_select	? uart_1_ready	:
 		i2c_select		? i2c_ready		:
 		sd_select		? sd_ready		:
 		timer_select	? timer_ready	:
 		dma_select		? dma_ready		:
 		plic_select		? plic_ready	:
+		vram_select		? vram_ready	:
 		1'b0;
 
 endmodule

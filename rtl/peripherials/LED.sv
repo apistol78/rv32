@@ -2,24 +2,24 @@
 `timescale 1ns/1ns
 
 module LED(
-	input wire i_reset,
-	input wire i_clock,
-	input wire i_request,
-	input wire [31:0] i_wdata,
-	output reg o_ready,
-	output wire [9:0] LEDR
+	input i_reset,
+	input i_clock,
+	input i_request,
+	input [31:0] i_wdata,
+	output bit o_ready,
+	output [9:0] LEDR
 );
 
-	reg [9:0] leds;
+	bit [9:0] leds;
 
 	initial o_ready = 0;
-	initial leds = 10'b1010101010;
+	initial leds = 10'b0;
 	
 	assign LEDR = leds;
 
-	always @(posedge i_clock, posedge i_reset) begin
+	always_ff @(posedge i_clock, posedge i_reset) begin
 		if (i_reset) begin
-			leds <= 10'b0101010101;
+			leds <= 10'b0;
 		end
 		else if (i_request) begin
 			leds <= i_wdata[9:0];

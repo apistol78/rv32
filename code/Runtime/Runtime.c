@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "Runtime/File.h"
+#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Interrupt.h"
@@ -26,8 +27,8 @@ int32_t __attribute__((used)) runtime_init()
 
 	printf("** FREQUENCY: %d MHz **\n", timer_get_frequency() / 1000000);
 
-	printf("** Initialize IRQ handler **\n");
-	interrupt_init();
+	//printf("** Initialize IRQ handler **\n");
+	// interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)
@@ -44,10 +45,14 @@ int32_t __attribute__((used)) runtime_init()
 	if (file_init() != 0)
 		printf("FS init failed!\n");
 
+	printf("** Initialize Input **\n");
+	input_init();
+
 	printf("** Ready **\n");
     return 0;
 }
 
 void runtime_update()
 {
+	input_update();
 }

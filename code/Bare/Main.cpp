@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/DMA.h"
@@ -10,7 +11,7 @@
 #include "Runtime/HAL/Video.h"
 
 #define FW 320
-#define FH 200
+#define FH 240
 
 uint8_t* framebuffer;
 
@@ -162,7 +163,7 @@ const int32_t indices[] =
 };
 
 
-#include "Runtime/File.h"
+// #include "Runtime/File.h"
 
 void splash_screen()
 {
@@ -185,33 +186,43 @@ void splash_screen()
 	video_swap();	
 }
 
+
+
+
+
+
+
+
 int main()
 {
 	runtime_init();
 
+
 	splash_screen();
 
-	volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
+
+
+	// volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
 	
-	int32_t fp = file_open("music.raw");
-	const int32_t size = file_size(fp);
-	const int32_t n = size / 2;
+	// int32_t fp = file_open("music.raw");
+	// const int32_t size = file_size(fp);
+	// const int32_t n = size / 2;
 
-	printf("%d samples...\n", n);
+	// printf("%d samples...\n", n);
 
-	int16_t buf[256];
-	for (;;)
-	{
-		if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
-		{
-			printf("loop\n");
-			file_seek(fp, 0, 0);
-			continue;
-		}
-		audio_play_mono(buf, 256);
-	}
+	// int16_t buf[256];
+	// for (;;)
+	// {
+	// 	if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
+	// 	{
+	// 		printf("loop\n");
+	// 		file_seek(fp, 0, 0);
+	// 		continue;
+	// 	}
+	// 	audio_play_mono(buf, 256);
+	// }
 
-/*
+
 	for (uint32_t i = 0; i < 256; ++i)
 	{
 		const uint8_t r = rand();
@@ -223,40 +234,15 @@ int main()
 	video_set_palette(0, 0x00000000);
 	video_set_palette(1, 0x00ffffff);
 
-	// float head = 0.0f;
-	// float pitch = 0.0f;
-	// float bank = 0.0f;
-	// Vec2i sv[8];
+	float head = 0.0f;
+	float pitch = 0.0f;
+	float bank = 0.0f;
+	Vec2i sv[8];
 
-	int32_t m = 1;
+	// int32_t m = 1;
 
 	printf("Enter loop...\n");
 
-	{
-
-		framebuffer = (uint8_t*)video_get_secondary_target();
-
-		#define VIDEO_CONTROL_BASE  (VIDEO_BASE + 0x00810000)
-		volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
-		control[1] = 0;
-
-		for (uint32_t i = 0; i < FW * FH; ++i)
-		{
-			framebuffer[i] = rand() & 127;
-			framebuffer[i + FW * FH] = rand() & 3;
-		}
-
-		for (int i = 0; i < 200; ++i)
-		{
-			control[0] = (i * 320);
-			timer_wait_ms(33);
-			printf("%d\n", i);
-		}
-
-	}
-*/
-/*
-	uint8_t bit = 1;
 	for (;;)
 	{
 		static int count = 0;
@@ -273,73 +259,67 @@ int main()
 			count = 0;
 		}
 
-		// const float ca = cos(head);
-		// const float sa = sin(head);
-		// const float cp = cos(pitch);
-		// const float sp = sin(pitch);
-		// const float cb = cos(bank);
-		// const float sb = sin(bank);
+		const float ca = cos(head);
+		const float sa = sin(head);
+		const float cp = cos(pitch);
+		const float sp = sin(pitch);
+		const float cb = cos(bank);
+		const float sb = sin(bank);
 
-		// for (int32_t i = 0; i < 8; ++i)
-		// {
-		// 	float xa = vertices[i].x * ca - vertices[i].z * sa;
-		// 	float ya = vertices[i].y;
-		// 	float za = vertices[i].x * sa + vertices[i].z * ca;
+		for (int32_t i = 0; i < 8; ++i)
+		{
+			float xa = vertices[i].x * ca - vertices[i].z * sa;
+			float ya = vertices[i].y;
+			float za = vertices[i].x * sa + vertices[i].z * ca;
 
-		// 	float xb = xa;
-		// 	float yb = ya * cp - za * sp;
-		// 	float zb = ya * sp + za * cp;
+			float xb = xa;
+			float yb = ya * cp - za * sp;
+			float zb = ya * sp + za * cp;
 
-		// 	float x = xb * cb - yb * sb;
-		// 	float y = xb * sb + yb * cb;
-		// 	float z = zb;
+			float x = xb * cb - yb * sb;
+			float y = xb * sb + yb * cb;
+			float z = zb;
 
-		// 	z += 5.0f;
+			z += 5.0f;
 
-		// 	float w = z * 0.5f;
-		// 	float ndx = x / w;
-		// 	float ndy = y / w;
+			float w = z * 0.5f;
+			float ndx = x / w;
+			float ndy = y / w;
 
-		// 	sv[i].x = (int32_t)((ndx * (FW/2)) + (FW/2));
-		// 	sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
-		// }
+			sv[i].x = (int32_t)((ndx * (FW/2)) + (FW/2));
+			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
+		}
 
 
 		framebuffer = (uint8_t*)video_get_secondary_target();
-
-
-		// for (uint32_t i = 0; i < FW * FH; ++i)
-		// 	framebuffer[i] = rand();
-
-		// for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
-		// {
-		// 	int32_t i0 = indices[i * 3 + 0];
-		// 	int32_t i1 = indices[i * 3 + 1];
-		// 	int32_t i2 = indices[i * 3 + 2];
-
-		// 	triangle(
-		// 		sv[i0],
-		// 		sv[i2],
-		// 		sv[i1],
-		// 		255 - i
-		// 	);			
-		// }
-
 		memset(framebuffer, 0, FW * FH);
+
+		framebuffer[0] = 1;
+		framebuffer[159] = 1;
+		framebuffer[160] = 1;
+		framebuffer[319] = 1;
+
+
+		for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
+		{
+			int32_t i0 = indices[i * 3 + 0];
+			int32_t i1 = indices[i * 3 + 1];
+			int32_t i2 = indices[i * 3 + 2];
+
+			triangle(
+				sv[i0],
+				sv[i2],
+				sv[i1],
+				255 - i
+			);			
+		}
+
 		video_swap();
 
-		timer_wait_ms(20);
-
-		memset(framebuffer, 1, FW * FH);
-		video_swap();
-
-		timer_wait_ms(20);
-
-		// head += 0.043f;
-		// pitch += 0.067f;
-		// bank += 0.034f;
+		head += 0.043f;
+		pitch += 0.067f;
+		bank += 0.034f;
 	}
-*/
 
 	return 0;
 }

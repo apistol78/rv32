@@ -56,7 +56,7 @@ int32_t video_init()
 
 	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 	control[0] = 0;			// GPU read offset
-	control[1] = 320 * 200;	// CPU write offset
+	control[1] = 320 * 240;	// CPU write offset
 
 	return 0;
 }
@@ -68,7 +68,7 @@ int32_t video_get_resolution_width()
 
 int32_t video_get_resolution_height()
 {
-	return 200;
+	return 240;
 }
 
 void video_set_palette(uint8_t index, uint32_t color)
@@ -86,20 +86,20 @@ void video_swap()
 {
 	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
 	{
-		memcpy(primary_target, secondary_target, 320 * 200);
+		memcpy(primary_target, secondary_target, 320 * 240);
 	}
 	else
 	{
 		volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 		if (current == 0)
 		{
-			control[0] = 320 * 200;	// GPU read offset
+			control[0] = 320 * 240;	// GPU read offset
 			control[1] = 0;			// CPU write offset
 		}
 		else
 		{
 			control[0] = 0;			// GPU read offset
-			control[1] = 320 * 200;	// CPU write offset
+			control[1] = 320 * 240;	// CPU write offset
 		}
 		current = 1 - current;
 	}

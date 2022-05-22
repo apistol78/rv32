@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "doomgeneric.h"
 #include "doomkeys.h"
+#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
@@ -27,6 +28,8 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 		count = 0;
 	}
 
+	runtime_update();
+
 	for (uint32_t i = 0; i < 256; ++i)
 		video_set_palette(i, colors[i]);
 
@@ -45,44 +48,56 @@ uint32_t DG_GetTicksMs()
 
 int DG_GetKey(int* pressed, unsigned char* doomKey)
 {
-	if (uart_rx_empty(0))
-		return 0;
+	uint8_t ikc;
+	uint8_t ip;
 
-	uint8_t v = uart_rx_u8(0);
-	switch (v & 0x7f)
+	if (input_get_kb_event(&ikc, &ip))
 	{
-	case 1:	// Left
-		*doomKey = KEY_LEFTARROW;
-		break;
-	case 2:	// Right
-		*doomKey = KEY_RIGHTARROW;
-		break;
-	case 3:	// Up
-		*doomKey = KEY_UPARROW;
-		break;
-	case 4: // Down
-		*doomKey = KEY_DOWNARROW;
-		break;
-	case 5:	// Use
-		*doomKey = KEY_USE;
-		break;
-	case 6:	// Fire
-		*doomKey = KEY_FIRE;
-		break;
-	case 7:	// Escape
-		*doomKey = KEY_ESCAPE;
-		break;
-	case 8:	// Enter
-		*doomKey = KEY_ENTER;
-		break;
+		switch (ikc)
+		{
+		case RT_KEY_LEFT:
+		case RT_KEY_A:
+			*doomKey = KEY_LEFTARROW;
+			break;
+
+		case RT_KEY_RIGHT:
+		case RT_KEY_D:
+			*doomKey = KEY_RIGHTARROW;
+			break;
+
+		case RT_KEY_UP:
+		case RT_KEY_W:
+			*doomKey = KEY_UPARROW;
+			break;
+
+		case RT_KEY_DOWN:
+		case RT_KEY_S:
+			*doomKey = KEY_DOWNARROW;
+			break;
+
+		case RT_KEY_E:
+			*doomKey = KEY_USE;
+			break;
+
+		case RT_KEY_SPACE:
+			*doomKey = KEY_FIRE;
+			break;
+
+		case RT_KEY_ESCAPE:
+			*doomKey = KEY_ESCAPE;
+			break;
+
+		case RT_KEY_RETURN:
+		case RT_KEY_ENTER:
+			*doomKey = KEY_ENTER;
+			break;
+		}
+
+		*pressed = ip;
+		return 1;
 	}
-
-	if (v & 0x80)
-		*pressed = 1;
-	else
-		*pressed = 0;
-
-	return 1;
+	
+	return 0;
 }
 
 void DG_SetWindowTitle(const char* title)

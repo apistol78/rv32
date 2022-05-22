@@ -76,8 +76,10 @@ module WriteBuffer(
 		o_bus_request = 1'b0;
 		o_bus_rw = 1'b0;
 		o_bus_address = 32'h0;
+		o_bus_wdata = 32'h0;
 
 		o_rdata = (i_request && !i_rw) ? i_bus_rdata : 32'hz;
+		o_ready = 1'b0;
 
 		case (state)
 			0: begin

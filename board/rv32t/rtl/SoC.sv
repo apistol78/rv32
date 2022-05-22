@@ -172,7 +172,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -496,7 +496,16 @@ module SoC(
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
 
-	VIDEO_VGA vga(
+	VIDEO_VGA #(
+		.HLINE(800),	// whole line
+		.HBACK(48),		// back porch
+		.HFRONT(16),	// front porch
+		.HPULSE(96),	// sync pulse
+		.VLINE(525),	// whole frame
+		.VBACK(33),		// back porch
+		.VFRONT(10),	// front porch
+		.VPULSE(2)		// sync pulse		
+	) vga(
 		.i_clock(vga_clock),
 		.i_clock_out(clock),
 		.o_hsync(HDMI_TX_HS),

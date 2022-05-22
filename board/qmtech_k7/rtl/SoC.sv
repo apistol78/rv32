@@ -10,8 +10,10 @@ module SoC(
     //output led_2,
     //output led_3,
 
-    input uart_rx,
-    output uart_tx,
+	input uart_0_rx,
+	output uart_0_tx,
+	input uart_1_rx,
+	output uart_1_tx,
     
 	output sd_clk,
 	inout sd_cmd,
@@ -22,12 +24,21 @@ module SoC(
     output i2s_lrck,
     output i2s_mclk,
 
-	output lcd_bkl,
-	output lcd_clk,
-	output lcd_de,
-	output [7:0] lcd_r,
-	output [7:0] lcd_g,
-	output [7:0] lcd_b,
+	output hdmi_nreset,
+    inout hdmi_sda,
+    output hdmi_scl,
+	output hdmi_idck,
+	output hdmi_vsync,
+	output hdmi_hsync,
+	output hdmi_de,
+	input hdmi_int,
+	output [7:0] hdmi_r,
+	output [7:0] hdmi_g,
+	output [7:0] hdmi_b,
+    output hdmi_sdo,
+    output hdmi_sck,
+    output hdmi_mclk,
+    output hdmi_ws,
 
 	inout [15:0] ddr3_dq,
 	inout [1:0] ddr3_dqs_n,
@@ -51,7 +62,7 @@ module SoC(
     IP_Clock ipclk(
         .clk_out1(clock),		// 125 MHz
 		.clk_out2(clock_ref),	// 200 MHz
-		.clk_out3(clock_video),	// ~28 MHz
+		.clk_out3(clock_video),	// 27 MHz
         .reset(1'b0),
         .clk_in1(sys_clk)
     );
@@ -189,7 +200,9 @@ module SoC(
 	wire [31:0] bus_pb_rdata;
 	wire [31:0] bus_pb_wdata;
 
-	BusAccess bus(
+	BusAccess #(
+	   .REGISTERED(1)
+	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -316,6 +329,9 @@ module SoC(
 		.LEDR(led_led)
 	);
 
+	assign hdmi_nreset = led_led[0];
+
+
 	// UART (FTDI)
 	wire uart_0_select;
 	wire [1:0] uart_0_address;
@@ -333,8 +349,45 @@ module SoC(
 		.o_rdata(uart_0_rdata),
 		.o_ready(uart_0_ready),
 		// ---
-		.UART_RX(uart_rx),
-		.UART_TX(uart_tx)
+		.UART_RX(uart_0_rx),
+		.UART_TX(uart_0_tx)
+	);
+
+	// UART (IO)
+	wire uart_1_select;
+	wire [1:0] uart_1_address;
+	wire [31:0] uart_1_rdata;
+	wire uart_1_ready;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_1(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_1_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(uart_1_address),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(uart_1_rdata),
+		.o_ready(uart_1_ready),
+		// ---
+		.UART_RX(uart_1_rx),
+		.UART_TX(uart_1_tx)
+	);
+
+	// I2C
+	wire i2c_select;
+	wire [31:0] i2c_rdata;
+	wire i2c_ready;
+	I2C i2c(
+		.i_clock(clock),
+		.i_request(i2c_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(i2c_rdata),
+		.o_ready(i2c_ready),
+		// ---
+		.I2C_SCL(hdmi_scl),
+		.I2C_SDA(hdmi_sda)
 	);
 
 	// SD
@@ -379,6 +432,10 @@ module SoC(
 	// AUDIO
 	wire audio_output_busy;
 	wire [15:0] audio_output_sample;
+	wire audio_sdout;
+	wire audio_sclk;
+	wire audio_lrck;
+	wire audio_mclk;
 
 	AUDIO_i2s_output #(
 		.FREQUENCY(`FREQUENCY)
@@ -388,11 +445,22 @@ module SoC(
 		.o_busy(audio_output_busy),
 		.i_sample(audio_output_sample),
 
-		.o_i2s_sdout(i2s_sdout),
-		.o_i2s_sclk(i2s_sclk),
-		.o_i2s_lrck(i2s_lrck),
-		.o_i2s_mclk(i2s_mclk)
+		.o_i2s_sdout(audio_sdout),
+		.o_i2s_sclk(audio_sclk),
+		.o_i2s_lrck(audio_lrck),
+		.o_i2s_mclk(audio_mclk)
 	);
+
+	// Wire both I2S chip and HDMI output.
+	assign i2s_sdout = audio_sdout;
+	assign i2s_sclk = audio_sclk;
+	assign i2s_lrck = audio_lrck;
+	assign i2s_mclk = audio_mclk;
+
+	assign hdmi_sdo = audio_sdout;
+	assign hdmi_sck = audio_sclk;
+	assign hdmi_ws = audio_lrck;
+	assign hdmi_mclk = audio_mclk;
 
 	wire audio_select;
 	wire audio_ready;
@@ -471,48 +539,39 @@ module SoC(
 	);
 
 	// VIDEO
-	assign lcd_bkl = counter[15];	// Backlight PWM controlled
-	assign lcd_clk = vga_clock;
-	assign lcd_de = vga_enable;
-	assign lcd_r = vga_enable_scale ? vmode_video_rdata[23:16] : 8'h0;
-	assign lcd_g = vga_enable_scale ? vmode_video_rdata[15:8] : 8'h0;
-	assign lcd_b = vga_enable_scale ? vmode_video_rdata[7:0] : 8'h0;
-	
-	// PWM counter.
-	logic [31:0] counter = 0;
-	always_ff @(posedge clock)
-	   counter <= counter + 1;
+	assign hdmi_hsync = ~vga_hsync;
+	assign hdmi_vsync = ~vga_vsync;
+	assign hdmi_de = vga_enable;
+	assign hdmi_idck = ~clock_video;
+	assign hdmi_r = vmode_video_rdata[7:0];
+	assign hdmi_g = vmode_video_rdata[15:8];
+	assign hdmi_b = vmode_video_rdata[23:16];
 
-	// Video signal generator.
+	// Video signal generator (640*480 @ 60 Hz)
+	wire vga_hsync;
+	wire vga_vsync;
 	wire vga_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
-	wire vga_clock;
-	VIDEO_LCD_AT070NTN92 #(
-		.SYSTEM_FREQUENCY(26_600_000),
-		.VGA_FREQUENCY(26_600_000),
-		.HLINE(862),
-		.HBACK(46),
-		.HFRONT(16),
-		.VLINE(510),
-		.VBACK(23),
-		.VFRONT(7)
+	VIDEO_VGA #(
+		.HLINE(800),	// whole line
+		.HBACK(48),		// back porch
+		.HFRONT(16),	// front porch
+		.HPULSE(96),	// sync pulse
+		.VLINE(525),	// whole frame
+		.VBACK(33),		// back porch
+		.VFRONT(10),	// front porch
+		.VPULSE(2)		// sync pulse
 	) vga(
 		.i_clock(clock_video),
 		.i_clock_out(clock),
+		.o_hsync(vga_hsync),
+		.o_vsync(vga_vsync),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
-		.o_pos_y(vga_pos_y),
-		.o_vga_clock(vga_clock)
+		.o_pos_y(vga_pos_y)
 	);
 
-	// Center into view.
-	// (800-640)/2 = 80
-	// (480-400)/2 = 40
-	wire [10:0] vga_pos_x_scale = vga_pos_x - 80;
-	wire [10:0] vga_pos_y_scale = vga_pos_y - 40;
-	wire vga_enable_scale = vga_enable && (vga_pos_x >= 80 && vga_pos_x < 640+80 && vga_pos_y >= 40 && vga_pos_y < 400+40);
-	
 	// Video memory.
 	wire vram_pa_request;
 	wire vram_pa_rw;
@@ -530,7 +589,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*320*200),
+		.SIZE(2*320*240),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),
@@ -572,8 +631,8 @@ module SoC(
 		
 		// Video signal interface.
 		.i_video_request(vga_enable_scale),
-		.i_video_pos_x(vga_pos_x_scale[9:1]),
-		.i_video_pos_y(vga_pos_y_scale[9:1]),
+		.i_video_pos_x(vga_pos_x[9:1]),
+		.i_video_pos_y(vga_pos_y[9:1]),
 		.o_video_rdata(vmode_video_rdata),
 		
 		// Video RAM interface.
@@ -605,7 +664,9 @@ module SoC(
 	wire [31:0] bridge_far_rdata;
 	wire bridge_far_ready;
 
-	BRIDGE bridge(
+	BRIDGE #(
+		.REGISTERED(1)
+	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),
 
@@ -631,6 +692,11 @@ module SoC(
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
 
+	assign uart_1_select = bridge_far_address[27:24] == 4'h2;
+	assign uart_1_address = bridge_far_address[3:2];
+
+	assign i2c_select = bridge_far_address[27:24] == 4'h3;
+
 	assign sd_select = bridge_far_address[27:24] == 4'h4;
 
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
@@ -644,11 +710,13 @@ module SoC(
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 
-	assign vram_select = bus_address[27:24] == 4'ha;
+	assign vram_select = bridge_far_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };
 
 	assign bridge_far_rdata =
 		uart_0_select	? uart_0_rdata	:
+		uart_1_select	? uart_1_rdata	:
+		i2c_select		? i2c_rdata		:
 		sd_select		? sd_rdata		:
 		timer_select	? timer_rdata	:
 		dma_select		? dma_rdata		:
@@ -659,6 +727,8 @@ module SoC(
 	assign bridge_far_ready =
 		led_select		? led_ready		:
 		uart_0_select	? uart_0_ready	:
+		uart_1_select	? uart_1_ready	:
+		i2c_select		? i2c_ready		:
 		sd_select		? sd_ready		:
 		timer_select	? timer_ready	:
 		audio_ready		? audio_ready	:

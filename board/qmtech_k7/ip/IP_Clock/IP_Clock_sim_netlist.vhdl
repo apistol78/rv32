@@ -1,10 +1,10 @@
 -- Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2021.2 (lin64) Build 3367213 Tue Oct 19 02:47:39 MDT 2021
--- Date        : Sat Apr 16 12:11:11 2022
--- Host        : pn-conan-ws running 64-bit Pop!_OS 21.10
--- Command     : write_vhdl -force -mode funcsim
---               /home/apistol/private/rv32/board/qmtech_k7/ip/IP_Clock/IP_Clock_sim_netlist.vhdl
+-- Date        : Sun May 15 09:52:12 2022
+-- Host        : pn-conan-ws running 64-bit Pop!_OS 22.04 LTS
+-- Command     : write_vhdl -force -mode funcsim -rename_top IP_Clock -prefix
+--               IP_Clock_ IP_Clock_sim_netlist.vhdl
 -- Design      : IP_Clock
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,7 +14,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity IP_Clock_clk_wiz is
+entity IP_Clock_IP_Clock_clk_wiz is
   port (
     clk_out1 : out STD_LOGIC;
     clk_out2 : out STD_LOGIC;
@@ -22,9 +22,9 @@ entity IP_Clock_clk_wiz is
     reset : in STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
-end IP_Clock_clk_wiz;
+end IP_Clock_IP_Clock_clk_wiz;
 
-architecture STRUCTURE of IP_Clock_clk_wiz is
+architecture STRUCTURE of IP_Clock_IP_Clock_clk_wiz is
   signal clk_in1_IP_Clock : STD_LOGIC;
   signal clk_out1_IP_Clock : STD_LOGIC;
   signal clk_out2_IP_Clock : STD_LOGIC;
@@ -104,7 +104,7 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKOUT1_DUTY_CYCLE => 0.500000,
       CLKOUT1_PHASE => 0.000000,
       CLKOUT1_USE_FINE_PS => false,
-      CLKOUT2_DIVIDE => 34,
+      CLKOUT2_DIVIDE => 40,
       CLKOUT2_DUTY_CYCLE => 0.500000,
       CLKOUT2_PHASE => 0.000000,
       CLKOUT2_USE_FINE_PS => false,
@@ -193,7 +193,7 @@ end IP_Clock;
 
 architecture STRUCTURE of IP_Clock is
 begin
-inst: entity work.IP_Clock_clk_wiz
+inst: entity work.IP_Clock_IP_Clock_clk_wiz
      port map (
       clk_in1 => clk_in1,
       clk_out1 => clk_out1,

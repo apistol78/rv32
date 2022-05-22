@@ -1,10 +1,10 @@
 // Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2021.2 (lin64) Build 3367213 Tue Oct 19 02:47:39 MDT 2021
-// Date        : Sat Apr 16 12:11:10 2022
-// Host        : pn-conan-ws running 64-bit Pop!_OS 21.10
-// Command     : write_verilog -force -mode funcsim
-//               /home/apistol/private/rv32/board/qmtech_k7/ip/IP_Clock/IP_Clock_sim_netlist.v
+// Date        : Sun May 15 09:52:12 2022
+// Host        : pn-conan-ws running 64-bit Pop!_OS 22.04 LTS
+// Command     : write_verilog -force -mode funcsim -rename_top IP_Clock -prefix
+//               IP_Clock_ IP_Clock_sim_netlist.v
 // Design      : IP_Clock
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -31,7 +31,7 @@ module IP_Clock
   wire clk_out3;
   wire reset;
 
-  IP_Clock_clk_wiz inst
+  IP_Clock_IP_Clock_clk_wiz inst
        (.clk_in1(clk_in1),
         .clk_out1(clk_out1),
         .clk_out2(clk_out2),
@@ -39,7 +39,7 @@ module IP_Clock
         .reset(reset));
 endmodule
 
-module IP_Clock_clk_wiz
+module IP_Clock_IP_Clock_clk_wiz
    (clk_out1,
     clk_out2,
     clk_out3,
@@ -119,7 +119,7 @@ module IP_Clock_clk_wiz
     .CLKOUT1_DUTY_CYCLE(0.500000),
     .CLKOUT1_PHASE(0.000000),
     .CLKOUT1_USE_FINE_PS("FALSE"),
-    .CLKOUT2_DIVIDE(34),
+    .CLKOUT2_DIVIDE(40),
     .CLKOUT2_DUTY_CYCLE(0.500000),
     .CLKOUT2_PHASE(0.000000),
     .CLKOUT2_USE_FINE_PS("FALSE"),

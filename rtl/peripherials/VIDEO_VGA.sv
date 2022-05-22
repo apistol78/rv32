@@ -2,14 +2,14 @@
 `timescale 1ns/1ns
 
 module VIDEO_VGA #(
-	parameter HLINE = 800,
-	parameter HBACK = 144,
-	parameter HFRONT = 16,
-	parameter HPULSE = 96,
-	parameter VLINE = 449,
-	parameter VBACK = 36,
-	parameter VFRONT = 13,
-	parameter VPULSE = 2
+	parameter HLINE,
+	parameter HBACK,
+	parameter HFRONT,
+	parameter HPULSE,
+	parameter VLINE,
+	parameter VBACK,
+	parameter VFRONT,
+	parameter VPULSE
 )(
 	input i_clock,				//!< VGA timing clock.
 	inout i_clock_out,			//!< Signal output clock domain.
@@ -17,11 +17,11 @@ module VIDEO_VGA #(
 	output bit o_hsync,
 	output bit o_vsync,
 	output bit o_data_enable,
-	output bit [9:0] o_pos_x,
-	output bit [9:0] o_pos_y
+	output bit [10:0] o_pos_x,
+	output bit [10:0] o_pos_y
 );
-	bit [9:0] vga_h = 0;
-	bit [9:0] vga_v = 0;
+	bit [10:0] vga_h = 0;
+	bit [10:0] vga_v = 0;
 
 	initial begin
 		o_hsync = 0;
@@ -50,8 +50,8 @@ module VIDEO_VGA #(
 	bit pl_vsync_b = 0;
 
 	always @(posedge i_clock_out) begin
-		pl_hsync_a <= (vga_h < HPULSE) ? 0 : 1;
-		pl_vsync_a <= (vga_v < VPULSE) ? 0 : 1;
+		pl_hsync_a <= (vga_h >= HLINE - HPULSE) ? 1 : 0;
+		pl_vsync_a <= (vga_v >= VLINE - VPULSE) ? 1 : 0;
 		pl_hsync_b <= pl_hsync_a;
 		pl_vsync_b <= pl_vsync_a;
 		o_hsync <= pl_hsync_b;
@@ -62,7 +62,7 @@ module VIDEO_VGA #(
 	bit pl_data_enable_b = 0;
 	
 	always @(posedge i_clock_out) begin
-		pl_data_enable_a <= (vga_h >= HBACK && vga_h < HLINE - HFRONT && vga_v >= VBACK && vga_v < VLINE - VFRONT);
+		pl_data_enable_a <= (vga_h >= HBACK && vga_h < (HLINE - HPULSE - HFRONT) && vga_v >= VBACK && vga_v < (VLINE - VPULSE - VFRONT));
 		pl_data_enable_b <= pl_data_enable_a;
 		o_data_enable <= pl_data_enable_b;
 	end
