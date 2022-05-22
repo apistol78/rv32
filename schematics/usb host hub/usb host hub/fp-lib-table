@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name "parts")(type "KiCad")(uri "${KIPRJMOD}/parts")(options "")(descr ""))
+  (lib (name "52271-0679")(type "KiCad")(uri "${KIPRJMOD}/parts/52271-0679")(options "")(descr ""))
+  (lib (name "532610671")(type "KiCad")(uri "${KIPRJMOD}/parts/532610671")(options "")(descr ""))
+)
