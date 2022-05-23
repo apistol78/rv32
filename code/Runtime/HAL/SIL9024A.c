@@ -22,7 +22,6 @@
 #define SiI9022_DEVICE_ID				0xb0
 #define HOT_PLUG_EVENT					0x01
 
-
 static void modify_register_bits(uint8_t reg, uint8_t mask, uint8_t set)
 {
 	uint8_t tmp;
@@ -73,16 +72,7 @@ static int sil9024a_reset()
 
 	printf("SIL90242 device found; id %02x, %02x, %02x.\n", deviceId, deviceProdRevId, tpiScheme);
 
-	
-	// enable active mode.
-	// i2c_read(TPI_ADDRESS, TPI_DEVICE_POWER_STATE_CTRL_REG, &tmp);
-	// printf("power state ctrl reg %02x\n", tmp);
-	// i2c_write(TPI_ADDRESS, TPI_DEVICE_POWER_STATE_CTRL_REG, tmp & (~0x03));
-
-
-
 	// select input bus characteristics.
-
 	const uint16_t clk = 2500;
 	const uint16_t vfreq = 60;
 	const uint16_t pixels = 800;
@@ -102,28 +92,9 @@ static int sil9024a_reset()
 
 	i2c_write(TPI_ADDRESS, 0x08, 0b01110000);
 
-
-
 	modify_register_bits(0x60, 0b10000000, 0b00000000);	// external sync
 	modify_register_bits(0x61, 0b00000111, 0b00000000);	// non-interlaced, vsync active high, hsync active high
 	modify_register_bits(0x63, 0b01000000, 0b00000000);	// disable DE generator.
-
-
-	/*
-	// setup sync decoding.
-	modify_register_bits(0x60, 0b10000000, 0b00000000);	// external sync
-	modify_register_bits(0x61, 0b00000111, 0b00000000);	// non-interlaced, vsync active high, hsync active high
-	
-	i2c_write(TPI_ADDRESS, 0x62, 16);	// h delay
-
-	modify_register_bits(0x63, 0b01110011, 0b01000000);
-	i2c_write(TPI_ADDRESS, 0x64, 10);	// v front porch
-	i2c_write(TPI_ADDRESS, 0x66, 640 & 255);	// active pixels
-	i2c_write(TPI_ADDRESS, 0x67, (640 >> 8) & 255);
-	i2c_write(TPI_ADDRESS, 0x68, 480 & 255);	// active lines
-	i2c_write(TPI_ADDRESS, 0x69, (480 >> 8) & 255);	
-	*/
-
 
 	// disable TMDS
 	i2c_write(TPI_ADDRESS, 0x1a, 0x11);
@@ -133,11 +104,6 @@ static int sil9024a_reset()
 
 	// enable TMDS
 	i2c_write(TPI_ADDRESS, 0x1a, 0x01);
-
-
-
-	// sil9024a_read_edid();
-
 
 	printf("SIL90242 device initialized.\n");
 	return 0;

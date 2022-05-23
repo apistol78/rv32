@@ -10,6 +10,10 @@ EXTERN_C int32_t input_get_kb_state(uint8_t keycode);
 
 EXTERN_C int32_t input_get_kb_event(uint8_t* keycode, uint8_t* pressed);
 
+EXTERN_C int32_t input_get_mouse_state(int32_t* x, int32_t* y, uint8_t* buttons);
+
+EXTERN_C int32_t input_get_mouse_event(int8_t* x, int8_t* y, int8_t* wheel, uint8_t* buttons);
+
 // Keycodes
 #define RT_KEY_A	        0x04
 #define RT_KEY_B	        0x05

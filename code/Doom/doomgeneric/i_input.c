@@ -41,10 +41,11 @@
 
 #include "doomgeneric.h"
 
+#include "Runtime/Input.h"
+
 int vanilla_keyboard_mapping = 1;
 
 // Is the shift key currently down?
-
 static int shiftdown = 0;
 
 // Lookup table for mapping AT keycodes to their doom keycode
@@ -244,7 +245,6 @@ static unsigned char GetTypedChar(unsigned char key)
     key = TranslateKey(key);
 
     // Is shift held down?  If so, perform a translation.
-
     if (shiftdown > 0)
     {
         if (key >= 0 && key < arrlen(shiftxform))
@@ -275,20 +275,17 @@ static void UpdateShiftStatus(int pressed, unsigned char key)
     }
 }
 
-
 void I_GetEvent(void)
 {
     event_t event;
     int pressed;
     unsigned char key;
-
     
 	while (DG_GetKey(&pressed, &key))
     {
         UpdateShiftStatus(pressed, key);
 
         // process event
-        
         if (pressed)
         {
             // data1 has the key pressed, data2 has the character
@@ -296,11 +293,8 @@ void I_GetEvent(void)
             event.type = ev_keydown;
             event.data1 = TranslateKey(key);
             event.data2 = GetTypedChar(key);
-
             if (event.data1 != 0)
-            {
                 D_PostEvent(&event);
-            }
         }
         else
         {
@@ -312,30 +306,26 @@ void I_GetEvent(void)
             // that was typed, but if something wants to detect
             // key releases it should do so based on data1
             // (key ID), not the printable char.
-
             event.data2 = 0;
 
             if (event.data1 != 0)
-            {
                 D_PostEvent(&event);
-            }
             break;
         }
     }
 
-
-                /*
-            case SDL_MOUSEMOTION:
-                event.type = ev_mouse;
-                event.data1 = mouse_button_state;
-                event.data2 = AccelerateMouse(sdlevent.motion.xrel);
-                event.data3 = -AccelerateMouse(sdlevent.motion.yrel);
-                D_PostEvent(&event);
-                break;
-                */
+    int8_t x, y, w;
+    uint8_t btns;
+    while (input_get_mouse_event(&x, &y, &w, &btns))
+    {
+        event.type = ev_mouse;
+        event.data1 = btns;
+        event.data2 = x;
+        event.data3 = -y;
+        D_PostEvent(&event);
+    }
 }
 
 void I_InitInput(void)
 {
 }
-
