@@ -31,7 +31,15 @@ int32_t video_init()
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
-		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if (sil9024a_init())
+		{
+			printf("Failed to initialize SIL9024A; unable to initialize video.\n");
+			return 1;
+		}		
+		//secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(320 * 200)) == 0)
+			return 1;		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
 	{
@@ -84,7 +92,7 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
+	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32 || timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
 		memcpy(primary_target, secondary_target, 320 * 240);
 	}

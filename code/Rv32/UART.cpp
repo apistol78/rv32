@@ -37,6 +37,11 @@ uint16_t UART::readU16(uint32_t address) const
 
 uint32_t UART::readU32(uint32_t address) const
 {
+	if (address == 0x04)
+	{
+		// Status empty.
+		return 0x00000002;
+	}
 	return 0;
 }
 
