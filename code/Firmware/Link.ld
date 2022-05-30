@@ -3,68 +3,175 @@ ENTRY( _start )
 
 MEMORY
 {
-  rom      (rx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
-  ram      (rw) : ORIGIN = 0x10000000, LENGTH = 0x00010000
-}
+	/* 20000000 - 22000000 */
 
-STACK_SIZE = 0x2000;
+    rom	(rx)	: ORIGIN = 0x00000000, LENGTH = 0x00100000
+	ram	(rw)	: ORIGIN = 0x20000000, LENGTH = 0x00100000
+}
 
 SECTIONS
 {
-    /* text: Code section */
-    .text :
-    {
-        *(.text)
-        *(.text.*)
-    } > rom
+	/*--------------------------------------------------------------------*/
+	/* Code and read-only segment                                         */
+	/*--------------------------------------------------------------------*/
 
-    /* init: Code executed before main. */
-    .init :
-    {
-        KEEP( *(.init) )
-    } > rom
+    . = ORIGIN(rom);
 
-    /* fini: Code executed after main. */
-    .fini :
-    {
-        KEEP( *(.fini) )
-    } > rom
+	/* Begining of code and text segment */
+	_ftext = .;
+	PROVIDE( eprol = . );
 
-    /* rodata: Read-only data. */
-    .rodata :
-    {
-        *(.rdata)
-        *(.rodata)
-        *(.rodata.*)
-    } > rom
+	/* text: Program code section */
+	.text : 
+	{
+		*(.text)
+		*(.text.*)
+		*(.gnu.linkonce.t.*)
+	} >rom
 
-    /* data: Initialized data segment */
-    .data :
-    {
-        _data_rom = LOADADDR(.data);
-        _data_ram = ADDR(.data);
+	/* init: Code to execute before main (called by crt0.S) */
+	.init : 
+	{
+		KEEP( *(.init) )
+	} >rom
 
-        *(.data*);
-        *(.sdata*);
-        . = ALIGN(16);
-        __global_pointer$ = .;
+	/* fini: Code to execute after main (called by crt0.S) */
+	.fini : 
+	{
+		KEEP( *(.fini) )
+	} >rom
 
-        _data_ram_end = ADDR(.data) + SIZEOF(.data);
-    } >ram AT>rom
+	/* rodata: Read-only data */
+	.rodata : 
+	{
+		*(.rdata)
+		*(.rodata)
+		*(.rodata.*)
+		*(.gnu.linkonce.r.*)
+	} >rom
 
-    /* .bss section which is used for uninitialized data */
-    .bss (NOLOAD) :
-    {
-        *(.bss*)
-    } > ram
+	/* End of code and read-only segment */
+	PROVIDE( etext = . );
+	_etext = .;
 
-    . = ALIGN(4);
-    _edata = .;
-    edata = .;
+    /*--------------------------------------------------------------------*/
+	/* Global constructor/destructor segment                             */
+	/*--------------------------------------------------------------------*/
 
-    /* End of uninitalized data segement */
-    .heap (NOLOAD):
-    {
-        _end = .;
-    } >ram
+	.preinit_array     :
+	{
+		PROVIDE_HIDDEN (__preinit_array_start = .);
+		KEEP (*(.preinit_array))
+		PROVIDE_HIDDEN (__preinit_array_end = .);
+	} >rom
+
+	.init_array     :
+	{
+		PROVIDE_HIDDEN (__init_array_start = .);
+		KEEP (*(SORT(.init_array.*)))
+		KEEP (*(.init_array ))
+		PROVIDE_HIDDEN (__init_array_end = .);
+	} >rom
+
+	.fini_array     :
+	{
+		PROVIDE_HIDDEN (__fini_array_start = .);
+		KEEP (*(SORT(.fini_array.*)))
+		KEEP (*(.fini_array ))
+		PROVIDE_HIDDEN (__fini_array_end = .);
+	} >rom
+
+	/*--------------------------------------------------------------------*/
+	/* Other misc gcc segments (this was in idt32.ld)                     */
+	/*--------------------------------------------------------------------*/
+	/* I am not quite sure about these sections but it seems they are for
+		 C++ exception handling. I think .jcr is for "Java Class
+		 Registration" but it seems to end up in C++ binaries as well. */
+
+	.eh_frame_hdr     : { *(.eh_frame_hdr)     } >rom
+	.eh_frame         : { KEEP( *(.eh_frame) ) } >rom
+	.gcc_except_table : { *(.gcc_except_table) } >rom
+	.jcr              : { KEEP (*(.jcr))       } >rom
+
+	/*--------------------------------------------------------------------*/
+	/* Initialized data segment                                           */
+	/*--------------------------------------------------------------------*/
+
+    . = ORIGIN(ram);
+
+	/* Start of initialized data segment */
+	. = ALIGN(16);
+	 _fdata = .;
+
+	/* data: Writable data */
+	.data : 
+	{
+        INIT_DATA_VALUES = LOADADDR(.data);
+        INIT_DATA_START = .;
+
+		*(.data)
+		*(.data.*)
+		*(.gnu.linkonce.d.*)
+
+        INIT_DATA_END = .;
+	} >ram AT >rom
+
+	/* Have _gp point to middle of sdata/sbss to maximize displacement range */
+	. = ALIGN(16);
+	/* _gp = . + 0x800; */
+
+	/* Writable small data segment */
+	.sdata : 
+	{
+        INIT_SDATA_VALUES = LOADADDR(.sdata);
+        INIT_SDATA_START = .;
+
+		*(.sdata)
+		*(.sdata.*)
+		*(.srodata.*)
+		*(.gnu.linkonce.s.*)
+
+        INIT_SDATA_END = .;
+	} >ram AT >rom
+
+	__global_pointer$ = .;
+
+	/* End of initialized data segment */
+	PROVIDE( edata = . );
+	_edata = .;
+
+	/*--------------------------------------------------------------------*/
+	/* Uninitialized data segment                                         */
+	/*--------------------------------------------------------------------*/
+
+	/* Start of uninitialized data segment */
+	. = ALIGN(8);
+	_fbss = .;
+
+	/* Writable uninitialized small data segment */
+    SBSS_START = .;
+	.sbss (NOLOAD) : 
+	{
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
+	} >ram
+    SBSS_END = .;
+
+	/* bss: Uninitialized writeable data section */
+	/* _bss_start = .; */
+    
+    BSS_START = .;
+	.bss (NOLOAD) : 
+	{
+		*(.bss)
+		*(.bss.*)
+		*(.gnu.linkonce.b.*)
+		*(COMMON)
+	} >ram
+    BSS_END = .;
+
+	/* End of uninitialized data segment (used by syscalls.c for heap) */
+	PROVIDE( end = . );
+	_end = ALIGN(8);
 }

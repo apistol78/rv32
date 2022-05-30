@@ -1,9 +1,11 @@
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
-#include "Firmware/HAL/SD.h"
-#include "Firmware/HAL/UART.h"
 #include "Firmware/ELF.h"
-#include "Firmware/File.h"
+#include "Runtime/CRT.h"
+#include "Runtime/File.h"
+#include "Runtime/HAL/SD.h"
+#include "Runtime/HAL/UART.h"
 
 typedef void (*call_fn_t)();
 
@@ -54,137 +56,64 @@ static void fatal_error(uint8_t error)
 void main()
 {
 	volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
-	
-	*led = 0x00;
 
-	// Welcome
-	for (uint32_t I = 0; I < 4; ++I)
+	// Initialize segments when running from ROM.
 	{
-		for (uint32_t lv = 0; lv < 256; ++lv)
-		{
-			for (uint32_t i = 0; i < 10; ++i)
-			{
-				for (uint32_t j = 0; j < 256; ++j)
-				{
-					*led = (j < lv) ? 0xff : 0x00;
-					__asm__ volatile ( "nop" );
-				}
-			}
-		}
-		for (uint32_t lv = 0; lv < 256; ++lv)
-		{
-			for (uint32_t i = 0; i < 10; ++i)
-			{
-				for (uint32_t j = 0; j < 256; ++j)
-				{
-					*led = (j > lv) ? 0xff : 0x00;
-					__asm__ volatile ( "nop" );
-				}
-			}
-		}		
+		extern uint8_t INIT_DATA_VALUES;
+		extern uint8_t INIT_DATA_START;
+		extern uint8_t INIT_DATA_END;
+		uint8_t* src = (uint8_t*)&INIT_DATA_VALUES;
+		uint8_t* dest = (uint8_t*)&INIT_DATA_START;
+		uint32_t len = (uint32_t)(&INIT_DATA_END - &INIT_DATA_START);
+		while (len--)
+			*dest++ = *src++;		
+	}
+	{
+		extern uint8_t INIT_SDATA_VALUES;
+		extern uint8_t INIT_SDATA_START;
+		extern uint8_t INIT_SDATA_END;
+		uint8_t* src = (uint8_t*)&INIT_SDATA_VALUES;
+		uint8_t* dest = (uint8_t*)&INIT_SDATA_START;
+		uint32_t len = (uint32_t)(&INIT_SDATA_END - &INIT_SDATA_START);
+		while (len--)
+			*dest++ = *src++;		
+	}
+	{
+		extern uint8_t BSS_START;
+		extern uint8_t BSS_END;
+        uint8_t* dest = (uint8_t*)&BSS_START;
+        uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
+        while (len--)
+                *dest++=0;		
+	}
+	{
+		extern uint8_t SBSS_START;
+		extern uint8_t SBSS_END;
+        uint8_t* dest = (uint8_t*)&SBSS_START;
+        uint32_t len = (uint32_t)(&SBSS_END - &SBSS_START);
+        while (len--)
+                *dest++=0;		
 	}
 
-/*
-	// Initialize data.
-	{
-		extern uint32_t _data_rom;
-		extern uint32_t _data_ram;
-		extern uint32_t _data_ram_end;
-		memcpy((void*)_data_ram, (const void*)_data_rom, _data_ram_end - _data_ram);
-	}
+	crt_init();
 
-	uart_tx_print("Booting...\n");
+	printf("===============================================================================\n");
+	printf("                                 Rebel-V SoC                                   \n");
+	printf("                           created by Anders Pistol                            \n");
+	printf("                                    2022                                       \n");
+	printf("-------------------------------------------------------------------------------\n");
+	printf("                             firmware version 0.1                              \n");
+	printf("===============================================================================\n");
 
-	// Initialize SD card reader.
+	printf("initialize storage...\n");
 	sd_init();
 
-	// Initialize file system.
+	printf("initialize file system...\n");
 	file_init();
 
-	// Read kernal.elf into memory.
-	int32_t fd = file_open("KERNAL");
-	if (fd > 0)
-	{
-		char tmp[256] = {};
-		const uint32_t sp = 0x20FFFFF0;
-		uint32_t jstart = 0;
+	printf("ready.\n");
 
-		uart_tx_print("Loading KERNAL...\n");
-
-		ELF32_Header hdr = {};
-		file_read(fd, &hdr, sizeof(hdr));
-		if (hdr.e_machine != 0xf3)
-			fatal_error(1);
-
-		for (uint32_t i = 0; i < hdr.e_shnum; ++i)
-		{
-			ELF32_SectionHeader shdr = {};
-			file_seek(fd, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), 0);
-			file_read(fd, &shdr, sizeof(shdr));
-
-			if (
-				shdr.sh_type == 0x01 ||	// SHT_PROGBITS
-				shdr.sh_type == 0x0e ||	// SHT_INIT_ARRAY
-				shdr.sh_type == 0x0f	// SHT_FINI_ARRAY
-			)
-			{
-				if ((shdr.sh_flags & 0x02) == 0x02)	// SHF_ALLOC
-				{
-					file_seek(fd, shdr.sh_offset, 0);
-					for (uint32_t i = 0; i < shdr.sh_size; i += 16)
-					{
-						uint32_t nb = shdr.sh_size - i;
-						if (nb > 16)
-							nb = 16;
-						if (file_read(fd, (void*)(shdr.sh_addr + i), nb) != nb)
-							fatal_error(2);
-					}
-				}
-			}
-			else if (shdr.sh_type == 0x02)	// SHT_SYMTAB
-			{
-				ELF32_SectionHeader shdr_link;
-				file_seek(fd, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), 0);
-				file_read(fd, &shdr_link, sizeof(shdr_link));
-
-				for (int32_t j = 0; j < shdr.sh_size; j += sizeof(ELF32_Sym))
-				{
-					ELF32_Sym sym = {};
-					file_seek(fd, shdr.sh_offset + j, 0);
-					file_read(fd, &sym, sizeof(sym));
-
-					file_seek(fd, shdr_link.sh_offset + sym.st_name, 0);
-					file_read(fd, tmp, sym.st_size);
-
-					tmp[sym.st_size] = 0;
-
-					if (strcmp(tmp, "_start") == 0)
-						jstart = sym.st_value;
-				}
-			}
-		}
-
-		file_close(fd);
-
-		if (jstart != 0)
-		{
-			uart_tx_print("Starting KERNAL...\n");
-			__asm__ volatile (
-				"fence					\n"
-				"mv		sp, %0			\n"
-				:
-				: "r" (sp)
-			);
-
-			((call_fn_t)jstart)();
-		}
-		
-		// If we've reach here then we cannot continue.
-		uart_tx_print("Unknown error\n");
-		fatal_error(3);
-	}
-	else	// No kernal.elf found, fall back to UART.
-*/
+	if (/* boot mode */ 1)
 	{
 		for (;;)
 		{

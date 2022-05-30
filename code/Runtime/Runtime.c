@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
@@ -9,9 +10,7 @@
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
 
-extern void crt_init();
-
-int32_t __attribute__((used)) runtime_init()
+int32_t runtime_init()
 {
 	crt_init();
 
@@ -27,8 +26,8 @@ int32_t __attribute__((used)) runtime_init()
 
 	printf("** FREQUENCY: %d MHz **\n", timer_get_frequency() / 1000000);
 
-	//printf("** Initialize IRQ handler **\n");
-	// interrupt_init();
+	printf("** Initialize IRQ handler **\n");
+	interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)

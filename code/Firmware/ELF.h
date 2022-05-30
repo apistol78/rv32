@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Runtime/HAL/Common.h"
+
 #define EI_NIDENT 16
 
 #pragma pack(1)

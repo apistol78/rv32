@@ -114,7 +114,8 @@ int mkdir(const char* path, mode_t mode)
 	return -1;
 }
 
-void __attribute__((__used__)) crt_init()
+int32_t crt_init()
 {
 	_sbrk(0);
+	return 0;
 }

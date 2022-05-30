@@ -628,41 +628,6 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="Filter">
-					<name>FatFs</name>
-					<items>
-						<item type="Filter">
-							<name>source</name>
-							<items>
-								<item type="File">
-									<fileName>FatFs/source/ff.c</fileName>
-									<items/>
-								</item>
-								<item type="File">
-									<fileName>FatFs/source/ff.h</fileName>
-									<items/>
-								</item>
-								<item type="File">
-									<fileName>FatFs/source/ffconf.h</fileName>
-									<items/>
-								</item>
-							</items>
-						</item>
-					</items>
-				</item>
-				<item type="Filter">
-					<name>HAL</name>
-					<items>
-						<item type="File">
-							<fileName>HAL/*.c</fileName>
-							<items/>
-						</item>
-						<item type="File">
-							<fileName>HAL/*.h</fileName>
-							<items/>
-						</item>
-					</items>
-				</item>
 				<item type="File">
 					<fileName>*.s</fileName>
 					<items/>
@@ -676,7 +641,13 @@
 					<items/>
 				</item>
 			</items>
-			<dependencies/>
+			<dependencies>
+				<item type="ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
 		</item>
 		<item type="Project" version="1">
 			<enable>true</enable>
