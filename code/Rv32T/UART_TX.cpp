@@ -7,11 +7,16 @@ using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"UART_TX", UART_TX, Device)
 
+UART_TX::UART_TX(CData& vpin)
+:	m_vpin(vpin)
+{
+}
+
 void UART_TX::eval(VSoC* soc, uint64_t /*time*/)
 {
 	const int32_t T = 100000000 / 115200;
 
-	auto& tx = soc->UART_TX;
+	auto& tx = m_vpin; // soc->UART_TX;
 
 	switch (m_state)
 	{

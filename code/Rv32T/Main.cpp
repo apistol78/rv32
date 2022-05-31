@@ -296,7 +296,8 @@ int main(int argc, const char **argv)
 	RefArray< Device > devices;
 	devices.push_back(&hdmi);
 	devices.push_back(new LEDR());
-	devices.push_back(new UART_TX());
+	devices.push_back(new UART_TX(soc->UART_TX));
+	devices.push_back(new UART_TX(soc->UART_1_TX));
 	devices.push_back(new SD());
 
 	// Create receiving UART.
@@ -310,7 +311,7 @@ int main(int argc, const char **argv)
 		}
 
 		Ref< IStream > target = new net::SocketStream(socket, true, true, 1000);
-		devices.push_back(new UART_RX(target));
+		devices.push_back(new UART_RX(target, soc->UART_RX));
 	}
 
 	// Add audio device to record PWM audio.
@@ -438,8 +439,8 @@ int main(int argc, const char **argv)
 				stallExecute++;
 			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
 				stallMemory++;
-			if (soc->SoC__DOT__vmode_chunky__DOT__wbuffer__DOT__stall)
-				stallVideo++;
+			// if (soc->SoC__DOT__vmode_chunky__DOT__wbuffer__DOT__stall)
+			// 	stallVideo++;
 
 			key1 = false;
 			reset = false;

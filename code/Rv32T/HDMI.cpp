@@ -50,7 +50,7 @@ void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 
 	if (!m_clk && clk)
 	{
-		const int32_t x = m_hpos - 144;
+		const int32_t x = m_hpos - 48; // - (96 + 48);
 		const int32_t y = m_vpos;
 		if (x >= 0 && x < 640 && y >= 0 && y < 480)
 		{

@@ -15,6 +15,8 @@ module VMODE_chunky #(
 	output bit o_cpu_ready,
 
 	// Video
+	input i_video_hsync,
+	input i_video_vsync,
 	input i_video_request,
 	input [8:0] i_video_pos_x,
 	input [8:0] i_video_pos_y,
@@ -66,12 +68,8 @@ module VMODE_chunky #(
 		.o_pb_ready()
 	);
 
-	bit [3:0] state = 0;
-	bit [31:0] quad [3:0];
 	bit [31:0] cpu_offset = 0;
 	bit [31:0] vram_offset = 0;
-
-	wire [1:0] byte_index = i_video_pos_x[1:0];
 
 	initial begin
 		o_cpu_ready = 1'b0;
@@ -91,38 +89,19 @@ module VMODE_chunky #(
 	//===============================
 	// CPU
 
-	bit wbuffer_request = 0;
-	wire wbuffer_ready;
-
-	WriteBuffer wbuffer(
-		.i_reset(1'b0),
-		.i_clock(i_clock),
-
-		.o_bus_rw(o_vram_pa_rw),
-		.o_bus_request(o_vram_pa_request),
-		.i_bus_ready(i_vram_pa_ready),
-		.o_bus_address(o_vram_pa_address),
-		.i_bus_rdata(i_vram_pa_rdata),
-		.o_bus_wdata(o_vram_pa_wdata),
-
-		.i_rw(i_cpu_rw),
-		.i_request(wbuffer_request),
-		.o_ready(wbuffer_ready),
-		.i_address(cpu_offset + i_cpu_address),
-		.o_rdata(o_cpu_rdata),
-		.i_wdata(i_cpu_wdata)
-	);
-
 	always_ff @(posedge i_clock) begin
-		o_cpu_ready <= 0;
-
 		palette_cpu_request <= 0;
-		wbuffer_request <= 0;
+		o_vram_pa_request <= 0;
+		o_cpu_ready <= 0;
 
 		if (i_cpu_request) begin
 			if (i_cpu_address < 32'h00800000) begin
-				wbuffer_request <= 1;
-				o_cpu_ready <= wbuffer_ready;
+				o_vram_pa_address <= cpu_offset + i_cpu_address;
+				o_vram_pa_request <= 1;
+				o_vram_pa_rw <= i_cpu_rw;
+				o_vram_pa_wdata <= i_cpu_wdata;
+				o_cpu_rdata = i_vram_pa_rdata;
+				o_cpu_ready <= i_vram_pa_ready;
 			end
 			else if (i_cpu_address < 32'h00810000) begin
 				palette_cpu_request <= 1;
@@ -138,69 +117,75 @@ module VMODE_chunky #(
 				o_cpu_ready <= 1;
 			end
 		end
-	end
+	end	
 
 	//===============================
 	// Video
 
+	bit [31:0] line [0:PPITCH/4];
+	bit [10:0] count;
+
+	typedef enum bit [1:0]
+	{
+		WAIT_HBLANK = 2'd0,
+		SETUP_READ_LINE = 2'd1,
+		WAIT_MEMORY = 2'd2
+	}
+	state_t;
+
+	state_t read_state = WAIT_HBLANK;
+
+	bit [1:0] hs = 2'b00;
 	always_ff @(posedge i_clock) begin
-		case (i_video_pos_x & 3)
-		0: o_video_rdata <= quad[0];
-		1: o_video_rdata <= quad[1];
-		2: o_video_rdata <= quad[2];
-		3: o_video_rdata <= quad[3];
+		hs <= { hs[0], i_video_hsync };
+	end
+
+	always_ff @(posedge i_clock) begin
+		case (read_state)
+			WAIT_HBLANK: begin
+				if (hs == 2'b01 && !i_video_vsync) begin
+					read_state <= SETUP_READ_LINE;
+				end
+			end
+
+			SETUP_READ_LINE: begin
+				o_vram_pb_address <= vram_offset + (i_video_pos_y * PPITCH);
+				o_vram_pb_request <= 1;
+				count <= 0;
+				read_state <= WAIT_MEMORY;
+			end
+
+			WAIT_MEMORY: begin
+				if (i_vram_pb_ready) begin
+
+					line[count] <= i_vram_pb_rdata;
+					count <= count + 1;
+
+					if (count < PPITCH/4-1) begin
+						o_vram_pb_address <= o_vram_pb_address + 4;
+						o_vram_pb_request <= 1;						
+					end
+					else begin
+						o_vram_pb_request <= 0;
+						read_state <= WAIT_HBLANK;
+					end
+					
+				end
+			end
+
+			default: begin
+				read_state <= WAIT_HBLANK;
+			end
 		endcase
 	end
 
-	bit [31:0] tmp_rdata;
-
-	always_ff @(posedge i_clock) begin
-	
-		o_vram_pb_request <= 0;
-		o_vram_pb_rw <= 0;
-		o_vram_pb_wdata <= 0;
-	
-		case (state)
-			0: begin
-				if ((i_video_pos_x & 3) == 0) begin
-					o_vram_pb_address <= vram_offset + (i_video_pos_x & ~3) + (i_video_pos_y * PPITCH);
-					o_vram_pb_request <= 1;
-					state <= 1;
-				end
-			end
-
-			1: begin
-				o_vram_pb_request <= !i_vram_pb_ready;
-				if (i_vram_pb_ready) begin
-					o_vram_pb_request <= 0;
-					tmp_rdata <= i_vram_pb_rdata;
-					palette_video_address <= i_vram_pb_rdata[7:0];
-					state <= 2;
-				end
-			end
-
-			2: begin
-				quad[0] <= palette_video_rdata;
-				palette_video_address <= tmp_rdata[15:8];
-				state <= 3;
-			end
-
-			3: begin
-				quad[1] <= palette_video_rdata;
-				palette_video_address <= tmp_rdata[23:16];
-				state <= 4;
-			end
-
-			4: begin
-				quad[2] <= palette_video_rdata;
-				palette_video_address <= tmp_rdata[31:24];
-				state <= 5;
-			end
-
-			5: begin
-				quad[3] <= palette_video_rdata;
-				state <= 0;
-			end
+	always_comb begin
+		o_video_rdata = palette_video_rdata;
+		case (i_video_pos_x & 3)
+			0: palette_video_address = line[i_video_pos_x[8:2]][7:0];
+			1: palette_video_address = line[i_video_pos_x[8:2]][15:8];
+			2: palette_video_address = line[i_video_pos_x[8:2]][23:16];
+			3: palette_video_address = line[i_video_pos_x[8:2]][31:24];
 		endcase
 	end
 

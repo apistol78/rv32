@@ -33,12 +33,10 @@ int32_t video_init()
 			return 1;
 		}
 
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(320 * 200)) == 0)
-			return 1;	
+		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset		
+		control[0] = 0;			// GPU read offset
+		control[1] = 320 * 240;	// CPU write offset	
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
@@ -110,8 +108,7 @@ void video_swap()
 {
 	if (
 		timer_get_device_id() == TIMER_DEVICE_ID_RV32 ||
-		timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2 ||
-		timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX
+		timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2
 	)
 	{
 		memcpy(primary_target, secondary_target, 320 * 240);

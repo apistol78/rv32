@@ -561,6 +561,8 @@ module SoC(
 	assign HDMI_TX_CLK = clock_video;
 
 	// Video signal generator
+	wire vga_hsync;
+	wire vga_vsync;
 	wire vga_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
@@ -576,12 +578,15 @@ module SoC(
 	) vga(
 		.i_clock(clock_video),
 		.i_clock_out(clock),
-		.o_hsync(HDMI_TX_HS),
-		.o_vsync(HDMI_TX_VS),
+		.o_hsync(vga_hsync),
+		.o_vsync(vga_vsync),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y)
 	);
+
+	assign HDMI_TX_HS = vga_hsync;
+	assign HDMI_TX_VS = vga_vsync;	
 	
 	// Video physical memory.
 	wire video_sram_request;
@@ -677,6 +682,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		// Video signal interface.
+		.i_video_hsync(vga_hsync),
+		.i_video_vsync(vga_vsync),
 		.i_video_request(vga_enable),
 		.i_video_pos_x(vga_pos_x[9:1]),
 		.i_video_pos_y(vga_pos_y[9:1]),
@@ -712,7 +719,7 @@ module SoC(
 	wire bridge_far_ready;
 
 	BRIDGE #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),

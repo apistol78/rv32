@@ -4,58 +4,37 @@
 
 module SoC(
 
-	output AUDIO_PWM,
+	output				AUDIO_PWM,
 
-	///////// CLOCK /////////
-	input CLOCK_125_p, ///LVDS
-	input CLOCK_50_B5B, ///3.3-V LVTTL
-	input CLOCK_50_B6A,
-	input CLOCK_50_B7A, ///2.5 V
-	input CLOCK_50_B8A,
+	input				CLOCK_125_p,
 
-	///////// CPU /////////
-	input CPU_RESET_n, ///3.3V LVTTL
+	input 				CPU_RESET_n, ///3.3V LVTTL
 
-	///////// GPIO ///////// 3.3-V LVTTL ///////
-	inout [35:0] GPIO,
+	output             	HDMI_TX_CLK,
+	output      [23:0] 	HDMI_TX_D,
+	output             	HDMI_TX_DE,
+	output             	HDMI_TX_HS,
+	input              	HDMI_TX_INT,
+	output             	HDMI_TX_VS,
 
-	///////// HDMI /////////
-	output             HDMI_TX_CLK,
-	output      [23:0] HDMI_TX_D,
-	output             HDMI_TX_DE,
-	output             HDMI_TX_HS,
-	input              HDMI_TX_INT,
-	output             HDMI_TX_VS,
+	output             	I2C_SCL,
+	inout              	I2C_SDA,
 
-	///////// I2C ///////// 2.5 V ///////
-	output             I2C_SCL,
-	inout              I2C_SDA,
+	input       [3:0]  	KEY,
 
-	///////// KEY ///////// 1.2 V ///////
-	input       [3:0]  KEY,
+	output      [9:0]  	LEDR,
 
-	///////// LEDR ///////// 2.5 V ///////
-	output      [9:0]  LEDR,
+	output             	SD_CLK,
+	input              	SD_CMD_in,
+	input       [3:0]  	SD_DAT_in,
+	output             	SD_CMD_out,
+	output      [3:0]  	SD_DAT_out,
 
-	///////// SD ///////// 3.3-V LVTTL ///////
-	output             SD_CLK,
-	input              SD_CMD_in,
-	input       [3:0]  SD_DAT_in,
-	output             SD_CMD_out,
-	output      [3:0]  SD_DAT_out,
+	input              	UART_RX,
+	output             	UART_TX,
 
-	///////// SRAM ///////// 3.3-V LVTTL ///////
-	output      [17:0] SRAM_A,
-	output             SRAM_CE_n,
-	inout       [15:0] SRAM_D,
-	output             SRAM_LB_n,
-	output             SRAM_OE_n,
-	output             SRAM_UB_n,
-	output             SRAM_WE_n,
-
-	///////// UART ///////// 2.5 V ///////
-	input              UART_RX,
-	output             UART_TX
+	input              	UART_1_RX,
+	output             	UART_1_TX
 );
 
 `define FREQUENCY 100000000
@@ -327,6 +306,29 @@ module SoC(
 		.UART_TX(UART_TX)
 	);
 
+	// UART (IO)
+	wire uart_1_select;
+	wire [1:0] uart_1_address;
+	wire [31:0] uart_1_rdata;
+	wire uart_1_ready;
+	wire uart_1_interrupt;
+	UART #(
+		.PRESCALE(`FREQUENCY / (115200 * 8))
+	) uart_1(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(uart_1_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(uart_1_address),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(uart_1_rdata),
+		.o_ready(uart_1_ready),
+		.o_interrupt(uart_1_interrupt),
+		// ---
+		.UART_RX(UART_1_RX),
+		.UART_TX(UART_1_TX)
+	);
+
 	// I2C
 	wire i2c_select;
 	wire [31:0] i2c_rdata;
@@ -463,7 +465,7 @@ module SoC(
 
 		.i_interrupt_0(0),					// Video
 		.i_interrupt_1(audio_interrupt),	// Audio
-		.i_interrupt_2(uart_0_interrupt),	// UART
+		.i_interrupt_2(uart_0_interrupt | uart_1_interrupt),	// UART
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),
@@ -492,6 +494,8 @@ module SoC(
 	);
 
 	// Video signal generator.
+	wire vga_hsync;
+	wire vga_vsync;
 	wire vga_enable;
 	wire [9:0] vga_pos_x;
 	wire [9:0] vga_pos_y;
@@ -504,16 +508,19 @@ module SoC(
 		.VLINE(525),	// whole frame
 		.VBACK(33),		// back porch
 		.VFRONT(10),	// front porch
-		.VPULSE(2)		// sync pulse		
+		.VPULSE(2)		// sync pulse	
 	) vga(
 		.i_clock(vga_clock),
 		.i_clock_out(clock),
-		.o_hsync(HDMI_TX_HS),
-		.o_vsync(HDMI_TX_VS),
+		.o_hsync(vga_hsync),
+		.o_vsync(vga_vsync),
 		.o_data_enable(vga_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y)
 	);
+
+	assign HDMI_TX_HS = vga_hsync;
+	assign HDMI_TX_VS = vga_vsync;
 	
 	// Video memory.
 	wire vram_pa_request;
@@ -532,7 +539,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*320*200),
+		.SIZE(2*320*240),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),
@@ -572,6 +579,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		// Video signal interface.
+		.i_video_hsync(vga_hsync),
+		.i_video_vsync(vga_vsync),
 		.i_video_request(vga_enable),
 		.i_video_pos_x(vga_pos_x[9:1]),
 		.i_video_pos_y(vga_pos_y[9:1]),
@@ -632,6 +641,9 @@ module SoC(
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
 
+	assign uart_1_select = bridge_far_address[27:24] == 4'h2;
+	assign uart_1_address = bridge_far_address[3:2];
+
 	assign i2c_select = bridge_far_address[27:24] == 4'h3;
 
 	assign sd_select = bridge_far_address[27:24] == 4'h4;
@@ -652,6 +664,7 @@ module SoC(
 
 	assign bridge_far_rdata =
 		uart_0_select	? uart_0_rdata	:
+		uart_1_select	? uart_1_rdata	:
 		i2c_select		? i2c_rdata		:
 		sd_select		? sd_rdata		:
 		timer_select	? timer_rdata	:
@@ -664,6 +677,7 @@ module SoC(
 	assign bridge_far_ready =
 		led_select		? led_ready		:
 		uart_0_select	? uart_0_ready	:
+		uart_1_select	? uart_1_ready	:
 		i2c_ready		? i2c_ready		:
 		sd_select		? sd_ready		:
 		timer_select	? timer_ready	:
@@ -722,7 +736,7 @@ module SoC(
 			vram_select,
 			led_select,
 			uart_0_select,
-			1'b0,
+			uart_1_select,
 			1'b0,
 			sd_select,
 			i2c_select,
