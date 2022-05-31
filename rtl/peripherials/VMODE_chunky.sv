@@ -152,6 +152,8 @@ module VMODE_chunky #(
 		endcase
 	end
 
+	bit [31:0] tmp_rdata;
+
 	always_ff @(posedge i_clock) begin
 	
 		o_vram_pb_request <= 0;
@@ -168,29 +170,30 @@ module VMODE_chunky #(
 			end
 
 			1: begin
-				o_vram_pb_request <= 1;
+				o_vram_pb_request <= !i_vram_pb_ready;
 				if (i_vram_pb_ready) begin
 					o_vram_pb_request <= 0;
-					palette_video_address = i_vram_pb_rdata[7:0];
+					tmp_rdata <= i_vram_pb_rdata;
+					palette_video_address <= i_vram_pb_rdata[7:0];
 					state <= 2;
 				end
 			end
 
 			2: begin
 				quad[0] <= palette_video_rdata;
-				palette_video_address = i_vram_pb_rdata[15:8];
+				palette_video_address <= tmp_rdata[15:8];
 				state <= 3;
 			end
 
 			3: begin
 				quad[1] <= palette_video_rdata;
-				palette_video_address = i_vram_pb_rdata[23:16];
+				palette_video_address <= tmp_rdata[23:16];
 				state <= 4;
 			end
 
 			4: begin
 				quad[2] <= palette_video_rdata;
-				palette_video_address = i_vram_pb_rdata[31:24];
+				palette_video_address <= tmp_rdata[31:24];
 				state <= 5;
 			end
 

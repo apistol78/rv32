@@ -47,6 +47,9 @@ module SoC(
 	input              DDR2LP_OCT_RZQ, ///1.2 V
 `endif /*ENABLE_DDR2LP*/
 
+	input				uart_1_rx,	// PIN_T21	GPIO[0]
+	output				uart_1_tx,	// PIN_D26	GPIO[1]
+/*
 `ifdef ENABLE_GPIO
 	///////// GPIO ///////// 3.3-V LVTTL ///////
 	inout       [35:0] GPIO,
@@ -56,7 +59,8 @@ module SoC(
 
 	///////// HEX3 ///////// 1.2 V ///////
 	output      [6:0]  HEX3,		
-`endif /*ENABLE_GPIO*/
+`endif
+*/
 
 	///////// HDMI /////////
 	output             HDMI_TX_CLK,
@@ -140,17 +144,8 @@ module SoC(
 
 `define FREQUENCY 100000000
 
-// `define SOC_ENABLE_SDRAM_L2CACHE
-`define SOC_ENABLE_VGA
-`define SOC_ENABLE_UART
-// `define SOC_ENABLE_GPIO
-`define SOC_ENABLE_I2C
-`define SOC_ENABLE_SD
-`define SOC_ENABLE_AUDIO
-
 	wire clock;
 	wire clock_video;
-	wire clock_sdram_ref = CLOCK_125_p;
 	
 	IP_PLL_Clk pll_clk(
 		.refclk(CLOCK_125_p),
@@ -220,17 +215,16 @@ module SoC(
 	SDRAM_interface sdram(
 		.i_global_reset_n(global_reset_n),
 		.i_soft_reset_n(soft_reset_n),
-		.i_clock_pll_ref(clock_sdram_ref),
-		
+		.i_clock_pll_ref(clock),
 		// ---
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(l2cache_bus_request),
-		.i_rw(l2cache_bus_rw),
-		.i_address(l2cache_bus_address),
-		.i_wdata(l2cache_bus_wdata),
-		.o_rdata(l2cache_bus_rdata),
-		.o_ready(l2cache_bus_ready),
+		.i_request(sdram_select && bus_request),
+		.i_rw(bus_rw),
+		.i_address(sdram_address),
+		.i_wdata(bus_wdata),
+		.o_rdata(sdram_rdata),
+		.o_ready(sdram_ready),
 		// ---
 		.DDR2LP_CA(DDR2LP_CA),
 		.DDR2LP_CKE(DDR2LP_CKE),
@@ -243,40 +237,6 @@ module SoC(
 		.DDR2LP_DQS_p(DDR2LP_DQS_p),
 		.DDR2LP_OCT_RZQ(DDR2LP_OCT_RZQ)
 	);
-
-	wire l2cache_bus_rw;
-	wire l2cache_bus_request;
-	wire l2cache_bus_ready;
-	wire [31:0] l2cache_bus_address;
-	wire [31:0] l2cache_bus_rdata;
-	wire [31:0] l2cache_bus_wdata;
-`ifdef SOC_ENABLE_SDRAM_L2CACHE
-	L2_Cache l2cache(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		.o_bus_rw(l2cache_bus_rw),
-		.o_bus_request(l2cache_bus_request),
-		.i_bus_ready(l2cache_bus_ready),
-		.o_bus_address(l2cache_bus_address),
-		.i_bus_rdata(l2cache_bus_rdata),
-		.o_bus_wdata(l2cache_bus_wdata),
-
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready)
-	);
-`else
-	assign l2cache_bus_request = sdram_select && bus_request;
-	assign l2cache_bus_rw = bus_rw;
-	assign sdram_ready = l2cache_bus_ready;
-	assign l2cache_bus_address = sdram_address;
-	assign sdram_rdata = l2cache_bus_rdata;
-	assign l2cache_bus_wdata = bus_wdata;
-`endif
 
 	//====================================================
 	// BUS
@@ -293,6 +253,7 @@ module SoC(
 	wire bus_pa_ready;
 	wire [31:0] bus_pa_address;
 	wire [31:0] bus_pa_rdata;
+	wire bus_pa_busy;
 
 	wire bus_pb_rw;
 	wire bus_pb_request;
@@ -302,7 +263,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(0)
+	   .REGISTERED(1)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -320,6 +281,7 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
+		.o_pa_busy(bus_pa_busy),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
@@ -381,7 +343,7 @@ module SoC(
 	);
 	
 	// 7:0
-	assign LEDG = { 1'b0, 1'b0, cpu_fault };
+	assign LEDG = { uart_1_rx, uart_1_tx, cpu_fault };
 
 	//=====================================
 
@@ -473,8 +435,8 @@ module SoC(
 		.o_ready(uart_1_ready),
 		.o_interrupt(uart_1_interrupt),
 		// ---
-		.UART_RX(GPIO[0]),
-		.UART_TX(GPIO[1])
+		.UART_RX(uart_1_rx),
+		.UART_TX(uart_1_tx)
 	);
 
 	// I2C
@@ -600,17 +562,17 @@ module SoC(
 
 	// Video signal generator
 	wire vga_enable;
-	wire [9:0] vga_pos_x;
-	wire [9:0] vga_pos_y;
+	wire [10:0] vga_pos_x;
+	wire [10:0] vga_pos_y;
 	VIDEO_VGA #(
-		.HLINE(800),
-		.HBACK(144),
-		.HFRONT(16),
-		.HPULSE(96),
-		.VLINE(449),
-		.VBACK(36),
-		.VFRONT(13),
-		.VPULSE(2)
+		.HLINE(800),	// whole line
+		.HBACK(48),		// back porch
+		.HFRONT(16),	// front porch
+		.HPULSE(96),	// sync pulse
+		.VLINE(525),	// whole frame
+		.VBACK(33),		// back porch
+		.VFRONT(10),	// front porch
+		.VPULSE(2)		// sync pulse
 	) vga(
 		.i_clock(clock_video),
 		.i_clock_out(clock),
@@ -749,7 +711,9 @@ module SoC(
 	wire [31:0] bridge_far_rdata;
 	wire bridge_far_ready;
 
-	BRIDGE bridge(
+	BRIDGE #(
+		.REGISTERED(1)
+	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),
 

@@ -56,13 +56,19 @@ int DG_GetKey(int* pressed, unsigned char* doomKey)
 		switch (ikc)
 		{
 		case RT_KEY_LEFT:
-		case RT_KEY_A:
 			*doomKey = KEY_LEFTARROW;
 			break;
 
+		case RT_KEY_A:
+			*doomKey = KEY_STRAFE_L;
+			break;
+
 		case RT_KEY_RIGHT:
-		case RT_KEY_D:
 			*doomKey = KEY_RIGHTARROW;
+			break;
+
+		case RT_KEY_D:
+			*doomKey = KEY_STRAFE_R;
 			break;
 
 		case RT_KEY_UP:

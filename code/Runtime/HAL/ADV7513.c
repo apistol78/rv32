@@ -9,7 +9,7 @@
 #define ADV7513_REG_CHIP_ID_HIGH	0xf5
 #define ADV7513_REG_CHIP_ID_LOW		0xf6
 
-#define SLAVE_ADDR 					0x72
+#define SLAVE_ADDR 					(0x72 >> 1)
 
 static const struct {
 	uint8_t reg;
@@ -88,7 +88,7 @@ static void adv7513_kick_up()
 static void adv7513_power_up()
 {
 	for (int32_t i = 0; i < sizeof(defaultConfig) / sizeof(defaultConfig[0]); ++i)
-		i2c_write(0x72, defaultConfig[i].reg, defaultConfig[i].val);
+		i2c_write(SLAVE_ADDR, defaultConfig[i].reg, defaultConfig[i].val);
 }
 
 static void adv7513_interrupt_handler()

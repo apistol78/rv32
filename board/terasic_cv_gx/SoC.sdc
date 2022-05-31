@@ -32,11 +32,11 @@ derive_clock_uncertainty
 #set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {CLOCK_125_p}]
 
 set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}]
-set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
+#set_false_path -from [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
 
-set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}]
-set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
-set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll7~PLL_OUTPUT_COUNTER|divclk}]
+#set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll1~PLL_OUTPUT_COUNTER|divclk}]
+#set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll6~PLL_OUTPUT_COUNTER|divclk}]
+#set_false_path -from [get_clocks {pll_clk|ip_pll_clk_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}] -to [get_clocks {sdram|sdram|ip_sdram_inst|pll0|pll7~PLL_OUTPUT_COUNTER|divclk}]
 
 # register forward path, suspect it's a false path since we assume result from last cycle.
 set_false_path -from {CPU:cpu|CPU_Execute:execute|data.inst_rd[*]~DUPLICATE} -to {CPU:cpu|CPU_Execute:execute|data.rd[*]}

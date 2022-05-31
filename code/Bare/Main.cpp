@@ -245,6 +245,8 @@ int main()
 
 	for (;;)
 	{
+		runtime_update();
+
 		static int count = 0;
 		if (++count >= 60)
 		{

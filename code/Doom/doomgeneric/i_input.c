@@ -320,8 +320,8 @@ void I_GetEvent(void)
     {
         event.type = ev_mouse;
         event.data1 = btns;
-        event.data2 = x;
-        event.data3 = -y;
+        event.data2 = x * 16;
+        event.data3 = -y * 8;
         D_PostEvent(&event);
     }
 }

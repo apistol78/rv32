@@ -34,7 +34,9 @@ module SDRAM_interface(
 	wire local_init_done;
 	wire local_cal_success;
 	wire pll_locked;
-	wire pll_avl_clk;
+	
+	assign DDR2LP_CKE[1] = 1'b0;
+	assign DDR2LP_CS_n[1] = 1'b0;
 	
 	IP_SDRAM sdram(
 		.pll_ref_clk(i_clock_pll_ref),

@@ -33,10 +33,10 @@ package require ::quartus::ddr_timing_model
 ###################
 
 # Interface Clock Period
-set t(CK) 3.333
+set t(CK) 2.5
 
 # Reference Clock Period
-set t(refCK) 8.0
+set t(refCK) 10.0
 
 # Minimum Clock Period
 set t(min_CK) 2.5
@@ -91,7 +91,7 @@ set t(DCD) 0.0
 set t(RL) 7
 set t(WL) 4
 set t(DWIDTH_RATIO) [expr { 1 * 2 }]
-set t(rd_to_wr_turnaround_oct) 4
+set t(rd_to_wr_turnaround_oct) 5
 
 #####################
 # FPGA specifications

@@ -16,9 +16,14 @@ static int32_t current = 0;
 
 int32_t video_init()
 {
+	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
+
 	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32T)
 	{
 		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+
+		control[0] = 0;			// GPU read offset
+		control[1] = 320 * 240;	// CPU write offset		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
 	{
@@ -27,7 +32,13 @@ int32_t video_init()
 			printf("Failed to initialize ADV7513; unable to initialize video.\n");
 			return 1;
 		}
-		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(320 * 200)) == 0)
+			return 1;	
+
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
@@ -36,10 +47,13 @@ int32_t video_init()
 			printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
 		}		
-		//secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		if ((secondary_target = malloc(320 * 200)) == 0)
 			return 1;		
+
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
 	{
@@ -49,22 +63,24 @@ int32_t video_init()
 			return 1;
 		}		
 		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+
+		control[0] = 0;			// GPU read offset
+		control[1] = 320 * 240;	// CPU write offset		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		if ((secondary_target = malloc(320 * 200)) == 0)
 			return 1;
+
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset		
 	}
 	else
 	{
 		printf("Unknown device; unable to initialize video.\n");
 		return 1;
 	}
-
-	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
-	control[0] = 0;			// GPU read offset
-	control[1] = 320 * 240;	// CPU write offset
 
 	return 0;
 }
@@ -92,7 +108,11 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32 || timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
+	if (
+		timer_get_device_id() == TIMER_DEVICE_ID_RV32 ||
+		timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2 ||
+		timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX
+	)
 	{
 		memcpy(primary_target, secondary_target, 320 * 240);
 	}

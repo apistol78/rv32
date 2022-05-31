@@ -152,7 +152,7 @@ module CPU_Execute (
 
 	// ====================
 
-	assign o_csr_index = i_data.imm;
+	assign o_csr_index = i_data.imm[11:0];
 	assign o_data = data;
 
 	bit [3:0] cycle = 0;
