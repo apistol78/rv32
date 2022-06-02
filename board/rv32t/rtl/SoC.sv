@@ -501,6 +501,8 @@ module SoC(
 	wire [9:0] vga_pos_y;
 
 	VIDEO_VGA #(
+		/*
+		// 640 * 480 * 60hz
 		.HLINE(800),	// whole line
 		.HBACK(48),		// back porch
 		.HFRONT(16),	// front porch
@@ -508,7 +510,17 @@ module SoC(
 		.VLINE(525),	// whole frame
 		.VBACK(33),		// back porch
 		.VFRONT(10),	// front porch
-		.VPULSE(2)		// sync pulse	
+		.VPULSE(2)		// sync pulse
+		*/
+		// 640 * 400 * 70hz
+		.HLINE(800),	// whole line
+		.HBACK(48),		// back porch
+		.HFRONT(16),	// front porch
+		.HPULSE(96),	// sync pulse
+		.VLINE(449),	// whole frame
+		.VBACK(35),		// back porch
+		.VFRONT(12),	// front porch
+		.VPULSE(2)		// sync pulse		
 	) vga(
 		.i_clock(vga_clock),
 		.i_clock_out(clock),
@@ -539,7 +551,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*320*240),
+		.SIZE(2*320*200),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),

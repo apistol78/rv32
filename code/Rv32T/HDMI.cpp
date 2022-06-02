@@ -12,7 +12,7 @@ HDMI::HDMI()
 	m_image = new drawing::Image(
 		drawing::PixelFormat::getX8R8G8B8(),
 		640,
-		480
+		400
 	);
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f)); 
 }
@@ -51,12 +51,11 @@ void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 	if (!m_clk && clk)
 	{
 		const int32_t x = m_hpos - 48; // - (96 + 48);
-		const int32_t y = m_vpos;
-		if (x >= 0 && x < 640 && y >= 0 && y < 480)
+		const int32_t y = m_vpos - 35;
+		if (x >= 0 && x < m_image->getWidth() && y >= 0 && y < m_image->getHeight())
 		{
 			uint32_t* id = (uint32_t*)m_image->getData();
-			id[x + y * 640] = d;
-			// m_dirty = true;
+			id[x + y * m_image->getWidth()] = d;
 		}
 		m_hpos++;
 	}

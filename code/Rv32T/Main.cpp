@@ -234,7 +234,7 @@ int main(int argc, const char **argv)
 			slow = !slow;
 		});
 
-		framebuffer = new ui::Bitmap(640, 480);
+		framebuffer = new ui::Bitmap(640, 400);
 		
 		Ref< ui::Container > containerImage = new ui::Container();
 		containerImage->create(form, ui::WsNone, new ui::FloodLayout());

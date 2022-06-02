@@ -6,6 +6,9 @@
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
+#define WIDTH 320
+#define HEIGHT 200
+
 #define VIDEO_DATA_BASE     VIDEO_BASE
 #define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
 #define VIDEO_CONTROL_BASE  (VIDEO_BASE + 0x00810000)
@@ -22,8 +25,8 @@ int32_t video_init()
 	{
 		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 
-		control[0] = 0;			// GPU read offset
-		control[1] = 320 * 240;	// CPU write offset		
+		control[0] = 0;					// GPU read offset
+		control[1] = WIDTH * HEIGHT;	// CPU write offset		
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
 	{
@@ -33,10 +36,12 @@ int32_t video_init()
 			return 1;
 		}
 
-		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
+			return 1;		
 
-		control[0] = 0;			// GPU read offset
-		control[1] = 320 * 240;	// CPU write offset	
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset	
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
 	{
@@ -47,7 +52,7 @@ int32_t video_init()
 		}		
 
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(320 * 200)) == 0)
+		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
 			return 1;		
 
 		control[0] = 0;	// GPU read offset
@@ -59,16 +64,24 @@ int32_t video_init()
 		{
 			printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
-		}		
-		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+		}
 
-		control[0] = 0;			// GPU read offset
-		control[1] = 320 * 240;	// CPU write offset		
+		// secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+
+		// control[0] = 0;					// GPU read offset
+		// control[1] = WIDTH * HEIGHT;	// CPU write offset
+
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
+			return 1;		
+
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset			
 	}
 	else if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(320 * 200)) == 0)
+		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
 			return 1;
 
 		control[0] = 0;	// GPU read offset
@@ -85,12 +98,12 @@ int32_t video_init()
 
 int32_t video_get_resolution_width()
 {
-	return 320;
+	return WIDTH;
 }
 
 int32_t video_get_resolution_height()
 {
-	return 240;
+	return HEIGHT;
 }
 
 void video_set_palette(uint8_t index, uint32_t color)
@@ -106,25 +119,22 @@ void* video_get_secondary_target()
 
 void video_swap()
 {
-	if (
-		timer_get_device_id() == TIMER_DEVICE_ID_RV32 ||
-		timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2
-	)
+	if (primary_target != 0)
 	{
-		memcpy(primary_target, secondary_target, 320 * 240);
+		memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 	}
 	else
 	{
 		volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 		if (current == 0)
 		{
-			control[0] = 320 * 240;	// GPU read offset
-			control[1] = 0;			// CPU write offset
+			control[0] = WIDTH * HEIGHT;	// GPU read offset
+			control[1] = 0;					// CPU write offset
 		}
 		else
 		{
-			control[0] = 0;			// GPU read offset
-			control[1] = 320 * 240;	// CPU write offset
+			control[0] = 0;					// GPU read offset
+			control[1] = WIDTH * HEIGHT;	// CPU write offset
 		}
 		current = 1 - current;
 	}

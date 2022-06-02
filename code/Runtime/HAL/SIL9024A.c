@@ -22,6 +22,10 @@
 #define SiI9022_DEVICE_ID				0xb0
 #define HOT_PLUG_EVENT					0x01
 
+// signal setup
+#define POSITIVE 0
+#define NEGATIVE 1
+
 static void modify_register_bits(uint8_t reg, uint8_t mask, uint8_t set)
 {
 	uint8_t tmp;
@@ -74,9 +78,18 @@ static int sil9024a_reset()
 
 	// select input bus characteristics.
 	const uint16_t clk = 2500;
-	const uint16_t vfreq = 60;
+	
+	// const uint16_t vfreq = 60;
+	// const uint16_t pixels = 800;
+	// const uint16_t lines = 525;
+	// const uint8_t vsync_pol = NEGATIVE;
+	// const uint8_t hsync_pol = NEGATIVE;
+
+	const uint16_t vfreq = 70;
 	const uint16_t pixels = 800;
-	const uint16_t lines = 525;
+	const uint16_t lines = 449;
+	const uint8_t vsync_pol = POSITIVE;
+	const uint8_t hsync_pol = NEGATIVE;
 
 	// pixel clock 25 MHz
 	i2c_write(TPI_ADDRESS, 0x00, clk & 255); i2c_write(TPI_ADDRESS, 0x01, clk >> 8);
@@ -93,8 +106,21 @@ static int sil9024a_reset()
 	i2c_write(TPI_ADDRESS, 0x08, 0b01110000);
 
 	modify_register_bits(0x60, 0b10000000, 0b00000000);	// external sync
-	modify_register_bits(0x61, 0b00000111, 0b00000000);	// non-interlaced, vsync active high, hsync active high
+	
+	modify_register_bits(0x61, 0b00000100, 0b00000000);	// non-interlaced
+
 	modify_register_bits(0x63, 0b01000000, 0b00000000);	// disable DE generator.
+
+	if (vsync_pol == POSITIVE)
+		modify_register_bits(0x61, 0b00000010, 0b00000000);
+	else
+		modify_register_bits(0x61, 0b00000010, 0b00000010);
+
+	if (hsync_pol == POSITIVE)
+		modify_register_bits(0x61, 0b00000001, 0b00000000);
+	else
+		modify_register_bits(0x61, 0b00000001, 0b00000001);
+
 
 	// disable TMDS
 	i2c_write(TPI_ADDRESS, 0x1a, 0x11);

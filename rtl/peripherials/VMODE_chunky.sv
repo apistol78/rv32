@@ -96,20 +96,23 @@ module VMODE_chunky #(
 
 		if (i_cpu_request) begin
 			if (i_cpu_address < 32'h00800000) begin
+				// Access video memory.
 				o_vram_pa_address <= cpu_offset + i_cpu_address;
 				o_vram_pa_request <= 1;
 				o_vram_pa_rw <= i_cpu_rw;
 				o_vram_pa_wdata <= i_cpu_wdata;
-				o_cpu_rdata = i_vram_pa_rdata;
+				o_cpu_rdata <= i_vram_pa_rdata;
 				o_cpu_ready <= i_vram_pa_ready;
 			end
 			else if (i_cpu_address < 32'h00810000) begin
+				// Access palette.
 				palette_cpu_request <= 1;
 				palette_cpu_address <= (i_cpu_address - 32'h00800000) >> 2;
 				palette_cpu_wdata <= i_cpu_wdata[23:0];
 				o_cpu_ready <= 1;
 			end
 			else begin
+				// Access control registers.
 				if (i_cpu_address[3:0] == 0)
 					vram_offset <= i_cpu_wdata;
 				else if (i_cpu_address[3:0] == 4)
