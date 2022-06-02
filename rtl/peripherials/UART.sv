@@ -2,7 +2,8 @@
 `timescale 1ns/1ns
 
 module UART #(
-    parameter PRESCALE = 50000000 / (9600 * 8)
+    parameter PRESCALE = 50000000 / (9600 * 8),
+	parameter RX_FIFO_DEPTH = 256
 )(
 	input i_reset,
 	input i_clock,
@@ -22,7 +23,8 @@ module UART #(
 	bit rx_request;
 	wire rx_ready;
 	UART_RX #(
-		.PRESCALE(PRESCALE)
+		.PRESCALE(PRESCALE),
+		.FIFO_DEPTH(RX_FIFO_DEPTH)
 	) rx(
 		.i_reset(i_reset),
 		.i_clock(i_clock),

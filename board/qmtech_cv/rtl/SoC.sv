@@ -237,8 +237,8 @@ module SoC(
 
 	CPU #(
 		.DCACHE_REGISTERED(0),
-		.ICACHE_SIZE(10),
-		.DCACHE_SIZE(10)
+		.ICACHE_SIZE(12),
+		.DCACHE_SIZE(13)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -323,7 +323,8 @@ module SoC(
 	wire uart_0_ready;
 	wire uart_0_interrupt;
 	UART #(
-		.PRESCALE(`FREQUENCY / (115200 * 8))
+		.PRESCALE(`FREQUENCY / (115200 * 8)),
+		.RX_FIFO_DEPTH(16)
 	) uart_0(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -346,7 +347,8 @@ module SoC(
 	wire uart_1_ready;
 	wire uart_1_interrupt;
 	UART #(
-		.PRESCALE(`FREQUENCY / (115200 * 8))
+		.PRESCALE(`FREQUENCY / (115200 * 8)),
+		.RX_FIFO_DEPTH(256)
 	) uart_1(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -611,7 +613,7 @@ module SoC(
 	wire vram_pb_busy;
 
 	BusAccess #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) vram_bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -706,7 +708,7 @@ module SoC(
 	wire bridge_far_ready;
 
 	BRIDGE #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),
