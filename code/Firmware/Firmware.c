@@ -5,6 +5,7 @@
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/HAL/SD.h"
+#include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/UART.h"
 
 typedef void (*call_fn_t)();
@@ -41,13 +42,12 @@ static void uart_tx_printHex(uint32_t v)
 
 static void fatal_error(uint8_t error)
 {
-	volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
 	for (;;)
 	{
-		*led = 0x80 | error;
+		sysreg_write(SR_REG_LEDS, 0x80 | error);
 		for (uint32_t i = 0; i < 1000000; ++i)
 			__asm__ volatile ("nop");
-		*led = 0x00 | error;
+		sysreg_write(SR_REG_LEDS, 0x00 | error);
 		for (uint32_t i = 0; i < 1000000; ++i)
 			__asm__ volatile ("nop");
 	}
@@ -55,8 +55,6 @@ static void fatal_error(uint8_t error)
 
 void main()
 {
-	volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
-
 	// Initialize segments when running from ROM.
 	{
 		extern uint8_t INIT_DATA_VALUES;
@@ -95,32 +93,30 @@ void main()
                 *dest++=0;		
 	}
 
-	/*
-	crt_init();
+	// crt_init();
 
-	printf("===============================================================================\n");
-	printf("                                 Rebel-V SoC                                   \n");
-	printf("                           created by Anders Pistol                            \n");
-	printf("                                    2022                                       \n");
-	printf("-------------------------------------------------------------------------------\n");
-	printf("                             firmware version 0.1                              \n");
-	printf("===============================================================================\n");
+	// printf("===============================================================================\n");
+	// printf("                                 Rebel-V SoC                                   \n");
+	// printf("                           created by Anders Pistol                            \n");
+	// printf("                                    2022                                       \n");
+	// printf("-------------------------------------------------------------------------------\n");
+	// printf("                             firmware version 0.1                              \n");
+	// printf("===============================================================================\n");
 
-	printf("initialize storage...\n");
-	sd_init();
+	// printf("initialize storage...\n");
+	// sd_init();
 
-	printf("initialize file system...\n");
-	file_init();
+	// printf("initialize file system...\n");
+	// file_init();
 
-	printf("ready.\n");
-	*/
+	// printf("ready...\n");
 
-	if (/* boot mode */ 1)
+	if ((sysreg_read(SR_REG_BM0) & 0x01) == 0x01)
 	{
 		for (;;)
 		{
 			uint8_t cmd = uart_rx_u8(0);
-			*led = (uint32_t)cmd;
+			sysreg_write(SR_REG_LEDS, cmd);
 
 			// poke
 			if (cmd == 0x01)

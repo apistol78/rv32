@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "Runtime/HAL/I2C.h"
 #include "Runtime/HAL/SIL9024A.h"
+#include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 
 #define TPI_ADDRESS 0x39
@@ -44,10 +45,9 @@ static int sil9024a_reset()
 	// Reset SIL9022 device.
 	for (;;)
 	{
-		volatile uint32_t* led = (volatile uint32_t*)LED_BASE;
-		*led = 0;
+		sysreg_modify(SR_REG_BM0, 0x02, 0x02);
 		timer_wait_ms(250);
-		*led = 1;
+		sysreg_modify(SR_REG_BM0, 0x02, 0x00);
 		timer_wait_ms(150);
 
 		// Set terminations.

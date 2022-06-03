@@ -212,5 +212,5 @@ void SD::process()
 		//log::info << L"acmd42" << Endl;
 	}
 	else
-		log::info << L"unkown command, " << str(L"%02x", c) << Endl;
+		log::info << L"[SD] Unknown command, " << str(L"%02x", c) << Endl;
 }

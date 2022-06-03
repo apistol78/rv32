@@ -270,19 +270,6 @@ module SoC(
 	// "NORTH" BRIDGE
 	//=====================================
 	
-
-	// LEDS
-	wire led_select;
-	wire led_ready;
-	LED led(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(led_select && bridge_far_request),
-		.i_wdata(bridge_far_wdata),
-		.o_ready(led_ready),
-		.LEDR(LEDR)
-	);
-
 	// UART (USB)
 	wire uart_0_select;
 	wire [1:0] uart_0_address;
@@ -478,6 +465,29 @@ module SoC(
 		.o_ready(plic_ready)
 	);
 
+	// System registers.
+	wire sysreg_select;
+	wire [1:0] sysreg_address;
+	wire [31:0] sysreg_rdata;
+	wire sysreg_ready;	
+	SystemRegisters sysreg(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// CPU
+		.i_request(sysreg_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(sysreg_address),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(sysreg_rdata),
+		.o_ready(sysreg_ready),
+
+		// Signals
+		.i_boot_mode_switch(1'b1),
+		.o_leds(LEDR),
+		.o_sil9024_reset()
+	);
+
 	// VIDEO
 	assign HDMI_TX_DE = vga_enable;
 	assign HDMI_TX_CLK = vga_clock;
@@ -648,8 +658,6 @@ module SoC(
 		.i_far_ready	(bridge_far_ready)
 	);
 
-	assign led_select = bridge_far_address[27:24] == 4'h0;
-
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
 
@@ -671,8 +679,12 @@ module SoC(
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 
+	assign sysreg_select = bridge_far_address[27:24] == 4'h9;
+	assign sysreg_address = bridge_far_address[3:2];
+
 	assign vram_select = bus_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };
+
 
 	assign bridge_far_rdata =
 		uart_0_select	? uart_0_rdata	:
@@ -683,11 +695,11 @@ module SoC(
 		audio_select	? audio_rdata	:
 		dma_select		? dma_rdata		:
 		plic_select		? plic_rdata	:
+		sysreg_select	? sysreg_rdata	:
 		vram_select		? vram_rdata	:
 		32'h00000000;
 	
 	assign bridge_far_ready =
-		led_select		? led_ready		:
 		uart_0_select	? uart_0_ready	:
 		uart_1_select	? uart_1_ready	:
 		i2c_ready		? i2c_ready		:
@@ -696,6 +708,7 @@ module SoC(
 		audio_ready		? audio_ready	:
 		dma_select		? dma_ready		:
 		plic_select		? plic_ready	:
+		sysreg_select	? sysreg_ready	:
 		vram_select		? vram_ready	:
 		1'b0;
 
@@ -708,14 +721,14 @@ module SoC(
 		ram_select				|
 		sdram_select			|
 		vram_select				|
-		led_select				|
 		bridge_select			|
 		sd_select				|
 		i2c_select				|
 		audio_select			|
 		dma_select				|
 		timer_select			|
-		plic_select;
+		plic_select				|
+		sysreg_select;
 
 	reg debug_bus_fault = 0;
 	reg [31:0] debug_bus_fault_address = 0;
@@ -746,7 +759,7 @@ module SoC(
 			ram_select,
 			sdram_select,
 			vram_select,
-			led_select,
+			1'b0,
 			uart_0_select,
 			uart_1_select,
 			1'b0,
