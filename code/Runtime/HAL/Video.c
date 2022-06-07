@@ -3,7 +3,7 @@
 #include <string.h>
 #include "Runtime/HAL/ADV7513.h"
 #include "Runtime/HAL/SIL9024A.h"
-#include "Runtime/HAL/Timer.h"
+#include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Video.h"
 
 #define WIDTH 320
@@ -21,14 +21,15 @@ int32_t video_init()
 {
 	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 
-	if (timer_get_device_id() == TIMER_DEVICE_ID_RV32T)
+	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
+	if (deviceId == SR_DEVICE_ID_RV32T)
 	{
 		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 
 		control[0] = 0;					// GPU read offset
 		control[1] = WIDTH * HEIGHT;	// CPU write offset		
 	}
-	else if (timer_get_device_id() == TIMER_DEVICE_ID_T_CV_GX)
+	else if (deviceId == SR_DEVICE_ID_T_CV_GX)
 	{
 		if (adv7513_init())
 		{
@@ -43,7 +44,7 @@ int32_t video_init()
 		control[0] = 0;	// GPU read offset
 		control[1] = 0;	// CPU write offset	
 	}
-	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_CV_2)
+	else if (deviceId == SR_DEVICE_ID_Q_CV_2)
 	{
 		if (sil9024a_init())
 		{
@@ -58,7 +59,7 @@ int32_t video_init()
 		control[0] = 0;	// GPU read offset
 		control[1] = 0;	// CPU write offset		
 	}
-	else if (timer_get_device_id() == TIMER_DEVICE_ID_Q_T7)
+	else if (deviceId == SR_DEVICE_ID_Q_T7)
 	{
 		if (sil9024a_init())
 		{
@@ -78,7 +79,7 @@ int32_t video_init()
 		control[0] = 0;	// GPU read offset
 		control[1] = 0;	// CPU write offset			
 	}
-	else if (timer_get_device_id() == TIMER_DEVICE_ID_RV32)
+	else if (deviceId == SR_DEVICE_ID_RV32)
 	{	
 		primary_target = (uint32_t*)VIDEO_DATA_BASE;
 		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)

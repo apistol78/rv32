@@ -1,7 +1,10 @@
 
 `timescale 1ns/1ns
 
-module SystemRegisters(
+module SystemRegisters #(
+	parameter FREQUENCY,
+	parameter DEVICEID
+)(
 	input i_reset,
 	input i_clock,
 
@@ -40,6 +43,10 @@ module SystemRegisters(
 					o_rdata <= { 30'b0, sil9024_reset, boot_mode };
 				else if (i_address == 2'b01)
 					o_rdata <= { 24'b0, leds };
+				else if (i_address == 2'b10)
+					o_rdata <= FREQUENCY;
+				else if (i_address == 2'b11)
+					o_rdata <= DEVICEID;
 			end
 			else begin
 				if (i_address == 2'b00) begin

@@ -2,8 +2,7 @@
 `timescale 1ns/1ns
 
 module Timer#(
-    parameter FREQUENCY,
-	parameter DEVICEID
+    parameter FREQUENCY
 )(
 	input i_reset,
 	input i_clock,
@@ -63,8 +62,6 @@ module Timer#(
 					3'h2: o_rdata <= cycles[63:32];
 					3'h3: o_rdata <= compare[31:0];
 					3'h4: o_rdata <= compare[63:32];
-					3'h5: o_rdata <= FREQUENCY;
-					3'h6: o_rdata <= DEVICEID;
 					default: o_rdata <= 0;
 				endcase
 			end

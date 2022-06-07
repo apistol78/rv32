@@ -359,8 +359,7 @@ module SoC(
 	wire timer_ready;
 	wire timer_interrupt;
 	Timer #(
-		.FREQUENCY(`FREQUENCY),
-		.DEVICEID(1)
+		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -470,7 +469,10 @@ module SoC(
 	wire [1:0] sysreg_address;
 	wire [31:0] sysreg_rdata;
 	wire sysreg_ready;	
-	SystemRegisters sysreg(
+	SystemRegisters #(
+		.FREQUENCY(`FREQUENCY),
+		.DEVICEID(1)
+	) sysreg(
 		.i_reset(reset),
 		.i_clock(clock),
 
