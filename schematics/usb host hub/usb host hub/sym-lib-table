@@ -3,4 +3,5 @@
   (lib (name "USBLC6-2SC6")(type "Legacy")(uri "${KIPRJMOD}/parts/USBLC6-2SC6/USBLC6-2SC6.lib")(options "")(descr ""))
   (lib (name "52271-0679")(type "Legacy")(uri "${KIPRJMOD}/parts/52271-0679/52271-0679.lib")(options "")(descr ""))
   (lib (name "532610671")(type "Legacy")(uri "${KIPRJMOD}/parts/532610671/532610671.lib")(options "")(descr ""))
+  (lib (name "292303-1")(type "Legacy")(uri "${KIPRJMOD}/parts/292303-1/292303-1.lib")(options "")(descr ""))
 )
