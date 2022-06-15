@@ -38,6 +38,7 @@
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
 #include "Rv32/SD.h"
+#include "Rv32/SystemRegisters.h"
 #include "Rv32/Timer.h"
 #include "Rv32/UART.h"
 #include "Rv32/Unknown.h"
@@ -99,10 +100,8 @@ int main(int argc, const char** argv)
 
 	Memory rom(0x00010000);
 	Memory ram(0x10000000);
-	Memory sram(0x00400000);
 	Memory sdram(0x10000000);
 	Video video;
-	Unknown led(L"LED", false);
 	UART uart1;
 	UART uart2;
 	Unknown i2c(L"I2C", true);
@@ -110,12 +109,12 @@ int main(int argc, const char** argv)
 	Unknown dma(L"DMA", true);
 	TimerD tmr;
 	Unknown plic(L"PLIC", true);
+	SystemRegisters sysreg;
 
 	Bus bus;
 	bus.map(0x00000000, 0x00010000, &rom);
 	bus.map(0x10000000, 0x20000000, &ram);
 	bus.map(0x20000000, 0x30000000, &sdram);
-	bus.map(0x50000000, 0x50000100, &led);
 	bus.map(0x51000000, 0x51000100, &uart1);
 	bus.map(0x52000000, 0x52000100, &uart2);
 	bus.map(0x53000000, 0x53000100, &i2c);
@@ -123,6 +122,7 @@ int main(int argc, const char** argv)
 	bus.map(0x55000000, 0x55000100, &tmr);
 	bus.map(0x57000000, 0x57000100, &dma);
 	bus.map(0x58000000, 0x58004000, &plic);
+	bus.map(0x59000000, 0x59000100, &sysreg);
 	bus.map(0x5a000000, 0x5b000000, &video);
 
 	Ref< OutputStream > os = nullptr;	

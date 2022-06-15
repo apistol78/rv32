@@ -45,10 +45,6 @@ uint32_t TimerD::readU32(uint32_t address) const
 		return (uint32_t)m_compare;	// compare low
 	case 0x10:
 		return (uint32_t)(m_compare >> 32);	// compare high
-	case 0x14:
-		return 100000000;	// frequency
-	case 0x18:
-		return 5;			// device id
 	}
 	return 0;
 }
