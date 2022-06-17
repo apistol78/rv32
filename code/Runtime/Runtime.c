@@ -39,7 +39,7 @@ int32_t runtime_init()
 	printf("** FREQUENCY: %d MHz **\n", sysreg_read(SR_REG_FREQUENCY) / 1000000);
 
 	printf("** Initialize IRQ handler **\n");
-	//interrupt_init();
+	interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)

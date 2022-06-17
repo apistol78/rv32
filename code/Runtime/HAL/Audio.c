@@ -24,7 +24,7 @@ void audio_init()
 		break;
 	}
 
-	//interrupt_set_handler(IRQ_SOURCE_PLIC_1, audio_interrupt_handler);
+	interrupt_set_handler(IRQ_SOURCE_PLIC_1, audio_interrupt_handler);
 }
 
 uint32_t audio_get_queued()
