@@ -1,4 +1,4 @@
-#include <stdio.h>
+// #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Runtime/HAL/ADV7513.h"
@@ -33,7 +33,7 @@ int32_t video_init()
 	{
 		if (adv7513_init())
 		{
-			printf("Failed to initialize ADV7513; unable to initialize video.\n");
+			// printf("Failed to initialize ADV7513; unable to initialize video.\n");
 			return 1;
 		}
 
@@ -48,7 +48,7 @@ int32_t video_init()
 	{
 		if (sil9024a_init())
 		{
-			printf("Failed to initialize SIL9024A; unable to initialize video.\n");
+			// printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
 		}		
 
@@ -63,7 +63,7 @@ int32_t video_init()
 	{
 		if (sil9024a_init())
 		{
-			printf("Failed to initialize SIL9024A; unable to initialize video.\n");
+			// printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
 		}
 
@@ -90,8 +90,8 @@ int32_t video_init()
 	}
 	else
 	{
-		printf("Unknown device; unable to initialize video.\n");
-		return 1;
+		// printf("Unknown device; unable to initialize video.\n");
+		return 2;
 	}
 
 	return 0;

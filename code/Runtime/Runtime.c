@@ -67,3 +67,14 @@ void runtime_update()
 {
 	input_update();
 }
+
+void runtime_warm_restart()
+{
+	const uint32_t sp = 0x10006000;
+	__asm__ volatile (
+		"mv sp, %0	\n"
+		"j	0		\n"
+		:
+		: "r" (sp)
+	);
+}

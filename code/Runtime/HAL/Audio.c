@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SystemRegisters.h"

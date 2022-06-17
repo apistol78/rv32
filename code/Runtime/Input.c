@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "Runtime/Input.h"
 #include "Runtime/HAL/UART.h"
 

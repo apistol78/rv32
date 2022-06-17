@@ -125,8 +125,8 @@ static uint8_t NO_OPTIMIZE i2c_tx_addr(uint8_t d, uint8_t bits, uint8_t read)
 	i2c_dly();
 
 	// High means NAK.
-	if (b)
-		printf("[%02x] no ack\n", od);
+	// if (b)
+	// 	printf("[%02x] no ack\n", od);
 
 	return b;
 }
