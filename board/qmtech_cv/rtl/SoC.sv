@@ -10,6 +10,9 @@ module SoC(
 	input key_1,		// Active low.
 	
 	output led_1,
+
+	output audio_pwm_left,
+	output audio_pwm_right,
 	
 	input uart_0_rx,
 	output uart_0_tx,
@@ -80,15 +83,6 @@ module SoC(
 		.o_reset_2(reset)
 	);
 
-	//=====================================
-
-	assign led_1 = led_counter[20];
-
-	bit [20:0] led_counter = 0;
-	always_ff @(posedge clock) begin
-		led_counter <= led_counter + 1;
-	end
-	
 	//=====================================
 	// ROM ($00000000)
 
@@ -299,23 +293,6 @@ module SoC(
 	// "NORTH" BRIDGE
 	//=====================================
 
-
-	// LEDS
-	wire led_select;
-	wire led_ready;
-	wire [9:0] led_led;
-	LED led(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(led_select && bridge_far_request),
-		.i_wdata(bridge_far_wdata),
-		.o_ready(led_ready),
-		.LEDR(led_led)
-	);
-
-	assign hdmi_nreset = led_led[0];
-
-
 	// UART (FTDI)
 	wire uart_0_select;
 	wire [1:0] uart_0_address;
@@ -405,8 +382,7 @@ module SoC(
 	wire timer_ready;
 	wire timer_interrupt;
 	Timer #(
-		.FREQUENCY(`FREQUENCY),
-		.DEVICEID(4)			// Why? Breaks down if use correct device ID...
+		.FREQUENCY(`FREQUENCY)
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -422,6 +398,8 @@ module SoC(
 	// AUDIO
 	wire audio_output_busy;
 	wire [15:0] audio_output_sample;
+
+	/*
 	wire audio_sdout;
 	wire audio_sclk;
 	wire audio_lrck;
@@ -446,16 +424,31 @@ module SoC(
 	assign hdmi_sck = audio_sclk;
 	assign hdmi_ws = audio_lrck;
 	assign hdmi_mclk = audio_mclk;
+	*/
+
+	wire audio_pwm;
+	AUDIO_pwm_output audio_pwm_output(
+		.i_clock(clock),
+		.o_busy(audio_output_busy),
+		.i_sample(audio_output_sample),
+		.o_pwm(audio_pwm)
+	);
+	assign audio_pwm_left = audio_pwm;
+	assign audio_pwm_right = audio_pwm;
 
 	wire audio_select;
+	wire [31:0] audio_rdata;
 	wire audio_ready;
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
 
 		.i_request(audio_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
 		.i_wdata(bridge_far_wdata[15:0]),
+		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
+		.o_interrupt(),
 
 		.i_output_busy(audio_output_busy),
 		.o_output_sample(audio_output_sample)
@@ -522,6 +515,37 @@ module SoC(
 		.o_rdata(plic_rdata),
 		.o_ready(plic_ready)
 	);
+
+	// System registers.
+	wire sysreg_select;
+	wire [1:0] sysreg_address;
+	wire [31:0] sysreg_rdata;
+	wire sysreg_ready;
+	wire [7:0] sysreg_leds;
+	wire sysreg_sil9024_reset;
+	SystemRegisters #(
+		.FREQUENCY(`FREQUENCY),
+		.DEVICEID(3)
+	) sysreg(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		// CPU
+		.i_request(sysreg_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(sysreg_address),
+		.i_wdata(bridge_far_wdata),
+		.o_rdata(sysreg_rdata),
+		.o_ready(sysreg_ready),
+
+		// Signals
+		.i_boot_mode_switch(1'b1),
+		.o_leds(sysreg_leds),
+		.o_sil9024_reset(sysreg_sil9024_reset)
+	);
+
+	assign led_1 = sysreg_leds[0];
+	assign hdmi_nreset = ~sysreg_sil9024_reset;
 
 	// VIDEO
 	assign hdmi_hsync = ~vga_hsync;
@@ -730,8 +754,6 @@ module SoC(
 		.i_far_ready	(bridge_far_ready)
 	);
 
-	assign led_select = bridge_far_address[27:24] == 4'h0;
-
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
 
@@ -753,6 +775,9 @@ module SoC(
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 
+	assign sysreg_select = bridge_far_address[27:24] == 4'h9;
+	assign sysreg_address = bridge_far_address[3:2];
+
 	assign vram_select = bridge_far_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };
 
@@ -762,13 +787,14 @@ module SoC(
 		i2c_select		? i2c_rdata		:
 		sd_select		? sd_rdata		:
 		timer_select	? timer_rdata	:
+		audio_select	? audio_rdata	:
 		dma_select		? dma_rdata		:
 		plic_select		? plic_rdata	:
+		sysreg_select	? sysreg_rdata	:
 		vram_select 	? vram_rdata	:
 		32'h00000000;
 	
 	assign bridge_far_ready =
-		led_select		? led_ready		:
 		uart_0_select	? uart_0_ready	:
 		uart_1_select	? uart_1_ready	:
 		i2c_select		? i2c_ready		:
@@ -777,6 +803,7 @@ module SoC(
 		audio_ready		? audio_ready	:
 		dma_select		? dma_ready		:
 		plic_select		? plic_ready	:
+		sysreg_select	? sysreg_ready	:
 		vram_select		? vram_ready	:
 		1'b0;
 

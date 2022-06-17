@@ -25,6 +25,7 @@ void AUDIO::eval(VSoC* soc, uint64_t time)
 	{
 		int16_t sv = (int16_t)(m_value * 32767.0f);
 		m_stream->write(&sv, sizeof(sv));
+		m_stream->flush();
 		m_written++;
 	}
 }
