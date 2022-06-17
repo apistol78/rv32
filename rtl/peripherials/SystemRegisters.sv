@@ -22,7 +22,6 @@ module SystemRegisters #(
 	output o_sil9024_reset
 );
 
-	bit boot_mode = 0;
 	bit sil9024_reset = 0;
 	bit [7:0] leds = 8'h0;
 
@@ -34,13 +33,12 @@ module SystemRegisters #(
 	always_ff @(posedge i_clock) begin
 		o_ready <= 0;
 		if (i_reset) begin
-			boot_mode <= i_boot_mode_switch;
 			leds <= 8'h0;
 		end
 		else if (i_request) begin
 			if (!i_rw) begin
 				if (i_address == 2'b00)
-					o_rdata <= { 30'b0, sil9024_reset, boot_mode };
+					o_rdata <= { 30'b0, sil9024_reset, i_boot_mode_switch };
 				else if (i_address == 2'b01)
 					o_rdata <= { 24'b0, leds };
 				else if (i_address == 2'b10)
@@ -50,7 +48,6 @@ module SystemRegisters #(
 			end
 			else begin
 				if (i_address == 2'b00) begin
-					boot_mode <= i_wdata[0];
 					sil9024_reset <= i_wdata[1];
 				end
 				else if (i_address == 2'b01) begin
