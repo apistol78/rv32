@@ -1,14 +1,19 @@
 OUTPUT_ARCH( "riscv" )
 ENTRY( _start )
 
+MEMORY
+{
+	ram	(rwx)	: ORIGIN = 0x20200000, LENGTH = 0x10000000
+}
+
 SECTIONS
 {
 	/*--------------------------------------------------------------------*/
 	/* Code and read-only segment                                         */
 	/*--------------------------------------------------------------------*/
 
-	/* Begining of code and text segment */
-	. = 0x20000000;
+	. = ORIGIN(ram);
+
 	_ftext = .;
 	PROVIDE( eprol = . );
 

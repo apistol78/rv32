@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Runtime/HAL/Common.h"
+#include "Runtime/printf/printf.h"
 
 EXTERN_C int32_t runtime_init();
 

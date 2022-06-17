@@ -60,23 +60,23 @@ module SoC(
 
 	//=====================================
 	// RAM
-	wire ram_select;
-	wire [31:0] ram_address;
-	wire [31:0] ram_rdata;
-	wire ram_ready;
-	BRAM #(
-		.WIDTH(32),
-		.SIZE(32'h200),
-		.ADDR_LSH(2)
-	) ram(
-		.i_clock(clock),
-		.i_request(ram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(ram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(ram_rdata),
-		.o_ready(ram_ready)
-	);
+	// wire ram_select;
+	// wire [31:0] ram_address;
+	// wire [31:0] ram_rdata;
+	// wire ram_ready;
+	// BRAM #(
+	// 	.WIDTH(32),
+	// 	.SIZE(32'h200),
+	// 	.ADDR_LSH(2)
+	// ) ram(
+	// 	.i_clock(clock),
+	// 	.i_request(ram_select && bus_request),
+	// 	.i_rw(bus_rw),
+	// 	.i_address(ram_address),
+	// 	.i_wdata(bus_wdata),
+	// 	.o_rdata(ram_rdata),
+	// 	.o_ready(ram_ready)
+	// );
 
 	//=====================================
 	// SDRAM
@@ -207,7 +207,9 @@ module SoC(
 	wire [`TAG_SIZE] cpu_writeback_debug_tag;
 	wire cpu_fault;
 
-	CPU cpu(
+	CPU #(
+		.STACK_POINTER(32'h20110000)
+	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
@@ -241,8 +243,8 @@ module SoC(
 	assign rom_select = bus_address[31:28] == 4'h0;
 	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	assign ram_select = bus_address[31:28] == 4'h1;
-	assign ram_address = { 4'h0, bus_address[27:0] };
+	// assign ram_select = bus_address[31:28] == 4'h1;
+	// assign ram_address = { 4'h0, bus_address[27:0] };
 
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
@@ -253,14 +255,14 @@ module SoC(
 
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
-		ram_select		? ram_rdata		:
+		// ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
 		bridge_select 	? bridge_rdata	:
 		32'h00000000;
 		
 	assign bus_ready =
 		rom_select		? rom_ready		:
-		ram_select		? ram_ready		:
+		// ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
 		1'b0;
@@ -720,7 +722,7 @@ module SoC(
 
 	wire bus_valid_select =
 		rom_select				|
-		ram_select				|
+		// ram_select				|
 		sdram_select			|
 		vram_select				|
 		bridge_select			|
@@ -758,7 +760,7 @@ module SoC(
 		debug_select =
 		{
 			rom_select,
-			ram_select,
+			1'b0, //ram_select,
 			sdram_select,
 			vram_select,
 			1'b0,

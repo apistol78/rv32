@@ -153,7 +153,7 @@ static int32_t launch_elf(const char* filename)
 void main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x10006000;
+	const uint32_t sp = 0x20110000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:

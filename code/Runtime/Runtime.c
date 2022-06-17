@@ -10,6 +10,12 @@
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
 
+// Needed by custom printf implementation.
+void _putchar(char character)
+{
+	uart_tx_u8(0, character);
+}
+
 int32_t runtime_init()
 {
 	crt_init();
@@ -39,7 +45,7 @@ int32_t runtime_init()
 	printf("** FREQUENCY: %d MHz **\n", sysreg_read(SR_REG_FREQUENCY) / 1000000);
 
 	printf("** Initialize IRQ handler **\n");
-	interrupt_init();
+	// interrupt_init();
 	
 	printf("** Initialize Video **\n");
 	if (video_init() != 0)
@@ -70,7 +76,7 @@ void runtime_update()
 
 void runtime_warm_restart()
 {
-	const uint32_t sp = 0x10006000;
+	const uint32_t sp = 0x20110000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		"j	0		\n"
