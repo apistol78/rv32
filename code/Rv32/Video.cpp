@@ -16,7 +16,7 @@ Video::Video()
 	m_image = new drawing::Image(
 		drawing::PixelFormat::getR8G8B8X8(),
 		320,
-		240
+		200
 	);
 	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
@@ -45,7 +45,7 @@ bool Video::writeU32(uint32_t address, uint32_t value)
 			Color4ub(value)
 		);
 	}
-	else if (address < (320 * 240) * 4)
+	else if (address < (320 * 200) * 4)
 	{
 		const uint32_t offset = address;
 		const uint32_t x = offset % 320;
