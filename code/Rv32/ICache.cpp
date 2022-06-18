@@ -11,8 +11,8 @@ ICache::ICache(Bus* bus)
 ,   m_hits(0)
 ,   m_misses(0)
 {
-    for (int32_t i = 0; i < 64; ++i)
-        m_valid[i] = false;
+    for (int32_t i = 0; i < 65536; ++i)
+        m_data[i].valid = false;
 }
 
 ICache::~ICache()
@@ -22,20 +22,21 @@ ICache::~ICache()
 
 uint32_t ICache::readU32(uint32_t address)
 {
-	uint32_t tag = (address >> 2) & 63;
+	const uint32_t tag = (address >> 2) & 65535;
+    Line& line = m_data[tag];
 
-    if (m_valid[tag] && m_data[tag][0] == address)
+    if (line.valid && line.address == address)
     {
         m_hits++;
-        return m_data[tag][1];
+        return line.word;
     }
 
-    uint32_t data = m_bus->readU32(address);
-
-    m_data[tag][0] = address;
-    m_data[tag][1] = data;
-    m_valid[tag] = true;
-    m_misses++;
+    const uint32_t word = m_bus->readU32(address);
     
-	return data;
+    line.address = address;
+    line.word = word;
+    line.valid = true;
+
+    m_misses++;
+    return word;
 }

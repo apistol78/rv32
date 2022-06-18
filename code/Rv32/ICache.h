@@ -17,9 +17,15 @@ public:
 	uint32_t readU32(uint32_t address);
 
 private:
+    struct Line
+    {
+        uint32_t address;
+        uint32_t word;
+        bool valid;
+    };
+
 	traktor::Ref< Bus > m_bus;
-    bool m_valid[64];
-    uint32_t m_data[64][2];
+    Line m_data[65536];
     uint32_t m_hits;
     uint32_t m_misses;
 };
