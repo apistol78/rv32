@@ -38,13 +38,13 @@ module CPU_ALU(
 		i_op == `OP_AND ? and_result :
 		i_op == `OP_OR ? or_result :
 		i_op == `OP_XOR ? xor_result :
-		0;
+		32'd0;
 
 	assign o_shift_result =
 		i_op == `OP_SHIFT_LEFT ? shl_result :
 		i_op == `OP_SHIFT_RIGHT ? shr_result :
 		i_op == `OP_ARITHMETIC_SHIFT_RIGHT ? ashr_result :
-		0;
+		32'd0;
 		
 	assign o_signed_sum_result = signed_sum;
 
@@ -55,6 +55,6 @@ module CPU_ALU(
 		i_op == `OP_NOT_EQUAL ? not_equal_result :
 		i_op == `OP_SIGNED_GREATER_EQUAL ? signed_get_result :
 		i_op == `OP_UNSIGNED_GREATER_EQUAL ? unsigned_get_result :
-		0;
+		1'b0;
 		
 endmodule

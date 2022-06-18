@@ -94,7 +94,7 @@ module SoC(
 
 	BRAM #(
 		.WIDTH(128),
-		.SIZE(32'h1000000 / 4),
+		.SIZE(32'h800000 / 4),
 		.ADDR_LSH(4)
 	) sdram(
 		.i_clock(clock),
@@ -151,7 +151,7 @@ module SoC(
 	wire [31:0] bus_pb_wdata;
 
 	BusAccess #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -208,7 +208,8 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
-		.STACK_POINTER(32'h20110000)
+		.STACK_POINTER(32'h20110000),
+		.DCACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -468,12 +469,13 @@ module SoC(
 
 	// System registers.
 	wire sysreg_select;
-	wire [1:0] sysreg_address;
+	wire [2:0] sysreg_address;
 	wire [31:0] sysreg_rdata;
 	wire sysreg_ready;	
 	SystemRegisters #(
 		.FREQUENCY(`FREQUENCY),
-		.DEVICEID(1)
+		.DEVICEID(1),
+		.RAM_SIZE(32'h800000)
 	) sysreg(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -487,7 +489,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b1),
+		.i_boot_mode_switch(1'b0),
 		.o_leds(LEDR),
 		.o_sil9024_reset()
 	);
@@ -641,7 +643,9 @@ module SoC(
 	wire [31:0] bridge_far_rdata;
 	wire bridge_far_ready;
 
-	BRIDGE bridge(
+	BRIDGE #(
+		.REGISTERED(0)
+	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),
 
@@ -684,7 +688,7 @@ module SoC(
 	assign plic_address = bridge_far_address[23:0];
 
 	assign sysreg_select = bridge_far_address[27:24] == 4'h9;
-	assign sysreg_address = bridge_far_address[3:2];
+	assign sysreg_address = bridge_far_address[4:2];
 
 	assign vram_select = bus_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };

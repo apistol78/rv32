@@ -2,10 +2,11 @@
 
 #include "Runtime/HAL/Common.h"
 
-#define SR_REG_BM0          0x00
-#define SR_REG_LEDS         0x01
-#define SR_REG_FREQUENCY    0x02
-#define SR_REG_DEVICE_ID    0x03
+#define SR_REG_BM0           0x00
+#define SR_REG_LEDS          0x01
+#define SR_REG_FREQUENCY     0x02
+#define SR_REG_DEVICE_ID     0x03
+#define SR_REG_RAM_SIZE      0x04
 
 #define SR_DEVICE_ID_RV32T   1
 #define SR_DEVICE_ID_T_CV_GX 2

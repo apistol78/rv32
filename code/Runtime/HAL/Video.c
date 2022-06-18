@@ -1,4 +1,3 @@
-// #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Runtime/HAL/ADV7513.h"
@@ -94,6 +93,9 @@ int32_t video_init()
 		return 2;
 	}
 
+	video_clear(0);
+	video_swap();
+
 	return 0;
 }
 
@@ -116,6 +118,13 @@ void video_set_palette(uint8_t index, uint32_t color)
 void* video_get_secondary_target()
 {
 	return secondary_target;
+}
+
+void video_clear(uint8_t idx)
+{
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	for (uint32_t i = 0; i < WIDTH * HEIGHT; ++i)
+		framebuffer[i] = idx;	
 }
 
 void video_swap()

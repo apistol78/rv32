@@ -3,7 +3,8 @@
 
 module SystemRegisters #(
 	parameter FREQUENCY,
-	parameter DEVICEID
+	parameter DEVICEID,
+	parameter RAM_SIZE
 )(
 	input i_reset,
 	input i_clock,
@@ -11,7 +12,7 @@ module SystemRegisters #(
 	// CPU access
 	input i_request,
 	input i_rw,
-	input [1:0] i_address,
+	input [2:0] i_address,
 	input [31:0] i_wdata,
 	output bit [31:0] o_rdata,
 	output bit o_ready,
@@ -37,22 +38,30 @@ module SystemRegisters #(
 		end
 		else if (i_request) begin
 			if (!i_rw) begin
-				if (i_address == 2'b00)
+				case (i_address)
+				3'd0:
 					o_rdata <= { 30'b0, sil9024_reset, i_boot_mode_switch };
-				else if (i_address == 2'b01)
+				3'd1:
 					o_rdata <= { 24'b0, leds };
-				else if (i_address == 2'b10)
+				3'd2:
 					o_rdata <= FREQUENCY;
-				else if (i_address == 2'b11)
+				3'd3:
 					o_rdata <= DEVICEID;
+				3'd4:
+					o_rdata <= RAM_SIZE;
+				default:
+					o_rdata <= 0;
+				endcase
 			end
 			else begin
-				if (i_address == 2'b00) begin
+				case (i_address)
+				3'd0:
 					sil9024_reset <= i_wdata[1];
-				end
-				else if (i_address == 2'b01) begin
+				3'd1:
 					leds <= i_wdata[7:0];
-				end
+				default:
+					;
+				endcase
 			end
 			o_ready <= 1;
 		end
