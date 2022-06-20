@@ -1,0 +1,9 @@
+(sym_lib_table
+  (lib (name "52271-0679")(type "Legacy")(uri "${KIPRJMOD}/parts/52271-0679/52271-0679.lib")(options "")(descr ""))
+  (lib (name "292303-1")(type "Legacy")(uri "${KIPRJMOD}/parts/292303-1/292303-1.lib")(options "")(descr ""))
+  (lib (name "532610671")(type "Legacy")(uri "${KIPRJMOD}/parts/532610671/532610671.lib")(options "")(descr ""))
+  (lib (name "2022-04-22_11-49-30")(type "Legacy")(uri "${KIPRJMOD}/parts/cs4344/KiCAD/2022-04-22_11-49-30/2022-04-22_11-49-30.lib")(options "")(descr ""))
+  (lib (name "685119134923")(type "Legacy")(uri "${KIPRJMOD}/parts/hdmi connector/685119134923.lib")(options "")(descr ""))
+  (lib (name "RP2040")(type "Legacy")(uri "${KIPRJMOD}/parts/rp2040/RP2040.lib")(options "")(descr ""))
+  (lib (name "USBLC6-2SC6")(type "Legacy")(uri "${KIPRJMOD}/parts/USBLC6-2SC6/USBLC6-2SC6.lib")(options "")(descr ""))
+)
