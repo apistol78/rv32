@@ -66,7 +66,6 @@ static int32_t launch_elf(const char* filename)
 	}
 
 	char tmp[256] = {};
-	const uint32_t sp = 0x20FFFFF0;
 	uint32_t jstart = 0;
 
 	printf("read header ...\n");
@@ -136,7 +135,8 @@ static int32_t launch_elf(const char* filename)
 
 	if (jstart != 0)
 	{
-		printf("launching application...\n");
+		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
+		printf("launching application (stack @ 0x%08x)...\n", sp);
 		__asm__ volatile (
 			"fence					\n"
 			"mv		sp, %0			\n"
@@ -153,7 +153,7 @@ static int32_t launch_elf(const char* filename)
 void main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x20110000;
+	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:

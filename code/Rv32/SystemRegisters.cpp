@@ -34,14 +34,16 @@ uint32_t SystemRegisters::readU32(uint32_t address) const
 {
 	switch (address)
 	{
-	case 0x00:
+	case 0:
         return 0x00000000;
-    case 0x04:
+    case 1 << 2:
         return 0x00000000;
-    case 0x08:
+    case 2 << 2:
 		return 100000000;	// frequency
-	case 0x0c:
+	case 3 << 2:
 		return 5;			// device id
+	case 4 << 2:
+		return 8192 * 1024;
 	}
 	return 0;
 }
