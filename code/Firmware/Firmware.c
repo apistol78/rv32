@@ -21,26 +21,6 @@ static uint32_t uart_rx_u32(uint8_t port)
 	return *(uint32_t*)tmp;
 }
 
-static void uart_tx_print(const char* txt)
-{
-	for (const char* c = txt; *c; ++c)
-		uart_tx_u8(0, *c);
-}
-
-static void uart_tx_printHex8(uint32_t v)
-{
-	static const char c_hex[] = { "0123456789abcdef" };
-	for (int i = 1; i >= 0; --i)
-		uart_tx_u8(0, c_hex[(v >> (i * 4)) & 15]);
-}
-
-static void uart_tx_printHex(uint32_t v)
-{
-	static const char c_hex[] = { "0123456789abcdef" };
-	for (int i = 7; i >= 0; --i)
-		uart_tx_u8(0, c_hex[(v >> (i * 4)) & 15]);
-}
-
 static void fatal_error(uint8_t error)
 {
 	for (;;)
@@ -135,7 +115,7 @@ static int32_t launch_elf(const char* filename)
 
 	if (jstart != 0)
 	{
-		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
+		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
 		printf("launching application (stack @ 0x%08x)...\n", sp);
 		__asm__ volatile (
 			"fence					\n"
@@ -153,7 +133,7 @@ static int32_t launch_elf(const char* filename)
 void main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
+	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:
@@ -168,34 +148,14 @@ void main()
 		uint8_t* src = (uint8_t*)&INIT_DATA_VALUES;
 		uint8_t* dest = (uint8_t*)&INIT_DATA_START;
 		uint32_t len = (uint32_t)(&INIT_DATA_END - &INIT_DATA_START);
-		while (len--)
-			*dest++ = *src++;		
-	}
-	{
-		extern uint8_t INIT_SDATA_VALUES;
-		extern uint8_t INIT_SDATA_START;
-		extern uint8_t INIT_SDATA_END;
-		uint8_t* src = (uint8_t*)&INIT_SDATA_VALUES;
-		uint8_t* dest = (uint8_t*)&INIT_SDATA_START;
-		uint32_t len = (uint32_t)(&INIT_SDATA_END - &INIT_SDATA_START);
-		while (len--)
-			*dest++ = *src++;		
+		memcpy(dest, src, len);
 	}
 	{
 		extern uint8_t BSS_START;
 		extern uint8_t BSS_END;
         uint8_t* dest = (uint8_t*)&BSS_START;
         uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
-        while (len--)
-                *dest++=0;		
-	}
-	{
-		extern uint8_t SBSS_START;
-		extern uint8_t SBSS_END;
-        uint8_t* dest = (uint8_t*)&SBSS_START;
-        uint32_t len = (uint32_t)(&SBSS_END - &SBSS_START);
-        while (len--)
-                *dest++=0;		
+		memset(dest, 0, len);
 	}
 
 	crt_init();
@@ -203,7 +163,7 @@ void main()
 	printf("===============================================================================\n");
 	printf("                                 Rebel-V SoC                                   \n");
 	printf("                           created by Anders Pistol                            \n");
-	printf("                                    2022                                       \n");
+	printf("                                  2021-2022                                    \n");
 	printf("-------------------------------------------------------------------------------\n");
 	printf("                             firmware version 0.1                              \n");
 	printf("===============================================================================\n");

@@ -49,6 +49,47 @@ using namespace traktor;
 // https://github.com/takahirox/riscv-rust/blob/master/src/cpu.rs
 // https://mindchasers.com/dev/rv-getting-started
 
+namespace
+{
+
+const wchar_t* c_registerNames[] =
+{
+	L"ZERO",
+	L"RA",
+	L"SP",
+	L"GP",
+	L"TP",
+	L"T0",
+	L"T1",
+	L"T2",
+	L"S0/FP",
+	L"S1",
+	L"A0",
+	L"A1",
+	L"A2",
+	L"A3",
+	L"A4",
+	L"A5",
+	L"A6",
+	L"A7",
+	L"S2",
+	L"S3",
+	L"S4",
+	L"S5",
+	L"S6",
+	L"S7",
+	L"S8",
+	L"S9",
+	L"S10",
+	L"S11",
+	L"T3",
+	L"T4",
+	L"T5",
+	L"T6"
+};
+
+}
+
 bool g_going = true;
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
@@ -98,8 +139,8 @@ int main(int argc, const char** argv)
 #endif
 	}
 
-	Memory rom(0x00010000);
-	Memory sdram(0x10000000); //8192 * 1024);
+	Memory rom(0x00100000);
+	Memory sdram(0x00800000);
 	Video video;
 	UART uart1;
 	UART uart2;
@@ -111,8 +152,8 @@ int main(int argc, const char** argv)
 	SystemRegisters sysreg;
 
 	Bus bus;
-	bus.map(0x00000000, 0x00010000, &rom);
-	bus.map(0x20000000, 0x30000000, &sdram);
+	bus.map(0x00000000, 0x00100000, &rom);
+	bus.map(0x20000000, 0x20800000, &sdram);
 	bus.map(0x51000000, 0x51000100, &uart1);
 	bus.map(0x52000000, 0x52000100, &uart2);
 	bus.map(0x53000000, 0x53000100, &i2c);
@@ -148,7 +189,7 @@ int main(int argc, const char** argv)
 	}
 
 	// Lock ROM from being mutable.
-	//rom.setReadOnly(true);
+	rom.setReadOnly(true);
 
 	if (cmdLine.hasOption(L's', L"start"))
 	{
@@ -253,8 +294,15 @@ int main(int argc, const char** argv)
 		form = nullptr;
 	}
 
-	for (int i = 0; i < dbg_pc.size(); ++i)
-		log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;
+
+	log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu.pc()) << Endl;
+	log::info << L"---" << Endl;
+
+	for (uint32_t i = 0; i < 32; ++i)
+		log::info << str(L"%-5S", c_registerNames[i]) << L" : " << str(L"%08x", cpu.reg(i)) << Endl;
+
+	// for (int i = 0; i < dbg_pc.size(); ++i)
+	// 	log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;
 
 	return 0;
 }

@@ -97,11 +97,8 @@ SECTIONS
 
     . = ORIGIN(ram);
 
-	/* Start of initialized data segment */
 	. = ALIGN(16);
-	 _fdata = .;
 
-	/* data: Writable data */
 	.data : 
 	{
         INIT_DATA_VALUES = LOADADDR(.data);
@@ -111,30 +108,19 @@ SECTIONS
 		*(.data.*)
 		*(.gnu.linkonce.d.*)
 
-        INIT_DATA_END = .;
-	} >ram AT >rom
-
-	/* Have _gp point to middle of sdata/sbss to maximize displacement range */
-	. = ALIGN(16);
-	/* _gp = . + 0x800; */
-
-	/* Writable small data segment */
-	.sdata : 
-	{
-        INIT_SDATA_VALUES = LOADADDR(.sdata);
-        INIT_SDATA_START = .;
-
 		*(.sdata)
 		*(.sdata.*)
 		*(.srodata.*)
 		*(.gnu.linkonce.s.*)
 
-        INIT_SDATA_END = .;
+        INIT_DATA_END = .;
 	} >ram AT >rom
 
+	. = ALIGN(16);
+
+	_gp = . + 0x800;
 	__global_pointer$ = .;
 
-	/* End of initialized data segment */
 	PROVIDE( edata = . );
 	_edata = .;
 
@@ -143,33 +129,26 @@ SECTIONS
 	/*--------------------------------------------------------------------*/
 
 	/* Start of uninitialized data segment */
-	. = ALIGN(8);
-	_fbss = .;
-
-	/* Writable uninitialized small data segment */
-    SBSS_START = .;
-	.sbss (NOLOAD) : 
-	{
-		*(.sbss)
-		*(.sbss.*)
-		*(.gnu.linkonce.sb.*)
-	} >ram
-    SBSS_END = .;
-
-	/* bss: Uninitialized writeable data section */
-	/* _bss_start = .; */
+	. = ALIGN(16);
     
-    BSS_START = .;
 	.bss (NOLOAD) : 
 	{
+	    BSS_START = .;
+
 		*(.bss)
 		*(.bss.*)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
-	} >ram
-    BSS_END = .;
 
-	/* End of uninitialized data segment (used by syscalls.c for heap) */
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
+
+	    BSS_END = .;
+	} >ram
+
+	. = ALIGN(16);
+
 	PROVIDE( end = . );
 	_end = ALIGN(8);
 }

@@ -1,12 +1,12 @@
 #include "Runtime/HAL/UART.h"
 
-static volatile uint32_t* c_base[] =
+volatile uint32_t* const c_base[] __attribute__ ((section (".rodata"))) =
 {
 	(volatile uint32_t*)UART_0_BASE,
 	(volatile uint32_t*)UART_1_BASE
 };
 
-static volatile uint32_t* c_status[] =
+volatile uint32_t* const c_status[] __attribute__ ((section (".rodata"))) =
 {
 	(volatile uint32_t*)(UART_0_BASE + 0x04),
 	(volatile uint32_t*)(UART_1_BASE + 0x04)

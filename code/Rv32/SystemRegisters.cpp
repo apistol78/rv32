@@ -43,7 +43,7 @@ uint32_t SystemRegisters::readU32(uint32_t address) const
 	case 3 << 2:
 		return 5;			// device id
 	case 4 << 2:
-		return 8192 * 1024;
+		return 0x00800000;
 	}
 	return 0;
 }

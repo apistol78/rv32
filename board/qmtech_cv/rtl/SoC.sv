@@ -374,33 +374,6 @@ module SoC(
 	wire audio_output_busy;
 	wire [15:0] audio_output_sample;
 
-	/*
-	wire audio_sdout;
-	wire audio_sclk;
-	wire audio_lrck;
-	wire audio_mclk;
-
-	AUDIO_i2s_output #(
-		.FREQUENCY(`FREQUENCY)
-	) audio_i2s_output(
-		.i_clock(clock),
-		
-		.o_busy(audio_output_busy),
-		.i_sample(audio_output_sample),
-
-		.o_i2s_sdout(audio_sdout),
-		.o_i2s_sclk(audio_sclk),
-		.o_i2s_lrck(audio_lrck),
-		.o_i2s_mclk(audio_mclk)
-	);
-
-	// Wire HDMI output.
-	assign hdmi_sdo = audio_sdout;
-	assign hdmi_sck = audio_sclk;
-	assign hdmi_ws = audio_lrck;
-	assign hdmi_mclk = audio_mclk;
-	*/
-
 	wire audio_pwm;
 	AUDIO_pwm_output audio_pwm_output(
 		.i_clock(clock),
@@ -753,7 +726,7 @@ module SoC(
 	assign plic_address = bridge_far_address[23:0];
 
 	assign sysreg_select = bridge_far_address[27:24] == 4'h9;
-	assign sysreg_address = bridge_far_address[3:2];
+	assign sysreg_address = bridge_far_address[4:2];
 
 	assign vram_select = bridge_far_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };

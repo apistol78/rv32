@@ -72,7 +72,8 @@ module CPU_DCache_Reg #(
 		.i_address(cache_address),
 		.i_wdata(cache_wdata),
 		.o_rdata(cache_rdata),
-		.o_ready()
+		.o_ready(),
+		.o_valid()
 	);
 
 	wire cache_entry_valid = cache_rdata[0];

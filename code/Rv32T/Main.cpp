@@ -467,6 +467,12 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;				
 			}
+			if (!soc->SoC__DOT__w_sdram_valid)
+			{
+				log::warning << L"MEMORY OUT OF BOUNDS, terminating." << Endl;
+				g_going = false;
+				break;
+			}
 		}
 
 		if (form)

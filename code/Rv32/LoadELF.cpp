@@ -120,7 +120,10 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 				const uint32_t addr = shdr[i].sh_addr;
 
 				for (uint32_t j = 0; j < shdr[i].sh_size; ++j)
-					bus.writeU8(addr + j, pbits[j]);
+				{
+					if (!bus.writeU8(addr + j, pbits[j]))
+						return false;
+				}
 			}
 		}
 		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB

@@ -61,26 +61,6 @@ module SoC(
 	);
 
 	//=====================================
-	// RAM
-	// wire ram_select;
-	// wire [31:0] ram_address;
-	// wire [31:0] ram_rdata;
-	// wire ram_ready;
-	// BRAM #(
-	// 	.WIDTH(32),
-	// 	.SIZE(32'h200),
-	// 	.ADDR_LSH(2)
-	// ) ram(
-	// 	.i_clock(clock),
-	// 	.i_request(ram_select && bus_request),
-	// 	.i_rw(bus_rw),
-	// 	.i_address(ram_address),
-	// 	.i_wdata(bus_wdata),
-	// 	.o_rdata(ram_rdata),
-	// 	.o_ready(ram_ready)
-	// );
-
-	//=====================================
 	// SDRAM
 	wire w_sdram_request;
 	wire w_sdram_rw;
@@ -88,6 +68,7 @@ module SoC(
 	wire [127:0] w_sdram_wdata;
 	wire [127:0] w_sdram_rdata;
 	wire w_sdram_ready;
+	wire w_sdram_valid;
 	
 	wire sdram_select;
 	wire [31:0] sdram_address;
@@ -96,7 +77,7 @@ module SoC(
 
 	BRAM #(
 		.WIDTH(128),
-		.SIZE(32'h800000 / 4),
+		.SIZE(32'h800000 / 16),
 		.ADDR_LSH(4)
 	) sdram(
 		.i_clock(clock),
@@ -106,7 +87,8 @@ module SoC(
 		.i_address(w_sdram_address),
 		.i_wdata(w_sdram_wdata),
 		.o_rdata(w_sdram_rdata),
-		.o_ready(w_sdram_ready)
+		.o_ready(w_sdram_ready),
+		.o_valid(w_sdram_valid)
 	);
 
 	LRU_cache sdram_lru(
@@ -246,9 +228,6 @@ module SoC(
 	assign rom_select = bus_address[31:28] == 4'h0;
 	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	// assign ram_select = bus_address[31:28] == 4'h1;
-	// assign ram_address = { 4'h0, bus_address[27:0] };
-
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
 
@@ -258,14 +237,12 @@ module SoC(
 
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
-		// ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
 		bridge_select 	? bridge_rdata	:
 		32'h00000000;
 		
 	assign bus_ready =
 		rom_select		? rom_ready		:
-		// ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
 		1'b0;
@@ -695,7 +672,6 @@ module SoC(
 	assign vram_select = bus_address[27:24] == 4'ha;
 	assign vram_address = { 8'h0, bridge_far_address[23:0] };
 
-
 	assign bridge_far_rdata =
 		uart_0_select	? uart_0_rdata	:
 		uart_1_select	? uart_1_rdata	:
@@ -728,7 +704,6 @@ module SoC(
 
 	wire bus_valid_select =
 		rom_select				|
-		// ram_select				|
 		sdram_select			|
 		vram_select				|
 		bridge_select			|
@@ -740,15 +715,15 @@ module SoC(
 		plic_select				|
 		sysreg_select;
 
-	reg debug_bus_fault = 0;
-	reg [31:0] debug_bus_fault_address = 0;
-	reg [1:0] debug_bus_fault_type = 0;
+	bit debug_bus_fault = 0;
+	bit [31:0] debug_bus_fault_address = 0;
+	bit [1:0] debug_bus_fault_type = 0;
 
-	reg [`TAG_SIZE] execute_debug_tag = 0;
-	reg [`TAG_SIZE] writeback_debug_tag = 0;
+	bit [`TAG_SIZE] execute_debug_tag = 0;
+	bit [`TAG_SIZE] writeback_debug_tag = 0;
 
-	reg debug_request = 0;
-	reg [13:0] debug_select = 0;
+	bit debug_request = 0;
+	bit [13:0] debug_select = 0;
 
 	always_comb begin
 		debug_bus_fault = !bus_valid_select && bus_request;
@@ -766,19 +741,17 @@ module SoC(
 		debug_select =
 		{
 			rom_select,
-			1'b0, //ram_select,
 			sdram_select,
 			vram_select,
-			1'b0,
 			uart_0_select,
 			uart_1_select,
-			1'b0,
 			sd_select,
 			i2c_select,
+			audio_select,
 			dma_select,
 			timer_select,
 			plic_select,
-			1'b0
+			sysreg_select
 		};
 	end
 

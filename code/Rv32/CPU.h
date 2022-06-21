@@ -40,6 +40,8 @@ public:
 
 	uint32_t sp() const { return m_registers[2]; }
 
+	uint32_t reg(uint32_t index) { return m_registers[index]; }
+
 private:
 	traktor::Ref< Bus > m_bus;
 	traktor::Ref< DCache > m_dcache;

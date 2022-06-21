@@ -13,18 +13,17 @@ namespace
 const wchar_t* c_names[] =
 {
 	L"ROM",
-	L"RAM",
 	L"SDRAM",
 	L"VRAM",
-	L"LED",
 	L"UART 0",
 	L"UART 1",
-	L"GPIO",
 	L"SD",
 	L"I2C",
+	L"AUDIO",
 	L"DMA",
 	L"TIMER",
-	L"PLIC"
+	L"PLIC",
+	L"SYSREG"
 };
 
 }
@@ -32,16 +31,16 @@ const wchar_t* c_names[] =
 ProfilerBUS::ProfilerBUS()
 :   m_total(0)
 {
-	for (int i = 0; i < 13; ++i)
+	for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 		m_active[i] = 0;
 }
 
 ProfilerBUS::~ProfilerBUS()
 {
-	for (int i = 0; i < 13; ++i)
+	for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 	{
 		double p = (m_active[i] * 100.0) / m_total;
-		log::info << str(L"%-7S", c_names[i]) << L": " << str(L"%.2f", p) << L"%" << Endl;
+		log::info << str(L"%-7S", c_names[i]) << L": " << str(L"%.2f", p) << L" %" << Endl;
 	}
 }
 
@@ -49,9 +48,9 @@ void ProfilerBUS::eval(VSoC* soc, uint64_t time)
 {
 	if (soc->SoC__DOT__debug_request)
 	{
-		for (int i = 0; i < 13; ++i)
+		for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 		{
-			if ((soc->SoC__DOT__debug_select & (1 << (12-i))) != 0)
+			if ((soc->SoC__DOT__debug_select & (1 << (sizeof_array(c_names) - 1 - i))) != 0)
 				m_active[i]++;
 		}
 	}
