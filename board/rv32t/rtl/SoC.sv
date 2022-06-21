@@ -8,7 +8,9 @@ module SoC(
 
 	input				CLOCK_125_p,
 
-	input 				CPU_RESET_n, ///3.3V LVTTL
+	input 				CPU_RESET_n,
+
+	input				BOOTMODE,
 
 	output             	HDMI_TX_CLK,
 	output      [23:0] 	HDMI_TX_D,
@@ -489,7 +491,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b0),
+		.i_boot_mode_switch(BOOTMODE),
 		.o_leds(LEDR),
 		.o_sil9024_reset()
 	);

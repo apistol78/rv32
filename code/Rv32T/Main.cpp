@@ -261,6 +261,9 @@ int main(int argc, const char **argv)
 	if (cmdLine.hasOption(L"disable-pipeline"))
 		soc->SoC__DOT__cpu_pipeline_disable = 1;
 
+	if (cmdLine.hasOption(L"bootmode"))
+		soc->BOOTMODE = cmdLine.getOption(L"bootmode").getInteger();
+
 	soc->eval();
 
 	if (cmdLine.hasOption(L"elf-kernal"))
@@ -534,8 +537,8 @@ int main(int argc, const char **argv)
 				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
 				double icr = (ich * 100.0) / (ich + icm);
 
-				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__hit;
-				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__miss;
+				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__hit;
+				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__miss;
 				double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
