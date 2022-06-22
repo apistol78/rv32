@@ -21,19 +21,6 @@ static uint32_t uart_rx_u32(uint8_t port)
 	return *(uint32_t*)tmp;
 }
 
-static void fatal_error(uint8_t error)
-{
-	for (;;)
-	{
-		sysreg_write(SR_REG_LEDS, 0x80 | error);
-		for (uint32_t i = 0; i < 1000000; ++i)
-			__asm__ volatile ("nop");
-		sysreg_write(SR_REG_LEDS, 0x00 | error);
-		for (uint32_t i = 0; i < 1000000; ++i)
-			__asm__ volatile ("nop");
-	}
-}
-
 static int32_t launch_elf(const char* filename)
 {
 	printf("open \"%s\"...\n", filename);
@@ -130,6 +117,140 @@ static int32_t launch_elf(const char* filename)
 	return 4;
 }
 
+static void remote_control()
+{
+	printf("waiting on UART...\n");
+	for (;;)
+	{
+		uint8_t cmd = uart_rx_u8(0);
+		sysreg_write(SR_REG_LEDS, cmd);
+
+		// poke
+		if (cmd == 0x01)
+		{
+			uint32_t addr = uart_rx_u32(0);
+			uint8_t nb = uart_rx_u8(0);
+			uint8_t cs = 0;
+
+			if (nb == 0)
+			{
+				uart_tx_u8(0, 0x81);	// Invalid data.
+				continue;
+			}
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&addr;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			// Receive 
+			uint8_t r[256];
+			for (uint8_t i = 0; i < nb; ++i)
+			{
+				uint8_t d = uart_rx_u8(0);
+				r[i] = d;
+				cs ^= d;
+			}
+
+			if (cs == uart_rx_u8(0))
+			{
+				// Write data to memory.
+				for (uint8_t i = 0; i < nb; ++i)
+					*(uint8_t*)(addr + i) = r[i];
+
+				// Verify data written to memory.
+				uint32_t result = 0x80;
+				for (uint8_t i = 0; i < nb; ++i)
+				{
+					if (*(uint8_t*)(addr + i) != r[i])
+					{
+						result = 0x83;
+						break;
+					}
+				}
+
+				uart_tx_u8(0, result);
+			}
+			else
+				uart_tx_u8(0, 0x82);	// Invalid checksum.
+		}
+
+		// peek
+		else if (cmd == 0x02)
+		{
+			uint32_t addr = uart_rx_u32(0);
+			uint8_t nb = uart_rx_u8(0);
+
+			if (nb == 0)
+			{
+				uart_tx_u8(0, 0x81);	// Invalid data.
+				continue;
+			}
+
+			// Ensure DCACHE is flushed.
+			__asm__ volatile ("fence");
+
+			uart_tx_u8(0, 0x80);	// Ok
+
+			for (uint8_t i = 0; i < nb; ++i)
+				uart_tx_u8(0, *(uint8_t*)addr++);
+		}
+
+		// jump to
+		else if (cmd == 0x03)
+		{
+			uint32_t addr = uart_rx_u32(0);
+			uint32_t sp = uart_rx_u32(0);
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			{
+				const uint8_t* p = (const uint8_t*)&addr;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
+
+			// Add stack to checksum.
+			{
+				const uint8_t* p = (const uint8_t*)&sp;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
+
+			if (cs == uart_rx_u8(0))
+			{
+				uart_tx_u8(0, 0x80);	// Ok
+
+				// Ensure DCACHE is flushed.
+				__asm__ volatile ("fence");
+				
+				if (sp != 0)
+				{
+					__asm__ volatile (
+						"mv	sp, %0\n"
+						:
+						: "r" (sp)
+					);
+				}
+				
+				((call_fn_t)addr)();
+			}
+			else
+				uart_tx_u8(0, 0x82);	// Invalid checksum.
+		}
+
+		// echo
+		else
+			uart_tx_u8(0, cmd);
+	}
+}
+
 void main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
@@ -158,8 +279,6 @@ void main()
 		memset(dest, 0, len);
 	}
 
-	crt_init();
-
 	printf("===============================================================================\n");
 	printf("                                 Rebel-V SoC                                   \n");
 	printf("                           created by Anders Pistol                            \n");
@@ -175,141 +294,9 @@ void main()
 	file_init();
 
 	if ((sysreg_read(SR_REG_BM0) & 0x01) == 0x00)
-	{
 		launch_elf("boot.elf");
-		for (;;);
-	}
 	else
-	{
-		printf("waiting on UART...\n");
-		for (;;)
-		{
-			uint8_t cmd = uart_rx_u8(0);
-			sysreg_write(SR_REG_LEDS, cmd);
+		remote_control();
 
-			// poke
-			if (cmd == 0x01)
-			{
-				uint32_t addr = uart_rx_u32(0);
-				uint8_t nb = uart_rx_u8(0);
-				uint8_t cs = 0;
-
-				if (nb == 0)
-				{
-					uart_tx_u8(0, 0x81);	// Invalid data.
-					continue;
-				}
-
-				// Add address to checksum.
-				const uint8_t* p = (const uint8_t*)&addr;
-				cs ^= p[0];
-				cs ^= p[1];
-				cs ^= p[2];
-				cs ^= p[3];
-
-				// Receive 
-				uint8_t r[256];
-				for (uint8_t i = 0; i < nb; ++i)
-				{
-					uint8_t d = uart_rx_u8(0);
-					r[i] = d;
-					cs ^= d;
-				}
-
-				if (cs == uart_rx_u8(0))
-				{
-					// Write data to memory.
-					for (uint8_t i = 0; i < nb; ++i)
-						*(uint8_t*)(addr + i) = r[i];
-
-					// Verify data written to memory.
-					uint32_t result = 0x80;
-					for (uint8_t i = 0; i < nb; ++i)
-					{
-						if (*(uint8_t*)(addr + i) != r[i])
-						{
-							result = 0x83;
-							break;
-						}
-					}
-
-					uart_tx_u8(0, result);
-				}
-				else
-					uart_tx_u8(0, 0x82);	// Invalid checksum.
-			}
-
-			// peek
-			else if (cmd == 0x02)
-			{
-				uint32_t addr = uart_rx_u32(0);
-				uint8_t nb = uart_rx_u8(0);
-
-				if (nb == 0)
-				{
-					uart_tx_u8(0, 0x81);	// Invalid data.
-					continue;
-				}
-
-				// Ensure DCACHE is flushed.
-				__asm__ volatile ("fence");
-
-				uart_tx_u8(0, 0x80);	// Ok
-
-				for (uint8_t i = 0; i < nb; ++i)
-					uart_tx_u8(0, *(uint8_t*)addr++);
-			}
-
-			// jump to
-			else if (cmd == 0x03)
-			{
-				uint32_t addr = uart_rx_u32(0);
-				uint32_t sp = uart_rx_u32(0);
-				uint8_t cs = 0;
-
-				// Add address to checksum.
-				{
-					const uint8_t* p = (const uint8_t*)&addr;
-					cs ^= p[0];
-					cs ^= p[1];
-					cs ^= p[2];
-					cs ^= p[3];
-				}
-
-				// Add stack to checksum.
-				{
-					const uint8_t* p = (const uint8_t*)&sp;
-					cs ^= p[0];
-					cs ^= p[1];
-					cs ^= p[2];
-					cs ^= p[3];
-				}
-
-				if (cs == uart_rx_u8(0))
-				{
-					uart_tx_u8(0, 0x80);	// Ok
-
-					// Ensure DCACHE is flushed.
-					__asm__ volatile ("fence");
-					
-					if (sp != 0)
-					{
-						__asm__ volatile (
-							"mv	sp, %0\n"
-							:
-							: "r" (sp)
-						);
-					}
-					
-					((call_fn_t)addr)();
-				}
-				else
-					uart_tx_u8(0, 0x82);	// Invalid checksum.
-			}
-
-			// echo
-			else
-				uart_tx_u8(0, cmd);
-		}
-	}
+	for (;;);
 }

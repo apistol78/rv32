@@ -11,6 +11,7 @@ class OutputStream;
 }
 
 class Bus;
+class BusAccess;
 class DCache;
 class ICache;
 
@@ -44,6 +45,7 @@ public:
 
 private:
 	traktor::Ref< Bus > m_bus;
+	traktor::Ref< BusAccess > m_busAccess;
 	traktor::Ref< DCache > m_dcache;
 	traktor::Ref< ICache > m_icache;
 	traktor::Ref< traktor::OutputStream > m_trace;
@@ -60,4 +62,6 @@ private:
 	uint32_t readCSR(uint16_t csr) const;
 
 	void writeCSR(uint16_t csr, uint32_t value);
+
+	void flushCaches();
 };

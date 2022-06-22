@@ -117,5 +117,6 @@ int mkdir(const char* path, mode_t mode)
 int32_t crt_init()
 {
 	_sbrk(0);
+	printf("** CRT heap @ 0x%08x **\n", (uintptr_t)heap);
 	return 0;
 }

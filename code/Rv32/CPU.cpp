@@ -2,6 +2,7 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32/Bus.h"
+#include "Rv32/BusAccess.h"
 #include "Rv32/CPU.h"
 #include "Rv32/DCache.h"
 #include "Rv32/Helpers.h"
@@ -170,14 +171,14 @@ inline FormatR4 parseFormatR4(uint32_t word)
 #define FR(x) m_flt_registers[x]
 #define FR_u(x) (uint32_t&)m_flt_registers[x]
 
-#define MEM_RD(addr) m_dcache->readU32(addr)
-#define MEM_WR(addr, value) m_dcache->writeU32(addr, value)
+#define MEM_RD(addr) m_busAccess->readU32(addr)
+#define MEM_WR(addr, value) m_busAccess->writeU32(addr, value)
 
-#define MEM_RD_U16(addr) m_dcache->readU16(addr)
-#define MEM_WR_U16(addr, value) m_dcache->writeU16(addr, value)
+#define MEM_RD_U16(addr) m_busAccess->readU16(addr)
+#define MEM_WR_U16(addr, value) m_busAccess->writeU16(addr, value)
 
-#define MEM_RD_U8(addr) m_dcache->readU8(addr);
-#define MEM_WR_U8(addr, value) m_dcache->writeU8(addr, value)
+#define MEM_RD_U8(addr) m_busAccess->readU8(addr);
+#define MEM_WR_U8(addr, value) m_busAccess->writeU8(addr, value)
 
 #define TRACE(s) // if (m_trace) { *m_trace << s << Endl; }
 
@@ -187,13 +188,16 @@ T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
 
 CPU::CPU(Bus* bus, OutputStream* trace)
 :   m_bus(bus)
-,	m_dcache(new DCache(bus))
-,	m_icache(new ICache(bus))
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
 ,	m_interrupt(false)
 ,	m_waitForInterrupt(false)
 {
+	m_dcache = new DCache(bus);
+	m_icache = new ICache(bus);
+
+	m_busAccess = new BusAccess(m_dcache);
+
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
 		m_registers[i] = 0x00000000;
 
@@ -282,4 +286,9 @@ void CPU::writeCSR(uint16_t csr, uint32_t value)
 {
 	//log::info << L"write CSR " << str(L"%03x", csr) << L" <= " << str(L"%08x", value) << Endl;
 	m_csr[csr] = value;
+}
+
+void CPU::flushCaches()
+{
+	m_dcache->flush();
 }

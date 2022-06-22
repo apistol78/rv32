@@ -5,11 +5,11 @@
 
 using namespace traktor;
 
-T_IMPLEMENT_RTTI_CLASS(L"Bus", Bus, Device)
+T_IMPLEMENT_RTTI_CLASS(L"Bus", Bus, Object)
 
-void Bus::map(uint32_t start, uint32_t end, Device* device)
+void Bus::map(uint32_t start, uint32_t end, bool cacheable, Device* device)
 {
-	m_mappedDevices.push_back({ start, end, device });
+	m_mappedDevices.push_back({ start, end, cacheable, device });
 }
 
 Device* Bus::device(uint32_t address) const
@@ -19,6 +19,15 @@ Device* Bus::device(uint32_t address) const
 		return mappedDevice->device;
 	else
 		return nullptr;	
+}
+
+bool Bus::cacheable(uint32_t address) const
+{
+	auto mappedDevice = findMappedDevice(address);
+	if (mappedDevice)
+		return mappedDevice->cacheable;
+	else
+		return false;
 }
 
 bool Bus::writeU8(uint32_t address, uint8_t value)

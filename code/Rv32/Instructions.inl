@@ -8,66 +8,6 @@ else if ((word & 0x0000707f) == 0x00000013)
 	auto f = parseFormatI(word);
 	R_s(f.rd) = R_s(f.rs1) + f.imm;
 }
-else if ((word & 0x0000707f) == 0x0000001b)
-{
-	log::error << L"ADDIW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0000003b)
-{
-	log::error << L"ADDW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x0000302f)
-{
-	log::error << L"AMOADD.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x0000202f)
-{
-	log::error << L"AMOADD.W not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x6000302f)
-{
-	log::error << L"AMOAND.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x6000202f)
-{
-	log::error << L"AMOAND.W not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0xe000302f)
-{
-	log::error << L"AMOMAXU.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0xe000202f)
-{
-	log::error << L"AMOMAXU.W not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x4000302f)
-{
-	log::error << L"AMOOR.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x4000202f)
-{
-	log::error << L"AMOOR.W not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x0800302f)
-{
-	log::error << L"AMOSWAP.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x0800202f)
-{
-	log::error << L"AMOSWAP.W not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfe00707f) == 0x00007033)
 {
 	auto f = parseFormatR(word);
@@ -175,16 +115,6 @@ else if ((word & 0xfe00707f) == 0x02005033)
 	else		
 		R_u(f.rd) = dividend / divisor;
 }
-else if ((word & 0xfe00707f) == 0x0200503b)
-{
-	log::error << L"DIVUW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0200403b)
-{
-	log::error << L"DIVW not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xffffffff) == 0x00100073)
 {
 	return false;
@@ -219,21 +149,12 @@ else if ((word & 0xfe00007f) == 0x18000053)
 }
 else if ((word & 0x0000707f) == 0x0000000f)
 {
-}
-else if ((word & 0x0000707f) == 0x0000100f)
-{
-	log::error << L"FENCE.I not implemented." << Endl;
-	return false;
+	flushCaches();
 }
 else if ((word & 0xfe00707f) == 0xa0002053)
 {
 	auto f = parseFormatR(word);
 	R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
-}
-else if ((word & 0x0000707f) == 0x00003007)
-{
-	log::error << L"FLD not implemented." << Endl;
-	return false;
 }
 else if ((word & 0xfe00707f) == 0xa0000053)
 {
@@ -295,11 +216,6 @@ else if ((word & 0xfff0707f) == 0xf0000053)
 	auto f = parseFormatR(word);
 	FR_u(f.rd) = R(f.rs1);
 }
-else if ((word & 0x0000707f) == 0x00003027)
-{
-	log::error << L"FSD not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfe00707f) == 0x20000053)
 {
 	auto f = parseFormatR(word);
@@ -353,11 +269,6 @@ else if ((word & 0x0000707f) == 0x00004003)
 	auto f = parseFormatI(word);
 	R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 }
-else if ((word & 0x0000707f) == 0x00003003)
-{
-	log::error << L"LD not implemented." << Endl;
-	return false;
-}
 else if ((word & 0x0000707f) == 0x00001003)
 {
 	auto f = parseFormatI(word);
@@ -368,16 +279,6 @@ else if ((word & 0x0000707f) == 0x00005003)
 	auto f = parseFormatI(word);
 	R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 }
-else if ((word & 0xf9f0707f) == 0x1000302f)
-{
-	log::error << L"LR.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf9f0707f) == 0x1000202f)
-{
-	log::error << L"LR.W not implemented." << Endl;
-	return false;
-}
 else if ((word & 0x0000007f) == 0x00000037)
 {
 	auto f = parseFormatU(word);
@@ -387,11 +288,6 @@ else if ((word & 0x0000707f) == 0x00002003)
 {
 	auto f = parseFormatI(word);
 	R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
-}
-else if ((word & 0x0000707f) == 0x00006003)
-{
-	log::error << L"LWU not implemented." << Endl;
-	return false;
 }
 else if ((word & 0xfe00707f) == 0x02000033)
 {
@@ -411,16 +307,6 @@ else if ((word & 0xfe00707f) == 0x02003033)
 	uint64_t lh = (uint64_t)R(f.rs1);
 	uint64_t rh = (uint64_t)R(f.rs2);
 	R(f.rd) = (lh * rh) >> 32;
-}
-else if ((word & 0xfe00707f) == 0x02002033)
-{
-	log::error << L"MULHSU not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0200003b)
-{
-	log::error << L"MULW not implemented." << Endl;
-	return false;
 }
 else if ((word & 0xffffffff) == 0x30200073)
 {
@@ -457,40 +343,10 @@ else if ((word & 0xfe00707f) == 0x02007033)
 	else
 		R_u(f.rd) = dividend % divisor;
 }
-else if ((word & 0xfe00707f) == 0x0200703b)
-{
-	log::error << L"REMUW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0200603b)
-{
-	log::error << L"REMW not implemented." << Endl;
-	return false;
-}
 else if ((word & 0x0000707f) == 0x00000023)
 {
 	auto f = parseFormatS(word);
 	MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
-}
-else if ((word & 0xf800707f) == 0x1800302f)
-{
-	log::error << L"SC.D not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xf800707f) == 0x1800202f)
-{
-	log::error << L"SC.W not implemented." << Endl;
-	return false;
-}
-else if ((word & 0x0000707f) == 0x00003023)
-{
-	log::error << L"SD not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe007fff) == 0x12000073)
-{
-	log::error << L"SFENCE.VMA not implemented." << Endl;
-	return false;
 }
 else if ((word & 0x0000707f) == 0x00001023)
 {
@@ -506,16 +362,6 @@ else if ((word & 0xfc00707f) == 0x00001013)
 {
 	auto f = parseFormatR(word);
 	R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
-}
-else if ((word & 0xfe00707f) == 0x0000101b)
-{
-	log::error << L"SLLIW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0000103b)
-{
-	log::error << L"SLLW not implemented." << Endl;
-	return false;
 }
 else if ((word & 0xfe00707f) == 0x00002033)
 {
@@ -547,21 +393,6 @@ else if ((word & 0xfc00707f) == 0x40005013)
 	auto f = parseFormatR(word);
 	R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
 }
-else if ((word & 0xfc00707f) == 0x4000501b)
-{
-	log::error << L"SRAIW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x4000503b)
-{
-	log::error << L"SRAW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xffffffff) == 0x10200073)
-{
-	log::error << L"SRET not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfe00707f) == 0x00005033)
 {
 	auto f = parseFormatR(word);
@@ -572,35 +403,15 @@ else if ((word & 0xfc00707f) == 0x00005013)
 	auto f = parseFormatR(word);
 	R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 }
-else if ((word & 0xfc00707f) == 0x0000501b)
-{
-	log::error << L"SRLIW not implemented." << Endl;
-	return false;
-}
-else if ((word & 0xfe00707f) == 0x0000503b)
-{
-	log::error << L"SRLW not implemented." << Endl;
-	return false;
-}
 else if ((word & 0xfe00707f) == 0x40000033)
 {
 	auto f = parseFormatR(word);
 	R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 }
-else if ((word & 0xfe00707f) == 0x4000003b)
-{
-	log::error << L"SUBW not implemented." << Endl;
-	return false;
-}
 else if ((word & 0x0000707f) == 0x00002023)
 {
 	auto f = parseFormatS(word);
 	MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
-}
-else if ((word & 0xffffffff) == 0x00200073)
-{
-	log::error << L"URET not implemented." << Endl;
-	return false;
 }
 else if ((word & 0xffffffff) == 0x10500073)
 {
@@ -618,7 +429,7 @@ else if ((word & 0x0000707f) == 0x00004013)
 }
 else
 {
-	log::error << L"Unknown instruction." << Endl;
+	log::error << L"Unknown instruction, " << str(L"%08x", word) << Endl;
 	return false;
 }
 return true;

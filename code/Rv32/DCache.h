@@ -12,18 +12,25 @@ class DCache : public traktor::Object
 public:
 	explicit DCache(Bus* bus);
 
-	void writeU8(uint32_t address, uint8_t value);
-
-	void writeU16(uint32_t address, uint16_t value);
+    virtual ~DCache();
 
 	void writeU32(uint32_t address, uint32_t value);
 
-	uint8_t readU8(uint32_t address) const;
+	uint32_t readU32(uint32_t address);
 
-	uint16_t readU16(uint32_t address) const;
-
-	uint32_t readU32(uint32_t address) const;
+	void flush();
 
 private:
+    struct Line
+    {
+        uint32_t address;
+        uint32_t word;
+        bool valid;
+		bool dirty;
+    };
+
 	traktor::Ref< Bus > m_bus;
+    Line m_data[65536];
+    uint32_t m_hits;
+    uint32_t m_misses;
 };

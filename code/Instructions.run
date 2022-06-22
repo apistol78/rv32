@@ -582,6 +582,7 @@ local instructions = {
 		format = "I",
 		type = insttype.COMPLEX,
 		cpp = [[
+			flushCaches();
 		]],
 		verilog_text = [[
 			`MEM_FLUSH <= 1;
@@ -1686,15 +1687,18 @@ function main(argv)
 
 	local language = argv:get(0)
 	local debug = false
+	local cnt = 0
 
 	if language == "cpp" then
 
 		for i, inst in ipairs(instructions) do
 			assert((inst.mask & inst.data) == inst.data)
-			if i > 1 then stdout:print("else if") else stdout:print("if") end
-			stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
-			stdout:printLn("{")
-			if inst.cpp ~= nil then
+			if inst.cpp ~= nil then 
+				if cnt >= 1 then stdout:print("else if") else stdout:print("if") end
+
+				stdout:printLn(" ((word & 0x" .. string.format("%08x", inst.mask) .. ") == 0x" .. string.format("%08x", inst.data) .. ")")
+				stdout:printLn("{")
+
 				local lns = iter2tbl(lines(inst.cpp))
 				while #lns > 0 and trim(lns[1]) == "" do
 					table.remove(lns, 1)
@@ -1709,15 +1713,16 @@ function main(argv)
 				for _, ln in pairs(lns) do
 					stdout:printLn("\t" .. ln:sub(ind + 1))
 				end
-			else
-				stdout:printLn("\tlog::error << L\"" .. inst.name .. " not implemented.\" << Endl;")
-				stdout:printLn("\treturn false;")
+
+				stdout:printLn("}")
+
+				cnt = cnt + 1
 			end
-			stdout:printLn("}")
 		end
+
 		stdout:printLn("else")
 		stdout:printLn("{")
-		stdout:printLn("\tlog::error << L\"Unknown instruction.\" << Endl;")
+		stdout:printLn("\tlog::error << L\"Unknown instruction, \" << str(L\"%08x\", word) << Endl;")
 		stdout:printLn("\treturn false;")
 		stdout:printLn("}")
 		stdout:printLn("return true;")

@@ -1,31 +1,36 @@
 #pragma once
 
+#include <Core/Object.h>
 #include <Core/Ref.h>
-#include <Core/Containers/AlignedVector.h>
-#include "Rv32/Device.h"
+#include <Core/Containers/StaticVector.h>
 
-class Bus : public Device
+class CPU;
+class Device;
+
+class Bus : public traktor::Object
 {
 	T_RTTI_CLASS;
 
 public:
-	void map(uint32_t start, uint32_t end, Device* device);
+	void map(uint32_t start, uint32_t end, bool cacheable, Device* device);
 
 	Device* device(uint32_t address) const;
 
-	virtual bool writeU8(uint32_t address, uint8_t value) override final;
+	bool cacheable(uint32_t address) const;
 
-	virtual bool writeU16(uint32_t address, uint16_t value) override final;
+	bool writeU8(uint32_t address, uint8_t value);
 
-	virtual bool writeU32(uint32_t address, uint32_t value) override final;
+	bool writeU16(uint32_t address, uint16_t value);
 
-	virtual uint8_t readU8(uint32_t address) const override final;
+	bool writeU32(uint32_t address, uint32_t value);
 
-	virtual uint16_t readU16(uint32_t address) const override final;
+	uint8_t readU8(uint32_t address) const;
 
-	virtual uint32_t readU32(uint32_t address) const override final;
+	uint16_t readU16(uint32_t address) const;
 
-	virtual bool tick(CPU* cpu) override final;
+	uint32_t readU32(uint32_t address) const;
+
+	bool tick(CPU* cpu);
 
 	bool error() const { return m_error; }
 
@@ -34,10 +39,11 @@ private:
 	{
 		uint32_t start;
 		uint32_t end;
+		bool cacheable;
 		traktor::Ref< Device > device;
 	};
 
-	traktor::AlignedVector< MappedDevice > m_mappedDevices;
+	traktor::StaticVector< MappedDevice, 32 > m_mappedDevices;
 	mutable bool m_error = false;
 
 	const MappedDevice* findMappedDevice(uint32_t address) const;

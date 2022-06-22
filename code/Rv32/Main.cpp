@@ -152,17 +152,17 @@ int main(int argc, const char** argv)
 	SystemRegisters sysreg;
 
 	Bus bus;
-	bus.map(0x00000000, 0x00100000, &rom);
-	bus.map(0x20000000, 0x20800000, &sdram);
-	bus.map(0x51000000, 0x51000100, &uart1);
-	bus.map(0x52000000, 0x52000100, &uart2);
-	bus.map(0x53000000, 0x53000100, &i2c);
-	bus.map(0x54000000, 0x54000100, &sd);
-	bus.map(0x55000000, 0x55000100, &tmr);
-	bus.map(0x57000000, 0x57000100, &dma);
-	bus.map(0x58000000, 0x58004000, &plic);
-	bus.map(0x59000000, 0x59000100, &sysreg);
-	bus.map(0x5a000000, 0x5b000000, &video);
+	bus.map(0x00000000, 0x00100000, false, &rom);
+	bus.map(0x20000000, 0x20800000, true, &sdram);
+	bus.map(0x51000000, 0x51000100, false, &uart1);
+	bus.map(0x52000000, 0x52000100, false, &uart2);
+	bus.map(0x53000000, 0x53000100, false, &i2c);
+	bus.map(0x54000000, 0x54000100, false, &sd);
+	bus.map(0x55000000, 0x55000100, false, &tmr);
+	bus.map(0x57000000, 0x57000100, false, &dma);
+	bus.map(0x58000000, 0x58004000, false, &plic);
+	bus.map(0x59000000, 0x59000100, false, &sysreg);
+	bus.map(0x5a000000, 0x5b000000, false, &video);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -212,6 +212,13 @@ int main(int argc, const char** argv)
 		}
 		cpu.setSP((uint32_t)sp);
 	}
+	else
+	{
+		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
+		const uint32_t memoryAvail = sysreg.readU32(4 << 2);
+		const uint32_t sp = 0x20000000 + memoryAvail - 0x10000;
+		cpu.setSP(sp);
+	}
 
 	CircularVector< std::pair< uint32_t, uint32_t >, 32 > dbg_pc;
 	uint32_t dbg_sp = cpu.sp();
@@ -244,9 +251,9 @@ int main(int argc, const char** argv)
 
 			for (int32_t i = 0; i < 10000; ++i)
 			{
-				if (dbg_pc.full())
-					dbg_pc.pop_front();
-				dbg_pc.push_back({ cpu.pc(), cpu.sp() });
+				// if (dbg_pc.full())
+				// 	dbg_pc.pop_front();
+				// dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
 				if (!cpu.tick())
 				{
@@ -269,9 +276,9 @@ int main(int argc, const char** argv)
 		}
 		else
 		{
-			if (dbg_pc.full())
-				dbg_pc.pop_front();
-			dbg_pc.push_back({ cpu.pc(), cpu.sp() });
+			// if (dbg_pc.full())
+			// 	dbg_pc.pop_front();
+			// dbg_pc.push_back({ cpu.pc(), cpu.sp() });
 
 			if (!cpu.tick())
 			{
