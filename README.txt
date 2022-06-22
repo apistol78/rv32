@@ -36,3 +36,8 @@ SDRAM
 16777215 words
 
 536870912 bytes => 512 MByte
+
+
+
+Winbond SDRAM, W9825G6KH-6
+W9864G6JT

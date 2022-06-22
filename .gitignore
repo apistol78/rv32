@@ -9,6 +9,8 @@
 /board/qmtech_cv/db
 /board/qmtech_cv/output_files
 /board/qmtech_cv/incremental*
+/board/qmtech_cv/greybox_tmp
+/board/qmtech_cv/*.txt
 
 /board/qmtech_k7___
 /board/qmtech_k7_git_tst
@@ -36,3 +38,5 @@
 /*.s16
 /*.vmem
 /*.vmem-range
+
+/uc/shid/build
