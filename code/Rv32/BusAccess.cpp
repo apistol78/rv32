@@ -1,4 +1,5 @@
 #include <Core/Log/Log.h>
+#include <Core/Misc/String.h>
 #include "Rv32/BusAccess.h"
 #include "Rv32/DCache.h"
 
@@ -47,12 +48,17 @@ void BusAccess::writeU16(uint32_t address, uint16_t value)
 	case 2:
 		w = (w & 0x0000ffff) | (value << 16);
 		break;
+	default:
+		log::error << L"Unaligned 16-bit write to " << str(L"%08x", address) << Endl;
+		break;
 	}
 	m_dcache->writeU32(wa, w);
 }
 
 void BusAccess::writeU32(uint32_t address, uint32_t value)
 {
+	if ((address & 3) != 0)
+		log::error << L"Unaligned 32-bit write to " << str(L"%08x", address) << Endl;
 	m_dcache->writeU32(address, value);
 }
 
@@ -86,11 +92,16 @@ uint16_t BusAccess::readU16(uint32_t address) const
 		return r & 0xffff;
 	case 2:
 		return (r >> 16) & 0xffff;
+	default:
+		log::error << L"Unaligned 16-bit read from " << str(L"%08x", address) << Endl;
+		break;
 	}
 	return 0;	
 }
 
 uint32_t BusAccess::readU32(uint32_t address) const
 {
+	if ((address & 3) != 0)
+		log::error << L"Unaligned 32-bit read from " << str(L"%08x", address) << Endl;
 	return m_dcache->readU32(address);
 }

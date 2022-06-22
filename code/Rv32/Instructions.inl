@@ -100,8 +100,8 @@ else if ((word & 0xfe00707f) == 0x02004033)
 	int32_t divisor = R_s(f.rs2);
 	if (divisor == 0)
 		R_s(f.rd) = -1;
-	else if (dividend == -std::numeric_limits< int32_t >::max() && divisor == -1)
-		R_s(f.rd) = dividend;
+	else if (dividend == std::numeric_limits< int32_t >::lowest() && divisor == -1)
+		R_s(f.rd) = std::numeric_limits< int32_t >::lowest();
 	else
 		R_s(f.rd) = dividend / divisor;
 }
@@ -111,7 +111,7 @@ else if ((word & 0xfe00707f) == 0x02005033)
 	uint32_t dividend = R_u(f.rs1);
 	uint32_t divisor = R_u(f.rs2);
 	if (divisor ==  0)
-		R_s(f.rd) = -1;
+		R_u(f.rd) = 0xffffffff;
 	else		
 		R_u(f.rd) = dividend / divisor;
 }
@@ -330,6 +330,8 @@ else if ((word & 0xfe00707f) == 0x02006033)
 	int32_t divisor = R_s(f.rs2);
 	if (divisor == 0)
 		R_s(f.rd) = dividend;
+	else if (dividend == std::numeric_limits< int32_t >::lowest() && divisor == -1)
+		R_s(f.rd) = 0;
 	else
 		R_s(f.rd) = dividend % divisor;
 }
@@ -386,7 +388,11 @@ else if ((word & 0xfe00707f) == 0x00003033)
 else if ((word & 0xfe00707f) == 0x40005033)
 {
 	auto f = parseFormatR(word);
-	R_s(f.rd) = R_s(f.rs1) >> R_u(f.rs2);
+	int32_t sh = R_s(f.rs2);
+	if (sh >= 0)
+		R_s(f.rd) = R_s(f.rs1) >> sh;
+	else
+		log::error << L"SRA, shift by negative not supported!" << Endl;
 }
 else if ((word & 0xfc00707f) == 0x40005013)
 {
