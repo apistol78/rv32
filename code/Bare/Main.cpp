@@ -3,19 +3,17 @@
 #include <string.h>
 #include <math.h>
 #include "Runtime/Input.h"
+#include "Runtime/File.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/DMA.h"
+#include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
 
 #define FW 320
-#define FH 240
-
-uint8_t* framebuffer;
-
-//
+#define FH 200
 
 class Vec3
 {
@@ -66,7 +64,7 @@ int32_t max(int32_t a, int32_t b)
 	return a > b ? a : b;
 }
 
-void triangle(const Vec2i& v0, const Vec2i& v1, const Vec2i& v2, uint8_t color)
+void triangle(const Vec2i& v0, const Vec2i& v1, const Vec2i& v2, uint8_t* framebuffer, uint8_t color)
 {
 	// Compute triangle bounding box
 	int32_t minX = min3(v0.x, v1.x, v2.x);
@@ -163,33 +161,50 @@ const int32_t indices[] =
 };
 
 
-// #include "Runtime/File.h"
 
-void splash_screen()
+// void splash_screen()
+// {
+// 	for (uint32_t i = 0; i < 256; ++i)
+// 	{
+// 		const uint8_t r = rand();
+// 		const uint8_t g = rand();
+// 		const uint8_t b = rand();
+// 		video_set_palette(i, (r << 16) | (g << 8) | b);
+// 	}
+
+// 	video_set_palette(0, 0x00000000);
+// 	video_set_palette(1, 0x00ffffff);
+
+// 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+
+// 	for (uint32_t i = 0; i < FW * FH; ++i)
+// 		framebuffer[i] = rand();	
+
+// 	video_swap();	
+// }
+
+
+
+#include "font8x8/font8x8_latin.h"
+
+void draw_character(char font[][8], char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
-	for (uint32_t i = 0; i < 256; ++i)
-	{
-		const uint8_t r = rand();
-		const uint8_t g = rand();
-		const uint8_t b = rand();
-		video_set_palette(i, (r << 16) | (g << 8) | b);
+	for (int32_t x = 0; x < 8; ++x) {
+		for (int32_t y = 0; y < 8; ++y) {
+			const bool set = font[ch][x] & (1 << y);
+			if (set) {
+				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 0xff;
+			}
+		}
 	}
-
-	video_set_palette(0, 0x00000000);
-	video_set_palette(1, 0x00ffffff);
-
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-
-	for (uint32_t i = 0; i < FW * FH; ++i)
-		framebuffer[i] = rand();	
-
-	video_swap();	
 }
 
-
-
-
-
+void draw_string(char font[][8], const char* str, int32_t col, int32_t row, uint8_t* framebuffer)
+{
+	while (*str) {
+		draw_character(font, *str++, col++, row, framebuffer);
+	}
+}
 
 
 
@@ -198,50 +213,47 @@ int main()
 	runtime_init();
 
 
-	splash_screen();
+	//splash_screen();
 
 
-
-	// volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
 	
 	// int32_t fp = file_open("music.raw");
-	// const int32_t size = file_size(fp);
-	// const int32_t n = size / 2;
-
-	// printf("%d samples...\n", n);
-
-	// int16_t buf[256];
-	// for (;;)
+	// if (fp >= 0)
 	// {
-	// 	if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
+	// 	const int32_t size = file_size(fp);
+	// 	const int32_t n = size / 2;
+
+	// 	printf("%d samples...\n", n);
+
+	// 	int16_t buf[256];
+	// 	for (;;)
 	// 	{
-	// 		printf("loop\n");
-	// 		file_seek(fp, 0, 0);
-	// 		continue;
+	// 		if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
+	// 		{
+	// 			printf("loop\n");
+	// 			file_seek(fp, 0, 0);
+	// 			continue;
+	// 		}
+	// 		audio_play_mono(buf, 256);
 	// 	}
-	// 	audio_play_mono(buf, 256);
 	// }
 
 
 	for (uint32_t i = 0; i < 256; ++i)
 	{
-		const uint8_t r = rand();
-		const uint8_t g = rand();
-		const uint8_t b = rand();
+		const uint8_t r = rand() / 3;
+		const uint8_t g = r; // rand();
+		const uint8_t b = r; // rand();
 		video_set_palette(i, (r << 16) | (g << 8) | b);
 	}
 
 	video_set_palette(0, 0x00000000);
-	video_set_palette(1, 0x00ffffff);
+	video_set_palette(255, 0x00ffffff);
 
 	float head = 0.0f;
 	float pitch = 0.0f;
 	float bank = 0.0f;
 	Vec2i sv[8];
-
-	// int32_t m = 1;
-
-	printf("Enter loop...\n");
 
 	for (;;)
 	{
@@ -292,15 +304,8 @@ int main()
 			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
 		}
 
-
-		framebuffer = (uint8_t*)video_get_secondary_target();
+		uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 		memset(framebuffer, 0, FW * FH);
-
-		framebuffer[0] = 1;
-		framebuffer[159] = 1;
-		framebuffer[160] = 1;
-		framebuffer[319] = 1;
-
 
 		for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
 		{
@@ -312,9 +317,18 @@ int main()
 				sv[i0],
 				sv[i2],
 				sv[i1],
+				framebuffer,
 				255 - i
 			);			
 		}
+
+
+		draw_string(font8x8_basic, " Rebel V", 16, 7, framebuffer);
+		draw_string(font8x8_basic, "=========", 16, 8, framebuffer);
+		draw_string(font8x8_basic, "1. Demo", 16, 9, framebuffer);
+		draw_string(font8x8_basic, "2. Doom", 16, 10, framebuffer);
+		draw_string(font8x8_basic, "3. Quake", 16, 11, framebuffer);
+		draw_string(font8x8_basic, "=========", 16, 12, framebuffer);
 
 		video_swap();
 
