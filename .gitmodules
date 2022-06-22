@@ -1,3 +1,6 @@
 [submodule "code/Runtime/printf"]
 	path = code/Runtime/printf
 	url = https://github.com/mpaland/printf.git
+[submodule "code/Bare/font8x8"]
+	path = code/Bare/font8x8
+	url = https://github.com/dhepper/font8x8.git
