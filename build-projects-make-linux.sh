@@ -22,4 +22,5 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.SolutionBuilder.App \
 	-f=make2 \
 	-make-solution-template=$TRAKTOR_HOME/resources/build/configurations/make-solution.sbm \
 	-make-project-template=$TRAKTOR_HOME/resources/build/configurations/make-project.sbm \
-	Rv32Linux.xms
+	Rv32Linux.xms \
+	$1

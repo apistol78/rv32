@@ -241,9 +241,9 @@ int main()
 
 	for (uint32_t i = 0; i < 256; ++i)
 	{
-		const uint8_t r = rand() / 3;
-		const uint8_t g = r; // rand();
-		const uint8_t b = r; // rand();
+		const uint8_t r = rand();
+		const uint8_t g = rand();
+		const uint8_t b = rand();
 		video_set_palette(i, (r << 16) | (g << 8) | b);
 	}
 
@@ -264,11 +264,7 @@ int main()
 		{
 			static uint32_t last_ms = 0;
 			uint32_t ms = timer_get_ms();
-
-			//kernel_cs_lock(&lock);
 			printf("%d fps\n", (60 * 1000) / (ms - last_ms));
-			//kernel_cs_unlock(&lock);
-
 			last_ms = ms;
 			count = 0;
 		}
@@ -313,21 +309,23 @@ int main()
 			int32_t i1 = indices[i * 3 + 1];
 			int32_t i2 = indices[i * 3 + 2];
 
+			int32_t f = i >> 1;
+
 			triangle(
 				sv[i0],
 				sv[i2],
 				sv[i1],
 				framebuffer,
-				255 - i
+				f + 1
 			);			
 		}
 
 
-		draw_string(font8x8_basic, " Rebel V", 16, 7, framebuffer);
+		draw_string(font8x8_basic, " Rebel V" , 16, 7, framebuffer);
 		draw_string(font8x8_basic, "=========", 16, 8, framebuffer);
-		draw_string(font8x8_basic, "1. Demo", 16, 9, framebuffer);
-		draw_string(font8x8_basic, "2. Doom", 16, 10, framebuffer);
-		draw_string(font8x8_basic, "3. Quake", 16, 11, framebuffer);
+		draw_string(font8x8_basic, "1. Demo"  , 16, 9, framebuffer);
+		draw_string(font8x8_basic, "2. Doom"  , 16, 10, framebuffer);
+		draw_string(font8x8_basic, "3. Quake" , 16, 11, framebuffer);
 		draw_string(font8x8_basic, "=========", 16, 12, framebuffer);
 
 		video_swap();

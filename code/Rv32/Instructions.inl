@@ -388,7 +388,7 @@ else if ((word & 0xfe00707f) == 0x00003033)
 else if ((word & 0xfe00707f) == 0x40005033)
 {
 	auto f = parseFormatR(word);
-	int32_t sh = R_s(f.rs2);
+	const int32_t sh = R_s(f.rs2);
 	if (sh >= 0)
 		R_s(f.rd) = R_s(f.rs1) >> sh;
 	else
@@ -397,7 +397,8 @@ else if ((word & 0xfe00707f) == 0x40005033)
 else if ((word & 0xfc00707f) == 0x40005013)
 {
 	auto f = parseFormatR(word);
-	R_s(f.rd) = R_s(f.rs1) >> ((word >> 20) & 0x1f);
+	const int32_t sh = (int32_t)((word >> 20) & 0x1f);
+	R_s(f.rd) = R_s(f.rs1) >> sh;
 }
 else if ((word & 0xfe00707f) == 0x00005033)
 {

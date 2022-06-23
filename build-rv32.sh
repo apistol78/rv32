@@ -23,6 +23,12 @@ pushd build/rv32
 make -j4 -f Rv32.mak ReleaseStatic
 popd
 
+# Generate solution only containing Hex2Verilog.
+./build-projects-make-linux.sh
+pushd build/linux
+make -j4 -f Rv32.mak ReleaseStatic
+popd
+
 # Generate firmware verilog memory file, \note using last built converter.
 riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Firmware Firmware.hex
 build/linux/ReleaseStatic/Hex2Verilog -word=32 Firmware.hex -vmem=Firmware.vmem -vmem-range=Firmware.vmem-range
@@ -41,7 +47,7 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-# Generate solution.
+# Generate solution, this time containing all projects.
 ./build-projects-make-linux.sh
 
 # Build host projects.
