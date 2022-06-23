@@ -282,7 +282,15 @@ int main(int argc, const char **argv)
 
 	if (cmdLine.hasOption('s', L"stack"))
 	{
-		uint32_t sp = (uint32_t)cmdLine.getOption('s', L"stack").getInteger();
+		const uint32_t sp = (uint32_t)cmdLine.getOption('s', L"stack").getInteger();
+		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
+		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
+	}
+	else
+	{
+		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
+		const uint32_t memoryAvail = 0x800000;
+		const uint32_t sp = 0x20000000 + memoryAvail - 0x10000;		
 		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
 		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
 	}
