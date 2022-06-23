@@ -59,6 +59,7 @@
 
 using namespace traktor;
 
+const uint32_t c_memoryAvail = 0x800000;
 bool g_going = true;
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
@@ -289,8 +290,7 @@ int main(int argc, const char **argv)
 	else
 	{
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
-		const uint32_t memoryAvail = 0x800000;
-		const uint32_t sp = 0x20000000 + memoryAvail - 0x10000;		
+		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x10000;		
 		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
 		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
 	}

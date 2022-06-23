@@ -5,6 +5,11 @@ using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"SystemRegisters", SystemRegisters, Device)
 
+SystemRegisters::SystemRegisters(uint32_t memoryAvail)
+:	m_memoryAvail(memoryAvail)
+{
+}
+
 bool SystemRegisters::writeU8(uint32_t address, uint8_t value)
 {
 	return true;
@@ -43,7 +48,7 @@ uint32_t SystemRegisters::readU32(uint32_t address) const
 	case 3 << 2:
 		return 5;			// device id
 	case 4 << 2:
-		return 0x00800000;
+		return m_memoryAvail;
 	}
 	return 0;
 }

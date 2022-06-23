@@ -52,6 +52,8 @@ using namespace traktor;
 namespace
 {
 
+const uint32_t c_memoryAvail = 0x1000000;
+
 const wchar_t* c_registerNames[] =
 {
 	L"ZERO",
@@ -140,7 +142,7 @@ int main(int argc, const char** argv)
 	}
 
 	Memory rom(0x00100000);
-	Memory sdram(0x00800000);
+	Memory sdram(c_memoryAvail);
 	Video video;
 	UART uart1;
 	UART uart2;
@@ -149,11 +151,11 @@ int main(int argc, const char** argv)
 	Unknown dma(L"DMA", true);
 	TimerD tmr;
 	Unknown plic(L"PLIC", true);
-	SystemRegisters sysreg;
+	SystemRegisters sysreg(c_memoryAvail);
 
 	Bus bus;
 	bus.map(0x00000000, 0x00100000, false, &rom);
-	bus.map(0x20000000, 0x20800000, true, &sdram);
+	bus.map(0x20000000, 0x20000000 + c_memoryAvail, true, &sdram);
 	bus.map(0x51000000, 0x51000100, false, &uart1);
 	bus.map(0x52000000, 0x52000100, false, &uart2);
 	bus.map(0x53000000, 0x53000100, false, &i2c);
@@ -215,8 +217,7 @@ int main(int argc, const char** argv)
 	else
 	{
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
-		const uint32_t memoryAvail = sysreg.readU32(4 << 2);
-		const uint32_t sp = 0x20000000 + memoryAvail - 0x10000;
+		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x10000;
 		cpu.setSP(sp);
 	}
 
