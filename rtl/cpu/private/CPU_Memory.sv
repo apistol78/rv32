@@ -196,7 +196,7 @@ module CPU_Memory #(
 					end
 					else if (i_data.mem_write) begin
 						dcache_request <= 1;
-						if (i_data.mem_width == 4) begin
+						if (i_data.mem_width == `MEMW_4) begin
 							dcache_rw <= 1;
 							dcache_wdata <= i_data.rd;
 							state <= WRITE_WORD;
@@ -235,12 +235,12 @@ module CPU_Memory #(
 					dcache_request <= 0;
 					data.tag <= i_data.tag;
 					case (i_data.mem_width)
-						4: data.rd <= dcache_rdata;
-						2: data.rd <= { { 16{ i_data.mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
-						1: data.rd <= { { 24{ i_data.mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
+						`MEMW_4: data.rd <= dcache_rdata;
+						`MEMW_2: data.rd <= { { 16{ i_data.mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
+						`MEMW_1: data.rd <= { { 24{ i_data.mem_signed & bus_rdata_byte[ 7] } }, bus_rdata_byte[ 7:0] };
 						default: data.rd <= 0;
 					endcase
-					data.inst_rd <= i_data.mem_inst_rd; //inst_rd;
+					data.inst_rd <= i_data.mem_inst_rd;
 					state <= IDLE;
 				end
 			end
@@ -267,7 +267,7 @@ module CPU_Memory #(
 			WRITE_RMW_1: begin
 				dcache_request <= 1;
 				dcache_rw <= 1;
-				if (i_data.mem_width == 1) begin
+				if (i_data.mem_width == `MEMW_1) begin
 					case (address_byte_index)
 						2'd0: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16], rmw_rdata[15:8], i_data.rd[7:0] };
 						2'd1: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16],  i_data.rd[7:0], rmw_rdata[7:0] };

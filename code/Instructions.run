@@ -1904,9 +1904,18 @@ function main(argv)
 		stdout:printLn("\t1'b0;")
 		stdout:printLn("")
 
-		stdout:printLn("wire [2:0] memory_width = ")
+		stdout:printLn("wire [1:0] memory_width = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " ? 3'd" .. inst.verilog_memory.width .. " :")
+			if inst.verilog_memory.width == 1 then
+				stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " ? 2'b00 :")
+			elseif inst.verilog_memory.width == 2 then
+				stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " ? 2'b01 :")
+			elseif inst.verilog_memory.width == 4 then
+				stdout:printLn("\tis_" .. string.format("%-3s", inst.name) .. " ? 2'b10 :")
+			else
+				stderr:printLn("Incorrect memory width in instruction " .. inst.name)
+				return 1
+			end
 		end
 		stdout:printLn("\t3'd0;")
 		stdout:printLn("")

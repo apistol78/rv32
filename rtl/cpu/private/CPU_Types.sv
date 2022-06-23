@@ -73,7 +73,7 @@ typedef struct packed
 	bit [2:0] alu_operand2;			//!< ALU operand 2 index.
 	bit memory_read;				//!< Memory read instruction.
 	bit memory_write;				//!< Memory write instruction.
-	bit [2:0] memory_width;			//!< Memory access width (1, 2, or 4) in bytes.
+	bit [1:0] memory_width;			//!< Memory access width (00 = 1, 01 = 2, 10 = 4, 11 = invalid) in bytes.
 	bit memory_signed;				//!< Signed extended memory access.
 	bit [4:0] op;					//!< Complex instruction operation code.
 	// bit fpu;						//!< FPU instruction.
@@ -89,7 +89,7 @@ typedef struct packed
 	bit mem_read;
 	bit mem_write;
 	bit mem_flush;
-	bit [2:0] mem_width;
+	bit [1:0] mem_width;
 	bit mem_signed;
 	bit [31:0] mem_address;
 	register_t mem_inst_rd;			//!< Memory load into register, separate from inst_rd since we cannot forward from execute on load.

@@ -17,17 +17,17 @@ wire memory_write =
 	is_SW  |
 	1'b0;
 
-wire [2:0] memory_width = 
-	is_FLW ? 3'd4 :
-	is_FSW ? 3'd4 :
-	is_LB  ? 3'd1 :
-	is_LBU ? 3'd1 :
-	is_LH  ? 3'd2 :
-	is_LHU ? 3'd2 :
-	is_LW  ? 3'd4 :
-	is_SB  ? 3'd1 :
-	is_SH  ? 3'd2 :
-	is_SW  ? 3'd4 :
+wire [1:0] memory_width = 
+	is_FLW ? 2'b10 :
+	is_FSW ? 2'b10 :
+	is_LB  ? 2'b00 :
+	is_LBU ? 2'b00 :
+	is_LH  ? 2'b01 :
+	is_LHU ? 2'b01 :
+	is_LW  ? 2'b10 :
+	is_SB  ? 2'b00 :
+	is_SH  ? 2'b01 :
+	is_SW  ? 2'b10 :
 	3'd0;
 
 wire memory_signed = 

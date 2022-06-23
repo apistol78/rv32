@@ -69,4 +69,9 @@
 `define CSR_MIMPID		12'hf13
 `define CSR_MHARTID		12'hf14
 
+// Memory widths
+`define MEMW_1	2'b00
+`define MEMW_2	2'b01
+`define MEMW_4	2'b10
+
 `endif	// _CPU_DEFINES_SV
