@@ -1294,8 +1294,6 @@ void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
 
 	numframes = LittleLong (pingroup->numframes);
 
-	printf("** Mod_LoadAliasGroup **, %08x, numframes = %d (%d)\n", (uint32_t)pin, numframes, pingroup->numframes);
-
 	paliasgroup = Hunk_AllocName (sizeof (maliasgroup_t) +
 			(numframes - 1) * sizeof (paliasgroup->frames[0]), "Mod_LoadAliasGroup"); //loadname);
 
@@ -1318,13 +1316,10 @@ void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
 
 	for (i=0 ; i<numframes ; i++)
 	{
-		printf("** Mod_LoadAliasGroup ** %d. interval %f\n", i, pin_intervals->interval);
-
 		*poutintervals = LittleFloat (pin_intervals->interval);
 		if (*poutintervals <= 0.0f)
 		{
-			//Sys_Error ("Mod_LoadAliasGroup: interval<=0");
-			printf ("Mod_LoadAliasGroup: interval<=0");
+			Sys_Error ("Mod_LoadAliasGroup: interval<=0");
 			*poutintervals = 0.05f;
 		}
 
