@@ -12,6 +12,20 @@ BusAccess::BusAccess(DCache* dcache)
 {
 }
 
+BusAccess::~BusAccess()
+{
+	uint64_t wt = m_nw8 + m_nw16 + m_nw32;
+	uint64_t rt = m_nr8 + m_nr16 + m_nr32;
+
+	log::info << L"Bus access:" << Endl;
+	log::info << str(L"%-12d", m_nw8)  << L" write 8-bit  (" << str(L"%.1f%%", (m_nw8 * 100.0) / wt)  << L")" << Endl;
+	log::info << str(L"%-12d", m_nw16) << L" write 16-bit (" << str(L"%.1f%%", (m_nw16 * 100.0) / wt) << L")" << Endl;
+	log::info << str(L"%-12d", m_nw32) << L" write 32-bit (" << str(L"%.1f%%", (m_nw32 * 100.0) / wt) << L")" << Endl;
+	log::info << str(L"%-12d", m_nr8)  << L" read 8-bit   (" << str(L"%.1f%%", (m_nr8 * 100.0) / rt)  << L")" << Endl;
+	log::info << str(L"%-12d", m_nr16) << L" read 16-bit  (" << str(L"%.1f%%", (m_nr16 * 100.0) / rt) << L")" << Endl;
+	log::info << str(L"%-12d", m_nr32) << L" read 32-bit  (" << str(L"%.1f%%", (m_nr32 * 100.0) / rt) << L")" << Endl;
+}
+
 void BusAccess::writeU8(uint32_t address, uint8_t value)
 {
 	const uint32_t wa = address & ~3;
@@ -33,6 +47,7 @@ void BusAccess::writeU8(uint32_t address, uint8_t value)
 		break;
 	}
 	m_dcache->writeU32(wa, w);
+	++m_nw8;
 }
 
 void BusAccess::writeU16(uint32_t address, uint16_t value)
@@ -53,6 +68,7 @@ void BusAccess::writeU16(uint32_t address, uint16_t value)
 		break;
 	}
 	m_dcache->writeU32(wa, w);
+	++m_nw16;
 }
 
 void BusAccess::writeU32(uint32_t address, uint32_t value)
@@ -60,13 +76,17 @@ void BusAccess::writeU32(uint32_t address, uint32_t value)
 	if ((address & 3) != 0)
 		log::error << L"Unaligned 32-bit write to " << str(L"%08x", address) << Endl;
 	m_dcache->writeU32(address, value);
+	++m_nw32;
 }
 
 uint8_t BusAccess::readU8(uint32_t address) const
 {
 	const uint32_t ra = address & ~3;
 	const uint32_t rb = address & 3;
-	uint32_t r = m_dcache->readU32(ra);
+
+	const uint32_t r = m_dcache->readU32(ra);
+	++m_nr8;
+
 	switch(rb)
 	{
 	case 0:
@@ -85,7 +105,10 @@ uint16_t BusAccess::readU16(uint32_t address) const
 {
 	const uint32_t ra = address & ~3;
 	const uint32_t rb = address & 3;
-	uint32_t r = m_dcache->readU32(ra);
+
+	const uint32_t r = m_dcache->readU32(ra);
+	++m_nr16;
+
 	switch(rb)
 	{
 	case 0:
@@ -103,5 +126,9 @@ uint32_t BusAccess::readU32(uint32_t address) const
 {
 	if ((address & 3) != 0)
 		log::error << L"Unaligned 32-bit read from " << str(L"%08x", address) << Endl;
-	return m_dcache->readU32(address);
+
+	const uint32_t r = m_dcache->readU32(address);
+	++m_nr32;
+
+	return r;
 }

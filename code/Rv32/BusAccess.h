@@ -12,6 +12,8 @@ class BusAccess : public traktor::Object
 public:
 	explicit BusAccess(DCache* dcache);
 
+	virtual ~BusAccess();
+
 	void writeU8(uint32_t address, uint8_t value);
 
 	void writeU16(uint32_t address, uint16_t value);
@@ -26,4 +28,10 @@ public:
 
 private:
 	traktor::Ref< DCache > m_dcache;
+	mutable uint64_t m_nw8 = 0;
+	mutable uint64_t m_nw16 = 0;
+	mutable uint64_t m_nw32 = 0;
+	mutable uint64_t m_nr8 = 0;
+	mutable uint64_t m_nr16 = 0;
+	mutable uint64_t m_nr32 = 0;
 };
