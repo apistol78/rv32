@@ -34,6 +34,7 @@
 #endif
 #include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
+#include "Rv32/Helpers.h"
 #include "Rv32/LoadELF.h"
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
@@ -52,43 +53,7 @@ using namespace traktor;
 namespace
 {
 
-const uint32_t c_memoryAvail = 0x1000000;
-
-const wchar_t* c_registerNames[] =
-{
-	L"ZERO",
-	L"RA",
-	L"SP",
-	L"GP",
-	L"TP",
-	L"T0",
-	L"T1",
-	L"T2",
-	L"S0/FP",
-	L"S1",
-	L"A0",
-	L"A1",
-	L"A2",
-	L"A3",
-	L"A4",
-	L"A5",
-	L"A6",
-	L"A7",
-	L"S2",
-	L"S3",
-	L"S4",
-	L"S5",
-	L"S6",
-	L"S7",
-	L"S8",
-	L"S9",
-	L"S10",
-	L"S11",
-	L"T3",
-	L"T4",
-	L"T5",
-	L"T6"
-};
+const uint32_t c_memoryAvail = 0x2000000;
 
 }
 
@@ -307,7 +272,7 @@ int main(int argc, const char** argv)
 	log::info << L"---" << Endl;
 
 	for (uint32_t i = 0; i < 32; ++i)
-		log::info << str(L"%-5S", c_registerNames[i]) << L" : " << str(L"%08x", cpu.reg(i)) << Endl;
+		log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu.reg(i)) << Endl;
 
 	// for (int i = 0; i < dbg_pc.size(); ++i)
 	// 	log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;

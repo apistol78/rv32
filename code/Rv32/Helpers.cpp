@@ -2,40 +2,40 @@
 
 const wchar_t* getRegisterName(uint32_t index)
 {
-    const wchar_t* c_names[] =
-    {
-        L"zero",
-		L"ra",
-		L"sp",
-		L"gp",
-		L"tp",
-		L"t0",
-		L"t1",
-		L"t2",
-		L"s0",
-		L"s1",
-		L"a0",
-		L"a1",
-		L"a2",
-		L"a3",
-		L"a4",
-		L"a5",
-		L"a6",
-		L"a7",
-		L"s2",
-		L"s3",
-		L"s4",
-		L"s5",
-		L"s6",
-		L"s7",
-		L"s8",
-		L"s9",
-		L"s10",
-		L"s11",
-		L"t3",
-		L"t4",
-		L"t5",
-		L"t6"
-    };
-    return c_names[index];
+	const wchar_t* c_names[] =
+	{
+		L"ZERO",
+		L"RA",
+		L"SP",
+		L"GP",
+		L"TP",
+		L"T0",
+		L"T1",
+		L"T2",
+		L"S0/FP",
+		L"S1",
+		L"A0",
+		L"A1",
+		L"A2",
+		L"A3",
+		L"A4",
+		L"A5",
+		L"A6",
+		L"A7",
+		L"S2",
+		L"S3",
+		L"S4",
+		L"S5",
+		L"S6",
+		L"S7",
+		L"S8",
+		L"S9",
+		L"S10",
+		L"S11",
+		L"T3",
+		L"T4",
+		L"T5",
+		L"T6"
+	};
+	return c_names[index];
 }

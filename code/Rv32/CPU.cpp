@@ -244,10 +244,10 @@ bool CPU::tick()
 		*m_trace << Endl;
 	}
 
-	if ((word & 0x3) == 0x3)
+	// if ((word & 0x3) == 0x3)
 		m_next = m_pc + 4;
-	else
-		m_next = m_pc + 2;
+	// else
+	// 	m_next = m_pc + 2;
 
 	// zero register is hardcoded.
 	R(0) = 0;
