@@ -10,29 +10,9 @@ SystemRegisters::SystemRegisters(uint32_t memoryAvail)
 {
 }
 
-bool SystemRegisters::writeU8(uint32_t address, uint8_t value)
-{
-	return true;
-}
-
-bool SystemRegisters::writeU16(uint32_t address, uint16_t value)
-{
-	return true;
-}
-
 bool SystemRegisters::writeU32(uint32_t address, uint32_t value)
 {
 	return true;
-}
-
-uint8_t SystemRegisters::readU8(uint32_t address) const
-{
-	return 0;
-}
-
-uint16_t SystemRegisters::readU16(uint32_t address) const
-{
-	return 0;
 }
 
 uint32_t SystemRegisters::readU32(uint32_t address) const

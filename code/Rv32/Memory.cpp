@@ -18,46 +18,6 @@ void Memory::setReadOnly(bool readOnly)
 	m_readOnly = readOnly;
 }
 
-bool Memory::writeU8(uint32_t address, uint8_t value)
-{
-	if (address >= m_capacity)
-	{
-		log::error << L"Trying to write to memory at 0x" << str(L"%08x", address) << L", out of bounds!" << Endl;
-		return false;
-	}
-
-	if (!m_readOnly)
-	{
-		*(uint8_t*)(m_data.c_ptr() + address) = value;
-		return true;
-	}
-	else
-	{
-		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
-		return false;
-	}
-}
-
-bool Memory::writeU16(uint32_t address, uint16_t value)
-{
-	if (address >= m_capacity)
-	{
-		log::error << L"Trying to write to memory at 0x" << str(L"%08x", address) << L", out of bounds!" << Endl;
-		return false;
-	}
-
-	if (!m_readOnly)
-	{
-		*(uint16_t*)(m_data.c_ptr() + address) = value;
-		return true;
-	}
-	else
-	{
-		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
-		return false;
-	}
-}
-
 bool Memory::writeU32(uint32_t address, uint32_t value)
 {
 	if (address >= m_capacity)
@@ -76,28 +36,6 @@ bool Memory::writeU32(uint32_t address, uint32_t value)
 		log::error << L"Trying to write to read-only memory at 0x" << str(L"%08x", address) << Endl;
 		return false;
 	}
-}
-
-uint8_t Memory::readU8(uint32_t address) const
-{
-	if (address >= m_capacity)
-	{
-		log::error << L"Trying to read from memory at 0x" << str(L"%08x", address) << L", out of bounds!" << Endl;
-		return 0;
-	}
-
-	return *(const uint8_t*)(m_data.c_ptr() + address);
-}
-
-uint16_t Memory::readU16(uint32_t address) const
-{
-	if (address >= m_capacity)
-	{
-		log::error << L"Trying to read from memory at 0x" << str(L"%08x", address) << L", out of bounds!" << Endl;
-		return 0;
-	}
-
-	return *(const uint16_t*)(m_data.c_ptr() + address);
 }
 
 uint32_t Memory::readU32(uint32_t address) const

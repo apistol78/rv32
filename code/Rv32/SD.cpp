@@ -15,20 +15,8 @@ SD::SD()
 	m_stream = FileSystem::getInstance().open(L"FS.img", File::FmRead);
 }
 
-bool SD::writeU8(uint32_t address, uint8_t value)
-{
-	return true;
-}
-
-bool SD::writeU16(uint32_t address, uint16_t value)
-{
-	return true;
-}
-
 bool SD::writeU32(uint32_t address, uint32_t value)
 {
-	//log::info << L"SD : WRITE U32, address " << str(L"%08x", address) << L", value " << str(L"%08x", value) << Endl;
-
 	const uint8_t mask = (uint8_t)(value >> 8);
 	const uint8_t write = (uint8_t)value;
 
@@ -44,16 +32,6 @@ bool SD::writeU32(uint32_t address, uint32_t value)
 		m_r_dat = (value & 0xf0) >> 4;
 
 	return true;
-}
-
-uint8_t SD::readU8(uint32_t address) const
-{
-	return 0;
-}
-
-uint16_t SD::readU16(uint32_t address) const
-{
-	return 0;
 }
 
 uint32_t SD::readU32(uint32_t address) const

@@ -1,4 +1,5 @@
 #include <Core/Log/Log.h>
+#include <Core/Misc/String.h>
 #include "Rv32/DCache.h"
 #include "Rv32/Bus.h"
 
@@ -20,7 +21,7 @@ DCache::DCache(Bus* bus)
 
 DCache::~DCache()
 {
-    log::info << L"DCache " << m_hits << L"/" << m_misses << L" (" << (m_hits * 100) / (m_hits + m_misses) << L"%)" << Endl;
+	log::info << L"DCache " << m_hits << L"/" << m_misses << L" (" << str(L"%.2f%%", (m_hits * 100.0) / (m_hits + m_misses)) << L")" << Endl;
 }
 
 void DCache::writeU32(uint32_t address, uint32_t value)

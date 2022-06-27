@@ -7,7 +7,9 @@
 #include <Core/Misc/String.h>
 #include <Core/Misc/TString.h>
 #include "Rv32/Bus.h"
+#include "Rv32/BusAccess.h"
 #include "Rv32/CPU.h"
+#include "Rv32/DCache.h"
 #include "Rv32/LoadHEX.h"
 
 using namespace traktor;
@@ -80,6 +82,10 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 {
 	AlignedVector< uint8_t > elf;
 
+	// Temporary dcache & bus access so we can write bytes.
+	DCache dcache(&bus);
+	BusAccess busAccess(&dcache);
+
 	// Read entire ELF into memory.
 	{
 		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
@@ -120,10 +126,7 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 				const uint32_t addr = shdr[i].sh_addr;
 
 				for (uint32_t j = 0; j < shdr[i].sh_size; ++j)
-				{
-					if (!bus.writeU8(addr + j, pbits[j]))
-						return false;
-				}
+					busAccess.writeU8(addr + j, pbits[j]);
 			}
 		}
 		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
@@ -143,5 +146,6 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 		}
 	}
 
+	dcache.flush();
 	return true;
 }

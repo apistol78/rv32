@@ -6,29 +6,9 @@ using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"TimerD", TimerD, Device)
 
-bool TimerD::writeU8(uint32_t address, uint8_t value)
-{
-	return true;
-}
-
-bool TimerD::writeU16(uint32_t address, uint16_t value)
-{
-	return true;
-}
-
 bool TimerD::writeU32(uint32_t address, uint32_t value)
 {
 	return true;
-}
-
-uint8_t TimerD::readU8(uint32_t address) const
-{
-	return 0;
-}
-
-uint16_t TimerD::readU16(uint32_t address) const
-{
-	return 0;
 }
 
 uint32_t TimerD::readU32(uint32_t address) const

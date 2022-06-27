@@ -5,7 +5,9 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32/Bus.h"
+#include "Rv32/BusAccess.h"
 #include "Rv32/CPU.h"
+#include "Rv32/DCache.h"
 #include "Rv32/LoadHEX.h"
 
 using namespace traktor;
@@ -20,6 +22,10 @@ bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus)
 		log::error << L"Unable to open HEX \"" << fileName << L"\"." << Endl;
 		return false;
 	}
+
+	// Temporary dcache & bus access so we can write bytes.
+	DCache dcache(&bus);
+	BusAccess busAccess(&dcache);	
 
 	uint32_t segment = 0x00000000;
 	uint32_t upper = 0x00000000;
@@ -47,7 +53,7 @@ bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus)
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
-				bus.writeU8((upper | addr) + segment, (uint8_t)v);
+				busAccess.writeU8((upper | addr) + segment, (uint8_t)v);
 				start = std::min(start, (upper | addr) + segment);
 				end = std::max(end, (upper | addr) + segment);
 				addr++;
@@ -79,5 +85,6 @@ bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus)
 	if (start <= end)
 		log::info << L"HEX loaded into " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
 
+	dcache.flush();
 	return true;
 }
