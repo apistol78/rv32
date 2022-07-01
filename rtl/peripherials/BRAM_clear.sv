@@ -11,17 +11,17 @@ module BRAM_clear #(
 	parameter ADDR_LSH = 2,
 	parameter CLEAR_VALUE = 32'h0
 )(
-	input wire i_reset,
-	input wire i_clock,
-	output wire o_initialized,
-	input wire i_request,
-	input wire i_rw,
-	input wire [31:0] i_address,
-	input wire [WIDTH - 1:0] i_wdata,
-	output reg [WIDTH - 1:0] o_rdata,
-	output reg o_ready
+	input i_reset,
+	input i_clock,
+	output o_initialized,
+	input i_request,
+	input i_rw,
+	input [31:0] i_address,
+	input [WIDTH - 1:0] i_wdata,
+	output bit [WIDTH - 1:0] o_rdata,
+	output bit o_ready
 );
-    reg [31:0] clear = 0;
+    bit [31:0] clear = 0;
     
     assign o_initialized = clear >= SIZE;
 

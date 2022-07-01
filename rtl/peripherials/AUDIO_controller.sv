@@ -9,9 +9,9 @@ module AUDIO_controller(
 	input i_request,
 	input i_rw,
 	input [15:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
-	output logic o_interrupt,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
+	output bit o_interrupt,
 
 	// Audio output
 	input i_output_busy,
@@ -20,8 +20,8 @@ module AUDIO_controller(
 
     wire output_fifo_empty;
 	wire output_fifo_full;
-	logic output_fifo_wr = 0;
-	logic output_fifo_rd = 0;
+	bit output_fifo_wr = 0;
+	bit output_fifo_rd = 0;
 	wire [7:0] output_fifo_queued;
 	FIFO64 #(
 		.DEPTH(256),
@@ -65,7 +65,7 @@ module AUDIO_controller(
 		output_fifo_rd <= !i_output_busy && !output_fifo_empty;
 	end
 
-	logic [1:0] last_queued = 2'b0;
+	bit [1:0] last_queued = 2'b0;
 	always_ff @(posedge i_clock) begin
 		last_queued <= { last_queued[0], output_fifo_queued[7] };
 	end

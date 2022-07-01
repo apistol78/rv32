@@ -19,14 +19,14 @@ module PLIC(
 	input i_rw,
 	input [23:0] i_address,
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready
+	output bit [31:0] o_rdata,
+	output bit o_ready
 );
 
-	logic [3:0] enable = 0;
-	logic [3:0] pending = 0;
-	logic interrupt_issue = 0;
-	logic interrupt_issued = 0;
+	bit [3:0] enable = 0;
+	bit [3:0] pending = 0;
+	bit interrupt_issue = 0;
+	bit interrupt_issued = 0;
 
 	assign o_interrupt = interrupt_issue;
 

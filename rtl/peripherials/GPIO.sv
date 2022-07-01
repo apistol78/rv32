@@ -7,16 +7,16 @@ module GPIO (
 	input i_rw,
 	input [1:0] i_address,
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 
 	inout [35:0] GPIO
 );
 	localparam DIR_IN = 1'b0;
 	localparam DIR_OUT = 1'b1;
 
-	logic [7:0] ctrl = 8'h00;		// All pins as inputs initially.
-	logic [7:0] outd = 8'h00;
+	bit [7:0] ctrl = 8'h00;		// All pins as inputs initially.
+	bit [7:0] outd = 8'h00;
 	
 	assign GPIO[0] = ctrl[0] ? outd[0] : 1'bz;
 	assign GPIO[1] = ctrl[1] ? outd[1] : 1'bz;

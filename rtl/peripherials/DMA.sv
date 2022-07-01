@@ -9,19 +9,19 @@ module DMA(
 	input i_rw,
 	input [1:0] i_address,
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 
 	// System
 	input i_stall,
 
 	// Bus
-	output logic o_bus_rw,				// Data read/write
-	output logic o_bus_request,			// IO request.
+	output bit o_bus_rw,				// Data read/write
+	output bit o_bus_request,			// IO request.
 	input i_bus_ready,					// IO request ready.
-	output logic [31:0] o_bus_address,	// Address
+	output bit [31:0] o_bus_address,	// Address
 	input [31:0] i_bus_rdata,			// Read data
-	output logic [31:0] o_bus_wdata		// Write data,
+	output bit [31:0] o_bus_wdata		// Write data,
 );
 	typedef enum bit [3:0]
 	{
@@ -50,16 +50,16 @@ module DMA(
 	typedef struct packed
 	{
 		dma_type_t dt;
-		logic [31:0] value_or_from;
-		logic [31:0] to;
-		logic [31:0] count;
+		bit [31:0] value_or_from;
+		bit [31:0] to;
+		bit [31:0] count;
 	}
 	dma_command_t;
 
 	wire queue_empty;
 	wire queue_full;
-	logic queue_write = 0;
-	logic queue_read = 0;
+	bit queue_write = 0;
+	bit queue_read = 0;
 	dma_command_t queue_rdata;
 	FIFO64 #(
 		.DEPTH(8),
@@ -77,7 +77,7 @@ module DMA(
 
 	dma_command_t wr_command;
 	dma_command_t rd_command;
-	logic [31:0] data;
+	bit [31:0] data;
 	state_t state = IDLE;
 
 	initial begin

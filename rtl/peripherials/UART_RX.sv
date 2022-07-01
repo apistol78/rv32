@@ -10,7 +10,7 @@ module UART_RX #(
 
 	input i_request,
 	input [1:0] i_address,
-	output logic [31:0] o_rdata,
+	output bit [31:0] o_rdata,
     output o_ready,
 
 	output bit o_interrupt,

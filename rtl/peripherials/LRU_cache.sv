@@ -8,15 +8,15 @@ module LRU_cache(
 	input i_rw,
 	input [31:0] i_address,     // Byte address
 	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
-	output logic o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 	input i_oddeven,			// Cache line channel
 
 	// SDRAM
-	output logic o_sdram_request,
-	output logic o_sdram_rw,
-	output logic [31:0] o_sdram_address,
-	output logic [127:0] o_sdram_wdata,
+	output bit o_sdram_request,
+	output bit o_sdram_rw,
+	output bit [31:0] o_sdram_address,
+	output bit [127:0] o_sdram_wdata,
 	input [127:0] i_sdram_rdata,
 	input i_sdram_ready
 );
@@ -35,18 +35,18 @@ module LRU_cache(
 
 	typedef struct packed
 	{
-		logic [27:0] page;
-		logic [127:0] data;
-		logic valid;
-		logic dirty;		
+		bit [27:0] page;
+		bit [127:0] data;
+		bit valid;
+		bit dirty;		
 	} cache_line_t;
 
 	state_t state = IDLE;
 	cache_line_t line[1:0];
 
-	logic ready = 0;
-	logic [31:0] hit = 0;
-	logic [31:0] miss = 0;
+	bit ready = 0;
+	bit [31:0] hit = 0;
+	bit [31:0] miss = 0;
 
 	wire [27:0] input_address_page = i_address[31:4];
 	wire [1:0] input_address_dword = i_address[3:2];

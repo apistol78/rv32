@@ -16,7 +16,7 @@ module BRAM #(
 	output bit o_valid
 );
     (* ram_style = "block" *)
-	reg [WIDTH - 1:0] data [0:SIZE - 1];
+	bit [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial begin
 		o_ready = 0;

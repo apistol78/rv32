@@ -11,15 +11,15 @@ module AUDIO_pwm_output #(
 )(
 	input i_clock,
 
-	output logic o_busy,
+	output bit o_busy,
 	input [15:0] i_sample,
 
 	output o_pwm
 );
 
-	logic [15:0] reload_counter =  0;
-	logic [15:0] sample = 0;
-	logic [15:0] pwm_counter = 0;
+	bit [15:0] reload_counter =  0;
+	bit [15:0] sample = 0;
+	bit [15:0] pwm_counter = 0;
 	wire [15:0] pwm_counter_rev;
 
 	initial o_busy = 0;

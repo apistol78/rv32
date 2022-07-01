@@ -2,14 +2,14 @@
 `timescale 1ns/1ns
 
 module BROM(
-	input wire i_clock,
-	input wire i_request,
-	input wire [31:0] i_address,
-	output reg [31:0] o_rdata,
-	output reg o_ready
+	input i_clock,
+	input i_request,
+	input [31:0] i_address,
+	output bit [31:0] o_rdata,
+	output bit o_ready
 );
 
-	reg [31:0] data [
+	bit [31:0] data [
 `ifdef __TESTBENCH__
 	`include "Firmware.vmem-range"		
 `else

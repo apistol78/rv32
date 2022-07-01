@@ -8,8 +8,8 @@ module RESET(
 	output o_reset_2	//< "Start" reset signal, active high.
 );
 
-	logic [31:0] counter = 0;
-	logic [4:0] sample = 0;
+	bit [31:0] counter = 0;
+	bit [4:0] sample = 0;
 
 	always_ff @(posedge i_clock) begin
 		counter <= (counter == 32'd4_000_001 ) ? 32'd0 : counter + 1'b1;

@@ -3,24 +3,24 @@
 `timescale 1ns/1ns
 
 module L2_Cache(
-	input wire i_reset,
-	input wire i_clock,
+	input i_reset,
+	input i_clock,
 
 	// Bus
-	output reg o_bus_rw,
-	output reg o_bus_request,
-	input wire i_bus_ready,
-	output reg [31:0] o_bus_address,
-	input wire [31:0] i_bus_rdata,
-	output reg [31:0] o_bus_wdata,
+	output bit o_bus_rw,
+	output bit o_bus_request,
+	input i_bus_ready,
+	output bit [31:0] o_bus_address,
+	input [31:0] i_bus_rdata,
+	output bit [31:0] o_bus_wdata,
 
 	// Input
-	input wire i_rw,
-	input wire i_request,
-	output reg o_ready,
-	input wire [31:0] i_address,
-	output reg [31:0] o_rdata,
-	input wire [31:0] i_wdata
+	input i_rw,
+	input i_request,
+	output bit o_ready,
+	input [31:0] i_address,
+	output bit [31:0] o_rdata,
+	input [31:0] i_wdata
 );
 
 	localparam SIZE	= 18;
@@ -37,9 +37,9 @@ module L2_Cache(
 
 	// Cache memory.
 	wire cache_initialized;
-	reg cache_rw;
-	reg [SIZE - 1:0] cache_address;
-	reg [63:0] cache_wdata;
+	bit cache_rw;
+	bit [SIZE - 1:0] cache_address;
+	bit [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 
 	// One cycle latency, important since
@@ -62,8 +62,8 @@ module L2_Cache(
 	);
 
 	state_t state = IDLE;
-	logic [31:0] hit = 0;
-	logic [31:0] miss = 0;
+	bit [31:0] hit = 0;
+	bit [31:0] miss = 0;
 
 	always_ff @(posedge i_clock) begin
 		case (state)

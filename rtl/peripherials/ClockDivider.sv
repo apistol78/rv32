@@ -5,19 +5,19 @@ module ClockDivider #(
     parameter CLOCK_RATE = 50000000,
     parameter BAUD_RATE = 9600
 )(
-	input wire i_reset,
-	input wire i_clock,
-	output reg o_clock
+	input i_reset,
+	input i_clock,
+	output bit o_clock
 );
 
 	localparam MAX_RATE = CLOCK_RATE / (2 * BAUD_RATE);
 	localparam CNT_WIDTH = $clog2(MAX_RATE);
 
-	logic [CNT_WIDTH:0] counter = 0;
+	bit [CNT_WIDTH:0] counter = 0;
 
 	initial o_clock = 0;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			counter <= 0;
 			o_clock <= 0;

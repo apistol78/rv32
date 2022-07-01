@@ -8,14 +8,14 @@ module SRAM_interface(
 	input i_rw,
 	input [31:0] i_address,
 	input [31:0] i_wdata,
-	output reg [31:0] o_rdata,
+	output bit [31:0] o_rdata,
 	output o_ready,
 
-	output reg [17:0] SRAM_A,
+	output bit [17:0] SRAM_A,
 	inout [15:0] SRAM_D,
 	output SRAM_CE_n,
 	output SRAM_OE_n,
-	output reg SRAM_WE_n,
+	output bit SRAM_WE_n,
 	output SRAM_LB_n,
 	output SRAM_UB_n
 );
@@ -23,8 +23,8 @@ module SRAM_interface(
 	// 50 MHz -> 8
 	localparam CYCLES = 6;
 
-	logic [15:0] count;
-	logic [15:0] wdata;
+	bit [15:0] count;
+	bit [15:0] wdata;
 	
 	initial begin
 		count = 0;

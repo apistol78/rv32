@@ -8,8 +8,8 @@ module SD (
 	input i_request,
 	input i_rw,
 	input [31:0] i_wdata,
-	output reg [31:0] o_rdata,
-	output reg o_ready,
+	output bit [31:0] o_rdata,
+	output bit o_ready,
 
     output SD_CLK,
 `ifndef __VERILATOR__
@@ -25,11 +25,11 @@ module SD (
 	localparam DIR_IN = 1'b0;
 	localparam DIR_OUT = 1'b1;
 	
-	logic clk = 1'b0;
-	logic cdir = DIR_IN;
-	logic ddir = DIR_IN;
-	logic cmd;
-	logic [3:0] dat;
+	bit clk = 1'b0;
+	bit cdir = DIR_IN;
+	bit ddir = DIR_IN;
+	bit cmd;
+	bit [3:0] dat;
 
 	wire [7:0] mask = i_wdata[15:8];
 	wire [7:0] write = i_wdata[7:0];

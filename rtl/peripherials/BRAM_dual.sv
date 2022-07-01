@@ -6,26 +6,26 @@ module BRAM_dual #(
 	parameter SIZE = 32'h400,
 	parameter ADDR_LSH = 2
 )(
-	input wire i_clock,
+	input i_clock,
 
     // Port A
-	input wire i_pa_request,
-	input wire i_pa_rw,
-	input wire [31:0] i_pa_address,
-	input wire [WIDTH - 1:0] i_pa_wdata,
-	output reg [WIDTH - 1:0] o_pa_rdata,
-	output reg o_pa_ready,
+	input i_pa_request,
+	input i_pa_rw,
+	input [31:0] i_pa_address,
+	input [WIDTH - 1:0] i_pa_wdata,
+	output bit [WIDTH - 1:0] o_pa_rdata,
+	output bit o_pa_ready,
 
     // Port B
-	input wire i_pb_request,
-	input wire i_pb_rw,
-	input wire [31:0] i_pb_address,
-	input wire [WIDTH - 1:0] i_pb_wdata,
-	output reg [WIDTH - 1:0] o_pb_rdata,
-	output reg o_pb_ready
+	input i_pb_request,
+	input i_pb_rw,
+	input [31:0] i_pb_address,
+	input [WIDTH - 1:0] i_pb_wdata,
+	output bit [WIDTH - 1:0] o_pb_rdata,
+	output bit o_pb_ready
 );
     (* ram_style = "block" *)
-	logic [WIDTH - 1:0] data [0:SIZE - 1];
+	bit [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial begin
         o_pa_ready = 0;
