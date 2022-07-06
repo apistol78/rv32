@@ -13,7 +13,7 @@ module BRAM_dual #(
 	input i_pa_rw,
 	input [31:0] i_pa_address,
 	input [WIDTH - 1:0] i_pa_wdata,
-	output bit [WIDTH - 1:0] o_pa_rdata,
+	output logic [WIDTH - 1:0] o_pa_rdata,
 	output bit o_pa_ready,
 
     // Port B
@@ -21,11 +21,11 @@ module BRAM_dual #(
 	input i_pb_rw,
 	input [31:0] i_pb_address,
 	input [WIDTH - 1:0] i_pb_wdata,
-	output bit [WIDTH - 1:0] o_pb_rdata,
+	output logic [WIDTH - 1:0] o_pb_rdata,
 	output bit o_pb_ready
 );
     (* ram_style = "block" *)
-	bit [WIDTH - 1:0] data [0:SIZE - 1];
+	logic [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial begin
         o_pa_ready = 0;

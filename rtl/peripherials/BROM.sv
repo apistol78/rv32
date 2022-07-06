@@ -5,11 +5,11 @@ module BROM(
 	input i_clock,
 	input i_request,
 	input [31:0] i_address,
-	output bit [31:0] o_rdata,
+	output logic [31:0] o_rdata,
 	output bit o_ready
 );
 
-	bit [31:0] data [
+	logic [31:0] data [
 `ifdef __TESTBENCH__
 	`include "Firmware.vmem-range"		
 `else

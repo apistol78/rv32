@@ -11,12 +11,12 @@ module BRAM #(
 	input i_rw,
 	input [31:0] i_address,
 	input [WIDTH - 1:0] i_wdata,
-	output bit [WIDTH - 1:0] o_rdata,
+	output logic [WIDTH - 1:0] o_rdata,
 	output bit o_ready,
 	output bit o_valid
 );
     (* ram_style = "block" *)
-	bit [WIDTH - 1:0] data [0:SIZE - 1];
+	logic [WIDTH - 1:0] data [0:SIZE - 1];
 
 	initial begin
 		o_ready = 0;
