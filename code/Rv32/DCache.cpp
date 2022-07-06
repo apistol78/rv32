@@ -12,7 +12,7 @@ DCache::DCache(Bus* bus)
 ,   m_hits(0)
 ,   m_misses(0)
 {
-    for (int32_t i = 0; i < 65536; ++i)
+    for (uint32_t i = 0; i < c_nlines; ++i)
 	{
         m_data[i].valid = false;
 		m_data[i].dirty = false;
@@ -28,7 +28,7 @@ void DCache::writeU32(uint32_t address, uint32_t value)
 {
 	if (m_bus->cacheable(address))
 	{
-		const uint32_t tag = (address >> 2) & 65535;
+		const uint32_t tag = (address >> 2) & (c_nlines - 1);
 		Line& line = m_data[tag];
 
 		if (line.address != address && line.valid && line.dirty)
@@ -47,7 +47,7 @@ uint32_t DCache::readU32(uint32_t address)
 {
 	if (m_bus->cacheable(address))
 	{
-		const uint32_t tag = (address >> 2) & 65535;
+		const uint32_t tag = (address >> 2) & (c_nlines - 1);
 		Line& line = m_data[tag];
 
 		if (line.valid && line.address == address)
@@ -75,7 +75,7 @@ uint32_t DCache::readU32(uint32_t address)
 
 void DCache::flush()
 {
-    for (int32_t i = 0; i < 65536; ++i)
+    for (uint32_t i = 0; i < c_nlines; ++i)
 	{
 		Line& line = m_data[i];
 		if (line.valid && line.dirty)

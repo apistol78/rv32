@@ -29,8 +29,10 @@ private:
 		bool dirty;
     };
 
+    constexpr static uint32_t c_nlines = 1 << 19;
+
 	traktor::Ref< Bus > m_bus;
-    Line m_data[65536];
+    Line m_data[c_nlines];
     uint32_t m_hits;
     uint32_t m_misses;
 };

@@ -7,9 +7,11 @@ using namespace traktor;
 
 T_IMPLEMENT_RTTI_CLASS(L"Bus", Bus, Object)
 
-void Bus::map(uint32_t start, uint32_t end, bool cacheable, Device* device)
+void Bus::map(uint32_t start, uint32_t end, bool cacheable, bool tick, Device* device)
 {
 	m_mappedDevices.push_back({ start, end, cacheable, device });
+	if (tick)
+		m_tickDevices.push_back(device);
 }
 
 Device* Bus::device(uint32_t address) const
@@ -59,11 +61,11 @@ uint32_t Bus::readU32(uint32_t address) const
 	}
 }
 
-bool Bus::tick(CPU* cpu)
+bool Bus::tick(CPU* cpu) const
 {
-	for (auto& mappedDevice : m_mappedDevices)
+	for (auto device : m_tickDevices)
 	{
-		if (!mappedDevice.device->tick(cpu))
+		if (!device->tick(cpu))
 			return false;
 	}
 	return true;

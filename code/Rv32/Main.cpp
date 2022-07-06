@@ -119,17 +119,17 @@ int main(int argc, const char** argv)
 	SystemRegisters sysreg(c_memoryAvail);
 
 	Bus bus;
-	bus.map(0x00000000, 0x00100000, false, &rom);
-	bus.map(0x20000000, 0x20000000 + c_memoryAvail, true, &sdram);
-	bus.map(0x51000000, 0x51000100, false, &uart1);
-	bus.map(0x52000000, 0x52000100, false, &uart2);
-	bus.map(0x53000000, 0x53000100, false, &i2c);
-	bus.map(0x54000000, 0x54000100, false, &sd);
-	bus.map(0x55000000, 0x55000100, false, &tmr);
-	bus.map(0x57000000, 0x57000100, false, &dma);
-	bus.map(0x58000000, 0x58004000, false, &plic);
-	bus.map(0x59000000, 0x59000100, false, &sysreg);
-	bus.map(0x5a000000, 0x5b000000, false, &video);
+	bus.map(0x00000000, 0x00100000, false, false, &rom);
+	bus.map(0x20000000, 0x20000000 + c_memoryAvail, true, false, &sdram);
+	bus.map(0x51000000, 0x51000100, false, false, &uart1);
+	bus.map(0x52000000, 0x52000100, false, false, &uart2);
+	bus.map(0x53000000, 0x53000100, false, false, &i2c);
+	bus.map(0x54000000, 0x54000100, false, true, &sd);
+	bus.map(0x55000000, 0x55000100, false, true, &tmr);
+	bus.map(0x57000000, 0x57000100, false, false, &dma);
+	bus.map(0x58000000, 0x58004000, false, false, &plic);
+	bus.map(0x59000000, 0x59000100, false, false, &sysreg);
+	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))

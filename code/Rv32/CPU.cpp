@@ -234,7 +234,7 @@ bool CPU::tick()
 		m_waitForInterrupt = false;
 	}
 
-	uint32_t word = m_icache->readU32(m_pc);
+	const uint32_t word = m_icache->readU32(m_pc);
 
 	if (m_trace)
 	{
