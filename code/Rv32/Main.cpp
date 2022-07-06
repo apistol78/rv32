@@ -201,7 +201,7 @@ int main(int argc, const char** argv)
 		uiImage = new ui::Bitmap(320, 200);
 		
 		image = new ui::Image();
-		image->create(form, uiImage, ui::Image::WsScale);
+		image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
 		form->update();
 		form->show();

@@ -241,7 +241,7 @@ int main(int argc, const char **argv)
 		containerImage->create(form, ui::WsNone, new ui::FloodLayout());
 
 		image = new ui::Image();
-		image->create(containerImage, framebuffer, ui::Image::WsScale);
+		image->create(containerImage, framebuffer, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
 		statusBar = new ui::StatusBar();
 		statusBar->create(form);
