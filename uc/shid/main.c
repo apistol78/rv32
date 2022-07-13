@@ -8,6 +8,8 @@
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
 
+#define LED_PIN 11
+
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
@@ -24,6 +26,9 @@ int main(void)
 {
 	board_init();
 	tusb_init();
+
+	gpio_init(LED_PIN);
+	gpio_set_dir(LED_PIN, GPIO_OUT);
 
 	uart_init(uart0, 115200);
 
@@ -92,6 +97,7 @@ void led_blinking_task(void)
 
 	start_ms += interval_ms;
 
-	board_led_write(led_state);
+	//board_led_write(led_state);
+	gpio_put(LED_PIN, led_state);
 	led_state = 1 - led_state;
 }
