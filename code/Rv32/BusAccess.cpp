@@ -14,16 +14,22 @@ BusAccess::BusAccess(DCache* dcache)
 
 BusAccess::~BusAccess()
 {
-	uint64_t wt = m_nw8 + m_nw16 + m_nw32;
-	uint64_t rt = m_nr8 + m_nr16 + m_nr32;
+	const uint64_t wt = m_nw8 + m_nw16 + m_nw32;
+	const uint64_t rt = m_nr8 + m_nr16 + m_nr32;
 
 	log::info << L"Bus access:" << Endl;
-	log::info << str(L"%-12d", m_nw8)  << L" write 8-bit  (" << str(L"%.1f%%", (m_nw8 * 100.0) / wt)  << L")" << Endl;
-	log::info << str(L"%-12d", m_nw16) << L" write 16-bit (" << str(L"%.1f%%", (m_nw16 * 100.0) / wt) << L")" << Endl;
-	log::info << str(L"%-12d", m_nw32) << L" write 32-bit (" << str(L"%.1f%%", (m_nw32 * 100.0) / wt) << L")" << Endl;
-	log::info << str(L"%-12d", m_nr8)  << L" read 8-bit   (" << str(L"%.1f%%", (m_nr8 * 100.0) / rt)  << L")" << Endl;
-	log::info << str(L"%-12d", m_nr16) << L" read 16-bit  (" << str(L"%.1f%%", (m_nr16 * 100.0) / rt) << L")" << Endl;
-	log::info << str(L"%-12d", m_nr32) << L" read 32-bit  (" << str(L"%.1f%%", (m_nr32 * 100.0) / rt) << L")" << Endl;
+	if (wt > 0)
+	{
+		log::info << str(L"%-12d", m_nw8)  << L" write 8-bit  (" << str(L"%.1f%%", (m_nw8 * 100.0) / wt)  << L")" << Endl;
+		log::info << str(L"%-12d", m_nw16) << L" write 16-bit (" << str(L"%.1f%%", (m_nw16 * 100.0) / wt) << L")" << Endl;
+		log::info << str(L"%-12d", m_nw32) << L" write 32-bit (" << str(L"%.1f%%", (m_nw32 * 100.0) / wt) << L")" << Endl;
+	}
+	if (rt > 0)
+	{
+		log::info << str(L"%-12d", m_nr8)  << L" read 8-bit   (" << str(L"%.1f%%", (m_nr8 * 100.0) / rt)  << L")" << Endl;
+		log::info << str(L"%-12d", m_nr16) << L" read 16-bit  (" << str(L"%.1f%%", (m_nr16 * 100.0) / rt) << L")" << Endl;
+		log::info << str(L"%-12d", m_nr32) << L" read 32-bit  (" << str(L"%.1f%%", (m_nr32 * 100.0) / rt) << L")" << Endl;
+	}
 }
 
 void BusAccess::writeU8(uint32_t address, uint8_t value)

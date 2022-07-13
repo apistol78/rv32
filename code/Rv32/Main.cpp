@@ -55,6 +55,16 @@ namespace
 
 const uint32_t c_memoryAvail = 0x2000000;
 
+uint8_t virtualToKey(ui::VirtualKey vkey)
+{
+	if (vkey == ui::VkUp)
+		return 0x52;
+	if (vkey == ui::VkDown)
+		return 0x51;
+
+	return 0;
+}
+
 }
 
 bool g_going = true;
@@ -202,6 +212,43 @@ int main(int argc, const char** argv)
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
+		image->addEventHandler< ui::MouseButtonDownEvent >([&](ui::MouseButtonDownEvent* event){
+			uart2.enqueue('M');
+			uart2.enqueue(0);
+			uart2.enqueue(0);
+			uart2.enqueue(0);
+			uart2.enqueue(1);
+			uart2.enqueue('E');
+		});
+		image->addEventHandler< ui::MouseButtonUpEvent >([&](ui::MouseButtonUpEvent* event){
+			uart2.enqueue('M');
+			uart2.enqueue(0);
+			uart2.enqueue(0);
+			uart2.enqueue(0);
+			uart2.enqueue(0);
+			uart2.enqueue('E');
+		});
+
+		image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event){
+			uint8_t kc = virtualToKey(event->getVirtualKey());
+			if (kc != 0)
+			{
+				uart2.enqueue('K');
+				uart2.enqueue(event->getSystemKey());
+				uart2.enqueue(0);
+				uart2.enqueue('E');
+			}
+		});
+		image->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
+			uint8_t kc = virtualToKey(event->getVirtualKey());
+			if (kc != 0)
+			{
+				uart2.enqueue('k');
+				uart2.enqueue(event->getSystemKey());
+				uart2.enqueue(0);
+				uart2.enqueue('E');
+			}
+		});
 
 		form->update();
 		form->show();
