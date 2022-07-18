@@ -545,7 +545,7 @@ int main(int argc, const char **argv)
 			{
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-				uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
+				uint32_t ds = 0; // soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
 
 				uint32_t ich = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__hit;
 				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
@@ -570,7 +570,7 @@ int main(int argc, const char **argv)
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
-				lastStarve = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
+				lastStarve = 0; // soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
 				
 				busActive.snapshot();
 				busCPUandDMA.snapshot();

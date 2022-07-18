@@ -22,6 +22,7 @@ module CPU_Forward (
 
 	// Forward RS1 from pipeline.
 	always_comb begin
+		rs1 = 32'h0;
 		if (i_decode_data.have_rs[0]) begin
 			rs1 =
 				(i_decode_data.inst_rs1 == i_execute_data.inst_rd) ? i_execute_data.rd :
@@ -29,12 +30,11 @@ module CPU_Forward (
 				(i_decode_data.inst_rs1 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
 				i_rs1;
 		end
-		else
-			rs1 = 32'h0;
 	end
 
 	// Forward RS2 from pipeline.
 	always_comb begin
+		rs2 = 32'h0;
 		if (i_decode_data.have_rs[1]) begin
 			rs2 =
 				(i_decode_data.inst_rs2 == i_execute_data.inst_rd) ? i_execute_data.rd :
@@ -42,8 +42,6 @@ module CPU_Forward (
 				(i_decode_data.inst_rs2 == i_writeback_data.inst_rd) ? i_writeback_data.rd :
 				i_rs2;
 		end
-		else
-			rs2 = 32'h0;
 	end
 
 endmodule

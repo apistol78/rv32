@@ -27,11 +27,11 @@ module CPU_Decode(
 	`undef RS2
 	`undef PC
 	`undef IMM
-	`define ZERO 3'd0
-	`define RS1 3'd1
-	`define RS2 3'd2
-	`define PC	3'd3
-	`define IMM 3'd4
+	`define ZERO 5'b00001
+	`define RS1  5'b00010
+	`define RS2  5'b00100
+	`define PC	 5'b01000
+	`define IMM  5'b10000
 	`include "private/generated/Instructions_alu.sv"
 //	`include "private/generated/Instructions_fpu.sv"
 	`include "private/generated/Instructions_memory.sv"

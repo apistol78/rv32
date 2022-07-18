@@ -40,16 +40,16 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 	// Prime icache.
 	if (g_primeICache)
 	{
-		for (int i = 0; i < 10; ++i)
-		{
-			const uint32_t pc = i * 4;
-			const uint32_t inst = tb->SoC__DOT__rom__DOT__data[i];
-			tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[i] =
-				(pc | 1) |
-				(uint64_t(inst) << 32);
-		};
-		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__next = 1;
-		tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1;
+		// for (int i = 0; i < 10; ++i)
+		// {
+		// 	const uint32_t pc = i * 4;
+		// 	const uint32_t inst = tb->SoC__DOT__rom__DOT__data[i];
+		// 	tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[i] =
+		// 		(pc | 1) |
+		// 		(uint64_t(inst) << 32);
+		// };
+		// tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__next = 1;
+		// tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1;
 	}
 
 	int32_t time = 0;

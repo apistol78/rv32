@@ -69,8 +69,8 @@ typedef struct packed
 	bit jump;						//!< Jump instruction.
 	bit jump_conditional;			//!< Conditional jump instruction.
 	bit [3:0] alu_operation;		//!< ALU operation code.
-	bit [2:0] alu_operand1;			//!< ALU operand 1 index.
-	bit [2:0] alu_operand2;			//!< ALU operand 2 index.
+	bit [4:0] alu_operand1;			//!< ALU operand 1, one hot.
+	bit [4:0] alu_operand2;			//!< ALU operand 2, one hot.
 	bit memory_read;				//!< Memory read instruction.
 	bit memory_write;				//!< Memory write instruction.
 	bit [1:0] memory_width;			//!< Memory access width (00 = 1, 01 = 2, 10 = 4, 11 = invalid) in bytes.

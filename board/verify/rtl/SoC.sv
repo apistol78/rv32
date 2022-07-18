@@ -37,7 +37,8 @@ module SoC(
 		.i_address(ram_address),
 		.i_wdata(bus_wdata),
 		.o_rdata(ram_rdata),
-		.o_ready(ram_ready)
+		.o_ready(ram_ready),
+		.o_valid()
 	);
 
 	//====================================================

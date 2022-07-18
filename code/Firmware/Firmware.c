@@ -11,6 +11,9 @@
 
 typedef void (*call_fn_t)();
 
+void __register_exitproc(void) {}
+void __call_exitprocs(void) {}
+
 static uint32_t uart_rx_u32(uint8_t port)
 {
 	uint8_t tmp[4];

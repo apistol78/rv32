@@ -1751,7 +1751,13 @@ function main(argv)
 
 		-- Instruction signals.
 		for _, inst in ipairs(vi) do
-			stdout:printLn("wire is_" .. string.format("%-9s", inst.name) .. " = ((`INSTRUCTION & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+			if inst.mask > 0x0000ffff or inst.data > 0x0000ffff then
+				stdout:printLn("wire is_" .. string.format("%-9s", inst.name) .. " = ((`INSTRUCTION[31:0] & 32'h" .. string.format("%08x", inst.mask) .. ") == 32'h" .. string.format("%08x", inst.data) .. ");")
+			elseif inst.mask > 0x00000ff or inst.data > 0x000000ff then
+				stdout:printLn("wire is_" .. string.format("%-9s", inst.name) .. " = ((`INSTRUCTION[15:0] & 16'h" .. string.format("%04x", inst.mask) .. "    ) == 16'h" .. string.format("%04x", inst.data) .. "    );")
+			else
+				stdout:printLn("wire is_" .. string.format("%-9s", inst.name) .. " = ((`INSTRUCTION[ 7:0] &  8'h" .. string.format("%02x", inst.mask) .. "      ) ==  8'h" .. string.format("%02x", inst.data) .. "      );")
+			end
 		end
 		stdout:printLn("")
 
@@ -1859,14 +1865,14 @@ function main(argv)
 		stdout:printLn("\t4'd0;")
 		stdout:printLn("")
 
-		stdout:printLn("wire [2:0] alu_operand1 = ")
+		stdout:printLn("wire [4:0] alu_operand1 = ")
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand1) .. " :")
 		end
 		stdout:printLn("\t3'd0;")
 		stdout:printLn("")
 
-		stdout:printLn("wire [2:0] alu_operand2 = ")
+		stdout:printLn("wire [4:0] alu_operand2 = ")
 		for i, inst in ipairs(alu) do
 			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand2) .. " :")
 		end

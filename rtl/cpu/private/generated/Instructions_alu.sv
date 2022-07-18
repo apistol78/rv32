@@ -43,7 +43,7 @@ wire [3:0] alu_operation =
 	is_XORI  ? `OP_XOR                    :
 	4'd0;
 
-wire [2:0] alu_operand1 = 
+wire [4:0] alu_operand1 = 
 	is_ADD   ? `RS1  :
 	is_ADDI  ? `RS1  :
 	is_AND   ? `RS1  :
@@ -85,7 +85,7 @@ wire [2:0] alu_operand1 =
 	is_XORI  ? `RS1  :
 	3'd0;
 
-wire [2:0] alu_operand2 = 
+wire [4:0] alu_operand2 = 
 	is_ADD   ? `RS2  :
 	is_ADDI  ? `IMM  :
 	is_AND   ? `RS2  :

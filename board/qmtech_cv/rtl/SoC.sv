@@ -218,8 +218,8 @@ module SoC(
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(timer_interrupt),
-		.i_external_interrupt(plic_interrupt),
+		.i_timer_interrupt(1'b0), //timer_interrupt),
+		.i_external_interrupt(1'b0), //plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -489,7 +489,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b0),	// 0 - read elf, 1 - wait on uart
+		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)
 	);

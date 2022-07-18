@@ -73,21 +73,43 @@ module CPU_Execute (
 	// ====================
 	// ALU
 	
-	wire [31:0] alu_operand1 =
-		(i_data.alu_operand1 == 3'd0) ? `ZERO :
-		(i_data.alu_operand1 == 3'd1) ? `RS1 :
-		(i_data.alu_operand1 == 3'd2) ? `RS2 :
-		(i_data.alu_operand1 == 3'd3) ? `PC  :
-		(i_data.alu_operand1 == 3'd4) ? `IMM :
-		32'd0;
+	// wire [31:0] alu_operand1 =
+	// 	(i_data.alu_operand1 == 3'd0) ? `ZERO :
+	// 	(i_data.alu_operand1 == 3'd1) ? `RS1 :
+	// 	(i_data.alu_operand1 == 3'd2) ? `RS2 :
+	// 	(i_data.alu_operand1 == 3'd3) ? `PC  :
+	// 	(i_data.alu_operand1 == 3'd4) ? `IMM :
+	// 	32'd0;
 
-	wire [31:0] alu_operand2 =
-		(i_data.alu_operand2 == 3'd0) ? `ZERO :
-		(i_data.alu_operand2 == 3'd1) ? `RS1 :
-		(i_data.alu_operand2 == 3'd2) ? `RS2 :
-		(i_data.alu_operand2 == 3'd3) ? `PC  :
-		(i_data.alu_operand2 == 3'd4) ? `IMM :
-		32'd0;
+	// wire [31:0] alu_operand2 =
+	// 	(i_data.alu_operand2 == 3'd0) ? `ZERO :
+	// 	(i_data.alu_operand2 == 3'd1) ? `RS1 :
+	// 	(i_data.alu_operand2 == 3'd2) ? `RS2 :
+	// 	(i_data.alu_operand2 == 3'd3) ? `PC  :
+	// 	(i_data.alu_operand2 == 3'd4) ? `IMM :
+	// 	32'd0;
+
+	bit [31:0] alu_operand1;
+	always_comb begin
+		unique case (1'b1)
+		i_data.alu_operand1[0]: alu_operand1 = `ZERO;
+		i_data.alu_operand1[1]: alu_operand1 = `RS1;
+		i_data.alu_operand1[2]: alu_operand1 = `RS2;
+		i_data.alu_operand1[3]: alu_operand1 = `PC;
+		i_data.alu_operand1[4]: alu_operand1 = `IMM;
+		endcase
+	end
+
+	bit [31:0] alu_operand2;
+	always_comb begin
+		unique case (1'b1)
+		i_data.alu_operand2[0]: alu_operand2 = `ZERO;
+		i_data.alu_operand2[1]: alu_operand2 = `RS1;
+		i_data.alu_operand2[2]: alu_operand2 = `RS2;
+		i_data.alu_operand2[3]: alu_operand2 = `PC;
+		i_data.alu_operand2[4]: alu_operand2 = `IMM;
+		endcase
+	end
 
 	wire [31:0] alu_result;
 	wire [31:0] alu_shift_result;

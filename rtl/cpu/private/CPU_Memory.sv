@@ -171,7 +171,7 @@ module CPU_Memory #(
 	wire [1:0] address_byte_index = i_data.mem_address[1:0];
 	wire [7:0] bus_rdata_byte = dcache_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = dcache_rdata >> (address_byte_index * 8);
-
+	
 	bit busy;
 	memory_data_t data = 0;
 	state_t state = IDLE;

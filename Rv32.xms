@@ -606,7 +606,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions></additionalCompilerOptions>
+					<additionalCompilerOptions>-fno-use-cxa-atexit</additionalCompilerOptions>
 					<additionalLinkerOptions>-T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
@@ -630,7 +630,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions></additionalCompilerOptions>
+					<additionalCompilerOptions>-fno-use-cxa-atexit</additionalCompilerOptions>
 					<additionalLinkerOptions>-T$(GAME_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
