@@ -73,24 +73,9 @@ module CPU_Execute (
 	// ====================
 	// ALU
 	
-	// wire [31:0] alu_operand1 =
-	// 	(i_data.alu_operand1 == 3'd0) ? `ZERO :
-	// 	(i_data.alu_operand1 == 3'd1) ? `RS1 :
-	// 	(i_data.alu_operand1 == 3'd2) ? `RS2 :
-	// 	(i_data.alu_operand1 == 3'd3) ? `PC  :
-	// 	(i_data.alu_operand1 == 3'd4) ? `IMM :
-	// 	32'd0;
-
-	// wire [31:0] alu_operand2 =
-	// 	(i_data.alu_operand2 == 3'd0) ? `ZERO :
-	// 	(i_data.alu_operand2 == 3'd1) ? `RS1 :
-	// 	(i_data.alu_operand2 == 3'd2) ? `RS2 :
-	// 	(i_data.alu_operand2 == 3'd3) ? `PC  :
-	// 	(i_data.alu_operand2 == 3'd4) ? `IMM :
-	// 	32'd0;
-
 	bit [31:0] alu_operand1;
 	always_comb begin
+		alu_operand1 = 0;
 		unique case (1'b1)
 		i_data.alu_operand1[0]: alu_operand1 = `ZERO;
 		i_data.alu_operand1[1]: alu_operand1 = `RS1;
@@ -102,6 +87,7 @@ module CPU_Execute (
 
 	bit [31:0] alu_operand2;
 	always_comb begin
+		alu_operand2 = 0;
 		unique case (1'b1)
 		i_data.alu_operand2[0]: alu_operand2 = `ZERO;
 		i_data.alu_operand2[1]: alu_operand2 = `RS1;

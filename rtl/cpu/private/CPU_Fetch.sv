@@ -132,23 +132,24 @@ module CPU_Fetch #(
 							data.instruction <= icache_rdata;
 							data.pc <= pc;
 
-							if (is_JUMP || is_JUMP_CONDITIONAL /*|| is_MRET*/) begin
+							// @todo Bad timing; is there any way we
+							// can skip decoding these...
+							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
 								// Branch instruction, need to wait
 								// for an explicit "goto" signal before
 								// we can continue feeding the pipeline.
 								state <= WAIT_JUMP;
 							end
-							// else if (is_ECALL || is_WFI) begin
-							// 	// Software interrupt, need to wait
-							// 	// for IRQ signal before continue.
-							// 	state <= WAIT_IRQ;
-							// end
-							//else begin
-								// Move PC to next instruction, will
-								// enable to icache to start loading
-								// next instruction.
-								pc <= pc + 4;
-							//end
+							else if (is_ECALL || is_WFI) begin
+								// Software interrupt, need to wait
+								// for IRQ signal before continue.
+								state <= WAIT_IRQ;
+							end
+
+							// Move PC to next instruction, will
+							// enable to icache to start loading
+							// next instruction.
+							pc <= pc + 4;
 						end
 `ifdef __VERILATOR__					
 						else if (!icache_stall)
@@ -165,15 +166,15 @@ module CPU_Fetch #(
 					end				
 				end
 
-				// WAIT_IRQ: begin
-				// 	// Wait for IRQ signal.
-				// 	o_irq_dispatched <= i_irq_pending;
-				// 	if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
-				// 		o_irq_epc <= pc + 4;
-				// 		pc <= i_irq_pc;
-				// 		state <= WAIT_ICACHE;
-				// 	end					
-				// end
+				WAIT_IRQ: begin
+					// Wait for IRQ signal.
+					o_irq_dispatched <= i_irq_pending;
+					if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
+						o_irq_epc <= pc + 4;
+						pc <= i_irq_pc;
+						state <= WAIT_ICACHE;
+					end					
+				end
 
 				default:
 					state <= WAIT_ICACHE;
