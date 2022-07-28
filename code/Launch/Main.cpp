@@ -340,7 +340,21 @@ bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 	return true;
 }
 
-bool memcheck(IStream* target, uint32_t from, uint32_t to)
+void for_each(uint32_t from, uint32_t to, uint32_t step, const std::function< void(uint32_t) >& fn)
+{
+	if (from <= to)
+	{
+		for (uint32_t addr = from; addr <= to; addr += step)
+			fn(addr);
+	}
+	else
+	{
+		for (uint32_t addr = from; addr >= to; addr -= step)
+			fn(addr);
+	}
+}
+
+bool memcheck(IStream* target, uint32_t from, uint32_t to, uint32_t step)
 {
 	uint8_t utd[64];
 	uint8_t ind[64];
@@ -349,9 +363,10 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to)
 	uint32_t error = 0;
 
 	const uint32_t nb = 64;
+	const uint32_t seed = clock();
 
-	Random rnd = Random();
-	for (uint32_t addr = from; addr < to; addr += nb)
+	Random rnd = Random(seed);
+	for_each(from, to, step, [&](uint32_t addr)
 	{
 		for (int32_t i = 0; i < nb; ++i)
 			utd[i] = (uint8_t)rnd.next();
@@ -383,12 +398,12 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to)
 		if (reply != 0x80)
 		{
 			log::error << L"Error reply (write), got " << str(L"%02x", reply) << Endl;
-			return false;
+			return;
 		}
-	}
+	});
 
-	rnd = Random();
-	for (uint32_t addr = from; addr < to; addr += nb)
+	rnd = Random(seed);
+	for_each(from, to, step, [&](uint32_t addr)
 	{
 		for (int32_t i = 0; i < nb; ++i)
 			utd[i] = (uint8_t)rnd.next();
@@ -402,7 +417,7 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to)
 		if (reply != 0x80)
 		{
 			log::error << L"Error reply (read), got " << str(L"%02x", reply) << Endl;
-			return false;
+			return;
 		}
 		read< uint8_t >(target, ind, nb);
 
@@ -417,7 +432,12 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to)
 		}
 
 		log::info << Endl;
-	}
+	});
+
+	if (error > 0)
+		log::error << error << L" error(s) found." << Endl;
+	else
+		log::info << L"No errors found." << Endl;
 
 	return error == 0;
 }
@@ -477,7 +497,12 @@ int main(int argc, const char** argv)
 	{
 		uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
 		uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
-		memcheck(target, from, to);
+		
+		uint32_t step = 64;
+		if (commandLine.hasOption(L"memcheck-step"))
+			step = commandLine.getOption(L"memcheck-step").getInteger();
+
+		memcheck(target, from, to, step);
 		return 0;
 	}
 

@@ -32,9 +32,9 @@ module SDRAM_interface_2(
 
     logic sdram_control_wb_cyc = 0;
     logic sdram_control_wb_stb = 0;
-    logic sdram_control_wb_we = 0;
-    wire [22:0] sdram_control_wb_addr;
-    wire [31:0] sdram_control_wb_wdata;
+    wire sdram_control_wb_we;
+    bit [22:0] sdram_control_wb_addr;
+    bit [31:0] sdram_control_wb_wdata;
     logic [3:0] sdram_control_wb_sel = 4'b1111;
     wire sdram_control_wb_stall;
     wire sdram_control_wb_ack;
@@ -97,11 +97,9 @@ module SDRAM_interface_2(
 
 	assign o_ready = ready; // && i_request;
 	
-	always_comb begin
-		sdram_control_wb_addr = { i_address[24:2] };
-        sdram_control_wb_wdata = i_wdata;
-        sdram_control_wb_we = i_rw;
-	end
+	assign sdram_control_wb_addr = i_address[24:2];
+	assign sdram_control_wb_wdata = i_wdata;
+    assign sdram_control_wb_we = i_rw;
 
 	always_ff @(posedge i_clock) begin
 

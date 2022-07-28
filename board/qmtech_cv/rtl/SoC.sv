@@ -61,8 +61,10 @@ module SoC(
 	output sram_we_n
 );
 
+	// 9375 ps
+
 	wire clock;				// 100MHz
-	wire clock_sdram;		// 100MHz, phase shifted 9375 ps.
+	wire clock_sdram;		// 100MHz, phase shifted 3000 ps. // 9375 ps.
 	wire clock_video;		// 25MHz
 	IP_PLL_Clk pll_clk(
 		.refclk(sys_clk),
@@ -106,30 +108,68 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	SDRAM_interface_2 sdram(
-		.i_reset(reset),
-		.i_clock(clock),
+	// SDRAM_interface_2 sdram(
+	// 	.i_reset(reset),
+	// 	.i_clock(clock),
+	// 	.i_clock_sdram(clock_sdram),
+	// 	// ---
+	// 	.i_request(sdram_select && bus_request),
+	// 	.i_rw(bus_rw),
+	// 	.i_address(sdram_address),
+	// 	.i_wdata(bus_wdata),
+	// 	.o_rdata(sdram_rdata),
+	// 	.o_ready(sdram_ready),
+	// 	// ---
+	// 	.sdram_clk(sdram_clk),
+	// 	.sdram_clk_en(sdram_clk_en),
+	// 	.sdram_cas_n(sdram_cas_n),
+	// 	.sdram_ce_n(sdram_ce_n),
+	// 	.sdram_ras_n(sdram_ras_n),
+	// 	.sdram_we_n(sdram_we_n),
+	// 	.sdram_dqml(sdram_dqml),
+	// 	.sdram_dqmh(sdram_dqmh),
+	// 	.sdram_ba(sdram_ba),
+	// 	.sdram_addr(sdram_addr),
+	// 	.sdram_data(sdram_data)
+	// );
+
+	wire [1:0] sdram_dqm;
+	assign sdram_dqml = sdram_dqm[0];
+	assign sdram_dqmh = sdram_dqm[1];
+	logic [15:0] sdram_data_r;
+	wire [15:0] sdram_data_w;
+	wire sdram_data_rw;
+
+    SDRAM_controller #(
+        .FREQUENCY(100000000)
+    ) sdram(
+	    .i_reset(reset),
+	    .i_clock(clock),
 		.i_clock_sdram(clock_sdram),
-		// ---
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
-		// ---
-		.sdram_clk(sdram_clk),
-		.sdram_clk_en(sdram_clk_en),
-		.sdram_cas_n(sdram_cas_n),
-		.sdram_ce_n(sdram_ce_n),
-		.sdram_ras_n(sdram_ras_n),
-		.sdram_we_n(sdram_we_n),
-		.sdram_dqml(sdram_dqml),
-		.sdram_dqmh(sdram_dqmh),
-		.sdram_ba(sdram_ba),
-		.sdram_addr(sdram_addr),
-		.sdram_data(sdram_data)
-	);
+
+	    .i_request(sdram_select && bus_request),
+	    .i_rw(bus_rw),
+	    .i_address(sdram_address),
+	    .i_wdata(bus_wdata),
+	    .o_rdata(sdram_rdata),
+	    .o_ready(sdram_ready),
+
+	    .sdram_clk(sdram_clk),
+	    .sdram_clk_en(sdram_clk_en),
+	    .sdram_cas_n(sdram_cas_n),
+	    .sdram_cs_n(sdram_ce_n),
+	    .sdram_ras_n(sdram_ras_n),
+	    .sdram_we_n(sdram_we_n),
+	    .sdram_dqm(sdram_dqm),
+	    .sdram_bs(sdram_ba),		// Called BA in QMTech schematics
+	    .sdram_addr(sdram_addr),
+		.sdram_rdata(sdram_data_r),
+		.sdram_wdata(sdram_data_w),
+		.sdram_data_rw(sdram_data_rw)
+    );
+
+	assign sdram_data = sdram_data_rw ? sdram_data_w : 16'hz;
+	assign sdram_data_r = sdram_data;
 
 	//====================================================
 	// BUS
