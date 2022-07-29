@@ -68,11 +68,9 @@ module SDRAM_controller #(
 		STATE_STARTUP,
 		STATE_STARTUP_PRECHARGE,
 		STATE_STARTUP_WAIT_PRECHARGE,
-
 		STATE_STARTUP_AUTO_REFRESH_1,
 		STATE_STARTUP_AUTO_REFRESH_2,
 		STATE_STARTUP_WAIT_AUTO_REFRESH,
-
 		STATE_STARTUP_SET_MODE,
 		STATE_STARTUP_WAIT_SET_MODE,
 		STATE_IDLE,
@@ -324,7 +322,7 @@ module SDRAM_controller #(
 					sdram_bs <= address[9:8];
 					sdram_addr <= address[22:10];
 
-					count <= 3; // tRCD_COUNT;
+					count <= 2; // tRCD_COUNT;
 					state <= STATE_WAIT_ACTIVATE;			
 				end
 
