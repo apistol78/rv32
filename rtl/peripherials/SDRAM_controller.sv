@@ -40,8 +40,6 @@ module SDRAM_controller #(
 	output bit [1:0] sdram_bs,		// Also commonly called BA.
 	output bit [ADDRESS_WIDTH-1:0] sdram_addr,
 	
-	//inout [DATA_WIDTH-1:0] sdram_data
-	
 	input [DATA_WIDTH-1:0] sdram_rdata,
 	output bit [DATA_WIDTH-1:0] sdram_wdata,
 	output bit sdram_data_rw
@@ -104,6 +102,16 @@ module SDRAM_controller #(
 	}
 	cas_t;
 
+	typedef enum bit [2:0]
+	{
+		BURST_1 = 3'b000,
+		BURST_2 = 3'b001,
+		BURST_4 = 3'b010,
+		BURST_8 = 3'b011,
+		BURST_PAGE = 3'b111
+	}
+	burst_length_t;
+
 	state_t state = STATE_STARTUP;
 	bit [15:0] count = STARTUP_COUNT;
 	bit [31:0] refresh = 0;
@@ -159,7 +167,7 @@ module SDRAM_controller #(
 
 			// Check if we should refresh.
 			refresh <= refresh + 1;
-			if (refresh >= 32'd20_0) begin
+			if (refresh >= 32'd50_0) begin
 				refresh <= 0;
 				should_refresh <= 1'b1;
 			end
@@ -251,7 +259,7 @@ module SDRAM_controller #(
 				STATE_STARTUP_SET_MODE: begin
 					command <= CMD_SET_MODE;
 					sdram_bs <= 2'b00;
-					sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, 3'b001 };	// ?,Write Burst Mode,?,CAS,Burst Type,Burst Length
+					sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_2 };	// ?,Write Burst Mode,?,CAS,Burst Type,Burst Length
 					count <= tMRD_COUNT;
 					state <= STATE_STARTUP_WAIT_SET_MODE;
 				end
@@ -269,14 +277,14 @@ module SDRAM_controller #(
 				//=================================================
 
 				/*
+				Idle state, wait for requests. Dispatch refresh
+				cycles.
 				*/
 				STATE_IDLE: begin
 					command <= CMD_NOP;
 
 					sdram_data_rw <= 1'b0;
-
-					//if (!i_request)
-						o_ready <= 1'b0;
+					o_ready <= 1'b0;
 
 					if (should_refresh) begin
 						should_refresh <= 1'b0;
@@ -291,12 +299,16 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Issue refresh command.
 				*/
 				STATE_REFRESH: begin
 					command <= CMD_REFRESH;
 					state <= STATE_REFRESH_2;
 				end
 
+				/*
+				Issue refresh command again.
+				*/
 				STATE_REFRESH_2: begin
 					command <= CMD_REFRESH;
 					count <= tRFC_COUNT;
@@ -304,6 +316,7 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Wait until refresh has finished.
 				*/
 				STATE_WAIT_REFRESH: begin
 					command <= CMD_NOP;
@@ -313,19 +326,21 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Activate row.
 				*/
 				STATE_ACTIVATE: begin
 					command <= CMD_ACTIVATE;
 					
 					sdram_bs <= address[9:8];
 					sdram_addr <= address[22:10];
-					//sdram_dqm <= 2'b11;
 
 					count <= 3; // tRCD_COUNT;
 					state <= STATE_WAIT_ACTIVATE;			
 				end
 
 				/*
+				Wait until activation of row finish,
+				then dispatch read or write states.
 				*/
 				STATE_WAIT_ACTIVATE: begin
 					command <= CMD_NOP;
@@ -334,7 +349,6 @@ module SDRAM_controller #(
 						sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
 						//sdram_addr[10] <= 1'b0;
 						sdram_addr[10] <= 1'b1;
-						//sdram_dqm <= 2'b00;
 						
 						sdram_wdata <= wdata[31:16];
 						sdram_data_rw <= i_rw;
@@ -344,6 +358,7 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Issue read command.
 				*/
 				STATE_READ: begin
 					command <= CMD_READ;
@@ -352,16 +367,10 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Wait until read command finishes, latch data.
 				*/
 				STATE_WAIT_READ: begin
 					command <= CMD_NOP;
-
-					// if (count == tRCD_COUNT - 2) begin
-					// 	o_rdata[31:16] <= sdram_rdata;
-					// end
-					// else if (count == tRCD_COUNT - 3) begin
-					// 	o_rdata[15:0] <= sdram_rdata;
-					// end
 
 					if (count == tRCD_COUNT - 4) begin
 						o_rdata[31:16] <= r_ram_data;
@@ -381,6 +390,7 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Issue write command.
 				*/
 				STATE_WRITE: begin
 					command <= CMD_WRITE;
@@ -389,6 +399,7 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Wait until write command finishes.
 				*/
 				STATE_WAIT_WRITE: begin
 					command <= CMD_NOP;
@@ -406,13 +417,13 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Issue precharge, aka close, row.
 				*/
 				STATE_PRECHARGE: begin
 					command <= CMD_PRECHARGE;
 
 					sdram_bs <= 2'b00;
 					
-					//sdram_addr <= { 2'b00, 1'b1, 10'b0000000000 };	// A10 set to precharge all banks.
 					sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
 					sdram_addr[10] <= 1'b1;
 
@@ -423,6 +434,7 @@ module SDRAM_controller #(
 				end
 
 				/*
+				Wait until precharge finishes.
 				*/
 				STATE_WAIT_PRECHARGE: begin
 					command <= CMD_NOP;
