@@ -16,8 +16,13 @@ Memory mapping
 
 module SDRAM_controller #(
 	parameter FREQUENCY = 100_000_000,
-	parameter ADDRESS_WIDTH = 13,
-	parameter DATA_WIDTH = 16
+
+	// User
+	parameter USER_DATA_WIDTH = 32,
+
+	// SDRAM chip
+	parameter SDRAM_ADDRESS_WIDTH = 13,
+	parameter SDRAM_DATA_WIDTH = 16
 )(
 	input i_reset,
 	input i_clock,
@@ -26,8 +31,8 @@ module SDRAM_controller #(
 	input i_request,
 	input i_rw,
 	input [31:0] i_address,			// Must be 4 byte aligned.
-	input [31:0] i_wdata,
-	output logic [31:0] o_rdata,
+	input [USER_DATA_WIDTH-1:0] i_wdata,
+	output logic [USER_DATA_WIDTH-1:0] o_rdata,
 	output bit o_ready,
 
 	output bit sdram_clk,
@@ -38,18 +43,32 @@ module SDRAM_controller #(
 	output bit sdram_we_n,
 	output bit [1:0] sdram_dqm,
 	output bit [1:0] sdram_bs,		// Also commonly called BA.
-	output bit [ADDRESS_WIDTH-1:0] sdram_addr,
+	output bit [SDRAM_ADDRESS_WIDTH-1:0] sdram_addr,
 	
-	input [DATA_WIDTH-1:0] sdram_rdata,
-	output bit [DATA_WIDTH-1:0] sdram_wdata,
+	input [SDRAM_DATA_WIDTH-1:0] sdram_rdata,
+	output bit [SDRAM_DATA_WIDTH-1:0] sdram_wdata,
 	output bit sdram_data_rw
 );
-	// Parameters
+	// Calculate burst length.
+	localparam BURST_COUNT = USER_DATA_WIDTH / SDRAM_DATA_WIDTH;
+
+	// Bit spans.
+	localparam Ba = 0;
+	localparam Bb = SDRAM_DATA_WIDTH;
+	localparam Bc = SDRAM_DATA_WIDTH * 2;
+	localparam Bd = SDRAM_DATA_WIDTH * 3;
+	localparam Be = SDRAM_DATA_WIDTH * 4;
+	localparam Bf = SDRAM_DATA_WIDTH * 5;
+	localparam Bg = SDRAM_DATA_WIDTH * 6;
+	localparam Bh = SDRAM_DATA_WIDTH * 7;
+	localparam Bi = SDRAM_DATA_WIDTH * 8;
+
+	// Timing parameters.
 	localparam STARTUP_COUNT	= 20000; // ( 100 * FREQUENCY) /     1_000_000;	// 100 us
 	localparam tRP_COUNT		= 4; //2; // (  20 * FREQUENCY) / 1_000_000_000;	// 20 ns
 	localparam tRFC_COUNT		= 8; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
 	localparam tMRD_COUNT		= 2000; // (2000 * FREQUENCY) /   100_000_000;	// 2000 cyc @ 100 MHz
-	localparam tRCD_COUNT		= 5; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
+	localparam tRCD_COUNT		= 3 + BURST_COUNT; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
 	
 	// Types
 	typedef enum bit [3:0]
@@ -116,7 +135,7 @@ module SDRAM_controller #(
 	bit [31:0] refresh = 0;
 	bit should_refresh = 1'b0;
 	command_t command = CMD_NOP;
-	bit [31:0] wdata;
+	bit [USER_DATA_WIDTH-1:0] wdata;
 	bit [22:0] address;
 
 	// Initial
@@ -247,7 +266,16 @@ module SDRAM_controller #(
 				STATE_STARTUP_SET_MODE: begin
 					command <= CMD_SET_MODE;
 					sdram_bs <= 2'b00;
-					sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_2 };	// ?,Write Burst Mode,?,CAS,Burst Type,Burst Length
+
+					if (BURST_COUNT == 1)
+						sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_1 };	// ?,Write Burst Mode,?,CAS,Burst Type,Burst Length
+					else if (BURST_COUNT == 2)
+						sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_2 };
+					else if (BURST_COUNT == 4)
+						sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_4 };
+					else if (BURST_COUNT == 8)
+						sdram_addr <= { 3'b000, WBM_PROGRAMMED_BURST_LENGTH, 2'b00, CAS_2, 1'b0, BURST_8 };
+
 					count <= tMRD_COUNT;
 					state <= STATE_STARTUP_WAIT_SET_MODE;
 				end
@@ -338,7 +366,15 @@ module SDRAM_controller #(
 						//sdram_addr[10] <= 1'b0;
 						sdram_addr[10] <= 1'b1;
 						
-						sdram_wdata <= wdata[31:16];
+						if (BURST_COUNT == 1)
+							sdram_wdata <= wdata;
+						else if (BURST_COUNT == 2)
+							sdram_wdata <= wdata[Bc-1:Bb];
+						else if (BURST_COUNT == 4)
+							sdram_wdata <= wdata[Be-1:Bd];
+						else if (BURST_COUNT == 8)
+							sdram_wdata <= wdata[Bi-1:Bh];
+
 						sdram_data_rw <= i_rw;
 
 						state <= i_rw ? STATE_WRITE : STATE_READ;	
@@ -360,11 +396,58 @@ module SDRAM_controller #(
 				STATE_WAIT_READ: begin
 					command <= CMD_NOP;
 
-					if (count == tRCD_COUNT - 4) begin
-						o_rdata[31:16] <= r_ram_data;
+					if (BURST_COUNT == 1) begin
+						if (count == tRCD_COUNT - 4) begin
+							o_rdata <= r_ram_data;
+						end
 					end
-					else if (count == tRCD_COUNT - 5) begin
-						o_rdata[15:0] <= r_ram_data;
+					else if (BURST_COUNT == 2) begin
+						if (count == tRCD_COUNT - 4) begin
+							o_rdata[Bc-1:Bb] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 5) begin
+							o_rdata[Bb-1:Ba] <= r_ram_data;
+						end						
+					end
+					else if (BURST_COUNT == 4) begin
+						if (count == tRCD_COUNT - 4) begin
+							o_rdata[Be-1:Bd] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 5) begin
+							o_rdata[Bd-1:Bc] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 6) begin
+							o_rdata[Bc-1:Bb] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 7) begin
+							o_rdata[Bb-1:Ba] <= r_ram_data;
+						end						
+					end
+					else if (BURST_COUNT == 8) begin
+						if (count == tRCD_COUNT - 4) begin
+							o_rdata[Bi-1:Bh] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 5) begin
+							o_rdata[Bh-1:Bg] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 6) begin
+							o_rdata[Bg-1:Bf] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 7) begin
+							o_rdata[Bf-1:Be] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 8) begin
+							o_rdata[Be-1:Bd] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 9) begin
+							o_rdata[Bd-1:Bc] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 10) begin
+							o_rdata[Bc-1:Bb] <= r_ram_data;
+						end
+						else if (count == tRCD_COUNT - 11) begin
+							o_rdata[Bb-1:Ba] <= r_ram_data;
+						end
 					end
 
 					if (count == 0) begin
@@ -392,7 +475,43 @@ module SDRAM_controller #(
 				STATE_WAIT_WRITE: begin
 					command <= CMD_NOP;
 
-					sdram_wdata <= wdata[15:0];
+					if (BURST_COUNT == 2) begin
+						sdram_wdata <= wdata[Bb-1:Ba];
+					end
+					else if (BURST_COUNT == 4) begin
+						if (count == tRCD_COUNT) begin
+							sdram_wdata <= wdata[Bd-1:Bc];
+						end
+						else if (count == tRCD_COUNT - 1) begin
+							sdram_wdata <= wdata[Bc-1:Bb];
+						end
+						else if (count == tRCD_COUNT - 2) begin
+							sdram_wdata <= wdata[Bb-1:Ba];
+						end
+					end
+					else if (BURST_COUNT == 8) begin
+						if (count == tRCD_COUNT) begin
+							sdram_wdata <= wdata[Bh-1:Bg];
+						end
+						else if (count == tRCD_COUNT - 1) begin
+							sdram_wdata <= wdata[Bg-1:Bf];
+						end
+						else if (count == tRCD_COUNT - 2) begin
+							sdram_wdata <= wdata[Bf-1:Be];
+						end
+						else if (count == tRCD_COUNT - 3) begin
+							sdram_wdata <= wdata[Be-1:Bd];
+						end
+						else if (count == tRCD_COUNT - 4) begin
+							sdram_wdata <= wdata[Bd-1:Bc];
+						end
+						else if (count == tRCD_COUNT - 5) begin
+							sdram_wdata <= wdata[Bc-1:Bb];
+						end
+						else if (count == tRCD_COUNT - 6) begin
+							sdram_wdata <= wdata[Bb-1:Ba];
+						end
+					end
 
 					if (count == 0) begin
 						o_ready <= 1'b1;
@@ -414,8 +533,6 @@ module SDRAM_controller #(
 					
 					sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
 					sdram_addr[10] <= 1'b1;
-
-					//sdram_dqm <= 2'b11;
 
 					count <= tRP_COUNT;
 					state <= STATE_WAIT_PRECHARGE;

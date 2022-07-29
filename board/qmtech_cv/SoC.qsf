@@ -375,8 +375,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to switch_bootmode
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to switch_reset
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to switch_bootmode
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to switch_reset
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/SDRAM_interface_2.sv
-set_global_assignment -name VERILOG_FILE ip/wbsdram.v
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedMultiply.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_UnsignedDivide.qip
 set_global_assignment -name QIP_FILE ../../ip/intel/IP_Multiply.qip
