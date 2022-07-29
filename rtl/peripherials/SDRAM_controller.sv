@@ -68,23 +68,24 @@ module SDRAM_controller #(
 		STATE_STARTUP,
 		STATE_STARTUP_PRECHARGE,
 		STATE_STARTUP_WAIT_PRECHARGE,
+
 		STATE_STARTUP_AUTO_REFRESH_1,
-		STATE_STARTUP_WAIT_AUTO_REFRESH_1,
 		STATE_STARTUP_AUTO_REFRESH_2,
-		STATE_STARTUP_WAIT_AUTO_REFRESH_2,
+		STATE_STARTUP_WAIT_AUTO_REFRESH,
+
 		STATE_STARTUP_SET_MODE,
 		STATE_STARTUP_WAIT_SET_MODE,
 		STATE_IDLE,
-		STATE_REFRESH,			// 10
-		STATE_REFRESH_2,		// 11
+		STATE_REFRESH,
+		STATE_REFRESH_2,		// 10
 		STATE_WAIT_REFRESH,
-		STATE_ACTIVATE,			// 13
+		STATE_ACTIVATE,			// 12
 		STATE_WAIT_ACTIVATE,
-		STATE_READ,				// 15
+		STATE_READ,				// 14
 		STATE_WAIT_READ,
-		STATE_WRITE,			// 17
+		STATE_WRITE,			// 16
 		STATE_WAIT_WRITE,
-		STATE_PRECHARGE,		// 19
+		STATE_PRECHARGE,		// 18
 		STATE_WAIT_PRECHARGE
 	} state_t;
 
@@ -220,33 +221,22 @@ module SDRAM_controller #(
 				*/
 				STATE_STARTUP_AUTO_REFRESH_1: begin
 					command <= CMD_REFRESH;
-					count <= tRFC_COUNT;
-					state <= STATE_STARTUP_WAIT_AUTO_REFRESH_1;
+					state <= STATE_STARTUP_AUTO_REFRESH_2;
 				end
 
-				/*
-				Wait until startup auto refresh finished.
-				*/
-				STATE_STARTUP_WAIT_AUTO_REFRESH_1: begin
-					command <= CMD_NOP;
-					if (count == 0) begin
-						state <= STATE_STARTUP_AUTO_REFRESH_2;
-					end	
-				end				
-				
 				/*
 				Perform startup auto refresh.
 				*/
 				STATE_STARTUP_AUTO_REFRESH_2: begin
 					command <= CMD_REFRESH;
 					count <= tRFC_COUNT;
-					state <= STATE_STARTUP_WAIT_AUTO_REFRESH_2;
+					state <= STATE_STARTUP_WAIT_AUTO_REFRESH;
 				end
 
 				/*
 				Wait until startup auto refresh finished.
 				*/
-				STATE_STARTUP_WAIT_AUTO_REFRESH_2: begin
+				STATE_STARTUP_WAIT_AUTO_REFRESH: begin
 					command <= CMD_NOP;
 					if (count == 0) begin
 						state <= STATE_STARTUP_SET_MODE;
