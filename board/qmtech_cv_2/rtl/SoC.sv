@@ -4,12 +4,11 @@
 `define FREQUENCY 100000000
 
 module SoC(
-	input sys_clk,		// 50 MHz oscillator
+	input sys_clk,			// 50 MHz oscillator
 	input sys_reset_n,
-	
-	input switch_reset,		// Active low.
-	input switch_bootmode,	// Active low.
-	
+
+	input key_1,		// Active low.
+
 	output led_1,
 
 	output audio_pwm_left,
@@ -53,11 +52,19 @@ module SoC(
 
 	output sd_clk,
 	inout sd_cmd,
-	inout [3:0] sd_dat
+	inout [3:0] sd_dat,
+
+	output [17:0] sram_a,
+	output sram_ce_n,
+	inout [15:0] sram_d,
+	output sram_lb_n,
+	output sram_oe_n,
+	output sram_ub_n,
+	output sram_we_n
 );
 
 	wire clock;				// 100MHz
-	wire clock_sdram;		// 100MHz, phase shifted 9375 ps.
+	wire clock_sdram;		// 100MHz, phase shifted 7000 ps.
 	wire clock_video;		// 25MHz
 	IP_PLL_Clk pll_clk(
 		.refclk(sys_clk),
@@ -72,7 +79,7 @@ module SoC(
 	wire reset;
 	RESET rst(
 		.i_clock(clock),
-		.i_reset_sw(~switch_reset),
+		.i_reset_sw(key_1),
 		.o_reset_0(),
 		.o_reset_1(),
 		.o_reset_2(reset)
@@ -101,30 +108,46 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	SDRAM_interface_2 sdram(
-		.i_reset(reset),
-		.i_clock(clock),
+	wire [1:0] sdram_dqm;
+	assign sdram_dqml_0 = sdram_dqm[0];
+	assign sdram_dqmh_0 = sdram_dqm[1];
+	assign sdram_dqml_1 = sdram_dqm[0];
+	assign sdram_dqmh_1 = sdram_dqm[1];
+	logic [31:0] sdram_data_r;
+	wire [31:0] sdram_data_w;
+	wire sdram_data_rw;
+
+    SDRAM_controller #(
+        .FREQUENCY(100000000),
+		.SDRAM_DATA_WIDTH(32)
+    ) sdram(
+	    .i_reset(reset),
+	    .i_clock(clock),
 		.i_clock_sdram(clock_sdram),
-		// ---
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
-		// ---
-		.sdram_clk(sdram_clk),
-		.sdram_clk_en(sdram_clk_en),
-		.sdram_cas_n(sdram_cas_n),
-		.sdram_ce_n(sdram_ce_n),
-		.sdram_ras_n(sdram_ras_n),
-		.sdram_we_n(sdram_we_n),
-		.sdram_dqml(sdram_dqml),
-		.sdram_dqmh(sdram_dqmh),
-		.sdram_ba(sdram_ba),
-		.sdram_addr(sdram_addr),
-		.sdram_data(sdram_data)
-	);
+
+	    .i_request(sdram_select && bus_request),
+	    .i_rw(bus_rw),
+	    .i_address(sdram_address),
+	    .i_wdata(bus_wdata),
+	    .o_rdata(sdram_rdata),
+	    .o_ready(sdram_ready),
+
+	    .sdram_clk(sdram_clk),
+	    .sdram_clk_en(sdram_clk_en),
+	    .sdram_cas_n(sdram_cas_n),
+	    .sdram_cs_n(sdram_ce_n),
+	    .sdram_ras_n(sdram_ras_n),
+	    .sdram_we_n(sdram_we_n),
+	    .sdram_dqm(sdram_dqm),
+	    .sdram_bs(sdram_ba),		// Called BA in QMTech schematics
+	    .sdram_addr(sdram_addr),
+		.sdram_rdata(sdram_data_r),
+		.sdram_wdata(sdram_data_w),
+		.sdram_data_rw(sdram_data_rw)
+    );
+
+	assign sdram_data = sdram_data_rw ? sdram_data_w : 32'hz;
+	assign sdram_data_r = sdram_data;
 
 	//====================================================
 	// BUS
@@ -205,9 +228,7 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0),
-		.ICACHE_SIZE(12),
-		.DCACHE_SIZE(13)
+		.DCACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -484,7 +505,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(~switch_bootmode),	// 0 - read elf, 1 - wait on uart
+		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)
 	);
@@ -539,7 +560,33 @@ module SoC(
 		.o_pos_y(vga_pos_y)
 	);
 
-	// Video memory.
+	// Video physical memory.
+	wire video_sram_request;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+	SRAM_interface video_sram(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready),
+		// ---
+		.SRAM_A(sram_a),
+		.SRAM_D(sram_d),
+		.SRAM_CE_n(sram_ce_n),
+		.SRAM_OE_n(sram_oe_n),
+		.SRAM_WE_n(sram_we_n),
+		.SRAM_LB_n(sram_lb_n),
+		.SRAM_UB_n(sram_ub_n)
+	);
+
+	// Video memory dual port.
 	wire vram_pa_request;
 	wire vram_pa_rw;
 	wire [31:0] vram_pa_address;
@@ -553,27 +600,44 @@ module SoC(
 	wire [31:0] vram_pb_wdata;
 	wire [31:0] vram_pb_rdata;
 	wire vram_pb_ready;
+	wire vram_pb_busy;
 
-	BRAM_dual #(
-		.WIDTH(32),
-		.SIZE(2*320*240),
-		.ADDR_LSH(2)
-	) vram(
+	BusAccess #(
+		.REGISTERED(0)
+	) vram_bus(
+		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_pa_request(vram_pa_request),
-		.i_pa_rw(vram_pa_rw),
-		.i_pa_address(vram_pa_address),
-		.i_pa_wdata(vram_pa_wdata),
-		.o_pa_rdata(vram_pa_rdata),
-		.o_pa_ready(vram_pa_ready),
+		.o_bus_rw(video_sram_rw),
+		.o_bus_request(video_sram_request),
+		.i_bus_ready(video_sram_ready),
+		.o_bus_address(video_sram_address),
+		.i_bus_rdata(video_sram_rdata),
+		.o_bus_wdata(video_sram_wdata),
 
-		.i_pb_request(vram_pb_request),
+		.i_pa_request(1'b0),
+		.o_pa_ready(),
+		.i_pa_address(32'h0),
+		.o_pa_rdata(),
+		.o_pa_busy(),
+
+		// Video output access.
 		.i_pb_rw(vram_pb_rw),
+		.i_pb_request(vram_pb_request),
+		.o_pb_ready(vram_pb_ready),
 		.i_pb_address(vram_pb_address),
-		.i_pb_wdata(vram_pb_wdata),
 		.o_pb_rdata(vram_pb_rdata),
-		.o_pb_ready(vram_pb_ready)
+		.i_pb_wdata(vram_pb_wdata),
+		.o_pb_busy(vram_pb_busy),
+
+		// Video CPU access.
+		.i_pc_rw(vram_pa_rw),
+		.i_pc_request(vram_pa_request),
+		.o_pc_ready(vram_pa_ready),
+		.i_pc_address(vram_pa_address),
+		.o_pc_rdata(vram_pa_rdata),
+		.i_pc_wdata(vram_pa_wdata),
+		.o_pc_busy()
 	);
 
 	// Video mode; chunky 8-bit palette.
@@ -634,7 +698,7 @@ module SoC(
 	wire bridge_far_ready;
 
 	BRIDGE #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),

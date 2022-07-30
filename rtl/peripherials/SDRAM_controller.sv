@@ -162,8 +162,8 @@ module SDRAM_controller #(
 
 	//=============================================
 
-    logic [15:0] r_ram_data = 0;
-    logic [15:0] r_ram_data_ext_clk = 0;
+    logic [SDRAM_DATA_WIDTH-1:0] r_ram_data = 0;
+    logic [SDRAM_DATA_WIDTH-1:0] r_ram_data_ext_clk = 0;
     always_ff @(posedge i_clock) begin
         { r_ram_data, r_ram_data_ext_clk } <= { r_ram_data_ext_clk, sdram_rdata };
     end	
