@@ -43,7 +43,10 @@ int32_t video_init()
 		control[0] = 0;	// GPU read offset
 		control[1] = 0;	// CPU write offset	
 	}
-	else if (deviceId == SR_DEVICE_ID_Q_CV_2)
+	else if (
+		deviceId == SR_DEVICE_ID_Q_CV_2 ||
+		deviceId == SR_DEVICE_ID_Q_CV_5
+	)
 	{
 		if (sil9024a_init())
 		{

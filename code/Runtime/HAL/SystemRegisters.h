@@ -13,6 +13,7 @@
 #define SR_DEVICE_ID_Q_CV_2  3
 #define SR_DEVICE_ID_Q_T7    4
 #define SR_DEVICE_ID_RV32    5
+#define SR_DEVICE_ID_Q_CV_5  6
 
 EXTERN_C void sysreg_write(uint8_t reg, uint32_t value);
 

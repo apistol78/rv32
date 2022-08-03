@@ -15,6 +15,7 @@ void audio_init()
 	{
 	case SR_DEVICE_ID_RV32T:
 	case SR_DEVICE_ID_Q_CV_2:
+	case SR_DEVICE_ID_Q_CV_5:
 		s_channels = 1;
 		break;
 

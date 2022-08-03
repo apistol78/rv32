@@ -29,13 +29,16 @@ int32_t runtime_init()
 			printf("** DEVICE   : Terasic Cyclone V GX **\n");
 			break;
 		case SR_DEVICE_ID_Q_CV_2:
-			printf("** DEVICE   : QMTech Cyclone V **\n");
+			printf("** DEVICE   : QMTech Cyclone V 2 - 5CEFA2F23 **\n");
 			break;
 		case SR_DEVICE_ID_Q_T7:
 			printf("** DEVICE   : QMTech Kintex-7 **\n");
 			break;
 		case SR_DEVICE_ID_RV32:
 			printf("** DEVICE   : Rv32 **\n");
+			break;
+		case SR_DEVICE_ID_Q_CV_5:
+			printf("** DEVICE   : QMTech Cyclone V 5 - 5CEFA5F23 **\n");
 			break;
 		default:
 			printf("** DEVICE   : UNKNOWN **\n");
