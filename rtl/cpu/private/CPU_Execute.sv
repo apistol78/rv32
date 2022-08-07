@@ -118,6 +118,7 @@ module CPU_Execute (
 	wire [63:0] mul_result;
 	CPU_Multiply multiply(
 		.i_clock(i_clock),
+		.i_latch(cycle == 0),
 		.i_signed(mul_signed),
 		.i_op1(`RS1),
 		.i_op2(`RS2),
@@ -129,6 +130,7 @@ module CPU_Execute (
 	wire [31:0] div_remainder;
 	CPU_Divide divide(
 		.i_clock(i_clock),
+		.i_latch(cycle == 0),
 		.i_signed(div_signed),
 		.i_numerator(`RS1),
 		.i_denominator(`RS2),
