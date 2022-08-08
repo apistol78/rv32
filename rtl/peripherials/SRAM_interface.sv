@@ -13,15 +13,14 @@ module SRAM_interface(
 
 	output bit [17:0] SRAM_A,
 	inout [15:0] SRAM_D,
-	output SRAM_CE_n,
-	output SRAM_OE_n,
+	output bit SRAM_CE_n,
+	output bit SRAM_OE_n,
 	output bit SRAM_WE_n,
 	output SRAM_LB_n,
 	output SRAM_UB_n
 );
-	// Number of cycles for entire transaction, must to be multiple of 2.
-	// 50 MHz -> 8
-	localparam CYCLES = 6;
+	// Number of cycles for entire transaction.
+	localparam CYCLES = 7;
 
 	bit [15:0] count;
 	bit [15:0] wdata;
@@ -29,10 +28,11 @@ module SRAM_interface(
 	initial begin
 		count = 0;
 		SRAM_A = 18'h0;
-		SRAM_WE_n = 1;
+		SRAM_CE_n = 1'b1;
+		SRAM_OE_n = 1'b1;
+		SRAM_WE_n = 1'b1;
 	end
 
-	assign SRAM_CE_n = 1'b0;
 	assign SRAM_LB_n = 1'b0;
 	assign SRAM_UB_n = 1'b0;
 	
@@ -42,45 +42,8 @@ module SRAM_interface(
 	// Input
 	wire [15:0] sram_d = (i_request && !i_rw) ? SRAM_D : 16'h0;
 
-	// Keep OE active for entire READ request.
-	assign SRAM_OE_n = (i_request && !i_rw) ? 1'b0 : 1'b1;
-
 	// Output ready signal.
 	assign o_ready = i_request && count >= (CYCLES - 1);
-
-	// Output 16-bit SRAM address, first low then high parts.
-	always_comb begin
-		SRAM_A = 32'h0;
-		
-		if (i_request) begin
-			if (count < CYCLES / 2)
-				SRAM_A = (i_address >> 1) & 32'hfffffffe;
-			else
-				SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
-		end
-	end
-
-	// Output SRAM write enable, memory is stored on positive edge.
-	always_comb begin
-		SRAM_WE_n = 1;
-		if (i_request && i_rw) begin
-			if (count == 0 || count == CYCLES / 2)
-				SRAM_WE_n = 0;
-			else
-				SRAM_WE_n = 1;
-		end
-	end
-
-	// Output 16-bit SRAM data, first low the high part.
-	always_comb begin
-		wdata = 32'h0;
-		if (i_request && i_rw) begin
-			if (count < CYCLES / 2)
-				wdata = i_wdata[15:0];
-			else
-				wdata = i_wdata[31:16];
-		end
-	end
 
 	// Increment counter, store data read from SRAM.
 	always_ff @(posedge i_clock) begin
@@ -89,14 +52,40 @@ module SRAM_interface(
 		end
 		else begin
 			if (i_request) begin
+				SRAM_CE_n <= 1'b0;
+				SRAM_OE_n <= i_rw;
+				SRAM_WE_n <= 1'b1;
+				
 				count <= count + 1;
-				if (count < CYCLES / 2)
-					o_rdata[15:0] <= sram_d;
-				else
-					o_rdata[31:16] <= sram_d;
+
+				if (count < CYCLES / 2) begin
+					SRAM_A = (i_address >> 1) & 32'hfffffffe;
+					wdata <= i_wdata[15:0];
+				end
+				else begin
+					SRAM_A = ((i_address >> 1) & 32'hfffffffe) + 1;
+					wdata <= i_wdata[31:16];
+				end
+
+				if (i_rw) begin
+					if (count == 0 || count == CYCLES / 2)
+						SRAM_WE_n <= 1'b0;
+					else
+						SRAM_WE_n <= 1'b1;
+				end
+				else begin
+					if (count == 2)
+						o_rdata[15:0] <= sram_d;
+					else if (count == CYCLES / 2 + 2)
+						o_rdata[31:16] <= sram_d;
+				end
 			end
-			else
+			else begin
+				SRAM_CE_n <= 1'b1;
+				SRAM_OE_n <= 1'b1;
+				SRAM_WE_n <= 1'b1;
 				count <= 0;
+			end
 		end
 	end
 
