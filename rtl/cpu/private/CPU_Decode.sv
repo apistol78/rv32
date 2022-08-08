@@ -111,6 +111,7 @@ module CPU_Decode(
 				`define OP data.op
 				`include "private/generated/Instructions_decode_ops.sv"
 
+`ifdef __VERILATOR__
 				if (
 					is_ARITHMETIC ||
 					is_SHIFT ||
@@ -127,6 +128,10 @@ module CPU_Decode(
 					// Invalid or unsupported instructions end here.
 					o_fault <= 1;
 				end
+`else
+				// Do not check invalid opcode on HW due to timing constraints.
+				data.tag <= i_data.tag;
+`endif
 			end
 		end
 	end
