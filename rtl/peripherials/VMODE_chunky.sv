@@ -18,8 +18,8 @@ module VMODE_chunky #(
 	input i_video_hsync,
 	input i_video_vsync,
 	input i_video_request,
-	input [8:0] i_video_pos_x,
-	input [8:0] i_video_pos_y,
+	input [9:0] i_video_pos_x,
+	input [9:0] i_video_pos_y,
 	output bit [31:0] o_video_rdata,
 
 	// Memory
@@ -185,10 +185,10 @@ module VMODE_chunky #(
 	always_comb begin
 		o_video_rdata = palette_video_rdata;
 		case (i_video_pos_x & 3)
-			0: palette_video_address = line[i_video_pos_x[8:2]][7:0];
-			1: palette_video_address = line[i_video_pos_x[8:2]][15:8];
-			2: palette_video_address = line[i_video_pos_x[8:2]][23:16];
-			3: palette_video_address = line[i_video_pos_x[8:2]][31:24];
+			0: palette_video_address = line[i_video_pos_x[9:2]][7:0];
+			1: palette_video_address = line[i_video_pos_x[9:2]][15:8];
+			2: palette_video_address = line[i_video_pos_x[9:2]][23:16];
+			3: palette_video_address = line[i_video_pos_x[9:2]][31:24];
 		endcase
 	end
 
