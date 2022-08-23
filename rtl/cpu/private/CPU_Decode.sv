@@ -78,17 +78,18 @@ module CPU_Decode(
 				data.inst_rs2 <= i_data.inst_rs2;
 				data.inst_rs3 <= i_data.inst_rs3;
 				data.inst_rd <= i_data.inst_rd;
-			
-				data.imm <=
-					is_B ? inst_B_imm :
-					is_I ? inst_I_imm :
-					is_J ? inst_J_imm :
-					is_S ? inst_S_imm :
-					is_U ? inst_U_imm :
-					is_R ? inst_R_imm :
-					is_CSR ? inst_CSR_imm :
-					32'h0;
 				
+				// data.imm <=
+				// 	is_B ? inst_B_imm :
+				// 	is_I ? inst_I_imm :
+				// 	is_J ? inst_J_imm :
+				// 	is_S ? inst_S_imm :
+				// 	is_U ? inst_U_imm :
+				// 	is_R ? inst_R_imm :
+				// 	is_CSR ? inst_CSR_imm :
+				// 	32'h0;
+				data.imm <= i_data.imm;
+			
 				data.arithmetic <= is_ARITHMETIC;
 				data.shift <= is_SHIFT;
 				data.compare <= is_COMPARE;

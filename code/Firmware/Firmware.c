@@ -163,6 +163,9 @@ static void remote_control()
 				for (uint8_t i = 0; i < nb; ++i)
 					*(uint8_t*)(addr + i) = r[i];
 
+				// Ensure DCACHE is flushed.
+				__asm__ volatile ("fence");
+
 				// Verify data written to memory.
 				uint32_t result = 0x80;
 				for (uint8_t i = 0; i < nb; ++i)

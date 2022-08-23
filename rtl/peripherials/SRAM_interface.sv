@@ -74,9 +74,9 @@ module SRAM_interface(
 						SRAM_WE_n <= 1'b1;
 				end
 				else begin
-					if (count == 2)
+					if (count == 1)
 						o_rdata[15:0] <= sram_d;
-					else if (count == CYCLES / 2 + 2)
+					else if (count == CYCLES / 2 + 1)
 						o_rdata[31:16] <= sram_d;
 				end
 			end

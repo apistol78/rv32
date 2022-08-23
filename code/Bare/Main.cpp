@@ -185,13 +185,13 @@ const int32_t indices[] =
 
 
 
-#include "font8x8/font8x8_latin.h"
+#include "font8x8_c64.h"
 
-void draw_character(char font[][8], char ch, int32_t col, int32_t row, uint8_t* framebuffer)
+void draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
 	for (int32_t x = 0; x < 8; ++x) {
 		for (int32_t y = 0; y < 8; ++y) {
-			const bool set = font[ch][x] & (1 << y);
+			const bool set = font[(ch - ' ') * 8 + y] & (1 << x);
 			if (set) {
 				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 0xff;
 			}
@@ -199,7 +199,7 @@ void draw_character(char font[][8], char ch, int32_t col, int32_t row, uint8_t* 
 	}
 }
 
-void draw_string(char font[][8], const char* str, int32_t col, int32_t row, uint8_t* framebuffer)
+void draw_string(const unsigned char* font, const char* str, int32_t col, int32_t row, uint8_t* framebuffer)
 {
 	while (*str) {
 		draw_character(font, *str++, col++, row, framebuffer);
@@ -211,6 +211,36 @@ void draw_string(char font[][8], const char* str, int32_t col, int32_t row, uint
 int main()
 {
 	runtime_init();
+
+	video_set_palette(0, 0x887ecb);
+	video_set_palette(1, 0x50459b);
+	video_set_palette(255, 0x887ecb);
+
+	video_clear(0);
+
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	for (int y = 23; y < 200 - 23; ++y)
+	{
+		for (int x = 23; x < 320 - 23; ++x)
+		{
+			framebuffer[x + y * 320] = 1;
+		}
+	}
+
+	draw_string(font8x8_c64, "   **** REKORD 5  SHELL V1 ****" , 3, 4, framebuffer);
+	draw_string(font8x8_c64, " 32M RAM SYSTEM   SOME BYTES FREE" , 3, 6, framebuffer);
+	draw_string(font8x8_c64, "READY.", 3, 8, framebuffer);
+
+	draw_string(font8x8_c64, "            1 = DOOM", 3, 9, framebuffer);
+	draw_string(font8x8_c64, "            2 = QUAKE", 3, 10, framebuffer);
+	draw_string(font8x8_c64, "            3 = DEMO", 3, 11, framebuffer);
+
+	video_swap();
+
+	for(;;)
+		runtime_update();
+
+	// video_set_palette(255, 0x00ffffff);
 
 
 	//splash_screen();
@@ -239,101 +269,101 @@ int main()
 	// }
 
 
-	for (uint32_t i = 0; i < 256; ++i)
-	{
-		const uint8_t r = rand();
-		const uint8_t g = rand();
-		const uint8_t b = rand();
-		video_set_palette(i, (r << 16) | (g << 8) | b);
-	}
+	// for (uint32_t i = 0; i < 256; ++i)
+	// {
+	// 	const uint8_t r = rand();
+	// 	const uint8_t g = rand();
+	// 	const uint8_t b = rand();
+	// 	video_set_palette(i, (r << 16) | (g << 8) | b);
+	// }
 
-	video_set_palette(0, 0x00000000);
-	video_set_palette(255, 0x00ffffff);
+	// video_set_palette(0, 0x00000000);
+	// video_set_palette(255, 0x00ffffff);
 
-	float head = 0.0f;
-	float pitch = 0.0f;
-	float bank = 0.0f;
-	Vec2i sv[8];
+	// float head = 0.0f;
+	// float pitch = 0.0f;
+	// float bank = 0.0f;
+	// Vec2i sv[8];
 
-	for (;;)
-	{
-		runtime_update();
+	// for (;;)
+	// {
+	// 	runtime_update();
 
-		static int count = 0;
-		if (++count >= 60)
-		{
-			static uint32_t last_ms = 0;
-			uint32_t ms = timer_get_ms();
-			printf("%d fps\n", (60 * 1000) / (ms - last_ms));
-			last_ms = ms;
-			count = 0;
-		}
+	// 	static int count = 0;
+	// 	if (++count >= 60)
+	// 	{
+	// 		static uint32_t last_ms = 0;
+	// 		uint32_t ms = timer_get_ms();
+	// 		printf("%d fps\n", (60 * 1000) / (ms - last_ms));
+	// 		last_ms = ms;
+	// 		count = 0;
+	// 	}
 
-		const float ca = cos(head);
-		const float sa = sin(head);
-		const float cp = cos(pitch);
-		const float sp = sin(pitch);
-		const float cb = cos(bank);
-		const float sb = sin(bank);
+	// 	const float ca = cos(head);
+	// 	const float sa = sin(head);
+	// 	const float cp = cos(pitch);
+	// 	const float sp = sin(pitch);
+	// 	const float cb = cos(bank);
+	// 	const float sb = sin(bank);
 
-		for (int32_t i = 0; i < 8; ++i)
-		{
-			float xa = vertices[i].x * ca - vertices[i].z * sa;
-			float ya = vertices[i].y;
-			float za = vertices[i].x * sa + vertices[i].z * ca;
+	// 	for (int32_t i = 0; i < 8; ++i)
+	// 	{
+	// 		float xa = vertices[i].x * ca - vertices[i].z * sa;
+	// 		float ya = vertices[i].y;
+	// 		float za = vertices[i].x * sa + vertices[i].z * ca;
 
-			float xb = xa;
-			float yb = ya * cp - za * sp;
-			float zb = ya * sp + za * cp;
+	// 		float xb = xa;
+	// 		float yb = ya * cp - za * sp;
+	// 		float zb = ya * sp + za * cp;
 
-			float x = xb * cb - yb * sb;
-			float y = xb * sb + yb * cb;
-			float z = zb;
+	// 		float x = xb * cb - yb * sb;
+	// 		float y = xb * sb + yb * cb;
+	// 		float z = zb;
 
-			z += 5.0f;
+	// 		z += 5.0f;
 
-			float w = z * 0.5f;
-			float ndx = x / w;
-			float ndy = y / w;
+	// 		float w = z * 0.5f;
+	// 		float ndx = x / w;
+	// 		float ndy = y / w;
 
-			sv[i].x = (int32_t)((ndx * (FW/2)) + (FW/2));
-			sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
-		}
+	// 		sv[i].x = (int32_t)((ndx * (FW/2)) + (FW/2));
+	// 		sv[i].y = (int32_t)((ndy * (FH/2)) + (FH/2));
+	// 	}
 
-		uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-		memset(framebuffer, 0, FW * FH);
+	// 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	// 	memset(framebuffer, 0, FW * FH);
 
-		for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
-		{
-			int32_t i0 = indices[i * 3 + 0];
-			int32_t i1 = indices[i * 3 + 1];
-			int32_t i2 = indices[i * 3 + 2];
+	// 	for (int32_t i = 0; i < (sizeof(indices) / sizeof(indices[0])) / 3; ++i)
+	// 	{
+	// 		int32_t i0 = indices[i * 3 + 0];
+	// 		int32_t i1 = indices[i * 3 + 1];
+	// 		int32_t i2 = indices[i * 3 + 2];
 
-			int32_t f = i >> 1;
+	// 		int32_t f = i >> 1;
 
-			triangle(
-				sv[i0],
-				sv[i2],
-				sv[i1],
-				framebuffer,
-				f + 1
-			);			
-		}
+	// 		triangle(
+	// 			sv[i0],
+	// 			sv[i2],
+	// 			sv[i1],
+	// 			framebuffer,
+	// 			f + 1
+	// 		);			
+	// 	}
 
 
-		draw_string(font8x8_basic, " Rebel V" , 16, 7, framebuffer);
-		draw_string(font8x8_basic, "=========", 16, 8, framebuffer);
-		draw_string(font8x8_basic, "1. Demo"  , 16, 9, framebuffer);
-		draw_string(font8x8_basic, "2. Doom"  , 16, 10, framebuffer);
-		draw_string(font8x8_basic, "3. Quake" , 16, 11, framebuffer);
-		draw_string(font8x8_basic, "=========", 16, 12, framebuffer);
+	// 	draw_string(font8x8_c64, " Rebel V" , 16, 7, framebuffer);
+	// 	draw_string(font8x8_c64, "=========", 16, 8, framebuffer);
+	// 	draw_string(font8x8_c64, "1. Demo"  , 16, 9, framebuffer);
+	// 	draw_string(font8x8_c64, "2. Doom"  , 16, 10, framebuffer);
+	// 	draw_string(font8x8_c64, "3. Quake" , 16, 11, framebuffer);
+	// 	draw_string(font8x8_c64, "=========", 16, 12, framebuffer);
 
-		video_swap();
+	// 	video_swap();
 
-		head += 0.043f;
-		pitch += 0.067f;
-		bank += 0.034f;
-	}
+	// 	head += 0.043f;
+	// 	pitch += 0.067f;
+	// 	bank += 0.034f;
+	// }
 
 	return 0;
 }

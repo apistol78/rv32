@@ -222,6 +222,15 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 		}
 	}
 
+	// uint8_t empty[128];
+	// memset(empty, 0, sizeof(empty));
+	// for (uint32_t i = last; i < last + 0x8000; i += 128)
+	// {
+	// 	log::info << L"NULL " << str(L"%08x", i) << L"..." << Endl;
+	// 	if (!sendLine(target, i, empty, 128))
+	// 		return false;
+	// }
+
 	if (start != -1)
 	{
 		if (sp)
@@ -491,6 +500,20 @@ int main(int argc, const char** argv)
 		}
 
 		target = new net::SocketStream(socket, true, true, 1000);
+	}
+
+	// Issue reset command.
+	write< uint8_t >(target, 0xff);
+	ThreadManager::getInstance().getCurrentThread()->sleep(200);
+
+	// Purge incoming data.
+	for (;;)
+	{
+		ThreadManager::getInstance().getCurrentThread()->sleep(200);
+		if (target->available() == 0)
+			break;
+		while (target->available() > 0)
+			read< uint8_t >(target);
 	}
 
 	if (commandLine.hasOption(L"memcheck"))

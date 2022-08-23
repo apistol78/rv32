@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Runtime/HAL/ADV7513.h"
+#include "Runtime/HAL/DMA.h"
 #include "Runtime/HAL/SIL9024A.h"
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Video.h"
@@ -23,10 +24,17 @@ int32_t video_init()
 	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
 	if (deviceId == SR_DEVICE_ID_RV32T)
 	{
-		secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+		// secondary_target = (uint32_t*)VIDEO_DATA_BASE;
 
-		control[0] = 0;					// GPU read offset
-		control[1] = WIDTH * HEIGHT;	// CPU write offset		
+		// control[0] = 0;					// GPU read offset
+		// control[1] = WIDTH * HEIGHT;	// CPU write offset		
+
+		primary_target = (uint32_t*)VIDEO_DATA_BASE;
+		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
+			return 1;		
+
+		control[0] = 0;	// GPU read offset
+		control[1] = 0;	// CPU write offset	
 	}
 	else if (deviceId == SR_DEVICE_ID_T_CV_GX)
 	{

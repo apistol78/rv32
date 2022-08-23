@@ -267,6 +267,12 @@ int main(int argc, const char **argv)
 
 	soc->eval();
 
+	// Randomize cache data.
+	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)
+		soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data[i] = -1;
+	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__cache__DOT__data); ++i)
+		soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__cache__DOT__data[i] = -1;
+
 	if (cmdLine.hasOption(L"elf-kernal"))
 	{
 		std::wstring fileName = cmdLine.getOption(L"elf-kernal").getString();
@@ -475,12 +481,12 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;				
 			}
-			if (!soc->SoC__DOT__w_sdram_valid)
-			{
-				log::warning << L"MEMORY OUT OF BOUNDS, terminating." << Endl;
-				g_going = false;
-				break;
-			}
+			// if (!soc->SoC__DOT__w_sdram_valid)
+			// {
+			// 	log::warning << L"MEMORY OUT OF BOUNDS, terminating." << Endl;
+			// 	g_going = false;
+			// 	break;
+			// }
 		}
 
 		if (form)
@@ -551,8 +557,8 @@ int main(int argc, const char **argv)
 				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
 				double icr = (ich * 100.0) / (ich + icm);
 
-				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__hit;
-				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__miss;
+				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__hit;
+				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__miss;
 				double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<

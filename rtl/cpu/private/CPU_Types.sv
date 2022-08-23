@@ -49,6 +49,7 @@ typedef struct packed
 	register_t inst_rs2;
 	register_t inst_rs3;
 	register_t inst_rd;
+	bit [31:0] imm;					//!< Immediate number.
 }
 fetch_data_t;
 

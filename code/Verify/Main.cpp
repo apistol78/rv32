@@ -40,16 +40,16 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 	// Prime icache.
 	if (g_primeICache)
 	{
-		// for (int i = 0; i < 10; ++i)
-		// {
-		// 	const uint32_t pc = i * 4;
-		// 	const uint32_t inst = tb->SoC__DOT__rom__DOT__data[i];
-		// 	tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__cache__DOT__data[i] =
-		// 		(pc | 1) |
-		// 		(uint64_t(inst) << 32);
-		// };
-		// tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__next = 1;
-		// tb->SoC__DOT__cpu__DOT__fetch__DOT__icache__DOT__state = 1;
+		for (int i = 0; i < 10; ++i)
+		{
+			const uint32_t pc = i * 4;
+			const uint32_t inst = tb->SoC__DOT__rom__DOT__data[i];
+			tb->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data[i] =
+				(pc | 1) |
+				(uint64_t(inst) << 32);
+		};
+		tb->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__next = 1;
+		tb->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__state = 1;
 	}
 
 	int32_t time = 0;
@@ -88,7 +88,7 @@ void evaluate(VSoC* tb, const char* trace, int32_t steps)
 	}
 }
 
-#define ITERATIONS 1000
+#define ITERATIONS 100000
 
 #define S0 8
 #define S1 9
@@ -797,7 +797,7 @@ bool verify_REM(const char* trace)
 	// 	s1,
 	// 	s2,
 	// 	tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0],
-	// 	s1 / s2
+	// 	s1 % s2
 	// );
 
 	if (tb->SoC__DOT__cpu__DOT__registers__DOT__r[S0] != (s1 % s2))
@@ -1975,55 +1975,55 @@ int main(int argc, char **argv)
 	bool success = true;
 	bool ftrce = false;
 
-	CHECK(verify_ADD);
-	CHECK(verify_ADDI);
-	CHECK(verify_AND);
-	CHECK(verify_ANDI);
-	CHECK(verify_AUIPC);
-	CHECK(verify_BEQ);
-	CHECK(verify_BGE);
-	CHECK(verify_BGEU);
-	CHECK(verify_BLT);
-	CHECK(verify_BLTU);
-	CHECK(verify_BNE);
-	CHECK(verify_DIV);
-	CHECK(verify_UDIV);
-	CHECK(verify_JAL);
-	CHECK(verify_JALR);
-	CHECK(verify_LB);
-	CHECK(verify_LBU);
-	CHECK(verify_LH);
-	CHECK(verify_LHU);
-	CHECK(verify_LUI);
-	CHECK(verify_LW);
+	// CHECK(verify_ADD);
+	// CHECK(verify_ADDI);
+	// CHECK(verify_AND);
+	// CHECK(verify_ANDI);
+	// CHECK(verify_AUIPC);
+	// CHECK(verify_BEQ);
+	// CHECK(verify_BGE);
+	// CHECK(verify_BGEU);
+	// CHECK(verify_BLT);
+	// CHECK(verify_BLTU);
+	// CHECK(verify_BNE);
+	// CHECK(verify_DIV);
+	// CHECK(verify_UDIV);
+	// CHECK(verify_JAL);
+	// CHECK(verify_JALR);
+	// CHECK(verify_LB);
+	// CHECK(verify_LBU);
+	// CHECK(verify_LH);
+	// CHECK(verify_LHU);
+	// CHECK(verify_LUI);
+	// CHECK(verify_LW);
 	CHECK(verify_MUL);
 	CHECK(verify_MULH);
 	CHECK(verify_MULHU);
-	CHECK(verify_OR);
-	CHECK(verify_ORI);
-	CHECK(verify_REM);
-	CHECK(verify_REMU);
-	CHECK(verify_SB);
-	CHECK(verify_SH);
-	CHECK(verify_SLL);
-	CHECK(verify_SLLI);
-	CHECK(verify_SLT);
-	CHECK(verify_SLTI);
-	CHECK(verify_SLTIU);
-	CHECK(verify_SLTU);
-	CHECK(verify_SRA);
-	CHECK(verify_SRAI);
-	CHECK(verify_SRL);
-	CHECK(verify_SRLI);
-	CHECK(verify_SUB);
-	CHECK(verify_SW);
-	CHECK(verify_XOR);
-	CHECK(verify_XORI);
-	CHECK(verify_ENDIAN);
-	CHECK(verify_MEM_LOAD_HAZARD);
-	CHECK(verify_PIPELINE);
-	CHECK(verify_PIPELINE_MEMORY);
-	CHECK(verify_PIPELINE_MEMORY_B);
+	// CHECK(verify_OR);
+	// CHECK(verify_ORI);
+	// CHECK(verify_REM);
+	// CHECK(verify_REMU);
+	// CHECK(verify_SB);
+	// CHECK(verify_SH);
+	// CHECK(verify_SLL);
+	// CHECK(verify_SLLI);
+	// CHECK(verify_SLT);
+	// CHECK(verify_SLTI);
+	// CHECK(verify_SLTIU);
+	// CHECK(verify_SLTU);
+	// CHECK(verify_SRA);
+	// CHECK(verify_SRAI);
+	// CHECK(verify_SRL);
+	// CHECK(verify_SRLI);
+	// CHECK(verify_SUB);
+	// CHECK(verify_SW);
+	// CHECK(verify_XOR);
+	// CHECK(verify_XORI);
+	// CHECK(verify_ENDIAN);
+	// CHECK(verify_MEM_LOAD_HAZARD);
+	// CHECK(verify_PIPELINE);
+	// CHECK(verify_PIPELINE_MEMORY);
+	// CHECK(verify_PIPELINE_MEMORY_B);
 
 #if defined(CHECK_FPU)
 
@@ -2051,7 +2051,7 @@ int main(int argc, char **argv)
 
 #endif
 
-	CHECK(verify_CSRRS);
+	// CHECK(verify_CSRRS);
 
 	if (success)
 		printf("SUCCESS!\n");

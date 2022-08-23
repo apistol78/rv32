@@ -75,10 +75,11 @@ module SoC(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	BRAM #(
+	BRAM_latency #(
 		.WIDTH(128),
 		.SIZE(32'h800000 / 16),
-		.ADDR_LSH(4)
+		.ADDR_LSH(4),
+		.LATENCY(16)
 	) sdram(
 		.i_clock(clock),
 
@@ -193,7 +194,7 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0)
+		.DCACHE_REGISTERED(1)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -469,6 +470,7 @@ module SoC(
 
 		// Signals
 		.i_boot_mode_switch(BOOTMODE),
+		.o_reset_switch(),
 		.o_leds(LEDR),
 		.o_sil9024_reset()
 	);

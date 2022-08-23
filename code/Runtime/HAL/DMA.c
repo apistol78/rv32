@@ -14,6 +14,7 @@ uint32_t dma_write(void* dst, uint32_t count, uint32_t value)
 	*DMA_COUNT = count;
 	*DMA_RUN = 1;
 	interrupt_enable();
+	return 0;
 }
 
 uint32_t dma_copy(void* dst, const void* src, uint32_t count)
@@ -24,6 +25,7 @@ uint32_t dma_copy(void* dst, const void* src, uint32_t count)
 	*DMA_COUNT = count;
 	*DMA_RUN = 2;
 	interrupt_enable();
+	return 0;
 }
 
 void dma_wait()

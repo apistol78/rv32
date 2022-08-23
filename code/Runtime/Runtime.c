@@ -76,15 +76,33 @@ int32_t runtime_init()
 void runtime_update()
 {
 	input_update();
+
+	// Check for reset signal on UART.
+	if (!uart_rx_empty(0))
+	{
+		uint8_t cmd = uart_rx_u8(0);
+		if (cmd == 0xff)
+			runtime_cold_restart();
+	}
 }
 
 void runtime_warm_restart()
 {
-	const uint32_t sp = 0x20110000;
+	typedef void (*call_fn_t)();
+
+	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
-		"j	0		\n"
 		:
 		: "r" (sp)
+
 	);
+
+	const uint32_t addr = 0x00000000;
+	((call_fn_t)addr)();
+}
+
+void runtime_cold_restart()
+{
+	sysreg_write(SR_REG_COLD_RESET, 1);
 }

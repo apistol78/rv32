@@ -76,10 +76,11 @@ module SoC(
 
 	//=====================================
 
+	bit reset_switch = 1'b0;
 	wire reset;
 	RESET rst(
 		.i_clock(clock),
-		.i_reset_sw(key_1),
+		.i_reset_sw(reset_switch || ~key_1),
 		.o_reset_0(),
 		.o_reset_1(),
 		.o_reset_2(reset)
@@ -228,14 +229,14 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0)
+		.DCACHE_REGISTERED(1)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(timer_interrupt),
-		.i_external_interrupt(plic_interrupt),
+		.i_timer_interrupt(1'b0), //timer_interrupt),
+		.i_external_interrupt(1'b0), //plic_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -490,8 +491,8 @@ module SoC(
 	wire sysreg_sil9024_reset;
 	SystemRegisters #(
 		.FREQUENCY(`FREQUENCY),
-		.DEVICEID(3),
-		.RAM_SIZE(32'h800000)
+		.DEVICEID(6),
+		.RAM_SIZE(32'h1000000)
 	) sysreg(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -506,6 +507,7 @@ module SoC(
 
 		// Signals
 		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
+		.o_reset_switch(reset_switch),
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)
 	);
@@ -698,7 +700,7 @@ module SoC(
 	wire bridge_far_ready;
 
 	BRIDGE #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),

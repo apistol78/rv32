@@ -26,13 +26,20 @@ module CPU_PreDecode(
 	wire have_RS3 = is_R4;
 	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR | is_R4;
 
+	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
+	wire [31:0] inst_I_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:20] };
+	wire [31:0] inst_J_imm = { { 12{ `INSTRUCTION[31] } }, `INSTRUCTION[19:12], `INSTRUCTION[20], `INSTRUCTION[30:21], 1'b0 };
+	wire [31:0] inst_S_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:25], `INSTRUCTION[11:7] };
+	wire [31:0] inst_U_imm = { `INSTRUCTION[31:12], 12'b0 };
+	wire [31:0] inst_R_imm = { 26'b0, `INSTRUCTION[25:20] };
+	wire [31:0] inst_CSR_imm = { 20'b0, `INSTRUCTION[31:20] };
+	
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			data <= 0;
 		end
 		else begin
 			if (i_data.tag != data.tag) begin
-
 				data <= i_data;
 
 				// Decode register indices here since we
@@ -43,6 +50,16 @@ module CPU_PreDecode(
 				data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
 				data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
 				
+				data.imm <=
+					is_B ? inst_B_imm :
+					is_I ? inst_I_imm :
+					is_J ? inst_J_imm :
+					is_S ? inst_S_imm :
+					is_U ? inst_U_imm :
+					is_R ? inst_R_imm :
+					is_CSR ? inst_CSR_imm :
+					32'h0;
+
 			end
 		end
 	end
