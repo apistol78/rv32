@@ -23,6 +23,7 @@
 #include "d_local.h"
 
 //#include "ctr.h"
+#include "Runtime/Runtime.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 

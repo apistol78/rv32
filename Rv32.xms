@@ -536,7 +536,7 @@
 					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Bare/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -559,7 +559,7 @@
 					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Bare/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include <ff.h>
@@ -30,7 +31,12 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
-	return RES_NOTRDY;
+	for (UINT i = 0; i < count; ++i)
+	{
+		if (sd_write_block512(sector, buff + 512 * i, 512) != 512)
+			return RES_ERROR;
+	}
+	return RES_OK;
 }
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
@@ -98,19 +104,26 @@ int32_t file_init()
 	return 0;
 }
 
-int32_t file_open(const char* name)
+int32_t file_open(const char* name, int32_t mode)
 {
 	FIL* fp = file_alloc();
 	if (!fp)
 		return 0;
 
-	if (f_open(fp, name, FA_READ) == FR_OK)
-		return file_index(fp);
-	else
+	FRESULT r = FR_INVALID_PARAMETER;
+	if (mode == FILE_MODE_READ)
 	{
-		file_free(fp);
-		return 0;
+		if ((r = f_open(fp, name, FA_READ)) == FR_OK)
+			return file_index(fp);
 	}
+	else if (mode == FILE_MODE_WRITE)
+	{
+		if ((r = f_open(fp, name, FA_CREATE_NEW | FA_WRITE)) == FR_OK)
+			return file_index(fp);
+	}
+
+	file_free(fp);
+	return 0;
 }
 
 void file_close(int32_t fd)
@@ -169,12 +182,14 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 
 int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 {
-	UINT bw = 0;
 	FIL* fp = file_from_index(fd);
-	if (f_write(fp, ptr, len, &bw) == FR_OK)
+	FRESULT result;
+	UINT bw = 0;
+	if ((result = f_write(fp, ptr, len, &bw)) == FR_OK)
 		return (int32_t)bw;
-	else
+	else {
 		return -1;
+	}
 }
 
 int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
@@ -189,3 +204,24 @@ int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 	else
 		return -1;
 }
+
+int32_t file_enumerate(const char* path, fn_enum_t fnen)
+{
+	FILINFO fno;
+	DIR dp;
+
+	if (f_opendir(&dp, path) != FR_OK)
+		return 1;
+
+	while (f_readdir(&dp, &fno) == FR_OK && fno.fname[0] != 0)
+		fnen(fno.fname, fno.fsize);
+
+	f_closedir(&dp);
+	return 0;
+}
+
+int32_t file_remove(const char* filename)
+{
+	return f_unlink(filename) == FR_OK ? 0 : 1;
+}
+

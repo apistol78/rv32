@@ -49,9 +49,10 @@ uint32_t DG_GetTicksMs()
 int DG_GetKey(int* pressed, unsigned char* doomKey)
 {
 	uint8_t ikc;
+	uint8_t im;
 	uint8_t ip;
 
-	if (input_get_kb_event(&ikc, &ip))
+	if (input_get_kb_event(&ikc, &im, &ip))
 	{
 		switch (ikc)
 		{

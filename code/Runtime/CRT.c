@@ -1,6 +1,8 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include "Runtime/File.h"
 #include "Runtime/HAL/UART.h"
@@ -19,7 +21,13 @@ void* _sbrk(int incr)
 
 int _open(const char* name, int flags, int mode)
 {
-	int32_t fd = file_open(name);
+	int32_t fd = -1;
+
+	if ((flags & O_ACCMODE) == O_RDONLY)
+		fd = file_open(name, FILE_MODE_READ);
+	else if ((flags & O_WRONLY) == O_WRONLY)
+		fd = file_open(name, FILE_MODE_WRITE);
+
 	return fd > 0 ? fd + 100 : -1;
 }
 

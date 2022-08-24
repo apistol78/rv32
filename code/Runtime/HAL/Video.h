@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Runtime/HAL/Common.h"
+
 EXTERN_C int32_t video_init();
 
 EXTERN_C int32_t video_get_resolution_width();

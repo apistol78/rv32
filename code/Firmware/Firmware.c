@@ -28,7 +28,7 @@ static int32_t launch_elf(const char* filename)
 {
 	printf("open \"%s\"...\n", filename);
 
-	int32_t fd = file_open(filename);
+	int32_t fd = file_open(filename, FILE_MODE_READ);
 	if (fd <= 0)
 	{
 		printf("unable to open \"%s\"\n", filename);
@@ -300,7 +300,7 @@ void main()
 	file_init();
 
 	if ((sysreg_read(SR_REG_BM0) & 0x01) == 0x00)
-		launch_elf("boot.elf");
+		launch_elf("BOOT");
 	else
 		remote_control();
 

@@ -7,6 +7,7 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SD.h"
 #include "Runtime/HAL/SystemRegisters.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 #include "Runtime/HAL/Video.h"
 
@@ -90,6 +91,10 @@ void runtime_warm_restart()
 {
 	typedef void (*call_fn_t)();
 
+	video_set_palette(0, 0x00000000);
+	video_clear(0);
+	video_swap();
+
 	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
@@ -100,9 +105,17 @@ void runtime_warm_restart()
 
 	const uint32_t addr = 0x00000000;
 	((call_fn_t)addr)();
+
+	for (;;);
 }
 
 void runtime_cold_restart()
 {
+	video_set_palette(0, 0x00000000);
+	video_clear(0);
+	video_swap();
+
 	sysreg_write(SR_REG_COLD_RESET, 1);
+
+	for (;;);
 }

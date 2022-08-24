@@ -8,11 +8,21 @@ EXTERN_C void input_update();
 
 EXTERN_C int32_t input_get_kb_state(uint8_t keycode);
 
-EXTERN_C int32_t input_get_kb_event(uint8_t* keycode, uint8_t* pressed);
+EXTERN_C int32_t input_get_kb_event(uint8_t* keycode, uint8_t* modifier, uint8_t* pressed);
+
+EXTERN_C int32_t input_translate_key(uint8_t keycode, uint8_t modifier, char* ch);
 
 EXTERN_C int32_t input_get_mouse_state(int32_t* x, int32_t* y, uint8_t* buttons);
 
 EXTERN_C int32_t input_get_mouse_event(int8_t* x, int8_t* y, int8_t* wheel, uint8_t* buttons);
+
+// Modifiers
+#define RT_MODIFIER_CTRL    0x01
+#define RT_MODIFIER_R_CTRL  0x10
+#define RT_MODIFIER_SHIFT   0x02
+#define RT_MODIFIER_R_SHIFT 0x20
+#define RT_MODIFIER_ALT     0x04
+#define RT_MODIFIER_R_ALT   0x40
 
 // Keycodes
 #define RT_KEY_A	        0x04

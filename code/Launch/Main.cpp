@@ -349,6 +349,52 @@ bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 	return true;
 }
 
+bool uploadFile(IStream* target, const std::wstring& fileName)
+{
+	Ref< traktor::IStream > ff = FileSystem::getInstance().open(fileName, File::FmRead);
+	if (!ff)
+	{
+		log::error << L"Unable to open file \"" << fileName << L"\"." << Endl;
+		return false;
+	}
+
+	Ref< traktor::IStream > f = new BufferedStream(ff);
+
+	const int32_t avail = f->available();
+
+	uint8_t buf[128];
+	int32_t total = 0;
+
+	for (;;)
+	{
+		int32_t nr = std::min(avail - total, 128);
+		if (nr <= 0)
+			break;
+
+		f->read(buf, nr);
+
+		log::info << total << Endl;
+
+		write< uint8_t >(target, (uint8_t)nr);
+		write< uint8_t >(target, buf, nr);
+
+		uint8_t reply = read< uint8_t >(target);
+		if (reply != 0x80)
+		{
+			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+			write< uint8_t >(target, (uint8_t)0x00);
+			return false;
+		}
+
+		total += nr;
+	}
+
+	write< uint8_t >(target, (uint8_t)0x00);
+
+	log::info << L"File uploaded." << Endl;
+	return true;
+}
+
 void for_each(uint32_t from, uint32_t to, uint32_t step, const std::function< void(uint32_t) >& fn)
 {
 	if (from <= to)
@@ -503,8 +549,11 @@ int main(int argc, const char** argv)
 	}
 
 	// Issue reset command.
-	write< uint8_t >(target, 0xff);
-	ThreadManager::getInstance().getCurrentThread()->sleep(200);
+	if (commandLine.hasOption(L"reset"))
+	{
+		write< uint8_t >(target, 0xff);
+		ThreadManager::getInstance().getCurrentThread()->sleep(200);
+	}
 
 	// Purge incoming data.
 	for (;;)
@@ -539,6 +588,16 @@ int main(int argc, const char** argv)
 		if (!uploadELF(target, elf, sp))
 		{
 			log::error << L"Unable to load ELF." << Endl;
+			return 1;
+		}
+	}
+
+	if (commandLine.hasOption('r', L"raw"))
+	{
+		std::wstring file = commandLine.getOption('r', L"raw").getString();
+		if (!uploadFile(target, file))
+		{
+			log::error << L"Unable to upload file." << Endl;
 			return 1;
 		}
 	}
