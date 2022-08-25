@@ -507,7 +507,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b0),	// 0 - read elf, 1 - wait on uart
+		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
 		.o_reset_switch(reset_switch),
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)

@@ -109,6 +109,8 @@ module CPU_Fetch #(
 		icache_stall = i_decode_busy || !(state == 0);
 	end
 
+	bit last_pending = 1'b0;
+
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= WAIT_ICACHE;
@@ -116,46 +118,49 @@ module CPU_Fetch #(
 			data <= 0;
 		end
 		else begin
+
+			o_irq_dispatched <= 1'b0;
+
 			case (state)
 				WAIT_ICACHE: begin
-					// Jump to interrupt if interrupt are pending, only do
-					// this in this state as we need to finish any pending
-					// branches first.
-					o_irq_dispatched <= i_irq_pending;
-					if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
-						o_irq_epc <= pc;
-						pc <= i_irq_pc;
-					end
-					else begin
-						if (icache_ready) begin
-							data.tag <= data.tag + 1;
-							data.instruction <= icache_rdata;
-							data.pc <= pc;
+					if (icache_ready) begin
+						data.tag <= data.tag + 1;
+						data.instruction <= icache_rdata;
+						data.pc <= pc;
 
-							// @todo Bad timing; is there any way we
-							// can skip decoding these...
-							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
-								// Branch instruction, need to wait
-								// for an explicit "goto" signal before
-								// we can continue feeding the pipeline.
-								state <= WAIT_JUMP;
-							end
-							else if (is_ECALL || is_WFI) begin
-								// Software interrupt, need to wait
-								// for IRQ signal before continue.
-								state <= WAIT_IRQ;
-							end
+						// Move PC to next instruction, will
+						// enable to icache to start loading
+						// next instruction.
+						pc <= pc + 4;
 
-							// Move PC to next instruction, will
-							// enable to icache to start loading
-							// next instruction.
-							pc <= pc + 4;
+						// @todo Bad timing; is there any way we
+						// can skip decoding these...
+						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
+							// Branch instruction, need to wait
+							// for an explicit "goto" signal before
+							// we can continue feeding the pipeline.
+							state <= WAIT_JUMP;
 						end
-`ifdef __VERILATOR__					
-						else if (!icache_stall)
-							starve <= starve + 1;
-`endif
+						else if (is_ECALL || is_WFI) begin
+							// Software interrupt, need to wait
+							// for IRQ signal before continue.
+							state <= WAIT_IRQ;
+						end
+						else begin
+							// Safe to issue interrupt since we know
+							// last instructions isn't a branch.
+							last_pending <= i_irq_pending;
+							if ({ last_pending, i_irq_pending } == 2'b01) begin
+								o_irq_dispatched <= 1'b1;
+								o_irq_epc <= pc + 4;
+								pc <= i_irq_pc;
+							end
+						end
 					end
+`ifdef __VERILATOR__					
+					else if (!icache_stall)
+						starve <= starve + 1;
+`endif
 				end
 
 				WAIT_JUMP: begin
@@ -167,10 +172,10 @@ module CPU_Fetch #(
 				end
 
 				WAIT_IRQ: begin
-					// Wait for IRQ signal.
-					o_irq_dispatched <= i_irq_pending;
-					if ({ o_irq_dispatched, i_irq_pending } == 2'b01) begin
-						o_irq_epc <= pc + 4;
+					// Wait for soft IRQ signal.
+					last_pending <= i_irq_pending;
+					if ({ last_pending, i_irq_pending } == 2'b01) begin
+						o_irq_epc <= pc;
 						pc <= i_irq_pc;
 						state <= WAIT_ICACHE;
 					end					

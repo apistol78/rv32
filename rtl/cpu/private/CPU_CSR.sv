@@ -52,7 +52,7 @@ module CPU_CSR #(
 	assign o_epc = mepc;
 
 	// Read CSR value by index.
-	always @(*) begin
+	always_comb begin
 		o_rdata = 0;
 		if (i_index == `CSR_MSTATUS)
 			o_rdata = mstatus;
@@ -77,9 +77,8 @@ module CPU_CSR #(
 	end
 
 	bit [2:0] issued = 0;
-	bit rd = 0;
 
-	always @(posedge i_clock) begin
+	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			mstatus_mie <= 0;
 			mie_meie <= 0;
@@ -109,7 +108,7 @@ module CPU_CSR #(
 					mepc <= i_wdata;
 			end
 
-			// Check interrupts, set pending flags.
+			// Latch interrupts pending.
 			if (mstatus_mie) begin
 				if (i_timer_interrupt && mie_mtie) begin
 					mip_mtip <= 1'b1;
@@ -125,10 +124,10 @@ module CPU_CSR #(
 			// Issue interrupts.
 			if (!o_irq_pending) begin
 				if (mip_mtip) begin
-					o_irq_pending <= 1;
+					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 7);
-					issued <= 1;
+					issued <= 1'b1;
 				end
 				else if (mip_meip) begin
 					o_irq_pending <= 1;
@@ -143,21 +142,19 @@ module CPU_CSR #(
 					issued <= 4;
 				end
 			end
-			else begin
-				rd <= i_irq_dispatched;
-				if ({ rd, i_irq_dispatched } == 2'b01) begin
-					mepc <= i_irq_epc;
+			
+			if (i_irq_dispatched) begin
+				mepc <= i_irq_epc;
 
-					if (issued[0])
-						mip_mtip <= 1'b0;
-					if (issued[1])
-						mip_meip <= 1'b0;
-					if (issued[2])
-						mip_msip <= 1'b0;
+				if (issued[0])
+					mip_mtip <= 1'b0;
+				if (issued[1])
+					mip_meip <= 1'b0;
+				if (issued[2])
+					mip_msip <= 1'b0;
 
-					o_irq_pending <= 0;
-					issued <= 0;
-				end
+				o_irq_pending <= 1'b0;
+				issued <= 0;
 			end
 		end
 	end

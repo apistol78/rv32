@@ -55,13 +55,140 @@ namespace
 
 const uint32_t c_memoryAvail = 0x2000000;
 
+
+// Modifiers
+#define RT_MODIFIER_CTRL    0x01
+#define RT_MODIFIER_R_CTRL  0x10
+#define RT_MODIFIER_SHIFT   0x02
+#define RT_MODIFIER_R_SHIFT 0x20
+#define RT_MODIFIER_ALT     0x04
+#define RT_MODIFIER_R_ALT   0x40
+
+// Keycodes
+#define RT_KEY_A	        0x04
+#define RT_KEY_B	        0x05
+#define RT_KEY_C	        0x06
+#define RT_KEY_D	        0x07
+#define RT_KEY_E	        0x08
+#define RT_KEY_F	        0x09
+#define RT_KEY_G	        0x0a
+#define RT_KEY_H	        0x0b
+#define RT_KEY_I	        0x0c
+#define RT_KEY_J	        0x0d
+#define RT_KEY_K	        0x0e
+#define RT_KEY_L	        0x0f
+#define RT_KEY_M	        0x10
+#define RT_KEY_N	        0x11
+#define RT_KEY_O	        0x12
+#define RT_KEY_P	        0x13
+#define RT_KEY_Q	        0x14
+#define RT_KEY_R	        0x15
+#define RT_KEY_S	        0x16
+#define RT_KEY_T	        0x17
+#define RT_KEY_U	        0x18
+#define RT_KEY_V	        0x19
+#define RT_KEY_W	        0x1a
+#define RT_KEY_X	        0x1b
+#define RT_KEY_Y	        0x1c
+#define RT_KEY_Z	        0x1d
+#define RT_KEY_SPACE	    0x2c
+#define RT_KEY_RETURN	    0x28
+#define RT_KEY_ENTER	    0x58
+#define RT_KEY_BACKSPACE	0x2a
+#define RT_KEY_1	        0x1e
+#define RT_KEY_2	        0x1f
+#define RT_KEY_3	        0x20
+#define RT_KEY_4	        0x21
+#define RT_KEY_5	        0x22
+#define RT_KEY_6	        0x23
+#define RT_KEY_7	        0x24
+#define RT_KEY_8	        0x25
+#define RT_KEY_9	        0x26
+#define RT_KEY_0	        0x27
+#define RT_KEY_ESCAPE	    0x29
+#define RT_KEY_TAB	        0x2b
+#define RT_KEY_TILDE	    0x35
+#define RT_KEY_F1	        0x3a
+#define RT_KEY_F2	        0x3b
+#define RT_KEY_F3	        0x3c
+#define RT_KEY_F4	        0x3d
+#define RT_KEY_F5	        0x3e
+#define RT_KEY_F6	        0x3f
+#define RT_KEY_F7	        0x40
+#define RT_KEY_F8	        0x41
+#define RT_KEY_F9	        0x42
+#define RT_KEY_F10	        0x43
+#define RT_KEY_F11	        0x44
+#define RT_KEY_F12	        0x45
+#define RT_KEY_DELETE	    0x4c
+#define RT_KEY_INSERT	    0x49
+#define RT_KEY_END	        0x4d
+#define RT_KEY_HOME	        0x4a
+#define RT_KEY_PGUP	        0x4b
+#define RT_KEY_PGDOWN	    0x4e
+#define RT_KEY_PRTSCR	    0x46
+#define RT_KEY_SCRLK	    0x47
+#define RT_KEY_PAUSE	    0x48
+#define RT_KEY_LEFT		    0x50
+#define RT_KEY_RIGHT	    0x4f
+#define RT_KEY_UP		    0x52
+#define RT_KEY_DOWN		    0x51
+#define RT_KEY_COMMA	    0x36
+#define RT_KEY_DOT		    0x37
+#define RT_KEY_MINUS	    0x38
+#define RT_KEY_PLUS		    0x2d
+#define RT_KEY_DASH		    0x2e
+
+const struct {
+	ui::VirtualKey vkey;
+	uint8_t kc;
+} c_keyMapping[] = {
+	{ ui::VkA, RT_KEY_A },
+	{ ui::VkB, RT_KEY_B },
+	{ ui::VkC, RT_KEY_C },
+	{ ui::VkD, RT_KEY_D },
+	{ ui::VkE, RT_KEY_E },
+	{ ui::VkF, RT_KEY_F },
+	{ ui::VkG, RT_KEY_G },
+	{ ui::VkH, RT_KEY_H },
+	{ ui::VkI, RT_KEY_I },
+	{ ui::VkJ, RT_KEY_J },
+	{ ui::VkK, RT_KEY_K },
+	{ ui::VkL, RT_KEY_L },
+	{ ui::VkM, RT_KEY_M },
+	{ ui::VkN, RT_KEY_N },
+	{ ui::VkO, RT_KEY_O },
+	{ ui::VkP, RT_KEY_P },
+	{ ui::VkQ, RT_KEY_Q },
+	{ ui::VkR, RT_KEY_R },
+	{ ui::VkS, RT_KEY_S },
+	{ ui::VkT, RT_KEY_T },
+	{ ui::VkU, RT_KEY_U },
+	{ ui::VkV, RT_KEY_V },
+	{ ui::VkW, RT_KEY_W },
+	{ ui::VkX, RT_KEY_X },
+	{ ui::VkY, RT_KEY_Y },
+	{ ui::VkZ, RT_KEY_Z },
+	{ ui::VkSpace, RT_KEY_SPACE },
+	{ ui::VkReturn, RT_KEY_RETURN },
+	// { ui::VkEnter, RT_KEY_ENTER },
+	{ ui::VkBackSpace, RT_KEY_BACKSPACE },
+
+	{ ui::VkEscape, RT_KEY_ESCAPE },
+
+	{ ui::VkLeft, RT_KEY_LEFT },
+	{ ui::VkRight, RT_KEY_RIGHT },
+	{ ui::VkUp, RT_KEY_UP },
+	{ ui::VkDown, RT_KEY_DOWN },
+};
+
 uint8_t virtualToKey(ui::VirtualKey vkey)
 {
-	if (vkey == ui::VkUp)
-		return 0x52;
-	if (vkey == ui::VkDown)
-		return 0x51;
-
+	for (int32_t i = 0; i < sizeof_array(c_keyMapping); ++i)
+	{
+		if (c_keyMapping[i].vkey == vkey)
+			return c_keyMapping[i].kc;
+	}
 	return 0;
 }
 
@@ -194,6 +321,7 @@ int main(int argc, const char** argv)
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
 		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x10000;
 		cpu.setSP(sp);
+		log::info << L"Initial stack " << str(L"%08x", sp) << Endl;
 	}
 
 	CircularVector< std::pair< uint32_t, uint32_t >, 32 > dbg_pc;
@@ -230,21 +358,24 @@ int main(int argc, const char** argv)
 		});
 
 		image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event){
-			uint8_t kc = virtualToKey(event->getVirtualKey());
+			const uint8_t kc = virtualToKey(event->getVirtualKey());
 			if (kc != 0)
 			{
 				uart2.enqueue('K');
-				uart2.enqueue(event->getSystemKey());
+				uart2.enqueue(kc);
 				uart2.enqueue(0);
 				uart2.enqueue('E');
 			}
 		});
 		image->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
-			uint8_t kc = virtualToKey(event->getVirtualKey());
+			log::info << L"Key up, vk " << (int32_t)event->getVirtualKey() << Endl;
+			if (event->isRepeat())
+				return;
+			const uint8_t kc = virtualToKey(event->getVirtualKey());
 			if (kc != 0)
 			{
 				uart2.enqueue('k');
-				uart2.enqueue(event->getSystemKey());
+				uart2.enqueue(kc);
 				uart2.enqueue(0);
 				uart2.enqueue('E');
 			}

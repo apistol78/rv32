@@ -433,8 +433,8 @@ module SoC(
 		.i_clock(clock),
 
 		.i_interrupt_0(0),					// Video
-		.i_interrupt_1(audio_interrupt),	// Audio
-		.i_interrupt_2(uart_0_interrupt | uart_1_interrupt),	// UART
+		.i_interrupt_1(0), //audio_interrupt),	// Audio
+		.i_interrupt_2(0), //uart_0_interrupt | uart_1_interrupt),	// UART
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),

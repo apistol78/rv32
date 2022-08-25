@@ -37,6 +37,8 @@ public:
 
 	void interrupt();
 
+	void reset();
+
 	uint32_t pc() const { return m_pc; }
 
 	uint32_t sp() const { return m_registers[2]; }

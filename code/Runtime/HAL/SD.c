@@ -681,7 +681,7 @@ int32_t sd_init()
 	*SD_CTRL = 0x0000ff00;
 
 	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
-	if (deviceId == SR_DEVICE_ID_RV32T)
+	if (deviceId == SR_DEVICE_ID_RV32T || deviceId == SR_DEVICE_ID_RV32)
 		s_dataBits = 4;
 	else
 	{

@@ -4,8 +4,10 @@
 #include "Runtime/Input.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SystemRegisters.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 
 #include "Console.h"
@@ -49,7 +51,7 @@ void cmd_run(const char* filename)
 		return;
 	}
 
-	char tmp[256] = {};
+	char tmp[1024] = {};
 	uint32_t jstart = 0;
 
 	fb_print("Reading header...\n");
@@ -103,6 +105,9 @@ void cmd_run(const char* filename)
 				ELF32_Sym sym = {};
 				file_seek(fd, shdr.sh_offset + j, 0);
 				file_read(fd, (uint8_t*)&sym, sizeof(sym));
+
+				if (sym.st_size >= sizeof(tmp))
+					continue;
 
 				file_seek(fd, shdr_link.sh_offset + sym.st_name, 0);
 				file_read(fd, (uint8_t*)tmp, sym.st_size);
@@ -212,6 +217,59 @@ void cmd_sysinfo()
 	fb_printf("MEMORY   : %d KiB **\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
 }
 
+volatile int g_leds = 0;
+volatile int g_queue = 0;
+
+void cmd_play(const char* filename)
+{
+	int32_t fp = file_open(filename, FILE_MODE_READ);
+	if (fp <= 0)
+		return;
+
+	const int32_t size = file_size(fp);
+	const int32_t n = size / 2;
+
+	fb_printf("Playing %d samples...\n", n);
+
+	// Interrupt are issued when audio hw buffer gets below 50%.
+	interrupt_set_handler(
+		IRQ_SOURCE_PLIC_1,
+		[](uint32_t source) {
+			g_leds++;
+			sysreg_write(SR_REG_LEDS, g_leds >> 4);
+			g_queue = 1;
+		}
+	);
+
+	int16_t buf[256];
+	for (;;)
+	{
+		if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
+			break;
+
+		g_queue = 0;
+		audio_play_mono(buf, 256);
+
+		while (g_queue == 0);
+
+		runtime_update();
+
+		uint8_t kc, m, p;
+		if (input_get_kb_event(&kc, &m, &p) > 0)
+		{
+			if (p != 0 && kc == RT_KEY_ESCAPE)
+				break;
+		}
+	}
+
+	interrupt_set_handler(
+		IRQ_SOURCE_PLIC_1,
+		0
+	);
+
+	file_close(fp);
+}
+
 void cmd_help()
 {
 	fb_print("REBOOT  - Cold reboot\n");
@@ -220,6 +278,7 @@ void cmd_help()
 	fb_print("RUN     - Run program\n");
 	fb_print("DL      - Download file\n");
 	fb_print("SYSINFO - System info\n");
+	fb_print("PLAY    - Play sound file\n");
 	fb_print("HELP    - Show help\n");
 }
 
@@ -227,25 +286,21 @@ int main()
 {
 	runtime_init();
 
-	// interrupt_set_handler(
-	// 	IRQ_SOURCE_ECALL,
-	// 	[](uint32_t source) {
-	// 		fb_print("ECALL HANDLER\n");
-	// 	}
-	// );
-
 	fb_init();
 	fb_clear();
 	fb_print("   **** REKORD 5  SHELL V1 ****\n");
-	fb_print(" 32M RAM SYSTEM   SOME BYTES FREE\n");
+	fb_print(" 16M RAM SYSTEM   SOME BYTES FREE\n");
 	fb_print("READY.\n");
 
-	sysreg_write(SR_REG_LEDS, 3);
+	sysreg_write(SR_REG_LEDS, 0);
 
 	// __asm__ volatile  (
 	// 	"ecall"
 	// );
 
+	// timer_set_compare(5000000);
+
+	int32_t counter = 0;
 	for(;;) {
 		runtime_update();
 		
@@ -275,6 +330,8 @@ int main()
 								cmd_download(&cmd[3]);
 							} else if (strncasecmp(cmd, "SYSINFO", 7) == 0) {
 								cmd_sysinfo();
+							} else if (strncasecmp(cmd, "PLAY", 4) == 0) {
+								cmd_play(&cmd[5]);
 							} else if (strncasecmp(cmd, "HELP", 4) == 0) {
 								cmd_help();
 							} else {

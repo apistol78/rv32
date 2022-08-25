@@ -271,6 +271,14 @@ void CPU::interrupt()
 	m_interrupt = true;
 }
 
+void CPU::reset()
+{
+	m_pc = 0x000000000;
+	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
+		m_registers[i] = 0x00000000;
+	m_registers[2] = 0x20110000;	
+}
+
 bool CPU::decode(uint32_t word)
 {
 	#include "Instructions.inl"
