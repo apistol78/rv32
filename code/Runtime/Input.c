@@ -52,7 +52,7 @@ const char keyboard_se[][5] =
 	{ RT_KEY_SPACE,		' ',	' ',	0, 0 },
 	{ RT_KEY_RETURN,	'\n',	'\n',	0, 0 },
 	{ RT_KEY_ENTER,		'\n',	'\n',	0, 0 },
-	{ RT_KEY_BACKSPACE,	'\r',	'\r',	0, 0 },
+	{ RT_KEY_BACKSPACE,	'\b',	'\b',	0, 0 },
 
 	{ RT_KEY_1, '1', '!',   0, 0 },
 	{ RT_KEY_2, '2', '"', '@', 0 },

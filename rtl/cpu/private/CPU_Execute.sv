@@ -169,12 +169,12 @@ module CPU_Execute (
 	execute_data_t data = 0;
 
 	initial begin
-		o_csr_wdata_wr = 0;
-		//o_csr_wdata = 0;
-		o_jump = 0;
-		//o_jump_pc = 0;
-		o_ecall = 0;
-		o_fault = 0;
+		o_csr_wdata_wr = 1'b0;
+		o_csr_wdata = 0;
+		o_jump = 1'b0;
+		o_jump_pc = 0;
+		o_ecall = 1'b0;
+		o_fault = 1'b0;
 	end
 	
 	always_comb begin
@@ -191,18 +191,18 @@ module CPU_Execute (
 		if (i_reset) begin
 			cycle <= 0;
 			data <= 0;
-			o_csr_wdata_wr <= 0;
-			//o_csr_wdata <= 0;
-			o_jump <= 0;
-			//o_jump_pc <= 0;
-			o_ecall <= 0;
-			o_fault <= 0;			
+			o_csr_wdata_wr <= 1'b0;
+			o_csr_wdata <= 0;
+			o_jump <= 1'b0;
+			o_jump_pc <= 0;
+			o_ecall <= 1'b0;
+			o_fault <= 1'b0;			
 		end
 		else begin
 
-			o_csr_wdata_wr <= 0;
-			o_jump <= 0;
-			o_ecall <= 0;
+			o_csr_wdata_wr <= 1'b0;
+			o_jump <= 1'b0;
+			o_ecall <= 1'b0;
 
 			if (
 				!i_memory_busy &&

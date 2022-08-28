@@ -57,14 +57,15 @@ static void draw_console()
 
 static void putchar(char c)
 {
-	if (c == '\n') {
+	if (c == '\n')
+	{
 		s_x = 0;
-		if (s_y < 18) {
+		if (s_y < 18)
 			s_y++;
-		} else {
-			for (int i = 0; i < 18; ++i) {
+		else
+		{
+			for (int i = 0; i < 18; ++i)
 				memmove(&fb[i * 40], &fb[(i + 1) * 40], 40);
-			}
 			memset(&fb[18 * 40], 0, 40);
 		}
 	}
@@ -72,6 +73,14 @@ static void putchar(char c)
     {
         s_x = 0;
     }
+	else if (c == '\b')
+	{
+		if (s_x > 0)
+		{
+			s_x--;
+			fb[s_x + s_y * 40] = 0;
+		}
+	}
 	else
     {
 		if (s_x < 40 && s_y < 20) {

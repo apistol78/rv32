@@ -73,10 +73,19 @@ bool Bus::tick(CPU* cpu) const
 
 const Bus::MappedDevice* Bus::findMappedDevice(uint32_t address) const
 {
+	if (m_last)
+	{
+		if (address >= m_last->start && address < m_last->end)
+			return m_last;		
+	}
 	for (auto& mappedDevice : m_mappedDevices)
 	{
 		if (address >= mappedDevice.start && address < mappedDevice.end)
-			return &mappedDevice;
+		{
+			m_last = &mappedDevice;
+			return m_last;
+		}
 	}
+	m_last = nullptr;
 	return nullptr;
 }

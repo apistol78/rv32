@@ -116,6 +116,7 @@ module CPU_Fetch #(
 			state <= WAIT_ICACHE;
 			pc <= RESET_VECTOR;
 			data <= 0;
+			last_pending <= 1'b0;
 		end
 		else begin
 
@@ -175,6 +176,7 @@ module CPU_Fetch #(
 					// Wait for soft IRQ signal.
 					last_pending <= i_irq_pending;
 					if ({ last_pending, i_irq_pending } == 2'b01) begin
+						o_irq_dispatched <= 1'b1;
 						o_irq_epc <= pc;
 						pc <= i_irq_pc;
 						state <= WAIT_ICACHE;

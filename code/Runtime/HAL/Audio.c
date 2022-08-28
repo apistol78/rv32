@@ -13,6 +13,7 @@ void audio_init()
 {
 	switch(sysreg_read(SR_REG_DEVICE_ID))
 	{
+	case SR_DEVICE_ID_RV32:
 	case SR_DEVICE_ID_RV32T:
 	case SR_DEVICE_ID_Q_CV_2:
 	case SR_DEVICE_ID_Q_CV_5:

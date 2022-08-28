@@ -169,17 +169,31 @@ const struct {
 	{ ui::VkX, RT_KEY_X },
 	{ ui::VkY, RT_KEY_Y },
 	{ ui::VkZ, RT_KEY_Z },
+
+	{ ui::Vk1, RT_KEY_1 },
+	{ ui::Vk2, RT_KEY_2 },
+	{ ui::Vk3, RT_KEY_3 },
+	{ ui::Vk4, RT_KEY_4 },
+	{ ui::Vk5, RT_KEY_5 },
+	{ ui::Vk6, RT_KEY_6 },
+	{ ui::Vk7, RT_KEY_7 },
+	{ ui::Vk8, RT_KEY_8 },
+	{ ui::Vk9, RT_KEY_9 },
+	{ ui::Vk0, RT_KEY_0 },
+
+	{ ui::VkEscape, RT_KEY_ESCAPE },
 	{ ui::VkSpace, RT_KEY_SPACE },
 	{ ui::VkReturn, RT_KEY_RETURN },
 	// { ui::VkEnter, RT_KEY_ENTER },
 	{ ui::VkBackSpace, RT_KEY_BACKSPACE },
 
-	{ ui::VkEscape, RT_KEY_ESCAPE },
-
 	{ ui::VkLeft, RT_KEY_LEFT },
 	{ ui::VkRight, RT_KEY_RIGHT },
 	{ ui::VkUp, RT_KEY_UP },
 	{ ui::VkDown, RT_KEY_DOWN },
+
+	{ ui::VkPeriod, RT_KEY_DOT },
+	{ ui::VkComma, RT_KEY_COMMA },
 };
 
 uint8_t virtualToKey(ui::VirtualKey vkey)
@@ -368,7 +382,6 @@ int main(int argc, const char** argv)
 			}
 		});
 		image->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
-			log::info << L"Key up, vk " << (int32_t)event->getVirtualKey() << Endl;
 			if (event->isRepeat())
 				return;
 			const uint8_t kc = virtualToKey(event->getVirtualKey());

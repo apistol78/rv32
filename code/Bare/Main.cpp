@@ -191,30 +191,30 @@ void cmd_sysinfo()
 	switch (sysreg_read(SR_REG_DEVICE_ID))
 	{
 		case SR_DEVICE_ID_RV32T:
-			fb_print("DEVICE   : Rv32T **\n");
+			fb_print("DEVICE   : Rv32T\n");
 			break;
 		case SR_DEVICE_ID_T_CV_GX:
-			fb_print("DEVICE   : Terasic Cyclone V GX **\n");
+			fb_print("DEVICE   : Terasic CV GX\n");
 			break;
 		case SR_DEVICE_ID_Q_CV_2:
-			fb_print("DEVICE   : QMTech Cyclone V 2 - 5CEFA2F23 **\n");
+			fb_print("DEVICE   : QMTech CV2 - 5CEFA2F23\n");
 			break;
 		case SR_DEVICE_ID_Q_T7:
-			fb_print("DEVICE   : QMTech Kintex-7 **\n");
+			fb_print("DEVICE   : QMTech K7\n");
 			break;
 		case SR_DEVICE_ID_RV32:
-			fb_print("DEVICE   : Rv32 **\n");
+			fb_print("DEVICE   : Rv32\n");
 			break;
 		case SR_DEVICE_ID_Q_CV_5:
-			fb_print("DEVICE   : QMTech Cyclone V 5 - 5CEFA5F23 **\n");
+			fb_print("DEVICE   : QMTech CV5 - 5CEFA5F23\n");
 			break;
 		default:
-			fb_print("DEVICE   : UNKNOWN **\n");
+			fb_print("DEVICE   : UNKNOWN\n");
 			break;
 	}
 
-	fb_printf("FREQUENCY: %d MHz **\n", sysreg_read(SR_REG_FREQUENCY) / 1000000);
-	fb_printf("MEMORY   : %d KiB **\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
+	fb_printf("FREQUENCY: %d MHz\n", sysreg_read(SR_REG_FREQUENCY) / 1000000);
+	fb_printf("MEMORY   : %d KiB\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
 }
 
 volatile int g_leds = 0;
@@ -288,17 +288,25 @@ int main()
 
 	fb_init();
 	fb_clear();
-	fb_print("   **** REKORD 5  SHELL V1 ****\n");
-	fb_print(" 16M RAM SYSTEM   SOME BYTES FREE\n");
+	fb_print("   **** RePET 5  SHELL V1 ****   \n");
+	fb_print(" 16MiB RAM        SOME BYTES FREE\n");
+	fb_print("\n");
 	fb_print("READY.\n");
 
 	sysreg_write(SR_REG_LEDS, 0);
 
-	// __asm__ volatile  (
-	// 	"ecall"
+	// interrupt_set_handler(
+	// 	IRQ_SOURCE_ECALL,
+	// 	[](uint32_t source) {
+	// 		fb_print("ECALL HANDLER\n");
+	// 	}
 	// );
-
-	// timer_set_compare(5000000);
+	// __asm__ volatile  (
+	// 	"ecall\n"
+	// 	"ecall\n"
+	// 	"ecall\n"
+	// 	"ecall\n"
+	// );
 
 	int32_t counter = 0;
 	for(;;) {
@@ -314,6 +322,10 @@ int main()
 						if (cnt > 0 || ch != ' ') {
 							cmd[cnt++] = ch;
 							
+						}
+					} else if (ch == '\b') {
+						if (cnt > 0) {
+							cmd[--cnt] = 0;
 						}
 					} else {
 						if (cnt > 0) {

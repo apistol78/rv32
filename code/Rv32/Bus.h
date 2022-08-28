@@ -37,6 +37,7 @@ private:
 
 	traktor::StaticVector< MappedDevice, 32 > m_mappedDevices;
 	traktor::StaticVector< Device*, 32 > m_tickDevices;
+	mutable const MappedDevice* m_last = nullptr;
 	mutable bool m_error = false;
 
 	const MappedDevice* findMappedDevice(uint32_t address) const;

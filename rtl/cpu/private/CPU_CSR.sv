@@ -90,6 +90,8 @@ module CPU_CSR #(
 			mip_meip <= 0;
 			mip_mtip <= 0;
 			mip_msip <= 0;
+			issued <= 0;
+			o_irq_pending <= 1'b0;
 		end
 		else begin
 			// Write CSR registers.
@@ -127,19 +129,19 @@ module CPU_CSR #(
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 7);
-					issued <= 1'b1;
+					issued <= 3'd1;
 				end
 				else if (mip_meip) begin
-					o_irq_pending <= 1;
+					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h80000000 | (1 << 11);					
-					issued <= 2;
+					issued <= 3'd2;
 				end
 				else if (mip_msip) begin
-					o_irq_pending <= 1;
+					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 					mcause <= 32'h00000000 | (1 << 11);					
-					issued <= 4;
+					issued <= 3'd4;
 				end
 			end
 			
