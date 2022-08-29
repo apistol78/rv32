@@ -12,8 +12,8 @@ C_FLAGS_DEBUG_EXECUTABLE=$(C_FLAGS_COMMON)
 C_FLAGS_RELEASE_EXECUTABLE=$(C_FLAGS_COMMON) $(OPTIMIZE)
 C_FLAG_OUTPUT=-o 
 
-CC=riscv32-unknown-elf-gcc
-CC_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -mbranch-cost=8 -mstrict-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
+CC=riscv32-unknown-elf-g++
+CC_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -mbranch-cost=8 -mstrict-align -fno-rtti -fpermissive -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
 CC_FLAGS_DEBUG_SHARED=$(CC_FLAGS_COMMON)
 CC_FLAGS_RELEASE_SHARED=$(CC_FLAGS_COMMON) $(OPTIMIZE)
 CC_FLAGS_DEBUG_STATIC=$(CC_FLAGS_COMMON)
@@ -28,7 +28,7 @@ AR_FLAGS_DEBUG_STATIC=$(AR_FLAGS_COMMON)
 AR_FLAGS_RELEASE_STATIC=$(AR_FLAGS_COMMON)
 AR_FLAG_OUTPUT=
 
-LINK=riscv32-unknown-elf-gcc
+LINK=riscv32-unknown-elf-g++
 LINK_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -Wl,-gc-sections
 LINK_FLAGS_DEBUG_SHARED=$(LINK_FLAGS_COMMON) -g -shared -fsanitize=address
 LINK_FLAGS_RELEASE_SHARED=$(LINK_FLAGS_COMMON) -shared 

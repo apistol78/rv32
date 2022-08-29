@@ -53,8 +53,7 @@ using namespace traktor;
 namespace
 {
 
-const uint32_t c_memoryAvail = 0x2000000;
-
+const uint32_t c_memoryAvail = 0x1000000;
 
 // Modifiers
 #define RT_MODIFIER_CTRL    0x01

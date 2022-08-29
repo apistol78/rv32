@@ -59,7 +59,7 @@
 
 using namespace traktor;
 
-const uint32_t c_memoryAvail = 0x800000;
+const uint32_t c_memoryAvail = 0x1000000;
 bool g_going = true;
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)

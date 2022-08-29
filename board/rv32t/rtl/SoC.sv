@@ -77,7 +77,7 @@ module SoC(
 
 	BRAM_latency #(
 		.WIDTH(128),
-		.SIZE(32'h800000 / 16),
+		.SIZE(32'h1000000 / 16),
 		.ADDR_LSH(4),
 		.LATENCY(16)
 	) sdram(
