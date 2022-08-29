@@ -6,10 +6,10 @@
 
 #include "rv.h"
 
-bool OSystem_RebelV::init()
+void OSystem_RebelV::init_size(uint w, uint h)
 {
 	if (runtime_init() != 0)
-		return false;
+		return;
 
 	for (int i = 0; i < 256; ++i)
 	{
@@ -23,30 +23,30 @@ bool OSystem_RebelV::init()
 			(b)
 		);
 	}
-
-	return true;
-}
-
-void OSystem_RebelV::init_size(uint w, uint h)
-{
-	printf("init_size %d * %d\n", w, h);
 }
 
 void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
 {
-	printf("set_palette\n");
+	for (uint i = 0; i < num; ++i)
+	{
+		const uint8_t r = colors[i * 3 + 0];
+		const uint8_t g = colors[i * 3 + 1];
+		const uint8_t b = colors[i * 3 + 2];
+		video_set_palette(
+			start + i,
+			(r << 16) |
+			(g << 8) |
+			(b)
+		);
+	}
 }
 
 void OSystem_RebelV::copy_rect(const byte *buf, int pitch, int x, int y, int w, int h)
 {
 	printf("copy_rect\n");
-}
 
-void OSystem_RebelV::copy_screen(const byte *buf, int y, int h, const uint32* mask, bool doublebuffer)
-{
-	// printf("copy_screen, %d, %d\n", y, h);
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	memcpy(framebuffer, buf, h * 320);
+	// uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	// memcpy(framebuffer, buf, h * 320);
 }
 
 void OSystem_RebelV::move_screen(int dx, int dy, int height)
@@ -65,11 +65,6 @@ void OSystem_RebelV::set_shake_pos(int shake_pos)
 	printf("set_shake_pos\n");
 }
 
-NewGuiColor OSystem_RebelV::RGBToColor(uint8 r, uint8 g, uint8 b)
-{
-	return 0;
-}
-
 bool OSystem_RebelV::show_mouse(bool visible)
 {
 	printf("show_mouse\n");
@@ -81,9 +76,9 @@ void OSystem_RebelV::warp_mouse(int x, int y)
 	printf("warp_mouse\n");
 }
 
-void OSystem_RebelV::set_mouse_cursor(uint32 id, const byte *buf, const byte* mask, uint w, uint h, int hotspot_x, int hotspot_y)
+void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
 {
-	printf("set_mouse_cursor\n");
+	//printf("set_mouse_cursor\n");
 }
 
 uint32 OSystem_RebelV::get_msecs()
@@ -173,13 +168,51 @@ void OSystem_RebelV::hide_overlay()
 void OSystem_RebelV::clear_overlay()
 {
 	printf("clear_overlay\n");
+	video_clear(0);
 }
 
-void OSystem_RebelV::grab_overlay(byte *buf, int pitch)
+void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
 {
 	printf("grab_overlay\n");
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 	memcpy(buf, framebuffer, 320 * 200);
+}
+
+void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x, int y, int w, int h)
+{
+	if (x < 0) {
+		w += x;
+		buf -= x;
+		x = 0;
+	}
+
+	if (y < 0) {
+		h += y; buf -= y * pitch;
+		y = 0;
+	}
+
+	if (w > 320 - x) {
+		w = 320 - x;
+	}
+
+	if (h > 200 - y) {
+		h = 200 - y;
+	}
+
+	if (w <= 0 || h <= 0)
+		return;
+
+	printf("copy_rect_overlay %d, %d, %d, %d, %d\n", pitch, x, y, w, h);
+
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+
+	uint8_t* dst = framebuffer + y * 320 + x;
+	do {
+		memcpy(dst, buf, w);
+		dst += 320;
+		buf += pitch;
+	} while (--h);
+
 }
 
 uint32 OSystem_RebelV::property(int param, Property *value)

@@ -33,11 +33,6 @@ private:
 	bool _ioFailed;
 	byte _encbyte;
 	char *_name;	// For debugging
-	uintptr_t _tempBuf;
-	uintptr_t _tempBufPtr;
-	uintptr_t _tempBufEnd;
-	bool _tempBufWriting;
-	uint32 _fileCacheSize;
 
 	static FILE *fopenNoCase(const char *filename, const char *directory, const char *mode);
 	
@@ -53,7 +48,6 @@ public:
 	
 	File();
 	virtual ~File();
-	void enableFileCache(uint32 size);
 	bool open(const char *filename, const Common::String &directory) { return open(filename, directory.c_str()); }
 	bool open(const char *filename, const char *directory = NULL, AccessMode mode = kFileReadMode, byte encbyte = 0);
 	void close();
@@ -78,18 +72,6 @@ public:
 	void writeUint16BE(uint16 value);
 	void writeUint32BE(uint32 value);
 	void setEnc(byte value) { _encbyte = value; }
-
-#ifdef SCUMM_LITTLE_ENDIAN
-	void writeUint32(uint32 value)	{ writeUint32LE(value);	 }
-	uint32 readUint32()				{ return readUint32LE(); }
-#else
-	void writeUint32(uint32 value)	{ writeUint32BE(value);	 }
-	uint32 readUint32()				{ return readUint32BE(); }
-#endif
-
-	void createTempBuf(bool writemode);
-	void writeTempBuf(bool force);
-	void readTempBuf();
 };
 
 #endif

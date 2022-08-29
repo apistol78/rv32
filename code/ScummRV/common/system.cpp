@@ -21,21 +21,40 @@
  */
 
 #include "stdafx.h"
+
 #include "backends/intern.h"
-#include "common/gameDetector.h"
+
+#include "base/gameDetector.h"
+
+#include "common/config-manager.h"
 #include "common/system.h"
 
 OSystem *g_system = 0;
 
 static OSystem *createSystem() {
+	int gfx_mode = GameDetector::parseGraphicsMode(ConfMan.get("gfx_mode"));	// FIXME: Get rid of this again!
+	
 #if defined(__RV__)
 	return OSystem_RebelV_create();
-#elif defined(__ATARI__)
-	return OSystem_Atari_create();
-#elif defined(GAME_RESOURCECONVERTER)
-	return OSystem_Converter_create();
+#elif defined(USE_NULL_DRIVER)
+	return OSystem_NULL_create();
+#elif defined(__DC__)
+	return OSystem_Dreamcast_create();
+#elif defined(X11_BACKEND)
+	return OSystem_X11_create();
+#elif defined(__MORPHOS__)
+	return OSystem_MorphOS_create(gfx_mode, ConfMan.getBool("fullscreen"));
+#elif defined(_WIN32_WCE)
+	return OSystem_WINCE3_create();
+#elif defined(MACOS_CARBON)
+	return OSystem_MAC_create(gfx_mode, ConfMan.getBool("fullscreen"));
+#elif defined(__GP32__)	// ph0x
+	return OSystem_GP32_create(GFX_NORMAL, true);
+#elif defined(__PALM_OS__) //chrilith
+	return OSystem_PALMOS_create(gfx_mode);
 #else
-	return OSystem_SDL_create(1);
+	/* SDL is the default driver for now */
+	return OSystem_SDL_create(gfx_mode);
 #endif
 }
 

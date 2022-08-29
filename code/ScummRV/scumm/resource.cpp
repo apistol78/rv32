@@ -24,6 +24,7 @@
 #include "common/str.h"
 #include "scumm/dialogs.h"
 #include "scumm/imuse.h"
+#include "scumm/imuse_digi/dimuse.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
 #include "scumm/scumm.h"
@@ -31,65 +32,17 @@
 #include "scumm/verbs.h"
 #include "sound/mididrv.h" // Need MD_ enum values
 
-//#ifdef __ATARI__
-#if 1
-#define ATARI_RESOURCE_XOR			0x00
-#else
-#define ATARI_RESOURCE_XOR			0x69
-#endif
-
 namespace Scumm {
 
-static const char *resTypeFromId(int id)
-{
-	static char buf[100];
-
-	switch (id) {
-	case rtRoom:
-		return "Room";
-	case rtScript:
-		return "Script";
-	case rtCostume:
-		return "Costume";
-	case rtSound:
-		return "Sound";
-	case rtInventory:
-		return "Inventory";
-	case rtCharset:
-		return "Charset";
-	case rtString:
-		return "String";
-	case rtVerb:
-		return "Verb";
-	case rtActorName:
-		return "ActorName";
-	case rtBuffer:
-		return "Buffer";
-	case rtScaleTable:
-		return "ScaleTable";
-	case rtTemp:
-		return "Temp";
-	case rtFlObject:
-		return "FlObject";
-	case rtMatrix:
-		return "Matrix";
-	case rtBox:
-		return "Box";
-	case rtLast:
-		return "Last";
-	case rtNumTypes:
-		return "NumTypes";
-	default:
-		sprintf(buf, "%d", id);
-		return buf;
-	}
-}
+static uint16 newTag2Old(uint32 oldTag);
+static const char *resTypeFromId(int id);
 
 /* Open a room */
 void ScummEngine::openRoom(int room) {
-	int room_offs;
+	int room_offs, roomlimit;
 	bool result;
 	char buf[128];
+	char buf2[128] = "";
 	byte encByte = 0;
 
 	debugC(DEBUG_GENERAL, "openRoom(%d)", room);
@@ -109,7 +62,14 @@ void ScummEngine::openRoom(int room) {
 
 	/* Either xxx.lfl or monkey.xxx file name */
 	while (1) {
-		room_offs = room ? _roomFileOffsets[room] : 0;
+		if (_features & GF_SMALL_NAMES)
+			roomlimit = 98;
+		else
+			roomlimit = 900;
+		if (_features & GF_EXTERNAL_CHARSET && room >= roomlimit)
+			room_offs = 0;
+		else
+			room_offs = room ? _roomFileOffsets[room] : 0;
 
 		if (room_offs == -1)
 			break;
@@ -118,33 +78,59 @@ void ScummEngine::openRoom(int room) {
 			_fileOffset = _roomFileOffsets[room];
 			return;
 		}
+		if (!(_features & GF_SMALL_HEADER)) {
 
-		// try converted resource
-		sprintf(buf, "%s.ST%01d", _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
-		strupr(buf);
+			if (_features & GF_AFTER_HEV7) {
+				sprintf(buf, "%s.he%.1d", _gameName.c_str(), room == 0 ? 0 : 1);
+			} else if (_version >= 7) {
+				if (room > 0 && (_version == 8))
+					VAR(VAR_CURRENTDISK) = res.roomno[rtRoom][room];
+				sprintf(buf, "%s.la%d", _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
 
-		result = openResourceFile(buf, ATARI_RESOURCE_XOR);
-		/*
-		if (!result)
-		{
-			// try v5-v6 resource
-			sprintf(buf, "%s.%03d",  _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
+				sprintf(buf2, "%s.%.3d", _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
+			} else if (_features & GF_HUMONGOUS)
+				sprintf(buf, "%s.he%.1d", _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
+			else {
+				sprintf(buf, "%s.%.3d",  _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
+				if (_gameId == GID_SAMNMAX)
+					sprintf(buf2, "%s.sm%.1d",  _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
+			}
+
 			encByte = (_features & GF_USE_KEY) ? 0x69 : 0;
-			result = openResourceFile(buf, encByte);
-			if (!result && (_gameId == GID_SAMNMAX))
-			{
-				// try samnmax resource
-				sprintf(buf, "%s.sm%01d",  _gameName.c_str(), room == 0 ? 0 : res.roomno[rtRoom][room]);
-				result = openResourceFile(buf, encByte);
-			}		
+		} else if (!(_features & GF_SMALL_NAMES)) {
+			if (room == 0 || room >= 900) {
+				sprintf(buf, "%.3d.lfl", room);
+				encByte = 0;
+				if (openResourceFile(buf, encByte)) {
+					return;
+				}
+				askForDisk(buf, room == 0 ? 0 : res.roomno[rtRoom][room]);
+
+			} else {
+				sprintf(buf, "disk%.2d.lec", room == 0 ? 0 : res.roomno[rtRoom][room]);
+				encByte = 0x69;
+			}
+		} else {
+			sprintf(buf, "%.2d.lfl", room);
+			// Maniac Mansion demo has .man instead of .lfl
+			if (_gameId == GID_MANIAC)
+				sprintf(buf2, "%.2d.man", room);
+			encByte = (_features & GF_USE_KEY) ? 0xFF : 0;
 		}
-		*/
+
+		result = openResourceFile(buf, encByte);
+		if ((result == false) && (buf2[0])) {
+			result = openResourceFile(buf2, encByte);
+			// We have .man files so set demo mode
+			if (_gameId == GID_MANIAC)
+				_demoMode = true;
+		}
 			
-		if (result)
-		{
+		if (result) {
 			if (room == 0)
 				return;
-
+			if (_features & GF_EXTERNAL_CHARSET && room >= roomlimit)
+				return;
 			readRoomsOffsets();
 			_fileOffset = _roomFileOffsets[room];
 
@@ -157,15 +143,14 @@ void ScummEngine::openRoom(int room) {
 		askForDisk(buf, room == 0 ? 0 : res.roomno[rtRoom][room]);
 	}
 
-	// try loose room files
-	/*
 	do {
-		sprintf(buf, "%03d.lfl", room);
-		if (openResourceFile(buf, 0))
+		sprintf(buf, "%.3d.lfl", room);
+		encByte = 0;
+		if (openResourceFile(buf, encByte))
 			break;
 		askForDisk(buf, room == 0 ? 0 : res.roomno[rtRoom][room]);
 	} while (1);
-	*/
+
 	deleteRoomOffsets();
 	_fileOffset = 0;		// start of file
 }
@@ -180,7 +165,7 @@ void ScummEngine::closeRoom() {
 
 /** Delete the currently loaded room offsets. */
 void ScummEngine::deleteRoomOffsets() {
-	if (!_dynamicRoomOffsets)
+	if (!(_features & GF_SMALL_HEADER) && !_dynamicRoomOffsets)
 		return;
 
 	for (int i = 0; i < _numRooms; i++) {
@@ -191,16 +176,33 @@ void ScummEngine::deleteRoomOffsets() {
 
 /** Read room offsets */
 void ScummEngine::readRoomsOffsets() {
-	int num, room;
+	int num, room, i;
+	byte *ptr;
 
 	debug(9, "readRoomOffsets()");
 
 	deleteRoomOffsets();
-
-	if (!_dynamicRoomOffsets)
+	if (_features & GF_SMALL_NAMES)
 		return;
 
-	_fileHandle.seek(16, SEEK_SET);
+	if (_features & GF_AFTER_HEV7) {
+		num = READ_LE_UINT16(_HEV7RoomOffsets);
+		ptr = _HEV7RoomOffsets + 2;
+		for (i = 0; i < num; i++) {
+			_roomFileOffsets[i] = READ_LE_UINT32(ptr);	
+			ptr += 4;
+		}
+		return;
+	}
+	
+	if (!(_features & GF_SMALL_HEADER)) {
+		if (!_dynamicRoomOffsets)
+			return;
+
+		_fileHandle.seek(16, SEEK_SET);
+	} else {
+		_fileHandle.seek(12, SEEK_SET);	// Directly searching for the room offset block would be more generic...
+	}
 
 	num = _fileHandle.readByte();
 	while (num--) {
@@ -214,28 +216,40 @@ void ScummEngine::readRoomsOffsets() {
 }
 
 bool ScummEngine::openResourceFile(const char *filename, byte encByte) {
+	debugC(DEBUG_GENERAL, "openResourceFile(%s)", filename);
+
 	if (_fileHandle.isOpen()) {
 		_fileHandle.close();
 	}
 
 	_fileHandle.open(filename, getGameDataPath(), File::kFileReadMode, encByte);
 
-	bool ret = _fileHandle.isOpen();
-	if (ret)
-	{
-		debug(1, "openResourceFile(%s)(%02x)", filename,encByte);
-		return true;
-	}
-	return false;
+	return _fileHandle.isOpen();
 }
 
 void ScummEngine::askForDisk(const char *filename, int disknum) {
 	char buf[128];
-	sprintf(buf, "Cannot find file: %s", filename);
-	InfoDialog dialog(this, (char*)buf);
-	runDialog(dialog);
-	error("Cannot find file: '%s'", filename);
-	g_system->quit();
+
+	if (_version == 8) {
+		char result;
+
+		_imuseDigital->stopAllSounds(true);
+
+#ifdef MACOSX
+		sprintf(buf, "Cannot find file: '%s'\nPlease insert disc %d.\nPress OK to retry, Quit to exit", filename, disknum);
+#else
+		sprintf(buf, "Cannot find file: '%s'\nInsert disc %d into drive %s\nPress OK to retry, Quit to exit", filename, disknum, getGameDataPath());
+#endif
+
+		result = displayError("Quit", buf);
+		if (result == 2)
+			error("Cannot find file: '%s'", filename);
+	} else { 
+		sprintf(buf, "Cannot find file: '%s'", filename);
+		InfoDialog dialog(this, (char*)buf);
+		runDialog(dialog);
+		error("Cannot find file: '%s'", filename);
+	}
 }
 
 void ScummEngine::readIndexFile() {
@@ -249,9 +263,7 @@ void ScummEngine::readIndexFile() {
 	closeRoom();
 	openRoom(0);
 
-	uint16 resourceVersion = 0;
-
-	if (_version == 5) {
+	if (_version <= 5) {
 		/* Figure out the sizes of various resources */
 		while (!_fileHandle.eof()) {
 			blocktype = fileReadDword();
@@ -298,38 +310,58 @@ void ScummEngine::readIndexFile() {
 
 		numblock++;
 
-		debug(1, "block '%s' (%d)", tag2str(blocktype), itemsize);
-
 		switch (blocktype) {
-
-		case MKID('_ST_'):
-			_resourceVersion = _fileHandle.readUint16BE();
-			_fileHandle.readUint16BE();
-			debug(1,"Atari resource v.: %d", i);
-			break;
-
 		case MKID('DCHR'):
 		case MKID('DIRF'):
 			readResTypeList(rtCharset, MKID('CHAR'), "charset");
 			break;
 		
 		case MKID('DOBJ'):
-			num = _fileHandle.readUint16LE();
+			if (_version == 8)
+				num = _fileHandle.readUint32LE();
+			else
+				num = _fileHandle.readUint16LE();
 			assert(num == _numGlobalObjects);
 
-			_fileHandle.read(_objectOwnerTable, num);
-			for (i = 0; i < num; i++) {
-				_objectStateTable[i] = _objectOwnerTable[i] >> OF_STATE_SHL;
-				_objectOwnerTable[i] &= OF_OWNER_MASK;
+			if (_version == 8) {	/* FIXME: Not sure.. */
+				char buffer[40];
+				for (i = 0; i < num; i++) {
+					_fileHandle.read(buffer, 40);
+					if (buffer[0]) {
+						// Add to object name-to-id map
+						_objectIDMap[buffer] = i;
+					}
+					_objectStateTable[i] = _fileHandle.readByte();
+					_objectRoomTable[i] = _fileHandle.readByte();
+					_classData[i] = _fileHandle.readUint32LE();
+				}
+				memset(_objectOwnerTable, 0xFF, num);
+			} else if (_version == 7) {
+				_fileHandle.read(_objectStateTable, num);
+				_fileHandle.read(_objectRoomTable, num);
+				memset(_objectOwnerTable, 0xFF, num);
+			} else {
+				_fileHandle.read(_objectOwnerTable, num);
+				for (i = 0; i < num; i++) {
+					_objectStateTable[i] = _objectOwnerTable[i] >> OF_STATE_SHL;
+					_objectOwnerTable[i] &= OF_OWNER_MASK;
+				}
+				if (_features & GF_AFTER_HEV7) {
+					// _objectRoomTable
+					_fileHandle.seek(num * 4, SEEK_CUR);
+					//_fileHandle.read(_objectRoomTable, num * 4);
+				}
 			}
 			
-			_fileHandle.read(_classData, num * sizeof(uint32));
+			if (_version != 8) {
+				_fileHandle.read(_classData, num * sizeof(uint32));
 
-			// Swap flag endian where applicable
+				// Swap flag endian where applicable
 #if defined(SCUMM_BIG_ENDIAN)
-			for (i = 0; i != num; i++)
-				_classData[i] = FROM_LE_32(_classData[i]);
+				for (i = 0; i != num; i++)
+					_classData[i] = FROM_LE_32(_classData[i]);
 #endif
+			}
 			break;
 
 		case MKID('RNAM'):
@@ -393,9 +425,9 @@ void ScummEngine::readIndexFile() {
 			break;
 
 		case MKID('AARY'):
-			debug(1, "Going to call readArrayFromIndexFile (pos = 0x%08x)", _fileHandle.pos());
+			debug(3, "Going to call readArrayFromIndexFile (pos = 0x%08x)", _fileHandle.pos());
 			readArrayFromIndexFile();
-			debug(1, "After readArrayFromIndexFile (pos = 0x%08x)", _fileHandle.pos());
+			debug(3, "After readArrayFromIndexFile (pos = 0x%08x)", _fileHandle.pos());
 			break;
 
 		default:
@@ -412,31 +444,66 @@ void ScummEngine::readIndexFile() {
 
 void ScummEngine::readArrayFromIndexFile() {
 	error("readArrayFromIndexFile() not supported in pre-V6 games");
-	// the code for v6 games is in script_v6.cpp
 }
 
 void ScummEngine::readResTypeList(int id, uint32 tag, const char *name) {
 	int num;
 	int i;
 
-	num = _fileHandle.readUint16LE();
+	debug(9, "readResTypeList(%s,%x,%s)", resTypeFromId(id), FROM_LE_32(tag), name);
 
-	debug(1, "readResTypeList(%d, %s,%x,%s) : %d", id, resTypeFromId(id), FROM_LE_32(tag), name, num);
+	if (_version == 8)
+		num = _fileHandle.readUint32LE();
+	else if (!(_features & GF_OLD_BUNDLE))
+		num = _fileHandle.readUint16LE();
+	else
+		num = _fileHandle.readByte();
 
-	if (num != res.num[id]) {
-		error("Invalid number of %ss (%d) in directory", name, num);
+	if (_features & GF_OLD_BUNDLE) {
+		if (num >= 0xFF) {
+			error("Too many %ss (%d) in directory", name, num);
+		}
+	} else {
+		if (num != res.num[id]) {
+			error("Invalid number of %ss (%d) in directory", name, num);
+		}
 	}
 
-	for (i = 0; i < num; i++) {
-		res.roomno[id][i] = _fileHandle.readByte();
-	}
-	for (i = 0; i < num; i++) {
-		res.roomoffs[id][i] = _fileHandle.readUint32LE();
+	if (_features & GF_OLD_BUNDLE) {
+		if (id == rtRoom) {
+			for (i = 0; i < num; i++)
+				res.roomno[id][i] = i;
+			_fileHandle.seek(num, SEEK_CUR);
+		} else {
+			for (i = 0; i < num; i++)
+				res.roomno[id][i] = _fileHandle.readByte();
+		}
+		for (i = 0; i < num; i++) {
+			res.roomoffs[id][i] = _fileHandle.readUint16LE();
+			if (res.roomoffs[id][i] == 0xFFFF)
+				res.roomoffs[id][i] = 0xFFFFFFFF;
+		}
+
+	} else if (_features & GF_SMALL_HEADER) {
+		for (i = 0; i < num; i++) {
+			res.roomno[id][i] = _fileHandle.readByte();
+			res.roomoffs[id][i] = _fileHandle.readUint32LE();
+		}
+	} else {
+		for (i = 0; i < num; i++) {
+			res.roomno[id][i] = _fileHandle.readByte();
+		}
+		for (i = 0; i < num; i++) {
+			res.roomoffs[id][i] = _fileHandle.readUint32LE();
+		}
+		if (_features & GF_AFTER_HEV7) {
+			_fileHandle.seek(4 * num, SEEK_CUR); // FIXME what are these additional offsets
+		}
 	}
 }
 
 void ScummEngine::allocResTypeData(int id, uint32 tag, int num, const char *name, int mode) {
-	debug(1, "allocResTypeData(%s/%s,%x,%d,%d)", resTypeFromId(id), name, FROM_LE_32(tag), num, mode);
+	debug(9, "allocResTypeData(%s/%s,%x,%d,%d)", resTypeFromId(id), name, FROM_LE_32(tag), num, mode);
 	assert(id >= 0 && id < (int)(ARRAYSIZE(res.mode)));
 
 	if (num >= 2000) {
@@ -471,6 +538,8 @@ void ScummEngine::loadCharset(int no) {
 
 //  ensureResourceLoaded(rtCharset, no);
 	ptr = getResourceAddress(rtCharset, no);
+	if (_features & GF_SMALL_HEADER)
+		ptr -= 12;
 
 	for (i = 0; i < 15; i++) {
 		_charsetData[no][i + 1] = ptr[i + 14];
@@ -513,8 +582,9 @@ void ScummEngine::ensureResourceLoaded(int type, int i) {
 
 	loadResource(type, i);
 
-	if (type == rtRoom && i == _roomResource)
-		VAR(VAR_ROOM_FLAG) = 1;
+	if (_version < 7 && !(_features & GF_SMALL_HEADER))
+		if (type == rtRoom && i == _roomResource)
+			VAR(VAR_ROOM_FLAG) = 1;
 }
 
 int ScummEngine::loadResource(int type, int idx) {
@@ -522,7 +592,12 @@ int ScummEngine::loadResource(int type, int idx) {
 	uint32 fileOffs;
 	uint32 size, tag;
 
-	debug(1, "loadResource(%s,%d)", resTypeFromId(type),idx);
+	debugC(DEBUG_RESOURCE, "loadResource(%s,%d)", resTypeFromId(type),idx);
+
+	if (type == rtCharset && (_features & GF_SMALL_HEADER)) {
+		loadCharset(idx);
+		return (1);
+	}
 
 	roomNr = getResourceRoomNr(type, idx);
 
@@ -533,7 +608,10 @@ int ScummEngine::loadResource(int type, int idx) {
 		roomNr = _roomResource;
 
 	if (type == rtRoom) {
-		fileOffs = 0;
+		if (_version == 8)
+			fileOffs = 8;
+		else
+			fileOffs = 0;
 	} else {
 		fileOffs = res.roomoffs[type][idx];
 		if (fileOffs == 0xFFFFFFFF)
@@ -544,23 +622,45 @@ int ScummEngine::loadResource(int type, int idx) {
 
 	_fileHandle.seek(fileOffs + _fileOffset, SEEK_SET);
 
-	if (type == rtSound) {
-		return readSoundResource(type, idx);
+	if (_features & GF_OLD_BUNDLE) {
+		if ((_version == 3) && !(_features & GF_AMIGA) && (type == rtSound)) {
+			return readSoundResourceSmallHeader(type, idx);
+		} else {
+			size = _fileHandle.readUint16LE();
+			_fileHandle.seek(-2, SEEK_CUR);
+		}
+	} else if (_features & GF_SMALL_HEADER) {
+		if (!(_features & GF_SMALL_NAMES))
+			_fileHandle.seek(8, SEEK_CUR);
+		size = _fileHandle.readUint32LE();
+		tag = _fileHandle.readUint16LE();
+		_fileHandle.seek(-6, SEEK_CUR);
+		if ((type == rtSound) && !(_features & GF_AMIGA) && !(_features & GF_FMTOWNS)) {
+			return readSoundResourceSmallHeader(type, idx);
+		}
+	} else {
+		if (type == rtSound) {
+			return readSoundResource(type, idx);
+		}
+
+		tag = fileReadDword();
+
+		if (tag != res.tags[type]) {
+			error("%s %d not in room %d at %d+%d in file %s",
+					res.name[type], idx, roomNr,
+					_fileOffset, fileOffs, _fileHandle.name());
+		}
+
+		size = _fileHandle.readUint32BE();
+		_fileHandle.seek(-8, SEEK_CUR);
 	}
-
-	tag = fileReadDword();
-
-	if (tag != res.tags[type]) {
-		warning("%s %d not in room %d at %d+%d in file %s",
-				res.name[type], idx, roomNr,
-				_fileOffset, fileOffs, _fileHandle.name());
-	}
-
-	size = _fileHandle.readUint32BE();
-	_fileHandle.seek(-8, SEEK_CUR);
 	_fileHandle.read(createResource(type, idx, size), size);
 
 	// dump the resource if requested
+	if (_dumpScripts && type == rtScript) {
+		dumpResource("script-", idx, getResourceAddress(rtScript, idx));
+	}
+
 	if (!_fileHandle.ioFailed()) {
 		return 1;
 	}
@@ -568,7 +668,6 @@ int ScummEngine::loadResource(int type, int idx) {
 	nukeResource(type, idx);
 
 	error("Cannot read resource");
-	return 0;
 }
 
 int ScummEngine::readSoundResource(int type, int idx) {
@@ -660,6 +759,7 @@ int ScummEngine::readSoundResource(int type, int idx) {
 		total_size = _fileHandle.readUint32BE() - 8;
 		byte *ptr = (byte *)calloc(total_size, 1);
 		_fileHandle.read(ptr, total_size);
+//		dumpResource("sound-", idx, ptr);
 		convertMac0Resource(type, idx, ptr, total_size);
 		free(ptr);
 		return 1;
@@ -902,7 +1002,6 @@ static inline byte Mac0ToGMInstrument(uint32 type, int &transpose) {
 	case MKID('BASS'): transpose = -24; return 35;
 	default:
 		error("Unknown Mac0 instrument %s found", tag2str(type));
-		return 0;
 	}
 }
 
@@ -1143,7 +1242,16 @@ void ScummEngine::convertADResource(int type, int idx, byte *src_ptr, int size) 
 		track = src_ptr;
 		
 		// Convert the ticks into a MIDI tempo. 
-		dw = 500000 * 256 / ticks;
+		// Unfortunate LOOM and INDY3 have different interpretation
+		// of the ticks value.
+		if (_gameId == GID_INDY3) {
+			// Note: since we fix ppqn at 480, ppqn/473 is almost 1
+			dw = 500000 * 256 / 473 * ppqn / ticks;
+		} else if (_gameId == GID_LOOM) {
+			dw = 500000 * ppqn / 4 / ticks;
+		} else {
+			dw = 500000 * 256 / ticks;
+		}
 		debugC(DEBUG_SOUND, "  ticks = %d, speed = %ld", ticks, dw);
 			
 		// Write a tempo change Meta event
@@ -1473,6 +1581,121 @@ void ScummEngine::convertADResource(int type, int idx, byte *src_ptr, int size) 
 }
 
 
+int ScummEngine::readSoundResourceSmallHeader(int type, int idx) {
+	uint32 pos, total_size, size, tag;
+	uint32 ad_size = 0, ad_offs = 0;
+	uint32 ro_size = 0, ro_offs = 0;
+	uint32 wa_size = 0, wa_offs = 0;
+
+	debug(4, "readSoundResourceSmallHeader(%s,%d)", resTypeFromId(type), idx);
+
+	if ((_gameId == GID_LOOM) && (_features & GF_PC) && VAR(VAR_SOUNDCARD) == 4) {
+		// Roland resources in Loom are tagless
+		// So we add an RO tag to allow imuse to detect format
+		byte *ptr, *src_ptr;
+		ro_offs = _fileHandle.pos();
+		ro_size = _fileHandle.readUint16LE();
+
+		src_ptr = (byte *) calloc(ro_size - 4, 1);
+		_fileHandle.seek(ro_offs + 4, SEEK_SET);
+		_fileHandle.read(src_ptr, ro_size -4);
+
+		ptr = createResource(type, idx, ro_size + 2);
+		memcpy(ptr, "RO", 2); ptr += 2;
+		memcpy(ptr, src_ptr, ro_size - 4); ptr += ro_size - 4;
+		return 1;
+	} else if (_features & GF_OLD_BUNDLE) {
+		wa_offs = _fileHandle.pos();
+		wa_size = _fileHandle.readUint16LE();
+		_fileHandle.seek(wa_size - 2, SEEK_CUR);
+
+		if (!(_features & GF_ATARI_ST || _features & GF_MACINTOSH)) {
+			ad_offs = _fileHandle.pos();
+			ad_size = _fileHandle.readUint16LE();
+		}
+		_fileHandle.seek(4, SEEK_CUR);
+		total_size = wa_size + ad_size;
+	} else {
+		total_size = size = _fileHandle.readUint32LE();
+		tag = _fileHandle.readUint16LE();
+		debug(4, "  tag='%c%c', size=%d", (char) (tag & 0xff),
+				(char) ((tag >> 8) & 0xff), size);
+
+		if (tag == 0x4F52) { // RO
+			ro_offs = _fileHandle.pos();
+			ro_size = size;
+		} else {
+			pos = 6;
+			while (pos < total_size) {
+				size = _fileHandle.readUint32LE();
+				tag = _fileHandle.readUint16LE();
+				debug(4, "  tag='%c%c', size=%d", (char) (tag & 0xff),
+						(char) ((tag >> 8) & 0xff), size);
+				pos += size;
+
+				// MI1 and Indy3 uses one or more nested SO resources, which contains AD and WA
+				// resources.
+				if ((tag == 0x4441) && !(ad_offs)) { // AD
+					ad_size = size;
+					ad_offs = _fileHandle.pos();
+				} else if ((tag == 0x4157) && !(wa_offs)) { // WA
+					wa_size = size;
+					wa_offs = _fileHandle.pos();
+				} else { // other AD, WA and nested SO resources
+					if (tag == 0x4F53) { // SO
+						pos -= size;
+						size = 6;
+						pos += 6;
+					}
+				}
+				_fileHandle.seek(size - 6, SEEK_CUR);
+			}
+		}
+	}
+
+	if ((_midiDriver == MD_ADLIB) && ad_offs != 0) {
+		// AD resources have a header, instrument definitions and one MIDI track.
+		// We build an 'ADL ' resource from that:
+		//   8 bytes resource header
+		//  16 bytes MDhd header
+		//  14 bytes MThd header
+		//   8 bytes MTrk header
+		//   7 bytes MIDI tempo sysex
+		//     + some default instruments
+		byte *ptr;
+		if (_features & GF_OLD_BUNDLE) {
+			ptr = (byte *) calloc(ad_size - 4, 1);
+			_fileHandle.seek(ad_offs + 4, SEEK_SET);
+			_fileHandle.read(ptr, ad_size - 4);
+			convertADResource(type, idx, ptr, ad_size - 4);
+			free(ptr);
+			return 1;
+		} else {
+			ptr = (byte *) calloc(ad_size - 6, 1);
+			_fileHandle.seek(ad_offs, SEEK_SET);
+			_fileHandle.read(ptr, ad_size - 6);
+			convertADResource(type, idx, ptr, ad_size - 6);
+			free(ptr);
+			return 1;
+		} 
+	} else if (((_midiDriver == MD_PCJR) || (_midiDriver == MD_PCSPK)) && wa_offs != 0) {
+		if (_features & GF_OLD_BUNDLE) {
+			_fileHandle.seek(wa_offs, SEEK_SET);
+			_fileHandle.read(createResource(type, idx, wa_size), wa_size);
+		} else {
+			_fileHandle.seek(wa_offs - 6, SEEK_SET);
+			_fileHandle.read(createResource(type, idx, wa_size + 6), wa_size + 6);
+		}
+		return 1;
+	} else if (ro_offs != 0) {
+		_fileHandle.seek(ro_offs - 2, SEEK_SET);
+		_fileHandle.read(createResource(type, idx, ro_size - 4), ro_size - 4);
+		return 1;
+	}
+	res.roomoffs[type][idx] = 0xFFFFFFFF;
+	return 0;
+}
+
 int ScummEngine::getResourceRoomNr(int type, int idx) {
 	if (type == rtRoom)
 		return idx;
@@ -1488,16 +1711,6 @@ int ScummEngine::getResourceSize(int type, int idx) {
 
 byte *ScummEngine::getResourceAddress(int type, int idx) {
 	byte *ptr;
-
-	// no nonsense for the mask buffers
-	if (type == rtBuffer && idx == 9)
-	{
-		ptr = (byte *)res.address[type][idx];
-		if (ptr)
-			ptr += sizeof(MemBlkHeader);
-		return ptr;
-	}
-
 
 	CHECK_HEAP
 	if (!validateResource("getResourceAddress", type, idx))
@@ -1561,7 +1774,7 @@ byte *ScummEngine::createResource(int type, int idx, uint32 size) {
 	byte *ptr;
 
 	CHECK_HEAP
-	debug(1, "createResource(%s,%d,%d)", resTypeFromId(type), idx, size);
+	debugC(DEBUG_RESOURCE, "createResource(%s,%d,%d)", resTypeFromId(type), idx, size);
 
 	if (!validateResource("allocating", type, idx))
 		return NULL;
@@ -1610,7 +1823,13 @@ void ScummEngine::nukeResource(int type, int idx) {
 }
 
 const byte *ScummEngine::findResourceData(uint32 tag, const byte *ptr) {
-	ptr = findResource(tag, ptr);
+	if (_features & GF_OLD_BUNDLE)
+		error("findResourceData must not be used in GF_OLD_BUNDLE games");
+	else if (_features & GF_SMALL_HEADER)
+		ptr = findResourceSmall(tag, ptr);
+	else
+		ptr = findResource(tag, ptr);
+
 	if (ptr == NULL)
 		return NULL;
 	return ptr + _resourceHeaderSize;
@@ -1619,7 +1838,13 @@ const byte *ScummEngine::findResourceData(uint32 tag, const byte *ptr) {
 int ScummEngine::getResourceDataSize(const byte *ptr) const {
 	if (ptr == NULL)
 		return 0;
-	return READ_BE_UINT32(ptr - 4) - 8;
+
+	if (_features & GF_OLD_BUNDLE)
+		return READ_LE_UINT16(ptr) - 4;
+	else if (_features & GF_SMALL_HEADER)
+		return READ_LE_UINT32(ptr) - 6;
+	else
+		return READ_BE_UINT32(ptr - 4) - 8;
 }
 
 void ScummEngine::lock(int type, int i) {
@@ -1654,39 +1879,6 @@ bool ScummEngine::isResourceInUse(int type, int i) const {
 }
 
 void ScummEngine::increaseResourceCounter() {
-#if 0
-	for (int16 i = rtFirst; i <= rtLast; i++)
-	{
-		byte* flags = res.flags[i];
-		byte* end = flags + res.num[i];
-
-		while((flags+8) < end)
-		{
-			byte flag, counter;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-		}
-		while((flags+4) < end)
-		{
-			byte flag, counter;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-		}
-		while(flags < end)
-		{
-			byte flag, counter;
-			flag = *flags; counter = (flag & RF_USAGE); if(counter && (counter != RF_USAGE_MAX)) { counter++; *flags = (flag & ~RF_USAGE) | counter; } flags++;
-		}
-	}
-#else
 	int i, j;
 	byte counter;
 
@@ -1698,7 +1890,6 @@ void ScummEngine::increaseResourceCounter() {
 			}
 		}
 	}
-#endif
 }
 
 void ScummEngine::expireResources(uint32 size) {
@@ -1805,7 +1996,80 @@ void ScummEngine::resourceStats() {
 }
 
 void ScummEngine::readMAXS() {
-	if (_version == 6) {
+	if (_version == 8) {                    // CMI
+		_fileHandle.seek(50 + 50, SEEK_CUR);            // 176 - 8
+		_numVariables = _fileHandle.readUint32LE();     // 1500
+		_numBitVariables = _fileHandle.readUint32LE();  // 2048
+		_fileHandle.readUint32LE();                     // 40
+		_numScripts = _fileHandle.readUint32LE();       // 458
+		_numSounds = _fileHandle.readUint32LE();        // 789
+		_numCharsets = _fileHandle.readUint32LE();      // 1
+		_numCostumes = _fileHandle.readUint32LE();      // 446
+		_numRooms = _fileHandle.readUint32LE();         // 95
+		_fileHandle.readUint32LE();                     // 80
+		_numGlobalObjects = _fileHandle.readUint32LE(); // 1401
+		_fileHandle.readUint32LE();                     // 60
+		_numLocalObjects = _fileHandle.readUint32LE();  // 200
+		_numNewNames = _fileHandle.readUint32LE();      // 100
+		_numFlObject = _fileHandle.readUint32LE();      // 128
+		_numInventory = _fileHandle.readUint32LE();     // 80
+		_numArray = _fileHandle.readUint32LE();         // 200
+		_numVerbs = _fileHandle.readUint32LE();         // 50
+
+		_objectRoomTable = (byte *)calloc(_numGlobalObjects, 1);
+		_numGlobalScripts = 2000;
+
+		_shadowPaletteSize = NUM_SHADOW_PALETTE * 256;
+	} else if (_version == 7) {
+		_fileHandle.seek(50 + 50, SEEK_CUR);
+		_numVariables = _fileHandle.readUint16LE();
+		_numBitVariables = _fileHandle.readUint16LE();
+		_fileHandle.readUint16LE();                      // 40 in FT; 16 in Dig
+		_numGlobalObjects = _fileHandle.readUint16LE();
+		_numLocalObjects = _fileHandle.readUint16LE();
+		_numNewNames = _fileHandle.readUint16LE();
+		_numVerbs = _fileHandle.readUint16LE();
+		_numFlObject = _fileHandle.readUint16LE();
+		_numInventory = _fileHandle.readUint16LE();
+		_numArray = _fileHandle.readUint16LE();
+		_numRooms = _fileHandle.readUint16LE();
+		_numScripts = _fileHandle.readUint16LE();
+		_numSounds = _fileHandle.readUint16LE();
+		_numCharsets = _fileHandle.readUint16LE();
+		_numCostumes = _fileHandle.readUint16LE();
+
+		_objectRoomTable = (byte *)calloc(_numGlobalObjects, 1);
+
+		if ((_gameId == GID_FT) && (_features & GF_DEMO) && 
+		    (_features & GF_PC))
+			_numGlobalScripts = 300;
+		else
+			_numGlobalScripts = 2000;
+
+		_shadowPaletteSize = NUM_SHADOW_PALETTE * 256;
+	// FIXME better check for the more recent windows based humongous games...
+	} else if (_gameId == GID_PJSDEMO) {
+		_fileHandle.readUint16LE();
+		_numVariables = _fileHandle.readUint16LE();
+		_numBitVariables = _fileHandle.readUint16LE();
+		_numLocalObjects = _fileHandle.readUint16LE();
+		_numArray = _fileHandle.readUint16LE();
+		_fileHandle.readUint16LE();
+		_fileHandle.readUint16LE();
+		_numFlObject = _fileHandle.readUint16LE();
+		_numInventory = _fileHandle.readUint16LE();
+		_numRooms = _fileHandle.readUint16LE();
+		_numScripts = _fileHandle.readUint16LE();
+		_numSounds = _fileHandle.readUint16LE();
+		_numCharsets = _fileHandle.readUint16LE();
+		_numCostumes = _fileHandle.readUint16LE();
+		_numGlobalObjects = _fileHandle.readUint16LE();
+		_fileHandle.readUint16LE(); 
+
+		_objectRoomTable = (byte *)calloc(_numGlobalObjects * 4, 1);
+		_numGlobalScripts = 200;
+		_shadowPaletteSize = 256;
+	} else if (_version == 6 && _gameId != GID_PJSDEMO) {
 		_numVariables = _fileHandle.readUint16LE();
 		_fileHandle.readUint16LE();                      // 16 in Sam/DOTT
 		_numBitVariables = _fileHandle.readUint16LE();
@@ -1822,9 +2086,11 @@ void ScummEngine::readMAXS() {
 		_numCostumes = _fileHandle.readUint16LE();
 		_numGlobalObjects = _fileHandle.readUint16LE();
 		_numNewNames = 50;
+
 		_objectRoomTable = NULL;
 		_numGlobalScripts = 200;
 
+		_shadowPaletteSize = 256;
 	} else {
 		_numVariables = _fileHandle.readUint16LE();      // 800
 		_fileHandle.readUint16LE();                      // 16
@@ -1841,8 +2107,14 @@ void ScummEngine::readMAXS() {
 		_fileHandle.readUint16LE();                      // 50
 		_numInventory = _fileHandle.readUint16LE();      // 80
 		_numGlobalScripts = 200;
+
+		_shadowPaletteSize = 256;
+
 		_numFlObject = 50;
 	}
+
+	if (_shadowPaletteSize)
+		_shadowPalette = (byte *)calloc(_shadowPaletteSize, 1);
 
 	allocateArrays();
 	_dynamicRoomOffsets = true;
@@ -1864,7 +2136,8 @@ void ScummEngine::allocateArrays() {
 	_scummVars = (int32 *)calloc(_numVariables, sizeof(int32));
 	_bitVars = (byte *)calloc(_numBitVariables >> 3, 1);
 
-	allocResTypeData(rtCostume, MKID('COST'), _numCostumes, "costume", 1);
+	allocResTypeData(rtCostume, (_features & GF_NEW_COSTUMES) ? MKID('AKOS') : MKID('COST'),
+								_numCostumes, "costume", 1);
 	allocResTypeData(rtRoom, MKID('ROOM'), _numRooms, "room", 1);
 	allocResTypeData(rtRoomScripts, MKID('RMSC'), _numRooms, "room script", 1);
 	allocResTypeData(rtSound, MKID('SOUN'), _numSounds, "sound", 2);
@@ -1889,31 +2162,80 @@ bool ScummEngine::isGlobInMemory(int type, int idx) const{
 	return res.address[type][idx] != NULL;
 }
 
+void ScummEngine::dumpResource(const char *tag, int idx, const byte *ptr, int length) {
+	char buf[256];
+	File out;
 
-ResourceIterator::ResourceIterator(const byte *searchin)
-	: _ptr(searchin) {
+	uint32 size;
+	if (length >= 0)
+		size = length;
+	else if (_features & GF_OLD_BUNDLE)
+		size = READ_LE_UINT16(ptr);
+	else if (_features & GF_SMALL_HEADER)
+		size = READ_LE_UINT32(ptr);
+	else
+		size = READ_BE_UINT32(ptr + 4);
+
+#if defined(MACOS_CARBON)
+	sprintf(buf, ":dumps:%s%d.dmp", tag, idx);
+#else
+	sprintf(buf, "dumps/%s%d.dmp", tag, idx);
+#endif
+
+	out.open(buf, "", File::kFileWriteMode);
+	if (out.isOpen() == false)
+		return;
+	out.write(ptr, size);
+	out.close();
+}
+
+ResourceIterator::ResourceIterator(const byte *searchin, bool smallHeader)
+	: _ptr(searchin), _smallHeader(smallHeader) {
 	assert(searchin);
-	_size = READ_BE_UINT32(searchin + 4);
-	_pos = 8;
-	_ptr = searchin + 8;
+	if (_smallHeader) {
+		_size = READ_LE_UINT32(searchin);
+		_pos = 6;
+		_ptr = searchin + 6;
+	} else {
+		_size = READ_BE_UINT32(searchin + 4);
+		_pos = 8;
+		_ptr = searchin + 8;
+	}
+	
 }
 
 const byte *ResourceIterator::findNext(uint32 tag) {
 	uint32 size = 0;
 	const byte *result = 0;
 	
-	do {
-		if (_pos >= _size)
-			return 0;
-
-		result = _ptr;
-		size = READ_BE_UINT32(result + 4);
-		if ((int32)size <= 0)
-			return 0;	// Avoid endless loop
-		
-		_pos += size;
-		_ptr += size;
-	} while (READ_UINT32(result) != tag);
+	if (_smallHeader) {
+		uint16 smallTag = newTag2Old(tag);
+		do {
+			if (_pos >= _size)
+				return 0;
+	
+			result = _ptr;
+			size = READ_LE_UINT32(result);
+			if ((int32)size <= 0)
+				return 0;	// Avoid endless loop
+			
+			_pos += size;
+			_ptr += size;
+		} while (READ_LE_UINT16(result + 4) != smallTag);
+	} else {
+		do {
+			if (_pos >= _size)
+				return 0;
+	
+			result = _ptr;
+			size = READ_BE_UINT32(result + 4);
+			if ((int32)size <= 0)
+				return 0;	// Avoid endless loop
+			
+			_pos += size;
+			_ptr += size;
+		} while (READ_UINT32(result) != tag);
+	}
 
 	return result;
 }
@@ -1945,10 +2267,111 @@ const byte *findResource(uint32 tag, const byte *searchin) {
 	return NULL;
 }
 
+const byte *findResourceSmall(uint32 tag, const byte *searchin) {
+	uint32 curpos, totalsize, size;
+	uint16 smallTag;
 
+	smallTag = newTag2Old(tag);
+	if (smallTag == 0)
+		return NULL;
 
+	assert(searchin);
 
+	totalsize = READ_LE_UINT32(searchin);
+	searchin += 6;
+	curpos = 6;
 
+	while (curpos < totalsize) {
+		size = READ_LE_UINT32(searchin);
+
+		if (READ_LE_UINT16(searchin + 4) == smallTag)
+			return searchin;
+
+		if ((int32)size <= 0) {
+			error("(%s) Not found in %d... illegal block len %d", tag2str(tag), 0, size);
+			return NULL;
+		}
+
+		curpos += size;
+		searchin += size;
+	}
+
+	return NULL;
+}
+
+uint16 newTag2Old(uint32 oldTag) {
+	switch (oldTag) {
+	case (MKID('RMHD')):
+		return (0x4448);	// HD
+	case (MKID('IM00')):
+		return (0x4D42);	// BM
+	case (MKID('EXCD')):
+		return (0x5845);	// EX
+	case (MKID('ENCD')):
+		return (0x4E45);	// EN
+	case (MKID('SCAL')):
+		return (0x4153);	// SA
+	case (MKID('LSCR')):
+		return (0x534C);	// LS
+	case (MKID('OBCD')):
+		return (0x434F);	// OC
+	case (MKID('OBIM')):
+		return (0x494F);	// OI
+	case (MKID('SMAP')):
+		return (0x4D42);	// BM
+	case (MKID('CLUT')):
+		return (0x4150);	// PA
+	case (MKID('BOXD')):
+		return (0x5842);	// BX
+	case (MKID('CYCL')):
+		return (0x4343);	// CC
+	default:
+		return (0);
+	}
+}
+
+const char *resTypeFromId(int id) {
+	static char buf[100];
+
+	switch (id) {
+	case rtRoom:
+		return "Room";
+	case rtScript:
+		return "Script";
+	case rtCostume:
+		return "Costume";
+	case rtSound:
+		return "Sound";
+	case rtInventory:
+		return "Inventory";
+	case rtCharset:
+		return "Charset";
+	case rtString:
+		return "String";
+	case rtVerb:
+		return "Verb";
+	case rtActorName:
+		return "ActorName";
+	case rtBuffer:
+		return "Buffer";
+	case rtScaleTable:
+		return "ScaleTable";
+	case rtTemp:
+		return "Temp";
+	case rtFlObject:
+		return "FlObject";
+	case rtMatrix:
+		return "Matrix";
+	case rtBox:
+		return "Box";
+	case rtLast:
+		return "Last";
+	case rtNumTypes:
+		return "NumTypes";
+	default:
+		sprintf(buf, "%d", id);
+		return buf;
+	}
+}
 
 } // End of namespace Scumm
-

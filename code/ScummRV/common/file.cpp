@@ -22,6 +22,7 @@
 #include "common/file.h"
 #include "common/util.h"
 
+
 Common::String File::_defaultDirectory;
 
 
@@ -133,24 +134,11 @@ File::File() {
 	_ioFailed = false;
 	_encbyte = 0;
 	_name = 0;
-	_fileCacheSize = 0;
-	_tempBuf = 0;
-	_tempBufPtr = 0;
-	_tempBufEnd = 0;
-	_tempBufWriting = false;
 }
 
 File::~File() {
 	close();
 	delete [] _name;
-}
-
-void File::enableFileCache(uint32 size)
-{
-	if (!isOpen() && (size > 0))
-	{
-		_fileCacheSize = size;
-	}
 }
 
 bool File::open(const char *filename, const char *directory, AccessMode mode, byte encbyte) {
@@ -193,22 +181,13 @@ bool File::open(const char *filename, const char *directory, AccessMode mode, by
 		delete [] _name;
 	_name = new char[len+1];
 	memcpy(_name, filename, len+1);
-	if (_fileCacheSize > 0)
-		createTempBuf(mode == kFileWriteMode ? true : false);
+
 	return true;
 }
 
 void File::close() {
 	if (_handle)
-	{
-		if (_fileCacheSize > 0)
-		{
-			if (_tempBufWriting && (_tempBufPtr > _tempBuf))
-				fwrite((void*)_tempBuf, (_tempBufPtr - _tempBuf), 1, _handle);
-			free((void*)_tempBuf);
-		}
 		fclose(_handle);
-	}
 	_handle = NULL;
 }
 
@@ -229,17 +208,8 @@ bool File::eof() {
 		error("File is not open!");
 		return false;
 	}
-	if (_fileCacheSize > 0)
-	{
-		if (_tempBufWriting)
-			return feof(_handle) != 0;
-		else
-			return (feof(_handle) != 0) && (_tempBufPtr >= _tempBufEnd);
-	}
-	else
-	{
-		return feof(_handle) != 0;
-	}
+
+	return feof(_handle) != 0;
 }
 
 uint32 File::pos() {
@@ -248,17 +218,7 @@ uint32 File::pos() {
 		return 0;
 	}
 
-	if (_fileCacheSize > 0)
-	{
-		if (_tempBufWriting)
-			return ftell(_handle) + (_tempBufPtr - _tempBuf);
-		else
-			return ftell(_handle) - (_tempBufEnd - _tempBufPtr);
-	}
-	else
-	{
-		return ftell(_handle);
-	}
+	return ftell(_handle);
 }
 
 uint32 File::size() {
@@ -280,21 +240,6 @@ void File::seek(int32 offs, int whence) {
 		error("File is not open!");
 		return;
 	}
-	if (_fileCacheSize > 0)
-	{
-		if (_tempBufWriting)
-		{
-			writeTempBuf(true);
-		}
-		else
-		{
-			if (whence == SEEK_CUR)
-				offs -= (_tempBufEnd - _tempBufPtr);
-
-			_tempBufPtr = _tempBuf;
-			_tempBufEnd = _tempBuf;
-		}
-	}
 
 	if (fseek(_handle, offs, whence) != 0)
 		clearerr(_handle);
@@ -302,6 +247,7 @@ void File::seek(int32 offs, int whence) {
 
 uint32 File::read(void *ptr, uint32 len) {
 	byte *ptr2 = (byte *)ptr;
+	uint32 real_len;
 
 	if (_handle == NULL) {
 		error("File is not open!");
@@ -311,64 +257,13 @@ uint32 File::read(void *ptr, uint32 len) {
 	if (len == 0)
 		return 0;
 
-	uint32 real_len = 0;
-	if (_fileCacheSize > 0)
-	{
-		readTempBuf();
-		uint32 remaining = _tempBufEnd - _tempBufPtr;
-		if (remaining >= len)
-		{
-			memcpy(ptr2, (void*)_tempBufPtr, len);
-			_tempBufPtr += len;
-			ptr2 += len;
-			real_len = len;
-			len = 0;
-		}
-		else
-		{
-			if (remaining > 0)
-			{
-				memcpy(ptr2, (void*)_tempBufPtr, remaining);
-				_tempBufPtr += remaining;
-				ptr2 += remaining;
-				real_len += remaining;
-				len -= remaining;
-			}
-		}
-	}
-
-	if (len > 0)
-	{
-		// P.Putnik drivers appears to silently fail on certain partitions when reading more than 128Kb in a single go.
-		// May or may not be related to files larger than 16MB.
-		// It triggers on Indy4 when reading >128KB that crosses the 16MB mark of the file.
-		// Let's read in 64KB chunks since that is the usual size of the _FRB anyway.
-		const uint32 maxlen = 64*1024;
-
-		while(len > maxlen)
-		{
-			uint32 retlen = fread(ptr2, 1, maxlen, _handle);
-			if (retlen < maxlen)
-			{
-				clearerr(_handle);
-				_ioFailed = true;
-				break;
-			}
-			len -= maxlen;
-			ptr2 += maxlen;
-			real_len += maxlen;
-		}
-
-		real_len += fread(ptr2, 1, len, _handle);
-		if (real_len < len)
-		{
-			clearerr(_handle);
-			_ioFailed = true;
-		}	
+	real_len = fread(ptr2, 1, len, _handle);
+	if (real_len < len) {
+		clearerr(_handle);
+		_ioFailed = true;
 	}
 
 	if (_encbyte != 0) {
-		ptr2 = (byte *)ptr;
 		uint32 t_size = real_len;
 		do {
 			*ptr2++ ^= _encbyte;
@@ -379,31 +274,16 @@ uint32 File::read(void *ptr, uint32 len) {
 }
 
 byte File::readByte() {
-	byte b = 0;
+	byte b;
 
 	if (_handle == NULL) {
 		error("File is not open!");
 		return 0;
 	}
-	if (_fileCacheSize > 0)
-	{
-		readTempBuf();
-		if (_tempBufPtr >= _tempBufEnd)
-		{
-			clearerr(_handle);
-			_ioFailed = true;
-		}
-		else
-		{
-			b = *((byte*)_tempBufPtr++);
-		}
-	}
-	else
-	{
-		if (fread(&b, 1, 1, _handle) != 1) {
-			clearerr(_handle);
-			_ioFailed = true;
-		}	
+
+	if (fread(&b, 1, 1, _handle) != 1) {
+		clearerr(_handle);
+		_ioFailed = true;
 	}
 	return b ^ _encbyte;
 }
@@ -454,37 +334,9 @@ uint32 File::write(const void *ptr, uint32 len) {
 		ptr = tmp;
 	}
 
-	if (_fileCacheSize > 0)
-		writeTempBuf(true);
-
-	// P.Putnik drivers appears to silently fail on certain partitions when reading more than 128Kb in a single go.
-	// May or may not be related to files larger than 16MB.
-	// It triggers on Indy4 when reading >128KB that crosses the 16MB mark of the file.
-	// Let's read in 64KB chunks since that is the usual size of the _FRB anyway.
-	const uint32 maxlen = 64*1024;
-	const byte* ptr2 = (const byte*) ptr;
-	uint32 real_len = 0;
-	while(len > maxlen)
-	{
-		uint32 retlen = fwrite(ptr2, 1, maxlen, _handle);
-		if (retlen != maxlen)
-		{
-			clearerr(_handle);
-			_ioFailed = true;
-			break;
-		}
-		len -= maxlen;
-		ptr2 += maxlen;
-		real_len += maxlen;
-	}
-	if (len > 0)
-	{
-		real_len += fwrite(ptr2, 1, len, _handle);
-		if (real_len != len)
-		{
-			clearerr(_handle);
-			_ioFailed = true;
-		}
+	if ((uint32)fwrite(ptr, 1, len, _handle) != len) {
+		clearerr(_handle);
+		_ioFailed = true;
 	}
 
 	if (_encbyte != 0) {
@@ -500,18 +352,11 @@ void File::writeByte(byte value) {
 	if (_handle == NULL) {
 		error("File is not open!");
 	}
-	if (_fileCacheSize > 0)
-	{
-		*((byte*)_tempBufPtr++) = value;
-		writeTempBuf(false);
+
+	if (fwrite(&value, 1, 1, _handle) != 1) {
+		clearerr(_handle);
+		_ioFailed = true;
 	}
-	else
-	{
-		if (fwrite(&value, 1, 1, _handle) != 1) {
-			clearerr(_handle);
-			_ioFailed = true;
-		}
-	}	
 }
 
 void File::writeUint16LE(uint16 value) {
@@ -533,56 +378,3 @@ void File::writeUint32BE(uint32 value) {
 	writeUint16BE((uint16)(value >> 16));
 	writeUint16BE((uint16)(value & 0xffff));
 }
-
-
-void File::createTempBuf(bool writemode)
-{
-	if (_fileCacheSize > 0)
-	{
-	#ifdef __ATARI__
-		// prefer ST ram because file operations would have to go through FRB otherwise
-		_tempBuf = (uintptr_t) atari_alloc(_fileCacheSize, ALLOC_STRAM_PREFER);
-	#else
-		_tempBuf = (uintptr_t) malloc(_fileCacheSize);
-	#endif
-		_tempBufPtr = _tempBuf;
-		_tempBufEnd = _tempBuf;
-		_tempBufWriting = writemode;	
-	}
-}
-
-void File::writeTempBuf(bool force)
-{
-	if (_fileCacheSize > 0)
-	{
-		uint32 size = _tempBufPtr - _tempBuf;
-		if ((size >= _fileCacheSize) || (force && (size > 0)))
-		{
-			if (fwrite((void*)_tempBuf, 1, size, _handle) != 1)
-			{
-				clearerr(_handle);
-				_ioFailed = true;
-			}
-			_tempBufPtr = _tempBuf;
-		}
-	}
-}
-
-void File::readTempBuf()
-{
-	if (_fileCacheSize > 0)
-	{
-		uint usedSize = _tempBufPtr - _tempBuf;
-		if ((usedSize == 0) || (usedSize >= _fileCacheSize))
-		{
-			int count = fread((void*)_tempBuf, 1, _fileCacheSize, _handle);
-			_tempBufEnd = _tempBuf + count;
-			_tempBufPtr = _tempBuf;
-		}	
-	}
-}
-
-
-
-
-

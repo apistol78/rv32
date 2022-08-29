@@ -1,0 +1,19 @@
+/.cvsignore/1.1/Sat Aug 24 21:39:28 2002//Trelease-0-6-0
+/channel.h/1.17/Fri Jan  9 23:33:36 2004//Trelease-0-6-0
+/chunk.cpp/1.26/Wed Jan 28 04:07:54 2004//Trelease-0-6-0
+/chunk.h/1.13/Sun Jan 25 05:25:50 2004//Trelease-0-6-0
+/chunk_type.h/1.8/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/codec1.cpp/1.14/Fri Jan 30 02:14:29 2004//Trelease-0-6-0
+/codec37.cpp/1.26/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/codec37.h/1.14/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/codec47.cpp/1.67/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/codec47.h/1.20/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/imuse_channel.cpp/1.28/Fri Jan  9 23:33:46 2004//Trelease-0-6-0
+/saud_channel.cpp/1.26/Sat Feb 14 01:39:09 2004//Trelease-0-6-0
+/smush_font.cpp/1.16/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/smush_font.h/1.10/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/smush_mixer.cpp/1.31/Mon Feb  2 22:40:20 2004//Trelease-0-6-0
+/smush_mixer.h/1.9/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/smush_player.cpp/1.111.2.1/Sun Feb 29 01:08:17 2004//Trelease-0-6-0
+/smush_player.h/1.26/Mon Feb  9 18:57:05 2004//Trelease-0-6-0
+D

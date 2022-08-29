@@ -744,7 +744,10 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>code/ScummRV</item>
+						<item>code/ScummRV/base</item>
 						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/gui</item>
+						<item>code/ScummRV/sound</item>
 						<item>code/ScummRV/backends/rv</item>
 					</includePaths>
 					<definitions>
@@ -755,7 +758,12 @@
 						<item>ENGINE_SCUMM5</item>
 						<item>ENGINE_SCUMM6</item>
 						<item>SINGLEGAME</item>
-						<item>GAME_MONKEY1</item>
+						<item>GAME_ATLANTIS</item>
+						<item>DISABLE_SIMON</item>
+						<item>DISABLE_SKY</item>
+						<item>DISABLE_SWORD1</item>
+						<item>DISABLE_SWORD2</item>
+						<item>DISABLE_QUEEN</item>
 						<item>__RV__</item>
 					</definitions>
 					<libraryPaths/>
@@ -777,7 +785,10 @@
 					<precompiledHeader/>
 					<includePaths>
 						<item>code/ScummRV</item>
+						<item>code/ScummRV/base</item>
 						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/gui</item>
+						<item>code/ScummRV/sound</item>
 						<item>code/ScummRV/backends/rv</item>
 					</includePaths>
 					<definitions>
@@ -788,7 +799,12 @@
 						<item>ENGINE_SCUMM5</item>
 						<item>ENGINE_SCUMM6</item>
 						<item>SINGLEGAME</item>
-						<item>GAME_MONKEY1</item>
+						<item>GAME_ATLANTIS</item>
+						<item>DISABLE_SIMON</item>
+						<item>DISABLE_SKY</item>
+						<item>DISABLE_SWORD1</item>
+						<item>DISABLE_SWORD2</item>
+						<item>DISABLE_QUEEN</item>
 						<item>__RV__</item>
 					</definitions>
 					<libraryPaths/>
@@ -822,6 +838,32 @@
 							</items>
 						</item>
 						<item type="Filter">
+							<name>fs</name>
+							<items>
+								<item type="Filter">
+									<name>rv</name>
+									<items>
+										<item type="File">
+											<fileName>backends/fs/rv/*.cpp</fileName>
+											<items/>
+										</item>
+										<item type="File">
+											<fileName>backends/fs/rv/*.h</fileName>
+											<items/>
+										</item>
+									</items>
+								</item>
+								<item type="File">
+									<fileName>backends/fs/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>backends/fs/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="Filter">
 							<name>midi</name>
 							<items>
 								<item type="File">
@@ -842,58 +884,142 @@
 							<fileName>backends/*.h</fileName>
 							<items/>
 						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>base</name>
+					<items>
+						<item type="File" version="2">
+							<fileName>base/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>base/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>common</name>
+					<items>
 						<item type="Filter">
-							<name>common</name>
+							<name>gui</name>
 							<items>
-								<item type="Filter">
-									<name>gui</name>
-									<items>
-										<item type="File">
-											<fileName>common/gui/*.cpp</fileName>
-											<items/>
-										</item>
-										<item type="File">
-											<fileName>common/gui/*.h</fileName>
-											<items/>
-										</item>
-									</items>
-								</item>
-								<item type="Filter">
-									<name>sound</name>
-									<items>
-										<item type="File" version="2">
-											<fileName>common/sound/*.cpp</fileName>
-											<excludeFilter>*_xmidi.*</excludeFilter>
-											<items/>
-										</item>
-										<item type="File">
-											<fileName>common/sound/*.h</fileName>
-											<items/>
-										</item>
-									</items>
-								</item>
 								<item type="File">
-									<fileName>common/*.cpp</fileName>
+									<fileName>common/gui/*.cpp</fileName>
 									<items/>
 								</item>
 								<item type="File">
-									<fileName>common/*.h</fileName>
+									<fileName>common/gui/*.h</fileName>
 									<items/>
 								</item>
 							</items>
 						</item>
 						<item type="Filter">
-							<name>scumm</name>
+							<name>sound</name>
 							<items>
-								<item type="File">
-									<fileName>scumm/*.cpp</fileName>
+								<item type="File" version="2">
+									<fileName>common/sound/*.cpp</fileName>
+									<excludeFilter>*_xmidi.*</excludeFilter>
 									<items/>
 								</item>
 								<item type="File">
-									<fileName>scumm/*.h</fileName>
+									<fileName>common/sound/*.h</fileName>
 									<items/>
 								</item>
 							</items>
+						</item>
+						<item type="File">
+							<fileName>common/*.cpp</fileName>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>common/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>gui</name>
+					<items>
+						<item type="File" version="2">
+							<fileName>gui/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>gui/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>scumm</name>
+					<items>
+
+						<item type="Filter">
+							<name>imuse_digi</name>
+							<items>
+								<item type="File">
+									<fileName>scumm/imuse_digi/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>scumm/imuse_digi/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="Filter">
+							<name>insane</name>
+							<items>
+								<item type="File">
+									<fileName>scumm/insane/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>scumm/insane/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="Filter">
+							<name>smush</name>
+							<items>
+								<item type="File">
+									<fileName>scumm/smush/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>scumm/smush/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+
+						<item type="File" version="2">
+							<fileName>scumm/*.cpp</fileName>
+							<excludeFilter>resource_converter.*</excludeFilter>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>scumm/*.h</fileName>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="Filter">
+					<name>sound</name>
+					<items>
+						<item type="File" version="2">
+							<fileName>sound/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>sound/*.h</fileName>
+							<items/>
 						</item>
 					</items>
 				</item>

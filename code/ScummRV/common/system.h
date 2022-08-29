@@ -121,16 +121,8 @@ public:
 	virtual ~OSystem() {}
 
 
-	// virtual void installStart()	{ }
-	// virtual void installDone() {}
-	// virtual void installUpdate(byte progCur, byte progMax) { }
-	// virtual void setIsLoading(bool isloading) {}
-
-
 	/** @name Graphics */
 	//@{
-
-	virtual bool init() = 0;
 
 	/** Set the size of the video bitmap. Typically 320x200 pixels. */
 	virtual void init_size(uint w, uint h) = 0;
@@ -159,7 +151,6 @@ public:
 	 * @see update_screen
 	 */
 	virtual void copy_rect(const byte *buf, int pitch, int x, int y, int w, int h) = 0;
-	virtual void copy_screen(const byte* buf, int y, int h, const uint32* dirtymask = 0, bool doublebuffer = true) = 0;
 
 	/**
 	 * Moves the screen content by the offset specified via dx/dy.
@@ -190,8 +181,21 @@ public:
 	 * (that is, 5 bits red, 6 bits green, 5 bits blue).
 	 * @see colorToRGB
 	 */
-	virtual NewGuiColor RGBToColor(uint8 r, uint8 g, uint8 b) = 0;
+	virtual NewGuiColor RGBToColor(uint8 r, uint8 g, uint8 b) {
+		return ((((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F));
+	}
 
+	/** Convert the given NewGuiColor into a RGB triplet. A NewGuiColor can be
+	 * 8bit, 16bit or 32bit, depending on the target system. The default
+	 * implementation takes a 16 bit color value and assumes it to be in 565 format
+	 * (that is, 5 bits red, 6 bits green, 5 bits blue).
+	 * @see RGBToColor
+	 */
+	virtual void colorToRGB(NewGuiColor color, uint8 &r, uint8 &g, uint8 &b) {
+		r = (((color >> 11) & 0x1F) << 3);
+		g = (((color >> 5) & 0x3F) << 2);
+		b = ((color&0x1F) << 3);
+	}
 
 	//@}
 
@@ -209,8 +213,8 @@ public:
 	virtual void warp_mouse(int x, int y) = 0;
 
 	/** Set the bitmap used for drawing the cursor. */
-	virtual void set_mouse_cursor(uint32 id, const byte *buf, const byte* mask, uint w, uint h, int hotspot_x, int hotspot_y) = 0;
-	virtual bool mouse_cursor_cached(uint32 id) { return false; }
+	virtual void set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y) = 0;
+
 	//@}
 
 	/** @name Events and Time */
@@ -328,6 +332,9 @@ public:
 	virtual void hide_overlay() = 0;
 	virtual void clear_overlay() = 0;
 	virtual void grab_overlay(NewGuiColor *buf, int pitch) = 0;
+	virtual void copy_rect_overlay(const NewGuiColor *buf, int pitch, int x, int y, int w, int h) = 0;
+	virtual int16 get_overlay_height()	{ return get_height(); }
+	virtual int16 get_overlay_width()	{ return get_width(); }
 	//@} 
 
 

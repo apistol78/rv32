@@ -26,6 +26,7 @@
 
 #include "scumm/actor.h"
 #include "scumm/charset.h"
+#include "scumm/imuse_digi/dimuse.h"
 #include "scumm/imuse.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
@@ -33,6 +34,8 @@
 #include "scumm/scumm.h"
 #include "scumm/sound.h"
 #include "scumm/verbs.h"
+
+#include "sound/audiocd.h"
 #include "sound/mixer.h"
 
 
@@ -72,7 +75,7 @@ bool ScummEngine::saveState(int slot, bool compat, SaveFileManager *mgr) {
 
 	memcpy(hdr.name, _saveLoadName, sizeof(hdr.name));
 
-	hdr.type = MKID('SCST');
+	hdr.type = MKID('SCVM');
 	hdr.size = 0;
 	hdr.ver = TO_LE_32(CURRENT_VER);
 
@@ -90,13 +93,14 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 	SaveFile *in;
 	int i, j;
 	SaveGameHeader hdr;
+	byte *roomptr;
 
 	makeSavegameName(filename, slot, compat);
 	if (!(in = mgr->open_savefile(filename, getSavePath(), false)))
 		return false;
 
 	in->read(&hdr, sizeof(hdr));
-	if (hdr.type != MKID('SCST')) {
+	if (hdr.type != MKID('SCVM')) {
 		warning("Invalid savegame '%s'", filename);
 		delete in;
 		return false;
@@ -106,7 +110,7 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 	// We account for that by retrying once with swapped byte order.
 	if (hdr.ver > CURRENT_VER)
 		hdr.ver = SWAP_BYTES_32(hdr.ver);
-	if (hdr.ver < MIN_VALID_VER || hdr.ver > CURRENT_VER)
+	if (hdr.ver < VER(7) || hdr.ver > CURRENT_VER)
 	{
 		warning("Invalid version of '%s'", filename);
 		delete in;
@@ -135,6 +139,8 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 	if (!_imuse || _saveSound || !_saveTemporaryState)
 		_sound->stopAllSounds();
 
+	_sound->stopCD();
+
 	_sound->pauseSounds(true);
 
 	CHECK_HEAP
@@ -158,6 +164,9 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 
 	initScummVars();
 
+	if (_features & GF_OLD_BUNDLE)
+		loadCharset(0); // FIXME - HACK ?
+
 	//
 	// Now do the actual loading
 	//
@@ -170,20 +179,68 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 	if (_screenTop < 0)
 		_screenTop = 0;
 	
-	setDirtyColors(0, 255);
+	// For a long time, we used incorrect locations for some camera related
+	// scumm vars. We now know the proper locations. To be able to properly use
+	// old save games, we update the old (bad) variables to the new (correct)
+	// ones.
+	if (hdr.ver < 28 && _version == 8) {
+		_scummVars[VAR_CAMERA_MIN_X] = _scummVars[101];
+		_scummVars[VAR_CAMERA_MAX_X] = _scummVars[102];
+		_scummVars[VAR_CAMERA_MIN_Y] = _scummVars[103];
+		_scummVars[VAR_CAMERA_MAX_Y] = _scummVars[104];
+		_scummVars[VAR_CAMERA_THRESHOLD_X] = _scummVars[105];
+		_scummVars[VAR_CAMERA_THRESHOLD_Y] = _scummVars[106];
+		_scummVars[VAR_CAMERA_SPEED_X] = _scummVars[107];
+		_scummVars[VAR_CAMERA_SPEED_Y] = _scummVars[108];
+		_scummVars[VAR_CAMERA_ACCEL_X] = _scummVars[109];
+		_scummVars[VAR_CAMERA_ACCEL_Y] = _scummVars[110];
+	}
 
-	camera._last.x = camera._cur.x;
+	// We could simply dirty colours 0-15 for 16-colour games -- nowadays
+	// they handle their palette pretty much like the more recent games
+	// anyway. There was a time, though, when re-initializing was necessary
+	// for backwards compatibility, and it may still prove useful if we
+	// ever add options for using different 16-colour palettes.
+	if (_version == 1) {
+		if (_gameId == GID_MANIAC)
+			setupV1ManiacPalette();
+		else
+			setupV1ZakPalette();
+	} else if (_features & GF_16COLOR) {
+		if ((_features & GF_AMIGA) || (_features & GF_ATARI_ST))
+			setupAmigaPalette();
+		else
+			setupEGAPalette();
+	} else
+		setDirtyColors(0, 255);
 
-	// verb bkcolor was changed from system_pal to game_pal in version 32.
-	// workaround: force to 0 in old versions
-	if (hdr.ver < VER(32))
-		for (int i=0; i<_numVerbs; ++i)
-			_verbs[i].bkcolor = 0;
+
+	// Regenerate strip table (for V1/V2 games)
+	if (_version == 1) {
+		roomptr = getResourceAddress(rtRoom, _roomResource);
+		_IM00_offs = 0;
+		for (i = 0; i < 4; i++){
+			gdi._C64Colors[i] = roomptr[6 + i];
+		}
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 10), gdi._C64CharMap, 2048);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 12), gdi._C64PicMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 14), gdi._C64ColorMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 16), gdi._C64MaskMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 18) + 2, gdi._C64MaskChar, READ_LE_UINT16(roomptr + READ_LE_UINT16(roomptr + 18)));
+		gdi._C64ObjectMode = true;
+	} else if (_version == 2) {
+		_roomStrips = gdi.generateStripTable(getResourceAddress(rtRoom, _roomResource) + _IM00_offs,
+		                                     _roomWidth, _roomHeight, _roomStrips);
+	}
+
+	if (!(_features & GF_NEW_CAMERA)) {
+		camera._last.x = camera._cur.x;
+	}
 
 	// Restore the virtual screens and force a fade to black.
 	initScreens(_screenB, _screenH);
 	VirtScreen *vs = &virtscr[0];
-	memset(vs->screenPtr + vs->xstart, 0, (vs->width * vs->height) >> 1);
+	memset(vs->screenPtr + vs->xstart, 0, vs->width * vs->height);
 	vs->setDirtyRange(0, vs->height);
 	updateDirtyScreen(kMainVirtScreen);
 	updatePalette();
@@ -196,14 +253,12 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 
 	// With version 22, we replaced the scale items with scale slots. So when
 	// loading such an old save game, try to upgrade the old to new format.
-	/*
 	if (hdr.ver < VER(22)) {
 		// Convert all rtScaleTable resources to matching scale items
 		for (i = 1; i < res.num[rtScaleTable]; i++) {
 			convertScaleTableToScaleSlot(i);
 		}
 	}
-	*/
 
 	_lastCodePtr = NULL;
 	_drawObjectQueNr = 0;
@@ -212,34 +267,6 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 	cameraMoved();
 
 	initBGBuffers(_roomHeight);
-
-#ifdef GAME_SAMNMAX
-	if (hdr.ver >= VER(34))
-	{
-		int16 room = (_grabbedCursorId & 0xFF000000) >> 24;
-		int16 img  = (_grabbedCursorId & 0x00FFFF00) >> 8;
-		int16 idx  = (_grabbedCursorId & 0x000000F0) >> 4;
-		debug(1,"_grabbedCursorId = 0x%08x (%d,%d,%d)", _grabbedCursorId, room, img, idx);
-		if (room != 0x00 && room != 0xFF && img != 0x0000)
-		{
-			byte transpColors[16];
-			memcpy(transpColors, _grabbedCursorTransp, 16);
-			setCursorImg(img, room, idx);
-			for (int i=0; i!=16; i++)
-			{
-				if (transpColors[i] == 0xFF)
-					break;
-				makeCursorColorTransparent(transpColors[i]);
-			}
-		}
-		else
-		{
-			// use saved _grabbedCursor
-			updateCursor();
-		}
-		_system->warp_mouse(_mouse.x, _mouse.y);
-	}	
-#endif
 
 	CHECK_HEAP
 	debug(1, "State loaded from '%s'", filename);
@@ -250,7 +277,7 @@ bool ScummEngine::loadState(int slot, bool compat, SaveFileManager *mgr) {
 }
 
 void ScummEngine::makeSavegameName(char *out, int slot, bool compatible) {
-	sprintf(out, "%s.%c%02d", _targetName.c_str(), compatible ? 'c' : 's', slot);
+	sprintf(out, "%s.%c%.2d", _targetName.c_str(), compatible ? 'c' : 's', slot);
 }
 
 void ScummEngine::listSavegames(bool *marks, int num, SaveFileManager *mgr) {
@@ -274,14 +301,14 @@ bool ScummEngine::getSavegameName(int slot, char *desc, SaveFileManager *mgr) {
 	len = out->read(&hdr, sizeof(hdr));
 	delete out;
 
-	if (len != sizeof(hdr) || hdr.type != MKID('SCST')) {
+	if (len != sizeof(hdr) || hdr.type != MKID('SCVM')) {
 		strcpy(desc, "Invalid savegame");
 		return false;
 	}
 
 	if (hdr.ver > CURRENT_VER)
 		hdr.ver = TO_LE_32(hdr.ver);
-	if (hdr.ver < MIN_VALID_VER || hdr.ver > CURRENT_VER) {
+	if (hdr.ver < VER(7) || hdr.ver > CURRENT_VER) {
 		strcpy(desc, "Invalid version");
 		return false;
 	}
@@ -321,7 +348,10 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(VerbSlot, oldRect.top, sleInt16, VER(8)),
 		MKLINE(VerbSlot, oldRect.right, sleInt16, VER(8)),
 		MKLINE(VerbSlot, oldRect.bottom, sleInt16, VER(8)),
+
+		MKLINE_OLD(VerbSlot, verbid, sleByte, VER(8), VER(11)),
 		MKLINE(VerbSlot, verbid, sleInt16, VER(12)),
+
 		MKLINE(VerbSlot, color, sleByte, VER(8)),
 		MKLINE(VerbSlot, hicolor, sleByte, VER(8)),
 		MKLINE(VerbSlot, dimcolor, sleByte, VER(8)),
@@ -344,6 +374,7 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScummEngine, _EXCD_offs, sleUint32, VER(8)),
 		MKLINE(ScummEngine, _IM00_offs, sleUint32, VER(8)),
 		MKLINE(ScummEngine, _CLUT_offs, sleUint32, VER(8)),
+		MK_OBSOLETE(ScummEngine, _EPAL_offs, sleUint32, VER(8), VER(9)),
 		MKLINE(ScummEngine, _PALS_offs, sleUint32, VER(8)),
 		MKLINE(ScummEngine, _curPalIndex, sleByte, VER(8)),
 		MKLINE(ScummEngine, _currentRoom, sleByte, VER(8)),
@@ -352,11 +383,32 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScummEngine, _currentScript, sleByte, VER(8)),
 		MKARRAY(ScummEngine, _localScriptList[0], sleUint32, NUM_LOCALSCRIPT, VER(8)),
 
+
+		// vm.localvar grew from 25 to 40 script entries and then from
+		// 16 to 32 bit variables (but that wasn't reflect here)... and
+		// THEN from 16 to 25 variables.
+		MKARRAY2_OLD(ScummEngine, vm.localvar[0][0], sleUint16, 17, 25, (byte*)vm.localvar[1] - (byte*)vm.localvar[0], VER(8), VER(8)),
+		MKARRAY2_OLD(ScummEngine, vm.localvar[0][0], sleUint16, 17, 40, (byte*)vm.localvar[1] - (byte*)vm.localvar[0], VER(9), VER(14)),
+
+		// We used to save 25 * 40 = 1000 blocks; but actually, each 'row consisted of 26 entry,
+		// i.e. 26 * 40 = 1040. Thus the last 40 blocks of localvar where not saved at all. To be
+		// able to load this screwed format, we use a trick: We load 26 * 38 = 988 blocks.
+		// Then, we mark the followin 12 blocks (24 bytes) as obsolete.
+		MKARRAY2_OLD(ScummEngine, vm.localvar[0][0], sleUint16, 26, 38, (byte*)vm.localvar[1] - (byte*)vm.localvar[0], VER(15), VER(17)),
+		MK_OBSOLETE_ARRAY(ScummEngine, vm.localvar[39][0], sleUint16, 12, VER(15), VER(17)),
+
+		// This was the first proper multi dimensional version of the localvars, with 32 bit values
+		MKARRAY2_OLD(ScummEngine, vm.localvar[0][0], sleUint32, 26, 40, (byte*)vm.localvar[1] - (byte*)vm.localvar[0], VER(18), VER(19)),
+
+		// Then we doubled the script slots again, from 40 to 80
 		MKARRAY2(ScummEngine, vm.localvar[0][0], sleUint32, 26, NUM_SCRIPT_SLOT, (byte*)vm.localvar[1] - (byte*)vm.localvar[0], VER(20)),
+
 
 		MKARRAY(ScummEngine, _resourceMapper[0], sleByte, 128, VER(8)),
 		MKARRAY(ScummEngine, _charsetColorMap[0], sleByte, 16, VER(8)),
 		
+		// _charsetData grew from 10*16 to 15*16 bytes
+		MKARRAY_OLD(ScummEngine, _charsetData[0][0], sleByte, 10 * 16, VER(8), VER(9)),
 		MKARRAY(ScummEngine, _charsetData[0][0], sleByte, 15 * 16, VER(10)),
 
 		MKLINE(ScummEngine, _curExecScript, sleUint16, VER(8)),
@@ -380,6 +432,8 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScummEngine, _actorToPrintStrFor, sleByte, VER(8)),
 		MKLINE(ScummEngine, _charsetColor, sleByte, VER(8)),
 
+		// _charsetBufPos was changed from byte to int
+		MKLINE_OLD(ScummEngine, _charsetBufPos, sleByte, VER(8), VER(9)),
 		MKLINE(ScummEngine, _charsetBufPos, sleInt16, VER(10)),
 
 		MKLINE(ScummEngine, _haveMsg, sleByte, VER(8)),
@@ -387,6 +441,7 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 
 		MKLINE(ScummEngine, _talkDelay, sleInt16, VER(8)),
 		MKLINE(ScummEngine, _defaultTalkDelay, sleInt16, VER(8)),
+		MK_OBSOLETE(ScummEngine, _numInMsgStack, sleInt16, VER(8), VER(27)),
 		MKLINE(ScummEngine, _sentenceNum, sleByte, VER(8)),
 
 		MKLINE(ScummEngine, vm.cutSceneStackPointer, sleByte, VER(8)),
@@ -399,9 +454,8 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScummEngine, _userPut, sleByte, VER(8)),
 		MKLINE(ScummEngine, _userState, sleUint16, VER(17)),
 		MKLINE(ScummEngine, _cursor.state, sleByte, VER(8)),
+		MK_OBSOLETE(ScummEngine, gdi._cursorActive, sleByte, VER(8), VER(20)),
 		MKLINE(ScummEngine, _currentCursor, sleByte, VER(8)),
-		MKLINE(ScummEngine, _grabbedCursorId, sleUint32, VER(34)),
-		MKARRAY(ScummEngine, _grabbedCursorTransp[0], sleByte, 16, VER(34)),
 		MKARRAY(ScummEngine, _grabbedCursor[0], sleByte, 8192, VER(20)),
 		MKLINE(ScummEngine, _cursor.width, sleInt16, VER(20)),
 		MKLINE(ScummEngine, _cursor.height, sleInt16, VER(20)),
@@ -423,17 +477,35 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScummEngine, _palManipEnd, sleByte, VER(10)),
 		MKLINE(ScummEngine, _palManipCounter, sleUint16, VER(10)),
 
-		MKARRAY(ScummEngine, gfxUsageBits[0], sleUint32, 200, VER(8)),
+		// gfxUsageBits grew from 200 to 410 entries. Then 3 * 410 entries:
+		MKARRAY_OLD(ScummEngine, gfxUsageBits[0], sleUint32, 200, VER(8), VER(9)),
+		MKARRAY_OLD(ScummEngine, gfxUsageBits[0], sleUint32, 410, VER(10), VER(13)),
+		MKARRAY(ScummEngine, gfxUsageBits[0], sleUint32, 3 * 410, VER(14)),
 
 		MKLINE(ScummEngine, gdi._transparentColor, sleByte, VER(8)),
 		MKARRAY(ScummEngine, _currentPalette[0], sleByte, 768, VER(8)),
+
+		MKARRAY(ScummEngine, _proc_special_palette[0], sleByte, 256, VER(8)),
 
 		MKARRAY(ScummEngine, _charsetBuffer[0], sleByte, 256, VER(8)),
 
 		MKLINE(ScummEngine, _egoPositioned, sleByte, VER(8)),
 
+		// gdi._imgBufOffs grew from 4 to 5 entries. Then one day we relized
+		// that we don't have to store it since initBGBuffers() recomputes it.
+		MK_OBSOLETE_ARRAY(ScummEngine, gdi._imgBufOffs[0], sleUint16, 4, VER(8), VER(9)),
+		MK_OBSOLETE_ARRAY(ScummEngine, gdi._imgBufOffs[0], sleUint16, 5, VER(10), VER(26)),
+
+		// See _imgBufOffs: _numZBuffer is recomputed by initBGBuffers().
+		MK_OBSOLETE(ScummEngine, gdi._numZBuffer, sleByte, VER(8), VER(26)),
+
 		MKLINE(ScummEngine, _screenEffectFlag, sleByte, VER(8)),
 
+		MK_OBSOLETE(ScummEngine, _randSeed1, sleUint32, VER(8), VER(9)),
+		MK_OBSOLETE(ScummEngine, _randSeed2, sleUint32, VER(8), VER(9)),
+
+		// Converted _shakeEnabled to boolean and added a _shakeFrame field.
+		MKLINE_OLD(ScummEngine, _shakeEnabled, sleInt16, VER(8), VER(9)),
 		MKLINE(ScummEngine, _shakeEnabled, sleByte, VER(10)),
 		MKLINE(ScummEngine, _shakeFrame, sleUint32, VER(10)),
 
@@ -441,6 +513,11 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 
 		MKLINE(ScummEngine, _screenB, sleUint16, VER(8)),
 		MKLINE(ScummEngine, _screenH, sleUint16, VER(8)),
+
+		MK_OBSOLETE(ScummEngine, _cd_track, sleInt16, VER(9), VER(9)),
+		MK_OBSOLETE(ScummEngine, _cd_loops, sleInt16, VER(9), VER(9)),
+		MK_OBSOLETE(ScummEngine, _cd_frame, sleInt16, VER(9), VER(9)),
+		MK_OBSOLETE(ScummEngine, _cd_end, sleInt16, VER(9), VER(9)),
 		
 		MKEND()
 	};
@@ -457,6 +534,7 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKLINE(ScriptSlot, freezeCount, sleByte, VER(8)),
 		MKLINE(ScriptSlot, didexec, sleByte, VER(8)),
 		MKLINE(ScriptSlot, cutsceneOverride, sleByte, VER(8)),
+		MK_OBSOLETE(ScriptSlot, unk5, sleByte, VER(8), VER(10)),
 		MKEND()
 	};
 
@@ -520,31 +598,38 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		MKEND()
 	};
 
+	// MSVC6 FIX (Jamieson630):
+	// MSVC6 has a problem with any notation that involves
+	// more than one set of double colons ::
+	// The following MKLINE macros expand to such things
+	// as AudioCDManager::Status::playing, and MSVC6 has
+	// a fit with that. This typedef simplifies the notation
+	// to something MSVC6 can grasp.
+	typedef AudioCDManager::Status AudioCDManager_Status;
+	const SaveLoadEntry audioCDEntries[] = {
+		MKLINE(AudioCDManager_Status, playing, sleUint32, VER(24)),
+		MKLINE(AudioCDManager_Status, track, sleInt32, VER(24)),
+		MKLINE(AudioCDManager_Status, start, sleUint32, VER(24)),
+		MKLINE(AudioCDManager_Status, duration, sleUint32, VER(24)),
+		MKLINE(AudioCDManager_Status, numLoops, sleInt32, VER(24)),
+		MKEND()
+	};
 
 	int i, j;
 	int var120Backup;
 	int var98Backup;
 
 	s->saveLoadEntries(this, mainEntries);
-#ifndef GAME_SAMNMAX
+
+	if (s->isLoading() && savegameVersion < VER(14))
+		upgradeGfxUsageBits();
+
 	if (s->isLoading() && savegameVersion >= VER(20)) {
 		updateCursor();
 		_system->warp_mouse(_mouse.x, _mouse.y);
 	}
-#endif
 
 	s->saveLoadArrayOf(_actors, _numActors, sizeof(_actors[0]), actorEntries);
-	if (s->isLoading() && savegameVersion < VER(33)) {
-		for (i = 0; i < _numActors; i++) {
-			Actor* actor = &_actors[i];
-			actor->customPalette = false;
-			for (j = 0; j < 32 && actor->customPalette == false; j++) {
-				if (actor->getPalette(j) != 0xFF) {
-					actor->customPalette = true;
-				}
-			}
-		}
-	}
 
 	if (savegameVersion < VER(9))
 		s->saveLoadArrayOf(vm.slot, 25, sizeof(vm.slot[0]), scriptSlotEntries);
@@ -559,6 +644,7 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		for (i = _numObjectsInRoom; i < _numLocalObjects; i++) {
 			_objs[i].obj_nr = 0;
 		}
+
 	}
 	s->saveLoadArrayOf(_verbs, _numVerbs, sizeof(_verbs[0]), verbEntries);
 	s->saveLoadArrayOf(vm.nest, 16, sizeof(vm.nest[0]), nestedScriptEntries);
@@ -614,6 +700,13 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 	if (_objectRoomTable)
 		s->saveLoadArrayOf(_objectRoomTable, _numGlobalObjects, sizeof(_objectRoomTable[0]), sleByte);
 
+	if (_shadowPaletteSize) {
+		s->saveLoadArrayOf(_shadowPalette, _shadowPaletteSize, 1, sleByte);
+		// _roomPalette didn't show up until V21 save games
+		if (savegameVersion >= VER(21) && _version < 5)
+			s->saveLoadArrayOf(_roomPalette, sizeof(_roomPalette), 1, sleByte);
+	}
+
 	// PalManip data was not saved before V10 save games
 	if (savegameVersion < VER(10))
 		_palManipCounter = 0;
@@ -631,9 +724,6 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 	var120Backup = _scummVars[120];
 	var98Backup = _scummVars[98];
 
-	byte varVideoMode = VAR(VAR_VIDEOMODE);
-	byte varMachineSpeed = VAR(VAR_MACHINE_SPEED);
-
 	// The variables grew from 16 to 32 bit.
 	if (savegameVersion < VER(15))
 		s->saveLoadArrayOf(_scummVars, _numVariables, sizeof(_scummVars[0]), sleInt16);
@@ -644,9 +734,6 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		_scummVars[120] = var120Backup;
 	if (_gameId == GID_INDY4)
 		_scummVars[98] = var98Backup;;
-
-	VAR(VAR_VIDEOMODE) = varVideoMode;
-	VAR(VAR_MACHINE_SPEED) = varMachineSpeed;
 
 	s->saveLoadArrayOf(_bitVars, _numBitVariables >> 3, 1, sleByte);
 
@@ -667,10 +754,23 @@ void ScummEngine::saveOrLoad(Serializer *s, uint32 savegameVersion) {
 		}
 	}
 
+	// Save/load Audio CD status
+	if (savegameVersion >= VER(24)) {
+		AudioCDManager::Status info;
+		if (s->isSaving())
+			info = AudioCD.getStatus();
+		s->saveLoadArrayOf(&info, 1, sizeof(info), audioCDEntries);
+		// If we are loading, and the music being loaded was supposed to loop
+		// forever, then resume playing it. This helps a lot of audio CD
+		// is used to provide ambient music (see bug #788195).
+		if (s->isLoading() && info.playing && info.numLoops < 0)
+			AudioCD.play(info.track, info.numLoops, info.start, info.duration);
+	}
+
 	if (_imuse && (_saveSound || !_saveTemporaryState)) {
 		_imuse->save_or_load(s, this);
-		_imuse->setMasterVolume(GetConfig(kConfig_MasterVolume));
-		_imuse->set_music_volume(GetConfig(kConfig_MusicVolume));
+		_imuse->setMasterVolume(ConfMan.getInt("master_volume"));
+		_imuse->set_music_volume(ConfMan.getInt("music_volume"));
 	}
 }
 
@@ -767,11 +867,11 @@ void Serializer::loadBytes(void *b, int len) {
 }
 
 void Serializer::saveUint32(uint32 d) {
-	_saveLoadStream->writeUint32(d);
+	_saveLoadStream->writeUint32LE(d);
 }
 
 void Serializer::saveUint16(uint16 d) {
-	_saveLoadStream->writeUint16(d);
+	_saveLoadStream->writeUint16LE(d);
 }
 
 void Serializer::saveByte(byte b) {
@@ -779,11 +879,11 @@ void Serializer::saveByte(byte b) {
 }
 
 uint32 Serializer::loadUint32() {
-	return _saveLoadStream->readUint32();
+	return _saveLoadStream->readUint32LE();
 }
 
 uint16 Serializer::loadUint16() {
-	return _saveLoadStream->readUint16();
+	return _saveLoadStream->readUint16LE();
 }
 
 byte Serializer::loadByte() {

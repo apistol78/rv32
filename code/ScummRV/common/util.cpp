@@ -19,81 +19,70 @@
  */
 
 #include "stdafx.h"
-#include "common/engine.h"
+#include "base/engine.h"
 #include "common/util.h"
 
-#define FL8TO32(x)	((uint32(x)) | ((uint32(x)) << 8) | ((uint32(x)) << 16) | ((uint32(x)) << 24))
-
-uint32 rptTable[256] = {
-	FL8TO32(0), FL8TO32(1), FL8TO32(2), FL8TO32(3), FL8TO32(4), FL8TO32(5), FL8TO32(6), FL8TO32(7), FL8TO32(8), FL8TO32(9), 
-	FL8TO32(10), FL8TO32(11), FL8TO32(12), FL8TO32(13), FL8TO32(14), FL8TO32(15), FL8TO32(16), FL8TO32(17), FL8TO32(18), FL8TO32(19), 
-	FL8TO32(20), FL8TO32(21), FL8TO32(22), FL8TO32(23), FL8TO32(24), FL8TO32(25), FL8TO32(26), FL8TO32(27), FL8TO32(28), FL8TO32(29), 
-	FL8TO32(30), FL8TO32(31), FL8TO32(32), FL8TO32(33), FL8TO32(34), FL8TO32(35), FL8TO32(36), FL8TO32(37), FL8TO32(38), FL8TO32(39), 
-	FL8TO32(40), FL8TO32(41), FL8TO32(42), FL8TO32(43), FL8TO32(44), FL8TO32(45), FL8TO32(46), FL8TO32(47), FL8TO32(48), FL8TO32(49), 
-	FL8TO32(50), FL8TO32(51), FL8TO32(52), FL8TO32(53), FL8TO32(54), FL8TO32(55), FL8TO32(56), FL8TO32(57), FL8TO32(58), FL8TO32(59), 
-	FL8TO32(60), FL8TO32(61), FL8TO32(62), FL8TO32(63), FL8TO32(64), FL8TO32(65), FL8TO32(66), FL8TO32(67), FL8TO32(68), FL8TO32(69), 
-	FL8TO32(70), FL8TO32(71), FL8TO32(72), FL8TO32(73), FL8TO32(74), FL8TO32(75), FL8TO32(76), FL8TO32(77), FL8TO32(78), FL8TO32(79), 
-	FL8TO32(80), FL8TO32(81), FL8TO32(82), FL8TO32(83), FL8TO32(84), FL8TO32(85), FL8TO32(86), FL8TO32(87), FL8TO32(88), FL8TO32(89), 
-	FL8TO32(90), FL8TO32(91), FL8TO32(92), FL8TO32(93), FL8TO32(94), FL8TO32(95), FL8TO32(96), FL8TO32(97), FL8TO32(98), FL8TO32(99), 
-	FL8TO32(100), FL8TO32(101), FL8TO32(102), FL8TO32(103), FL8TO32(104), FL8TO32(105), FL8TO32(106), FL8TO32(107), FL8TO32(108), FL8TO32(109), 
-	FL8TO32(110), FL8TO32(111), FL8TO32(112), FL8TO32(113), FL8TO32(114), FL8TO32(115), FL8TO32(116), FL8TO32(117), FL8TO32(118), FL8TO32(119), 
-	FL8TO32(120), FL8TO32(121), FL8TO32(122), FL8TO32(123), FL8TO32(124), FL8TO32(125), FL8TO32(126), FL8TO32(127), FL8TO32(128), FL8TO32(129), 
-	FL8TO32(130), FL8TO32(131), FL8TO32(132), FL8TO32(133), FL8TO32(134), FL8TO32(135), FL8TO32(136), FL8TO32(137), FL8TO32(138), FL8TO32(139), 
-	FL8TO32(140), FL8TO32(141), FL8TO32(142), FL8TO32(143), FL8TO32(144), FL8TO32(145), FL8TO32(146), FL8TO32(147), FL8TO32(148), FL8TO32(149), 
-	FL8TO32(150), FL8TO32(151), FL8TO32(152), FL8TO32(153), FL8TO32(154), FL8TO32(155), FL8TO32(156), FL8TO32(157), FL8TO32(158), FL8TO32(159), 
-	FL8TO32(160), FL8TO32(161), FL8TO32(162), FL8TO32(163), FL8TO32(164), FL8TO32(165), FL8TO32(166), FL8TO32(167), FL8TO32(168), FL8TO32(169), 
-	FL8TO32(170), FL8TO32(171), FL8TO32(172), FL8TO32(173), FL8TO32(174), FL8TO32(175), FL8TO32(176), FL8TO32(177), FL8TO32(178), FL8TO32(179), 
-	FL8TO32(180), FL8TO32(181), FL8TO32(182), FL8TO32(183), FL8TO32(184), FL8TO32(185), FL8TO32(186), FL8TO32(187), FL8TO32(188), FL8TO32(189), 
-	FL8TO32(190), FL8TO32(191), FL8TO32(192), FL8TO32(193), FL8TO32(194), FL8TO32(195), FL8TO32(196), FL8TO32(197), FL8TO32(198), FL8TO32(199), 
-	FL8TO32(200), FL8TO32(201), FL8TO32(202), FL8TO32(203), FL8TO32(204), FL8TO32(205), FL8TO32(206), FL8TO32(207), FL8TO32(208), FL8TO32(209), 
-	FL8TO32(210), FL8TO32(211), FL8TO32(212), FL8TO32(213), FL8TO32(214), FL8TO32(215), FL8TO32(216), FL8TO32(217), FL8TO32(218), FL8TO32(219), 
-	FL8TO32(220), FL8TO32(221), FL8TO32(222), FL8TO32(223), FL8TO32(224), FL8TO32(225), FL8TO32(226), FL8TO32(227), FL8TO32(228), FL8TO32(229), 
-	FL8TO32(230), FL8TO32(231), FL8TO32(232), FL8TO32(233), FL8TO32(234), FL8TO32(235), FL8TO32(236), FL8TO32(237), FL8TO32(238), FL8TO32(239), 
-	FL8TO32(240), FL8TO32(241), FL8TO32(242), FL8TO32(243), FL8TO32(244), FL8TO32(245), FL8TO32(246), FL8TO32(247), FL8TO32(248), FL8TO32(249), 
-	FL8TO32(250), FL8TO32(251), FL8TO32(252), FL8TO32(253), FL8TO32(254), FL8TO32(255) 
-};
-
-uint32 c2pfill16[] = {
-#ifdef __ATARI__
-	0x00000000, 0xFF000000, 0X00FF0000, 0XFFFF0000, 0X0000FF00, 0XFF00FF00, 0X00FFFF00, 0XFFFFFF00, 0X000000FF, 0XFF0000FF, 0X00FF00FF, 0XFFFF00FF, 0X0000FFFF, 0XFF00FFFF, 0X00FFFFFF, 0XFFFFFFFF,
-	0x00000000, 0xFF000000, 0X00FF0000, 0XFFFF0000, 0X0000FF00, 0XFF00FF00, 0X00FFFF00, 0XFFFFFF00, 0X000000FF, 0XFF0000FF, 0X00FF00FF, 0XFFFF00FF, 0X0000FFFF, 0XFF00FFFF, 0X00FFFFFF, 0XFFFFFFFF,
-#else
-	0x00000000, 0x000000FF, 0X0000FF00, 0X0000FFFF, 0X00FF0000, 0X00FF00FF, 0X00FFFF00, 0X00FFFFFF, 0XFF000000, 0XFF0000FF, 0XFF00FF00, 0XFF00FFFF, 0XFFFF0000, 0XFFFF00FF, 0XFFFFFF00, 0XFFFFFFFF,
-	0x00000000, 0x000000FF, 0X0000FF00, 0X0000FFFF, 0X00FF0000, 0X00FF00FF, 0X00FFFF00, 0X00FFFFFF, 0XFF000000, 0XFF0000FF, 0XFF00FF00, 0XFF00FFFF, 0XFFFF0000, 0XFFFF00FF, 0XFFFFFF00, 0XFFFFFFFF,
-#endif
-};
-
-uint32 c2pfill16_2[] = {
-#ifdef __ATARI__
-	0x00000000, 0x00000000, 0xFF000000, 0xFF000000, 0X00FF0000, 0X00FF0000, 0XFFFF0000, 0XFFFF0000, 0X0000FF00, 0X0000FF00, 0XFF00FF00, 0XFF00FF00, 0X00FFFF00, 0X00FFFF00, 0XFFFFFF00, 0XFFFFFF00, 0X000000FF, 0X000000FF, 0XFF0000FF, 0XFF0000FF, 0X00FF00FF, 0X00FF00FF, 0XFFFF00FF, 0XFFFF00FF, 0X0000FFFF, 0X0000FFFF, 0XFF00FFFF, 0XFF00FFFF, 0X00FFFFFF, 0X00FFFFFF, 0XFFFFFFFF, 0XFFFFFFFF,
-	0x00000000, 0x00000000, 0xFF000000, 0xFF000000, 0X00FF0000, 0X00FF0000, 0XFFFF0000, 0XFFFF0000, 0X0000FF00, 0X0000FF00, 0XFF00FF00, 0XFF00FF00, 0X00FFFF00, 0X00FFFF00, 0XFFFFFF00, 0XFFFFFF00, 0X000000FF, 0X000000FF, 0XFF0000FF, 0XFF0000FF, 0X00FF00FF, 0X00FF00FF, 0XFFFF00FF, 0XFFFF00FF, 0X0000FFFF, 0X0000FFFF, 0XFF00FFFF, 0XFF00FFFF, 0X00FFFFFF, 0X00FFFFFF, 0XFFFFFFFF, 0XFFFFFFFF,
-#else
-	0x00000000, 0x00000000, 0x000000FF, 0x000000FF, 0X0000FF00, 0X0000FF00, 0X0000FFFF, 0X0000FFFF, 0X00FF0000, 0X00FF0000, 0X00FF00FF, 0X00FF00FF, 0X00FFFF00, 0X00FFFF00, 0X00FFFFFF, 0X00FFFFFF, 0XFF000000, 0XFF000000, 0XFF0000FF, 0XFF0000FF, 0XFF00FF00, 0XFF00FF00, 0XFF00FFFF, 0XFF00FFFF, 0XFFFF0000, 0XFFFF0000, 0XFFFF00FF, 0XFFFF00FF, 0XFFFFFF00, 0XFFFFFF00, 0XFFFFFFFF, 0XFFFFFFFF,
-	0x00000000, 0x00000000, 0x000000FF, 0x000000FF, 0X0000FF00, 0X0000FF00, 0X0000FFFF, 0X0000FFFF, 0X00FF0000, 0X00FF0000, 0X00FF00FF, 0X00FF00FF, 0X00FFFF00, 0X00FFFF00, 0X00FFFFFF, 0X00FFFFFF, 0XFF000000, 0XFF000000, 0XFF0000FF, 0XFF0000FF, 0XFF00FF00, 0XFF00FF00, 0XFF00FFFF, 0XFF00FFFF, 0XFFFF0000, 0XFFFF0000, 0XFFFF00FF, 0XFFFF00FF, 0XFFFFFF00, 0XFFFFFF00, 0XFFFFFFFF, 0XFFFFFFFF,
-#endif
-};
-
-
-uint16 squareTable[256];
-
-
 namespace Common {
+
+//
+// Print hexdump of the data passed in
+//
+void hexdump(const byte * data, int len, int bytesPerLine) {
+	assert(1 <= bytesPerLine && bytesPerLine <= 32);
+	int i;
+	byte c;
+	int offset = 0;
+	while (len >= bytesPerLine) {
+		printf("%06x: ", offset);
+		for (i = 0; i < bytesPerLine; i++) {
+			printf("%02x ", data[i]);
+			if (i % 4 == 3)
+				printf(" ");
+		}
+		printf(" |");
+		for (i = 0; i < bytesPerLine; i++) {
+			c = data[i];
+			if (c < 32 || c >= 127)
+				c = '.';
+			printf("%c", c);
+		}
+		printf("|\n");
+		data += bytesPerLine;
+		len -= bytesPerLine;
+		offset += bytesPerLine;
+	}
+
+	if (len <= 0) 
+		return;
+
+	printf("%06x: ", offset);
+	for (i = 0; i < bytesPerLine; i++) {
+		if (i < len)
+			printf("%02x ", data[i]);
+		else
+			printf("   ");
+		if (i % 4 == 3)
+			printf(" ");
+	}
+	printf(" |");
+	for (i = 0; i < len; i++) {
+		c = data[i];
+		if (c < 32 || c >= 127)
+			c = '.';
+		printf("%c", c);
+	}
+	for (; i < bytesPerLine; i++)
+		printf(" ");
+	printf("|\n");
+}
 
 #pragma mark -
 
 
-void Util::Init()
-{
-	for (int i=0; i<256; i++)
-	{
-		squareTable[i] = (uint16) ((i * i) & 0xFFFF);
-	}
-}
-
 RandomSource::RandomSource() {
 	// Use system time as RNG seed. Normally not a good idea, if you are using
 	// a RNG for security purposes, but good enough for our purposes.
-	setSeed(time(0));
+	//setSeed(time(0));	anders.pistol
 }
 
 void RandomSource::setSeed(uint32 seed) {
@@ -141,6 +130,122 @@ void StackLock::unlock() {
 	_syst->unlock_mutex(_mutex);
 }
 
+
+#pragma mark -
+
+
+const LanguageDescription g_languages[] = {
+	{"en", "English (US)", EN_USA},
+	{"de", "German", DE_DEU},
+	{"fr", "French", FR_FRA},
+	{"it", "Italian", IT_ITA},
+	{"pt", "Portuguese", PT_BRA},
+	{"es", "Spanish", ES_ESP},
+	{"jp", "Japanese", JA_JPN},
+	{"zh", "Chinese (Taiwan)", ZH_TWN},
+	{"kr", "Korean", KO_KOR},
+	{"gb", "English (GB)", EN_GRB},
+	{"se", "Swedish", SE_SWE},
+	{"hb", "Hebrew", HB_ISR},
+	{"ru", "Russian", RU_RUS},
+	{"cz", "Czech", CZ_CZE},
+	{"nl", "Dutch", NL_NLD},
+	{0, 0, UNK_LANG}
+};
+
+Language parseLanguage(const String &str) {
+	if (str.isEmpty())
+		return UNK_LANG;
+
+	const char *s = str.c_str();
+	const LanguageDescription *l = g_languages;
+	for (; l->code; ++l) {
+		if (!scumm_stricmp(l->code, s))
+			return l->id;
+	}
+
+	return UNK_LANG;
+}
+
+const char *getLanguageCode(Language id) {
+	const LanguageDescription *l = g_languages;
+	for (; l->code; ++l) {
+		if (l->id == id)
+			return l->code;
+	}
+	return 0;
+}
+
+const char *getLanguageDescription(Language id) {
+	const LanguageDescription *l = g_languages;
+	for (; l->code; ++l) {
+		if (l->id == id)
+			return l->description;
+	}
+	return 0;
+}
+
+
+#pragma mark -
+
+
+const PlatformDescription g_platforms[] = {
+	{"amiga", "ami", "Amiga", kPlatformAmiga},
+	{"atari", "atari-st", "Atari ST", kPlatformAtariST},
+
+	// The 'official' spelling seems to be "FM-TOWNS" (e.g. in the Indy4 demo).
+	// However, on the net many variations can be seen, like "FMTOWNS",
+	// "FM TOWNS", "FmTowns", etc.
+	{"fmtowns", "towns", "FM-TOWNS", kPlatformFMTowns},
+
+	{"macintosh", "mac", "Macintosh", kPlatformMacintosh},
+	{"pc", "dos", "PC", kPlatformPC},
+
+	{0, 0, "Default", kPlatformUnknown}
+};
+
+Platform parsePlatform(const String &str) {
+	if (str.isEmpty())
+		return kPlatformUnknown;
+
+	const char *s = str.c_str();
+	
+	// Handle some special case separately, for compatibility with old config
+	// files.
+	if (!strcmp(s, "1"))
+		return kPlatformAmiga;
+	else if (!strcmp(s, "2"))
+		return kPlatformAtariST;
+	else if (!strcmp(s, "3"))
+		return kPlatformMacintosh;
+
+	const PlatformDescription *l = g_platforms;
+	for (; l->code; ++l) {
+		if (!scumm_stricmp(l->code, s) || !scumm_stricmp(l->code2, s))
+			return l->id;
+	}
+
+	return kPlatformUnknown;
+}
+
+
+const char *getPlatformCode(Platform id) {
+	const PlatformDescription *l = g_platforms;
+	for (; l->code; ++l) {
+		if (l->id == id)
+			return l->code;
+	}
+	return 0;
+}
+
+const char *getPlatformDescription(Platform id) {
+	const PlatformDescription *l = g_platforms;
+	for (; l->code; ++l) {
+		if (l->id == id)
+			return l->description;
+	}
+	return l->description;
+}
 
 
 

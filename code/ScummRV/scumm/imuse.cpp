@@ -22,7 +22,7 @@
 
 #include "stdafx.h"
 
-#include "common/version.h"
+#include "base/version.h"
 
 #include "common/util.h"
 
@@ -33,7 +33,7 @@
 #include "scumm/scumm.h"
 
 #include "sound/mididrv.h"
-#include "sound/midiparser.h"
+
 
 namespace Scumm {
 
@@ -186,41 +186,32 @@ bool IMuseInternal::isGM(int sound) {
 
 MidiDriver *IMuseInternal::getBestMidiDriver(int sound) {
 	MidiDriver *driver = NULL;
-
+#if !defined(__RV__)
 	if (isGM(sound)) {
 		if (_midi_native) {
 			driver = _midi_native;
 		} else {
 			// Route it through Adlib anyway.
 			if (!_midi_adlib) {
-#ifndef DISABLE_ADLIB
 				_midi_adlib = MidiDriver_ADLIB_create(_mixer);
-#else
-				_midi_adlib = MidiDriver_NULL_create();
-#endif
 				initMidiDriver(_midi_adlib);
 			}
 			driver = _midi_adlib;
 		}
 	} else {
 		if (!_midi_adlib &&(_enable_multi_midi || !_midi_native)) {
-#ifndef DISABLE_ADLIB
 			_midi_adlib = MidiDriver_ADLIB_create(_mixer);
-#else
-			_midi_adlib = MidiDriver_NULL_create();
-#endif
 			initMidiDriver(_midi_adlib);
 		}
 		driver = _midi_adlib;
 	}
+#endif
 	return driver;
 }
 
 bool IMuseInternal::startSound(int sound) {
 	Player *player;
 	void *ptr;
-
-	debug(6, "ImuseInternal:StatSound %d\n\r", sound);
 
 	// Do not start a sound if it is already set to
 	// start on an ImTrigger event. This fixes carnival
@@ -1142,50 +1133,6 @@ IMuseInternal *IMuseInternal::create(OSystem *syst, SoundMixer *mixer, MidiDrive
 	return i;
 }
 
-void IMuseInternal::changeDriver(MidiDriver *midi, bool native_mt32)
-{
-	int vol = _master_volume;
-	setMasterVolume(0);
-
-	if (_midi_native)
-	{
-		_midi_native->close();
-		delete _midi_native;
-	}
-	if (midi)
-	{
-		_midi_native = midi;
-		initMidiDriver(_midi_native);
-		property(IMuse::PROP_NATIVE_MT32, native_mt32);
-	}
-
-	Player *player = _players;
-	for (int i = ARRAYSIZE(_players); i != 0; i--, player++) {
-		if (player->isActive()) {
-			int id = player->_id;
-
-			/*
-			uint track = player->_track_index;
-			uint beat = player->getBeatIndex();
-			uint tick = player->_parser ? player->_parser->getTick() : 0;
-			tick -= ((tick / player->getTicksPerBeat()) * player->getTicksPerBeat());
-			if (tick < 0)
-				tick = 0;
-			*/
-			uint tick = player->_parser->getTick();
-
-			player->clear();
-			player->startSound(id, _midi_native, false);
-			//player->scan(track, beat, tick);
-			player->_scanning = true;
-			player->_parser->jumpToTick(tick, true);
-			player->_scanning = false;
-		}
-	}
-
-	setMasterVolume(vol);
-}
-
 int IMuseInternal::initialize(OSystem *syst, SoundMixer *mixer, MidiDriver *native_midi) {
 	int i;
 
@@ -1349,7 +1296,6 @@ int IMuseInternal::saveReference(void *me_ref, byte type, void *ref) {
 		return (Player *)ref - me->_players;
 	default:
 		error("saveReference: invalid type");
-		return 0;
 	}
 }
 
@@ -1362,7 +1308,6 @@ void *IMuseInternal::loadReference(void *me_ref, byte type, int ref) {
 		return &me->_players[ref];
 	default:
 		error("loadReference: invalid type");
-		return 0;
 	}
 }
 
@@ -1838,7 +1783,6 @@ int IMuse::clear_queue() { in(); int ret = _target->clear_queue(); out(); return
 void IMuse::setBase(byte **base) { in(); _target->setBase(base); out(); }
 uint32 IMuse::property(int prop, uint32 value) { in(); uint32 ret = _target->property(prop, value); out(); return ret; }
 void IMuse::terminate() { in(); _target->terminate1(); out(); _target->terminate2(); }
-void IMuse::changeDriver(MidiDriver *midi, bool native_mt32) { in(); _target->changeDriver(midi, native_mt32); out(); }
 
 // The IMuse::create method provides a front-end factory
 // for creating IMuseInternal without exposing that class

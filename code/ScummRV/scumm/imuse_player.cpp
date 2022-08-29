@@ -22,7 +22,7 @@
 #include "stdafx.h"
 
 #include "common/util.h"
-#include "common/engine.h"
+#include "base/engine.h"
 
 #include "scumm/imuse_internal.h"
 #include "scumm/saveload.h"
@@ -44,8 +44,8 @@ namespace Scumm {
 #define ROLAND_SYSEX_ID 0x41
 #define PERCUSSION_CHANNEL 9
 
-//extern MidiParser *MidiParser_createRO();
-//extern MidiParser *MidiParser_createEUP();
+extern MidiParser *MidiParser_createRO();
+extern MidiParser *MidiParser_createEUP();
 
 uint16 Player::_active_notes[128];
 
@@ -192,19 +192,16 @@ int Player::start_seq_sound(int sound, bool reset_vars) {
 	if (_parser)
 		delete _parser;
 
-	/*
 	if (!memcmp (ptr, "RO", 2)) {
 		// Old style 'RO' resource
 		_parser = MidiParser_createRO();
-	}
-	else if (!memcmp (ptr, "SO", 2)) {
+	} else if (!memcmp (ptr, "SO", 2)) {
 		// Euphony (FM Towns) resource
 		_parser = MidiParser_createEUP();
 	} else if (!memcmp(ptr, "FORM", 4)) {
 		// Humongous Games XMIDI resource
 		_parser = MidiParser::createParser_XMIDI();
-	}
-	else*/ {
+	} else {
 		// SCUMM SMF resource
 		_parser = MidiParser::createParser_SMF();
 	}

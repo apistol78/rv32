@@ -19,48 +19,31 @@
  *
  */
 
-
-//
-// todo:
-//		draw directly to physical screen, get rid of virtual->physical copy
-//		double buffering needs to be handled in scummvm layer
-//		store data in ST-LOW format and get rid of MOVEP
-//
-
 #include "stdafx.h"
 #include "scumm/scumm.h"
 #include "scumm/actor.h"
 #include "scumm/charset.h"
 #include "scumm/resource.h"
-
-#define C2PTABLE256SIZE	(256*8)
-uint32 c2ptable256[C2PTABLE256SIZE * 2] = { 0 };
-uint32 c2pfill256[256] = { 0 };
-
-//#define DEBUG_DIRTY_REGIONS
-//#define DEBUG_REDRAWSTRIP
-//#define DEBUG_REDRAWBACKBUF
-//#define DEBUG_MASKS
+#include "scumm/usage_bits.h"
 
 namespace Scumm {
 
-#ifdef GAME_SAMNMAX
-bool _hack_samnmax_intro = false;
-#endif
+struct StripTable {
+	int offsets[160];
+	int run[160];
+	int color[160];
+	int zoffsets[120];	// FIXME: Why only 120 here?
+	int zrun[120];		// FIXME: Why only 120 here?
+};
 
 enum {
 	kScrolltime = 500,  // ms scrolling is supposed to take
 	kPictureDelay = 20
 };
 
-#define MAKE_SCREENPTR(base, pitch, x, y) (base + ((x)>>1) + (((y)*(pitch)) >> 1))
-
-
 #define NUM_SHAKE_POSITIONS 8
 static const int8 shake_positions[NUM_SHAKE_POSITIONS] = {
-//	0, 2, 4, 2, 0, 4, 6, 2
-//	0, 0, 8, 0, 8, 8, 0, 8
-	0, 0, -8, 0, 8, 8, 0, 8
+	0, 1 * 2, 2 * 2, 1 * 2, 0 * 2, 2 * 2, 3 * 2, 1 * 2
 };
 
 /**
@@ -82,6 +65,9 @@ struct TransitionEffect {
 	byte stripTable[16];	// ditto
 };
 
+#ifdef __PALM_OS__
+static const TransitionEffect *transitionEffects;
+#else
 static const TransitionEffect transitionEffects[5] = {
 	// Iris effect (looks like an opening/closing camera iris)
 	{
@@ -168,102 +154,7 @@ static const TransitionEffect transitionEffects[5] = {
 		}
 	}
 };
-
-#ifdef DEBUG_REDRAWSTRIP
-static bool _debugRedrawBitmap = false;
-static uint8 _debugStripColor = 0;
 #endif
-
-#define CPSTRIPM(x)			case x: mask = rptTable[*(m--)]; d[40 * (x - 1)] = ((d[40 * (x - 1)] & mask) | s[soffs]); soffs -= spitch;
-#define CPSTRIPM_DEC_SRC(x)	case x: mask = rptTable[*(m--)]; d[40 * (x - 1)] = ((d[40 * (x - 1)] & mask) | *s--);
-#define CPSTRIP(x)			case x: d[40 * (x - 1)] = s[soffs]; soffs -= spitch;
-#define CPSTRIP_DEC_SRC(x)	case x: d[40 * (x - 1)] = *s--;
-#define FLSTRIP(x)			case x: d[40 * (x - 1)] = c;
-
-#define JMPTABLE200(_mval, _mfunc)	\
-	switch(_mval) { \
-		_mfunc(200) \
-		_mfunc(199) _mfunc(198) _mfunc(197) _mfunc(196) _mfunc(195) _mfunc(194) _mfunc(193) _mfunc(192) _mfunc(191) _mfunc(190) \
-		_mfunc(189) _mfunc(188) _mfunc(187) _mfunc(186) _mfunc(185) _mfunc(184) _mfunc(183) _mfunc(182) _mfunc(181) _mfunc(180) \
-		_mfunc(179) _mfunc(178) _mfunc(177) _mfunc(176) _mfunc(175) _mfunc(174) _mfunc(173) _mfunc(172) _mfunc(171) _mfunc(170) \
-		_mfunc(169) _mfunc(168) _mfunc(167) _mfunc(166) _mfunc(165) _mfunc(164) _mfunc(163) _mfunc(162) _mfunc(161) _mfunc(160) \
-		_mfunc(159) _mfunc(158) _mfunc(157) _mfunc(156) _mfunc(155) _mfunc(154) _mfunc(153) _mfunc(152) _mfunc(151) _mfunc(150) \
-		_mfunc(149) _mfunc(148) _mfunc(147) _mfunc(146) _mfunc(145) _mfunc(144) _mfunc(143) _mfunc(142) _mfunc(141) _mfunc(140) \
-		_mfunc(139) _mfunc(138) _mfunc(137) _mfunc(136) _mfunc(135) _mfunc(134) _mfunc(133) _mfunc(132) _mfunc(131) _mfunc(130) \
-		_mfunc(129) _mfunc(128) _mfunc(127) _mfunc(126) _mfunc(125) _mfunc(124) _mfunc(123) _mfunc(122) _mfunc(121) _mfunc(120) \
-		_mfunc(119) _mfunc(118) _mfunc(117) _mfunc(116) _mfunc(115) _mfunc(114) _mfunc(113) _mfunc(112) _mfunc(111) _mfunc(110) \
-		_mfunc(109) _mfunc(108) _mfunc(107) _mfunc(106) _mfunc(105) _mfunc(104) _mfunc(103) _mfunc(102) _mfunc(101) _mfunc(100) \
-		_mfunc( 99) _mfunc( 98) _mfunc( 97) _mfunc( 96) _mfunc( 95) _mfunc( 94) _mfunc( 93) _mfunc( 92) _mfunc( 91) _mfunc( 90) \
-		_mfunc( 89) _mfunc( 88) _mfunc( 87) _mfunc( 86) _mfunc( 85) _mfunc( 84) _mfunc( 83) _mfunc( 82) _mfunc( 81) _mfunc( 80) \
-		_mfunc( 79) _mfunc( 78) _mfunc( 77) _mfunc( 76) _mfunc( 75) _mfunc( 74) _mfunc( 73) _mfunc( 72) _mfunc( 71) _mfunc( 70) \
-		_mfunc( 69) _mfunc( 68) _mfunc( 67) _mfunc( 66) _mfunc( 65) _mfunc( 64) _mfunc( 63) _mfunc( 62) _mfunc( 61) _mfunc( 60) \
-		_mfunc( 59) _mfunc( 58) _mfunc( 57) _mfunc( 56) _mfunc( 55) _mfunc( 54) _mfunc( 53) _mfunc( 52) _mfunc( 51) _mfunc( 50) \
-		_mfunc( 49) _mfunc( 48) _mfunc( 47) _mfunc( 46) _mfunc( 45) _mfunc( 44) _mfunc( 43) _mfunc( 42) _mfunc( 41) _mfunc( 40) \
-		_mfunc( 39) _mfunc( 38) _mfunc( 37) _mfunc( 36) _mfunc( 35) _mfunc( 34) _mfunc( 33) _mfunc( 32) _mfunc( 31) _mfunc( 30) \
-		_mfunc( 29) _mfunc( 28) _mfunc( 27) _mfunc( 26) _mfunc( 25) _mfunc( 24) _mfunc( 23) _mfunc( 22) _mfunc( 21) _mfunc( 20) \
-		_mfunc( 19) _mfunc( 18) _mfunc( 17) _mfunc( 16) _mfunc( 15) _mfunc( 14) _mfunc( 13) _mfunc( 12) _mfunc( 11) _mfunc( 10) \
-		_mfunc(  9) _mfunc(  8) _mfunc(  7) _mfunc(  6) _mfunc(  5) _mfunc(  4) _mfunc(  3) _mfunc(  2) _mfunc(  1) \
-	}
-
-
-static inline void copyStrip(byte* dst, const byte* src, uint16 srcpitch, uint16 height)
-{
-	const uint32* s = (const uint32*) (((uint32)src) & ~1);
-	uint32* d = (uint32*) (((uint32)dst) & ~1);
-	uint16 spitch = srcpitch;
-	int16 soffs = spitch * (height - 1);
-	JMPTABLE200(height,CPSTRIP);
-}
-
-static inline void copyStrip1(byte* dst, const byte* src, uint16 height)
-{
-	const uint32* s = (const uint32*)(((uint32)src) & ~1);
-	uint32* d = (uint32*)(((uint32)dst) & ~1);
-	s += (height - 1);
-	JMPTABLE200(height,CPSTRIP_DEC_SRC);
-}
-
-static inline void copyStripMasked(byte* dst, const byte* src, byte* msk, uint32 srcpitch, uint16 height)
-{
-	const uint32* s = (const uint32*) (((uint32)src) & ~1);
-	uint32* d = (uint32*) (((uint32)dst) & ~1);
-	byte*   m = msk + (height - 1);
-	uint32 mask;
-	uint16 spitch = srcpitch;
-	int16 soffs = spitch * (height - 1);
-	JMPTABLE200(height,CPSTRIPM);
-}
-
-static inline void copyStripMasked1(byte* dst, byte* src, byte* msk, uint16 height)
-{
-	const uint32* s = (const uint32*) (((uint32)src) & ~1);
-	uint32* d = (uint32*) (((uint32)dst) & ~1);
-	byte*   m = msk + (height - 1);
-	s += (height - 1);
-	uint32 mask;
-	JMPTABLE200(height,CPSTRIPM_DEC_SRC);
-}
-
-static inline void fillStrip(byte* ptr, byte color, uint16 height)
-{
-	uint32* d = (uint32*) (((uint32)ptr) & ~1);
-	uint32 c = c2pfill256[color];
-	JMPTABLE200(height,FLSTRIP);
-}
-
-static inline void fillStrips(byte* ptr, byte color, uint16 strips, uint16 height)
-{
-	uint32* d = (uint32*) (((uint32)ptr) & ~1);
-	uint32 c = c2pfill256[color];
-	while(strips > 0)
-	{
-		JMPTABLE200(height,FLSTRIP);
-		d++;
-		strips--;
-	}
-}
-
-
 
 #pragma mark -
 #pragma mark --- Virtual Screens ---
@@ -275,7 +166,7 @@ Gdi::Gdi(ScummEngine *vm) {
 	memset(this, 0, sizeof(*this));
 	_vm = vm;
 	_roomPalette = vm->_roomPalette;
-	if (vm->_features & GF_AMIGA)
+	if ((vm->_features & GF_AMIGA) && (vm->_version >= 4))
 		_roomPalette += 16;
 }
 
@@ -294,15 +185,18 @@ void ScummEngine::initScreens(int b, int h) {
 		// in pre-V7 for the games messages (like 'Pause', Yes/No dialogs,
 		// version display, etc.). I don't know about V7, maybe the same is the
 		// case there. If so, we could probably just remove it completely.
-		initVirtScreen(kUnkVirtScreen, 0, 80, SCREEN_WIDTH, 13, false, false);
+		if (_version >= 7) {
+			initVirtScreen(kUnkVirtScreen, 0, (_screenHeight / 2) - 10, _screenWidth, 13, false, false);
+		} else {
+			initVirtScreen(kUnkVirtScreen, 0, 80, _screenWidth, 13, false, false);
+		}
 	}
-	initVirtScreen(kMainVirtScreen, 0, b, SCREEN_WIDTH, h - b, true, true);
-	initVirtScreen(kTextVirtScreen, 0, 0, SCREEN_WIDTH, b, false, false);
-	initVirtScreen(kVerbVirtScreen, 0, h, SCREEN_WIDTH, SCREEN_HEIGHT - h, false, false);
+	initVirtScreen(kMainVirtScreen, 0, b, _screenWidth, h - b, true, true);
+	initVirtScreen(kTextVirtScreen, 0, 0, _screenWidth, b, false, false);
+	initVirtScreen(kVerbVirtScreen, 0, h, _screenWidth, _screenHeight - h, false, false);
 
 	_screenB = b;
 	_screenH = h;
-	_fullRedraw = true;
 }
 
 void ScummEngine::initVirtScreen(VirtScreenNumber slot, int number, int top, int width, int height, bool twobufs,
@@ -313,6 +207,11 @@ void ScummEngine::initVirtScreen(VirtScreenNumber slot, int number, int top, int
 	assert(height >= 0);
 	assert(slot >= 0 && slot < 4);
 
+	if (_version >= 7) {
+		if (slot == 0 && (_roomHeight != 0))
+			height = _roomHeight;
+	}
+
 	vs->number = slot;
 	vs->width = width;
 	vs->topline = top;
@@ -320,9 +219,8 @@ void ScummEngine::initVirtScreen(VirtScreenNumber slot, int number, int top, int
 	vs->hasTwoBuffers = twobufs;
 	vs->xstart = 0;
 	vs->backBuf = NULL;
-	vs->dirty.clear();
 
-	size = (vs->width * vs->height) >> 1;
+	size = vs->width * vs->height;
 	if (scrollable) {
 		// Allow enough spaces so that rooms can be up to 4 resp. 8 screens
 		// wide. To achieve (horizontal!) scrolling, we use a neat trick:
@@ -330,7 +228,11 @@ void ScummEngine::initVirtScreen(VirtScreenNumber slot, int number, int top, int
 		// very little of the screen has to be redrawn, and we have a very low
 		// memory overhead (namely for every pixel we want to scroll, we need
 		// one additional byte in the buffer).
-		size += (width * 4) >> 1;
+		if (_version >= 7) {
+			size += width * 8;
+		} else {
+			size += width * 4;
+		}
 	}
 
 	createResource(rtBuffer, slot + 1, size);
@@ -362,43 +264,53 @@ void ScummEngine::markRectAsDirty(VirtScreenNumber virt, int left, int right, in
 	VirtScreen *vs = &virtscr[virt];
 	int lp, rp;
 
-	//if (left >= right || top >= bottom)
 	if (left > right || top > bottom)
 		return;
 	if (top > vs->height || bottom < 0)
-	//if (top >= vs->height || bottom <= 0)
 		return;
 
 	if (top < 0)
 		top = 0;
 	if (bottom > vs->height)
 		bottom = vs->height;
-	if (virt == kMainVirtScreen && dirtybit)
-	{
+
+	if (virt == kMainVirtScreen && dirtybit) {
 		lp = left / 8 + _screenStartStrip;
 		if (lp < 0)
 			lp = 0;
-		rp = right / 8 + _screenStartStrip;
-		if (rp > 199)
-			rp = 199;
+		if (_version >= 7) {
+#ifdef V7_SMOOTH_SCROLLING_HACK
+			rp = (right + vs->xstart) / 8;
+#else
+			rp = right / 8 + _screenStartStrip;
+#endif
+			if (rp > 409)
+				rp = 409;
+		} else {
+			rp = right / 8 + _screenStartStrip;
+			if (rp >= 200)
+				rp = 200;
+		}
 		for (; lp <= rp; lp++)
 			setGfxUsageBit(lp, dirtybit);
 	}
 
 	// The following code used to be in the separate method setVirtscreenDirty
-	lp = SCREEN_TO_STRIP(left);
-	rp = SCREEN_TO_STRIP(right);
+	lp = left / 8;
+	rp = right / 8;
 
-	//if ((lp >= SCREEN_STRIP_COUNT) || (rp <= 0))
-	if ((lp >= SCREEN_STRIP_COUNT) || (rp < 0))
+	if ((lp >= gdi._numStrips) || (rp < 0))
 		return;
 	if (lp < 0)
 		lp = 0;
-	if (rp >= SCREEN_STRIP_COUNT)
-		rp = SCREEN_STRIP_COUNT - 1;
+	if (rp >= gdi._numStrips)
+		rp = gdi._numStrips - 1;
 
 	while (lp <= rp) {
-		vs->updateDirty(lp, top, bottom);
+		if (top < vs->tdirty[lp])
+			vs->tdirty[lp] = top;
+		if (bottom > vs->bdirty[lp])
+			vs->bdirty[lp] = bottom;
 		lp++;
 	}
 }
@@ -409,38 +321,27 @@ void ScummEngine::markRectAsDirty(VirtScreenNumber virt, int left, int right, in
  * code in the backend is controlled from here.
  */
 void ScummEngine::drawDirtyScreenParts() {
-#ifdef GAME_SAMNMAX
-	if(_hack_samnmax_intro)
-		return;
-#endif
-
 	// Update verbs
 	updateDirtyScreen(kVerbVirtScreen);
 	
 	// Update the conversation area (at the top of the screen)
-//	updateDirtyScreen(kTextVirtScreen);
+	updateDirtyScreen(kTextVirtScreen);
 
 	// Update game area ("stage")
-	updateDirtyScreen(kMainVirtScreen);
-	/*
-#ifdef DEBUG_REDRAWSTRIP
-	if (1)
-#else
-	if (_fullRedraw || (camera._last.x != camera._cur.x))
-#endif
-	{
+	if (camera._last.x != camera._cur.x || (_features & GF_NEW_CAMERA && (camera._cur.y != camera._last.y))) {
 		// Camera moved: redraw everything
+		// Small side note: most of our GFX code relies on this identity:
+		// gdi._numStrips * 8 == _screenWidth == vs->width
 		VirtScreen *vs = &virtscr[kMainVirtScreen];
-		byte* src = vs->screenPtr + (vs->xstart >> 1);
-		_system->copy_screen(src, vs->topline, vs->height, 0);
+		gdi.drawStripToScreen(vs, 0, vs->width, 0, vs->height);
 		vs->setDirtyRange(vs->height, 0);
 	} else {
 		updateDirtyScreen(kMainVirtScreen);
 	}
-	*/
+
 	// Handle shaking
 	if (_shakeEnabled) {
-		_shakeFrame = (_shakeFrame + 1) & (NUM_SHAKE_POSITIONS - 1);
+		_shakeFrame = (_shakeFrame + 1) % NUM_SHAKE_POSITIONS;
 		_system->set_shake_pos(shake_positions[_shakeFrame]);
 	} else if (!_shakeEnabled &&_shakeFrame != 0) {
 		_shakeFrame = 0;
@@ -448,54 +349,8 @@ void ScummEngine::drawDirtyScreenParts() {
 	}
 }
 
-void ScummEngine::updateDirtyScreen(VirtScreenNumber slot)
-{
-#ifdef DEBUG_DIRTY_REGIONS
-	static byte c = 0;
-	if (slot == kMainVirtScreen)
-	{
-		VirtScreen *vs = &virtscr[kMainVirtScreen];
-
-		int16 w = 1;
-		int16 start = 0;
-		uint16 dirty_restore = vs->height << 8;
-		byte* dirt = (byte*)vs->dirty;
-		for (int16 i = 0; i < SCREEN_STRIP_COUNT; i++)
-		{
-			byte top = *dirt; *dirt++ = vs->height;
-			byte bottom = *dirt; *dirt++ = 0;
-			if (bottom)
-			{
-				if (i != (SCREEN_STRIP_COUNT - 1)) {
-					if (*(dirt+0) == top && *(dirt+1) == bottom) {
-						w++;
-						continue;
-					}
-				}
-				if ((bottom > top) && (top < vs->height))
-				{
-					if (bottom > vs->height)
-						bottom = vs->height;
-					int16 x = STRIP_TO_SCREEN(start);
-					int16 x1 = start << 3;
-					int16 x2 = x1 + ((w << 3) - 1);
-					int16 y1 = top;
-					int16 y2 = bottom - 1;
-					drawBox(x1, y1, x2, y2, c++);
-				}
-				w = 1;
-			}
-			start = i + 1;
-		}
-
-		byte* src = vs->screenPtr + (vs->xstart >> 1);
-		_system->copy_scroll(src, camera._last.x - camera._cur.x, vs->topline, vs->height, vs->dirty);
-		vs->setDirtyRange(vs->height, 0);
-	}
-
-#else
+void ScummEngine::updateDirtyScreen(VirtScreenNumber slot) {
 	gdi.updateDirtyScreen(&virtscr[slot]);
-#endif
 }
 
 /**
@@ -507,18 +362,54 @@ void Gdi::updateDirtyScreen(VirtScreen *vs) {
 	if (vs->height == 0)
 		return;
 
-	uint16 y = vs->topline - _vm->_screenTop;
-	uint16 h = vs->height;
-	unsigned char* ptr = vs->screenPtr + (vs->xstart >> 1);
+	int i;
+	int w = 8;
+	int start = 0;
 
-	if (/*_vm->_fullRedraw ||*/ ((vs->number == kMainVirtScreen) && (_vm->camera._last.x != _vm->camera._cur.x))) {
-		_vm->_system->copy_screen(ptr, y, h, 0);
-	}else {
-		_vm->_system->copy_screen(ptr, y, h, vs->dirty.maskBuf());
+	for (i = 0; i < _numStrips; i++) {
+		if (vs->bdirty[i]) {
+			const int top = vs->tdirty[i];
+			const int bottom = vs->bdirty[i];
+			vs->tdirty[i] = vs->height;
+			vs->bdirty[i] = 0;
+			if (i != (_numStrips - 1) && vs->bdirty[i + 1] == bottom && vs->tdirty[i + 1] == top) {
+				// Simple optimizations: if two or more neighbouring strips
+				// form one bigger rectangle, coalesce them.
+				w += 8;
+				continue;
+			}
+			drawStripToScreen(vs, start * 8, w, top, bottom);
+			w = 8;
+		}
+		start = i + 1;
 	}
-	vs->dirty.clear();
 }
 
+/**
+ * Blit the specified rectangle from the given virtual screen to the display.
+ * Note: t and b are in *virtual screen* coordinates, while x is relative to
+ * the *real screen*. This is due to the way tdirty/vdirty work: they are
+ * arrays which map 'strips' (sections of the real screen) to dirty areas as
+ * specified by top/bottom coordinate in the virtual screen.
+ */
+void Gdi::drawStripToScreen(VirtScreen *vs, int x, int width, int top, int bottom) {
+	byte *ptr;
+	int height;
+
+	if (bottom <= top)
+		return;
+
+	if (top >= vs->height)
+		return;
+
+	assert(top >= 0 && bottom <= vs->height);	// Paranoia checks
+
+	height = bottom - top;
+	// We don't clip height and width here, rather we rely on the backend to
+	// perform any needed clipping.
+	ptr = vs->screenPtr + (x + vs->xstart) + top * vs->width;
+	_vm->_system->copy_rect(ptr, vs->width, x, vs->topline + top - _vm->_screenTop, width, height);
+}
 
 #pragma mark -
 #pragma mark --- Background buffers & charset mask ---
@@ -530,11 +421,46 @@ void ScummEngine::initBGBuffers(int height) {
 	int size, itemsize, i;
 	byte *room;
 
+	if (_version >= 7) {
+		// Resize main virtual screen in V7 games. This is necessary
+		// because in V7, rooms may be higher than one screen, so we have
+		// to accomodate for that.
+		initVirtScreen(kMainVirtScreen, 0, virtscr[0].topline, _screenWidth, height, 1, 1);
+	}
+
 	room = getResourceAddress(rtRoom, _roomResource);
-	ptr = findResource(MKID('RMIH'), findResource(MKID('RMIM'), room));
-	gdi._numZBuffer = READ_LE_UINT16(ptr + 8) + 1;
+	if (_version <= 3) {
+		gdi._numZBuffer = 2;
+	} else if (_features & GF_SMALL_HEADER) {
+		int off;
+		ptr = findResourceData(MKID('SMAP'), room);
+		gdi._numZBuffer = 0;
+
+		if (_gameId == GID_MONKEY_EGA || _gameId == GID_PASS)
+			off = READ_LE_UINT16(ptr);
+		else
+			off = READ_LE_UINT32(ptr);
+
+		while (off && gdi._numZBuffer < 4) {
+			gdi._numZBuffer++;
+			ptr += off;
+			off = READ_LE_UINT16(ptr);
+		}
+	} else if (_version == 8) {
+		// in V8 there is no RMIH and num z buffers is in RMHD
+		ptr = findResource(MKID('RMHD'), room);
+		gdi._numZBuffer = READ_LE_UINT32(ptr + 24) + 1;
+	} else {
+		ptr = findResource(MKID('RMIH'), findResource(MKID('RMIM'), room));
+		gdi._numZBuffer = READ_LE_UINT16(ptr + 8) + 1;
+	}
 	assert(gdi._numZBuffer >= 1 && gdi._numZBuffer <= 8);
-	itemsize = MUL_SCREEN_STRIPS(_roomHeight + 4);
+
+	if (_version >= 7)
+		itemsize = (_roomHeight + 10) * gdi._numStrips;
+	else
+		itemsize = (_roomHeight + 4) * gdi._numStrips;
+
 
 	size = itemsize * gdi._numZBuffer;
 	memset(createResource(rtBuffer, 9, size), 0, size);
@@ -554,89 +480,67 @@ void ScummEngine::initBGBuffers(int height) {
 void ScummEngine::redrawBGAreas() {
 	int i;
 	int val;
+	int diff;
 
-	if (camera._cur.x != camera._last.x && _charset->_hasMask)
-		stopTalk();
+	if (!(_features & GF_NEW_CAMERA))
+		if (camera._cur.x != camera._last.x && _charset->_hasMask && (_version > 3 && _gameId != GID_PASS))
+			stopTalk();
 
 	val = 0;
 
 	// Redraw parts of the background which are marked as dirty.
-	VirtScreen *vs = &virtscr[0];
-	if (!_fullRedraw && _BgNeedsRedraw)
-	{
-		for (i = 0; i != SCREEN_STRIP_COUNT; i++)
-		{
-			if (testGfxUsageBit(_screenStartStrip + i, USAGE_BIT_DIRTY))
-			{
-				redrawBGStrip(i, 1, 0, vs->height);
-				/*
-				byte* dirt = (byte*)&vs->dirty[i];
-				uint16 y = *dirt++;
-				uint16 h = *dirt++;
-				if (y < vs->height && h > y)
-					redrawBGStrip(i, 1, y, h - y);
-				else
-					redrawBGStrip(i, 1, 0, vs->height);
-				*/
+	if (!_fullRedraw && _BgNeedsRedraw) {
+		for (i = 0; i != gdi._numStrips; i++) {
+			if (testGfxUsageBit(_screenStartStrip + i, USAGE_BIT_DIRTY)) {
+				redrawBGStrip(i, 1);
 			}
 		}
 	}
 
-	int16 ccx = camera._cur.x >> 3;
-	int16 clx = camera._last.x >> 3;
-
-	if (_fullRedraw == 0 && ((ccx - clx) == 1)) {
-		val = 2;
-		redrawBGStrip(SCREEN_STRIP_COUNT - 1, 1, 0, vs->height);
-	} else if (_fullRedraw == 0 && ((ccx - clx) == -1)) {
-		val = 1;
-		redrawBGStrip(0, 1, 0, vs->height);
-	} else if (_fullRedraw != 0 || (ccx != clx)) {
-		_BgNeedsRedraw = false;
-		_flashlight.isDrawn = false;
-		redrawBGStrip(0, SCREEN_STRIP_COUNT, 0, vs->height);
+	if (_features & GF_NEW_CAMERA) {
+		diff = camera._cur.x / 8 - camera._last.x / 8;
+		if (_fullRedraw == 0 && diff == 1) {
+			val = 2;
+			redrawBGStrip(gdi._numStrips - 1, 1);
+		} else if (_fullRedraw == 0 && diff == -1) {
+			val = 1;
+			redrawBGStrip(0, 1);
+		} else if (_fullRedraw != 0 || diff != 0) {
+			_BgNeedsRedraw = false;
+			redrawBGStrip(0, gdi._numStrips);
+		}
+	} else {
+		if (_fullRedraw == 0 && camera._cur.x - camera._last.x == 8) {
+			val = 2;
+			redrawBGStrip(gdi._numStrips - 1, 1);
+		} else if (_fullRedraw == 0 && camera._cur.x - camera._last.x == -8) {
+			val = 1;
+			redrawBGStrip(0, 1);
+		} else if (_fullRedraw != 0 || camera._cur.x != camera._last.x) {
+			_BgNeedsRedraw = false;
+			_flashlight.isDrawn = false;
+			redrawBGStrip(0, gdi._numStrips);
+		}
 	}
 
 	drawRoomObjects(val);
 	_BgNeedsRedraw = false;
 }
 
-void ScummEngine::redrawBGStrip(int start, int num, int16 y, int16 h) {
+void ScummEngine::redrawBGStrip(int start, int num) {
 	int s = _screenStartStrip + start;
 
-	VirtScreen *vs = &virtscr[0];
-	if (y >= vs->height)
-		return;
-
-	if (y < 0)
-	{
-		h += y;
-		y = 0;
-	}
-	if (y + h > vs->height)
-		h = vs->height - y;
-	if (h <= 0)
-		return;
-
-	assert(s >= 0 && (size_t) s < sizeof(gfxUsageBits) / (sizeof(gfxUsageBits[0])));
+	assert(s >= 0 && (size_t) s < sizeof(gfxUsageBits) / (3 * sizeof(gfxUsageBits[0])));
 
 	for (int i = 0; i < num; i++)
 		setGfxUsageBit(s + i, USAGE_BIT_DIRTY);
-#ifdef DEBUG_REDRAWSTRIP
-	_debugStripColor = (_debugStripColor + 1) & 15;
-	_debugRedrawBitmap = true;
-#endif
 
-
-
-	gdi.drawBitmap(getResourceAddress(rtRoom, _roomResource) + _IM00_offs, vs, s, y, _roomWidth, h, s, num, y, 0);
-
-#ifdef DEBUG_REDRAWSTRIP
-	_debugRedrawBitmap = false;
-#endif
+	if (_version == 1) {
+		gdi._C64ObjectMode = false;
+	}
+	gdi.drawBitmap(getResourceAddress(rtRoom, _roomResource) + _IM00_offs,
+					&virtscr[0], s, 0, _roomWidth, virtscr[0].height, s, num, 0, _roomStrips);
 }
-
-
 
 void ScummEngine::restoreBG(Common::Rect rect, byte backColor) {
 	VirtScreen *vs;
@@ -659,24 +563,19 @@ void ScummEngine::restoreBG(Common::Rect rect, byte backColor) {
 	rect.top -= topline;
 	rect.bottom -= topline;
 
-	// snap to 8pixel strips
-	rect.left &= ~7;
-	rect.right = (rect.right + 7) & ~7;
-
 	rect.clip(vs->width, vs->height);
+
 	markRectAsDirty(vs->number, rect, USAGE_BIT_RESTORED);
 
-	uint32 offset = MAKE_SCREENPTR(0, vs->width, vs->xstart + rect.left, rect.top);
+	int offset = rect.top * vs->width + vs->xstart + rect.left;
 	backbuff = vs->screenPtr + offset;
 
 	int height = rect.height();
 	int width = rect.width();
 
-	if (vs->hasTwoBuffers && _currentRoom != 0 && isLightOn())
-	{
+	if (vs->hasTwoBuffers && _currentRoom != 0 && isLightOn()) {
 		blit(backbuff, vs->backBuf + offset, width, height);
-		if (vs->number == kMainVirtScreen && _charset->_hasMask && height)
-		{
+		if (vs->number == kMainVirtScreen && _charset->_hasMask && height) {
 			byte *mask;
 
 			// Move rect back
@@ -693,69 +592,30 @@ void ScummEngine::restoreBG(Common::Rect rect, byte backColor) {
 				mask_width++;
 
 			mask = getMaskBuffer(rect.left, rect.top + topline, 0);
+
 			do {
 				memset(mask, 0, mask_width);
-				mask += SCREEN_STRIP_COUNT;
-			} while (--height);			
-		}
-	}
-	else
-	{
-		fillStrips(backbuff, backColor, (width >> 3), height);
-	}
-}
-
-void ScummEngine::restoreCharsetBG(Common::Rect rect)
-{
-#if 1
-	restoreBG(rect);
-#else
-
-	// from v1.2.0 - when we move text to it's own buffer
-	// Restore background on the whole text area. This code is based on
-	// restoreBackground(), but was changed to only restore those parts which are
-	// currently covered by the charset mask.
-	VirtScreen *vs;
-	if ((vs = findVirtScreen(rect.top)) == NULL)
-		return;
-	if (!vs->height)
-		return;
-
-	int16 w = vs->width;
-	int16 h = vs->height;
-	markRectAsDirty(vs->number, Common::Rect(w, h), USAGE_BIT_RESTORED);
-
-	uint32 offset = (vs->xstart >> 1) - MUL160(vs->topline);
-	byte* screenBuf = vs->screenPtr + offset;
-
-	if (vs->hasTwoBuffers && _currentRoom != 0 && isLightOn()) {
-		if (vs->number != kMainVirtScreen) {
-			// Restore from back buffer
-			const byte* backBuf = vs->backBuf + offset;
-			blit(screenBuf, backBuf, w, h);
+				mask += gdi._numStrips;
+			} while (--height);
 		}
 	} else {
-		// Clear area
-		memset(screenBuf, 0, (w * h) >> 1);
+		while (height--) {
+			memset(backbuff, backColor, width);
+			backbuff += vs->width;
+		}
 	}
-
-	if (vs->hasTwoBuffers) {
-		// Clean out the charset mask
-		//clearTextSurface();
-	}
-#endif
 }
 
 void CharsetRenderer::restoreCharsetBg() {
-	if (_hasMask)
-	{
-		_vm->restoreCharsetBG(_mask);
+	if (_hasMask) {
+		_vm->restoreBG(_mask);
 		_hasMask = false;
 		_mask.top = _mask.left = 32767;
 		_mask.right = _mask.bottom = 0;
 		_str.left = -1;
 		_left = -1;
 	}
+
 	_nextLeft = _vm->_string[0].xpos;
 	_nextTop = _vm->_string[0].ypos;
 }
@@ -774,44 +634,12 @@ bool CharsetRenderer::hasCharsetMask(int left, int top, int right, int bottom) {
 
 byte *ScummEngine::getMaskBuffer(int x, int y, int z) {
 	return getResourceAddress(rtBuffer, 9)
-			+ _screenStartStrip + SCREEN_TO_STRIP(x) + MUL_SCREEN_STRIPS(y) + gdi._imgBufOffs[z];
+			+ _screenStartStrip + (x / 8) + y * gdi._numStrips + gdi._imgBufOffs[z];
 }
 
 byte *Gdi::getMaskBuffer(int x, int y, int z) {
 	return _vm->getResourceAddress(rtBuffer, 9)
-			+ x + MUL_SCREEN_STRIPS(y) + _imgBufOffs[z];
-}
-
-
-bool ScummEngine::hasMask(int l, int t, int r, int b, byte* ptr, int zbuf)
-{
-	if (_charset->hasCharsetMask(l, t, r, b))
-		return true;
-
-	if (zbuf == 0)
-		return false;
-
- 	l = (SCREEN_TO_STRIP(l) + _screenStartStrip) & ~1;
-	uint16* basePtr = (uint16*) (getResourceAddress(rtBuffer, 9) + l + MUL_SCREEN_STRIPS(t) + gdi._imgBufOffs[0]);
-	if (!basePtr)
-		return false;
-
-	r = SCREEN_TO_STRIP(r) + _screenStartStrip;
-	int width = ((r - l) >> 1);
-	int height = b - t + 1;
-
-	// skipping check on every second row
-	int h = height >> 1;
-	uint16* p = basePtr + (gdi._imgBufOffs[zbuf] >> 1);
-	do {
-		for (int i = 0; i <= width; i++)
-			if (p[i]) {
-				return true;
-			}
-		p += 40;
-	} while (--h);
-
-	return false;
+			+ x + y * _numStrips + _imgBufOffs[z];
 }
 
 
@@ -825,35 +653,24 @@ void ScummEngine::blit(byte *dst, const byte *src, int w, int h) {
 	assert(dst != NULL);
 	
 	// TODO: This function currently always assumes that srcPitch == dstPitch
-	// and furthermore that both equal SCREEN_WIDTH.
+	// and furthermore that both equal _screenWidth.
 
-	if (w==SCREEN_WIDTH)
-		memcpy (dst, src, (w*h)>>1);
+	if (w==_screenWidth)
+		memcpy (dst, src, w*h);
 	else
 	{
 		do {
-			memcpy(dst, src, (w>>1));
-			dst += (SCREEN_WIDTH>>1);
-			src += (SCREEN_WIDTH>>1);
+			memcpy(dst, src, w);
+			dst += _screenWidth;
+			src += _screenWidth;
 		} while (--h);
 	}
 }
 
-
-static uint32 _drawBoxMask[8 * 8] = {
-	0x80808080, 0xC0C0C0C0, 0xE0E0E0E0, 0xF0F0F0F0, 0xF8F8F8F8, 0xFCFCFCFC, 0xFEFEFEFE, 0xFFFFFFFF, // xbit 0
-	0x40404040, 0x60606060, 0x70707070, 0x78787878, 0x7C7C7C7C, 0x7E7E7E7E, 0x7F7F7F7F, 0x7F7F7F7F, // xbit 1
-	0x20202020, 0x30303030, 0x38383838, 0x3C3C3C3C, 0x3E3E3E3E, 0x3F3F3F3F, 0x3F3F3F3F, 0x3F3F3F3F, // xbit 2
-	0x10101010, 0x18181818, 0x1C1C1C1C, 0x1E1E1E1E, 0x1F1F1F1F, 0x1F1F1F1F, 0x1F1F1F1F, 0x1F1F1F1F, // xbit 3
-	0x08080808, 0x0C0C0C0C, 0x0E0E0E0E, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, // xbit 4
-	0x04040404, 0x06060606, 0x07070707, 0x07070707, 0x07070707, 0x07070707, 0x07070707, 0x07070707, // xbit 5
-	0x02020202, 0x03030303, 0x03030303, 0x03030303, 0x03030303, 0x03030303, 0x03030303, 0x03030303, // xbit 6
-	0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, // xbit 7
-};
-
-
 void ScummEngine::drawBox(int x, int y, int x2, int y2, int color) {
+	int width, height;
 	VirtScreen *vs;
+	byte *backbuff, *bgbuff;
 
 	if ((vs = findVirtScreen(y)) == NULL)
 		return;
@@ -870,7 +687,7 @@ void ScummEngine::drawBox(int x, int y, int x2, int y2, int color) {
 	// Adjust for the topline of the VirtScreen
 	y -= vs->topline;
 	y2 -= vs->topline;
-
+	
 	// Clip the coordinates
 	if (x < 0)
 		x = 0;
@@ -891,82 +708,27 @@ void ScummEngine::drawBox(int x, int y, int x2, int y2, int color) {
 		return;
 	else if (y2 > vs->height)
 		y2 = vs->height;
-
-#ifndef DEBUG_DIRTY_REGIONS
+	
 	markRectAsDirty(vs->number, x, x2, y, y2);
-#endif
 
-	if (color == -1)
-	{
-		// snap to 8 pixel grid
-		x = x & ~7;
-		x2 = (x2 + 7) & ~7;
-		int width = x2 - x;
-		int height = y2 - y;
+	backbuff = vs->screenPtr + vs->xstart + y * vs->width + x;
+
+	width = x2 - x;
+	height = y2 - y;
+	if (color == -1) {
 		if (vs->number != kMainVirtScreen)
 			error("can only copy bg to main window");
-
-		byte* backbuff = MAKE_SCREENPTR(vs->screenPtr, vs->width, vs->xstart + x, y);
-		byte* bgbuff = MAKE_SCREENPTR(vs->backBuf, vs->width, vs->xstart + x, y);
+		bgbuff = vs->backBuf + vs->xstart + y * vs->width + x;
 		blit(backbuff, bgbuff, width, height);
 	} else {
-
-		// left
-		uint16 len = x2 - x;
-		uint16 height = y2 - y;
-		byte xbit = x & 7;
-		byte bitcount = 8 - xbit;
-		byte xlen = len > bitcount ? bitcount : len;
-		len -= xlen;
-		uint32 mask = _drawBoxMask[(xbit << 3) | (xlen - 1)];
-		uint32 c = c2pfill256[color];
-
-		uint32* dstart = (uint32*) vs->screenPtr;
-		dstart += MUL40(y) + ((vs->xstart + x) >> 3);
-		register uint32* d = dstart;
-		register uint32 c32 = c & mask;
-		register uint32 mask32 = ~mask;
-		register int16 h = height;
-		while (h > 7) 	{ d[0*40] = (d[0*40] & mask32) | c32; d[1*40] = (d[1*40] & mask32) | c32; d[2*40] = (d[2*40] & mask32) | c32; d[3*40] = (d[3*40] & mask32) | c32; d[4*40] = (d[4*40] & mask32) | c32; d[5*40] = (d[5*40] & mask32) | c32; d[6*40] = (d[6*40] & mask32) | c32; d[7*40] = (d[7*40] & mask32) | c32; d += (40 * 8); h-= 8; }		
-		while (h > 3) 	{ d[0*40] = (d[0*40] & mask32) | c32; d[1*40] = (d[1*40] & mask32) | c32; d[2*40] = (d[2*40] & mask32) | c32; d[3*40] = (d[3*40] & mask32) | c32; d += (40 * 4); h-= 4; }		
-		while (h != 0)	{ *d = ((*d & mask32) | c32); d += 40; h--; }
-
-		// middle 
-		c32 = c;
-		while (len > 7)
-		{
-			dstart++;
-			d = dstart;
-			h = height;
-			while (h > 7) 	{ d[0*40] = c32; d[1*40] = c32; d[2*40] = c32; d[3*40] = c32; d[4*40] = c32; d[5*40] = c32; d[6*40] = c32; d[7*40] = c32; d += (40 * 8); h-= 8; }		
-			while (h > 3) 	{ d[0*40] = c32; d[1*40] = c32; d[2*40] = c32; d[3*40] = c32; d += (40 * 4); h-= 4; }		
-			while(h != 0) { *d = c32; d+= 40; h--; }
-			len-=8;
+		while (height--) {
+			memset(backbuff, color, width);
+			backbuff += vs->width;
 		}
-
-		// right
-		if (len != 0)
-		{
-			mask = _drawBoxMask[len-1];
-			c32 = c & mask;
-			mask32 = ~mask;
-			dstart++;
-			d = dstart;
-			h = height;
-			while (h > 7) 	{ d[0*40] = (d[0*40] & mask32) | c32; d[1*40] = (d[1*40] & mask32) | c32; d[2*40] = (d[2*40] & mask32) | c32; d[3*40] = (d[3*40] & mask32) | c32; d[4*40] = (d[4*40] & mask32) | c32; d[5*40] = (d[5*40] & mask32) | c32; d[6*40] = (d[6*40] & mask32) | c32; d[7*40] = (d[7*40] & mask32) | c32; d += (40 * 8); h-= 8; }		
-			while (h > 3) 	{ d[0*40] = (d[0*40] & mask32) | c32; d[1*40] = (d[1*40] & mask32) | c32; d[2*40] = (d[2*40] & mask32) | c32; d[3*40] = (d[3*40] & mask32) | c32; d += (40 * 4); h-= 4; }		
-			while (h != 0)	{ *d = (*d & mask32) | c32; d += 40; h--; }
-		}
-
-		//fillStrips(backbuff, getSystemPal(color), (width >> 3), height);
 	}
-
 }
 
 void ScummEngine::drawFlashlight() {
-	// TODO_ATARI: rewrite for planar (do we need this at all?)
-
-/*
 	int i, j, offset, x, y;
 	VirtScreen *vs = &virtscr[kMainVirtScreen];
 
@@ -989,30 +751,38 @@ void ScummEngine::drawFlashlight() {
 		return;
 
 	// Calculate the area of the flashlight
-	Actor *a = derefActor(VAR(VAR_EGO), "drawFlashlight");
-	x = a->_pos.x;
-	y = a->_pos.y;
-
+	if (_gameId == GID_ZAK256 || _version <= 2) {
+		x = _mouse.x + vs->xstart;
+		y = _mouse.y - vs->topline;
+	} else {
+		Actor *a = derefActor(VAR(VAR_EGO), "drawFlashlight");
+		x = a->_pos.x;
+		y = a->_pos.y;
+	}
 	_flashlight.w = _flashlight.xStrips * 8;
 	_flashlight.h = _flashlight.yStrips * 8;
-	_flashlight.x = x - (_flashlight.w / 2) - STRIP_TO_SCREEN(_screenStartStrip);
-	_flashlight.y = y - (_flashlight.h / 2);
+	_flashlight.x = x - _flashlight.w / 2 - _screenStartStrip * 8;
+	_flashlight.y = y - _flashlight.h / 2;
+
+	if (_gameId == GID_LOOM || _gameId == GID_LOOM256)
+		_flashlight.y -= 12;
 
 	// Clip the flashlight at the borders
 	if (_flashlight.x < 0)
 		_flashlight.x = 0;
-	else if (_flashlight.x + _flashlight.w > SCREEN_WIDTH)
-		_flashlight.x = SCREEN_WIDTH - _flashlight.w;
+	else if (_flashlight.x + _flashlight.w > gdi._numStrips * 8)
+		_flashlight.x = gdi._numStrips * 8 - _flashlight.w;
 	if (_flashlight.y < 0)
 		_flashlight.y = 0;
-	else if (_flashlight.y + _flashlight.h > vs->height)
+	else if (_flashlight.y + _flashlight.h> vs->height)
 		_flashlight.y = vs->height - _flashlight.h;
 
 	// Redraw any actors "under" the flashlight
-	for (i = SCREEN_TO_STRIP(_flashlight.x); i < SCREEN_TO_STRIP((_flashlight.x + _flashlight.w)); i++) {
-		assert(0 <= i && i < SCREEN_STRIP_COUNT);
+	for (i = _flashlight.x / 8; i < (_flashlight.x + _flashlight.w) / 8; i++) {
+		assert(0 <= i && i < gdi._numStrips);
 		setGfxUsageBit(_screenStartStrip + i, USAGE_BIT_DIRTY);
-		vs->setDirty(i, 0, vs->height);
+		vs->tdirty[i] = 0;
+		vs->bdirty[i] = vs->height;
 	}
 
 	byte *bgbak;
@@ -1041,7 +811,6 @@ void ScummEngine::drawFlashlight() {
 	}
 	
 	_flashlight.isDrawn = true;
-*/
 }
 
 bool ScummEngine::isLightOn() const {
@@ -1052,14 +821,12 @@ bool ScummEngine::isLightOn() const {
 #pragma mark --- Image drawing ---
 #pragma mark -
 
-
-
-
 /**
  * Draw a bitmap onto a virtual screen. This is main drawing method for room backgrounds
  * and objects, used throughout all SCUMM versions.
  */
-void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const int16 width, const int16 height, int16 stripnr, int16 numstrip, int16 yoffs, byte flag) {
+void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int x, int y, const int width, const int height,
+					int stripnr, int numstrip, byte flag, StripTable *table) {
 	assert(ptr);
 	assert(height > 0);
 	byte *backbuff_ptr, *bgbak_ptr;
@@ -1076,13 +843,16 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 	bool lightsOn;
 	bool useOrDecompress = false;
 
-	debug(2, "drawbitmap %x: %d,%d (%d,%d) s=%d,c=%d,f=%02x", ptr, x,y,width,height, stripnr, numstrip, flag);
-
 	// Check whether lights are turned on or not
 	lightsOn = _vm->isLightOn();
 
 	CHECK_HEAP;
-	smap_ptr = findResource(MKID('SMAP'), ptr);
+	if (_vm->_features & GF_SMALL_HEADER)
+		smap_ptr = ptr;
+	else if (_vm->_version == 8)
+		smap_ptr = ptr;
+	else
+		smap_ptr = findResource(MKID('SMAP'), ptr);
 
 	assert(smap_ptr);
 
@@ -1090,33 +860,185 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 
 	if (_zbufferDisabled)
 		numzbuf = 0;
-	else if (_numZBuffer <= 1)
+	else if (_numZBuffer <= 1 || (_vm->_version <= 2))
 		numzbuf = _numZBuffer;
 	else {
 		numzbuf = _numZBuffer;
 		assert(numzbuf <= ARRAYSIZE(zplane_list));
 		
-		const uint32 zplane_tags[] = {
-			MKID('ZP00'),
-			MKID('ZP01'),
-			MKID('ZP02'),
-			MKID('ZP03'),
-			MKID('ZP04')
-		};
-		
-		for (i = 1; i < numzbuf; i++) {
-			zplane_list[i] = findResource(zplane_tags[i], ptr);
+		if (_vm->_features & GF_SMALL_HEADER) {
+			if (_vm->_features & GF_16COLOR)
+				zplane_list[1] = smap_ptr + READ_LE_UINT16(smap_ptr);
+			else
+				zplane_list[1] = smap_ptr + READ_LE_UINT32(smap_ptr);
+			if (_vm->_features & GF_OLD256) {
+				if (0 == READ_LE_UINT32(zplane_list[1]))
+					zplane_list[1] = 0;
+			}
+			for (i = 2; i < numzbuf; i++) {
+				zplane_list[i] = zplane_list[i-1] + READ_LE_UINT16(zplane_list[i-1]);
+			}
+		} else if (_vm->_version == 8) {
+			// Find the OFFS chunk of the ZPLN chunk
+			const byte *zplnOffsChunkStart = smap_ptr + READ_BE_UINT32(smap_ptr + 12) + 24;
+			
+			// Each ZPLN contains a WRAP chunk, which has (as always) an OFFS subchunk pointing
+			// at ZSTR chunks. These once more contain a WRAP chunk which contains nothing but
+			// an OFFS chunk. The content of this OFFS chunk contains the offsets to the
+			// Z-planes.
+			// We do not directly make use of this, but rather hard code offsets (like we do
+			// for all other Scumm-versions, too). Clearly this is a bit hackish, but works
+			// well enough, and there is no reason to assume that there are any cases where it
+			// might fail. Still, doing this properly would have the advantage of catching
+			// invalid/damaged data files, and allow us to exit gracefully instead of segfaulting.
+			for (i = 1; i < numzbuf; i++) {
+				zplane_list[i] = zplnOffsChunkStart + READ_LE_UINT32(zplnOffsChunkStart + 4 + i*4) + 16;
+			}
+		} else {
+			const uint32 zplane_tags[] = {
+				MKID('ZP00'),
+				MKID('ZP01'),
+				MKID('ZP02'),
+				MKID('ZP03'),
+				MKID('ZP04')
+			};
+			
+			for (i = 1; i < numzbuf; i++) {
+				zplane_list[i] = findResource(zplane_tags[i], ptr);
+			}
 		}
 	}
 	
+	if (_vm->_version == 8) {	
+		// A small hack to skip to the BSTR->WRAP->OFFS chunk. Note: order matters, we do this
+		// *after* the Z buffer code because that assumes' the orginal value of smap_ptr. 
+		smap_ptr += 24;
+	}
+
 	bottom = y + height;
 	if (bottom > vs->height) {
 		warning("Gdi::drawBitmap, strip drawn to %d below window bottom %d", bottom, vs->height);
 	}
 
-	_horizStripNextInc = SCREEN_WIDTH >> 1;
-	int y160 = MUL160(y);
-	sx = x - SCREEN_TO_STRIP(vs->xstart);
+	_vertStripNextInc = height * vs->width - 1;
+
+	sx = x - vs->xstart / 8;
+
+	//
+	// Since V3, all graphics data was encoded in strips, which is very efficient
+	// for redrawing only parts of the screen. However, V2 is different: here
+	// the whole graphics are encoded as one big chunk. That makes it rather
+	// dificult to draw only parts of a room/object. We handle the V2 graphics
+	// differently from all other (newer) graphic formats for this reason.
+	//
+	if (_vm->_version == 2) {
+		
+		if (vs->hasTwoBuffers)
+			bgbak_ptr = vs->backBuf + (y * _numStrips + x) * 8;
+		else
+			bgbak_ptr = vs->screenPtr + (y * _numStrips + x) * 8;
+
+		mask_ptr = getMaskBuffer(x, y, 1);
+
+		const int left = (stripnr * 8);
+		const int right = left + (numstrip * 8);
+		byte *dst = bgbak_ptr;
+		const byte *src;
+		byte color, data = 0;
+		int run;
+		bool dither = false;
+		byte dither_table[128];
+		byte *ptr_dither_table;
+		memset(dither_table, 0, sizeof(dither_table));
+		int theX, theY, maxX;
+		
+		if (table) {
+			run = table->run[stripnr];
+			color = table->color[stripnr];
+			src = smap_ptr + table->offsets[stripnr];
+			theX = left;
+			maxX = right;
+		} else {
+			run = 1;
+			color = 0;
+			src = smap_ptr;
+			theX = 0;
+			maxX = width;
+		}
+		
+		// Draw image data. To do this, we decode the full RLE graphics data,
+		// but only draw those parts we actually want to display.
+		assert(height <= 128);
+		for (; theX < maxX; theX++) {
+			ptr_dither_table = dither_table;
+			for (theY = 0; theY < height; theY++) {
+				if (--run == 0) {
+					data = *src++;
+					if (data & 0x80) {
+						run = data & 0x7f;
+						dither = true;
+					} else {
+						run = data >> 4;
+						dither = false;
+					}
+					color = _roomPalette[data & 0x0f];
+					if (run == 0) {
+						run = *src++;
+					}
+				}
+				if (!dither) {
+					*ptr_dither_table = color;
+				}
+				if (left <= theX && theX < right) {
+					*dst = *ptr_dither_table++;
+					dst += vs->width;
+				}
+			}
+			if (left <= theX && theX < right) {
+				dst -= _vertStripNextInc;
+			}
+		}
+
+
+		// Draw mask (zplane) data
+		theY = 0;
+
+		if (table) {
+			src = smap_ptr + table->zoffsets[stripnr];
+			run = table->zrun[stripnr];
+			theX = left;
+		} else {
+			run = *src++;
+			theX = 0;
+		}
+		while (theX < right) {
+			const byte runFlag = run & 0x80;
+			if (runFlag) {
+				run &= 0x7f;
+				data = *src++;
+			}
+			do {
+				if (!runFlag)
+					data = *src++;
+				
+				if (left <= theX) {
+					*mask_ptr = data;
+					mask_ptr += _numStrips;
+				}
+				theY++;
+				if (theY >= height) {
+					if (left <= theX) {
+						mask_ptr -= _numStrips * height - 1;
+					}
+					theY = 0;
+					theX += 8;
+					if (theX >= right)
+						break;
+				}
+			} while (--run);
+			run = *src++;
+		}
+	}
 
 	while (numstrip--) {
 		CHECK_HEAP;
@@ -1124,22 +1046,37 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 		if (sx < 0)
 			goto next_iter;
 
-		if (sx >= SCREEN_STRIP_COUNT)
+		if (sx >= _numStrips)
 			return;
 
-		vs->updateDirty(sx, y, bottom);
+		if (y < vs->tdirty[sx])
+			vs->tdirty[sx] = y;
 
-		backbuff_ptr = vs->screenPtr + y160 + (x << 2);
-		if (vs->hasTwoBuffers) {
-			bgbak_ptr = vs->backBuf + y160 + (x << 2);
-		} else {
+		if (bottom > vs->bdirty[sx])
+			vs->bdirty[sx] = bottom;
+
+		backbuff_ptr = vs->screenPtr + (y * _numStrips + x) * 8;
+		if (vs->hasTwoBuffers)
+			bgbak_ptr = vs->backBuf + (y * _numStrips + x) * 8;
+		else
 			bgbak_ptr = backbuff_ptr;
+
+		if (_vm->_version == 1) {
+			if (_C64ObjectMode)
+				drawStripC64Object(bgbak_ptr, stripnr, width, height);
+			else
+				drawStripC64Background(bgbak_ptr, stripnr, height);
+		} else if (_vm->_version > 2) {
+			if (_vm->_features & GF_16COLOR) {
+				decodeStripEGA(bgbak_ptr, smap_ptr + READ_LE_UINT16(smap_ptr + stripnr * 2 + 2), height);
+			} else if (_vm->_features & GF_SMALL_HEADER) {
+				useOrDecompress = decompressBitmap(bgbak_ptr, smap_ptr + READ_LE_UINT32(smap_ptr + stripnr * 4 + 4), height);
+			} else {
+				useOrDecompress = decompressBitmap(bgbak_ptr, smap_ptr + READ_LE_UINT32(smap_ptr + stripnr * 4 + 8), height);
+			}
 		}
 
-		useOrDecompress = decompressBitmap(bgbak_ptr, smap_ptr + READ_LE_UINT32(smap_ptr + stripnr * 4 + 8), height, yoffs);
 		mask_ptr = getMaskBuffer(x, y);
-
-		debug(2, " strip %d,%d,%d : %02x", sx, y, bottom, flag);
 
 		CHECK_HEAP;
 		if (vs->hasTwoBuffers) {
@@ -1157,8 +1094,12 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 		}
 		CHECK_HEAP;
 
-		if (flag & dbDrawMaskOnAll)
-		{
+		if (_vm->_version == 1) {
+			mask_ptr = getMaskBuffer(x, y, 1);
+			drawStripC64Mask(mask_ptr, stripnr, width, height);
+		} else if (_vm->_version == 2) {
+			// Do nothing here for V2 games - zplane was handled already.
+		} else if (flag & dbDrawMaskOnAll) {
 			// Sam & Max uses dbDrawMaskOnAll for things like the inventory
 			// box and the speech icons. While these objects only have one
 			// mask, it should be applied to all the Z-planes in the room,
@@ -1175,14 +1116,16 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 			// don't know what for. At the time of writing, these games
 			// are still too unstable for me to investigate.
 
-			debug(2,"dbDrawMaskOnAll");
-			z_plane_ptr = zplane_list[1] + READ_LE_UINT16(zplane_list[1] + stripnr * 2 + 8);
+			if (_vm->_version == 8)
+				z_plane_ptr = zplane_list[1] + READ_LE_UINT32(zplane_list[1] + stripnr * 4 + 8);
+			else
+				z_plane_ptr = zplane_list[1] + READ_LE_UINT16(zplane_list[1] + stripnr * 2 + 8);
 			for (i = 0; i < numzbuf; i++) {
 				mask_ptr = getMaskBuffer(x, y, i);
 				if (useOrDecompress && (flag & dbAllowMaskOr))
-					decompressMaskImgOr(mask_ptr, z_plane_ptr, height, yoffs);
+					decompressMaskImgOr(mask_ptr, z_plane_ptr, height);
 				else
-					decompressMaskImg(mask_ptr, z_plane_ptr, height, yoffs);
+					decompressMaskImg(mask_ptr, z_plane_ptr, height);
 			}
 		} else {
 			for (i = 1; i < numzbuf; i++) {
@@ -1191,43 +1134,53 @@ void Gdi::drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const in
 				if (!zplane_list[i])
 					continue;
 
-				offs = READ_LE_UINT16(zplane_list[i] + stripnr * 2 + 8);
+				if (_vm->_features & GF_OLD_BUNDLE)
+					offs = READ_LE_UINT16(zplane_list[i] + stripnr * 2);
+				else if (_vm->_features & GF_OLD256)
+					offs = READ_LE_UINT16(zplane_list[i] + stripnr * 2 + 4);
+				else if (_vm->_features & GF_SMALL_HEADER)
+					offs = READ_LE_UINT16(zplane_list[i] + stripnr * 2 + 2);
+				else if (_vm->_version == 8)
+					offs = READ_LE_UINT32(zplane_list[i] + stripnr * 4 + 8);
+				else
+					offs = READ_LE_UINT16(zplane_list[i] + stripnr * 2 + 8);
+
 				mask_ptr = getMaskBuffer(x, y, i);
 
 				if (offs) {
 					z_plane_ptr = zplane_list[i] + offs;
 
 					if (useOrDecompress && (flag & dbAllowMaskOr)) {
-						decompressMaskImgOr(mask_ptr, z_plane_ptr, height, yoffs);
+						decompressMaskImgOr(mask_ptr, z_plane_ptr, height);
 					} else {
-						decompressMaskImg(mask_ptr, z_plane_ptr, height, yoffs);
+						decompressMaskImg(mask_ptr, z_plane_ptr, height);
 					}
 
 				} else {
 					if (!(useOrDecompress && (flag & dbAllowMaskOr)))
-						for (int h = MUL_SCREEN_STRIPS(height-1); h != 0; h -= SCREEN_STRIP_COUNT)
-							mask_ptr[h] = 0;
+						for (int h = 0; h < height; h++)
+							mask_ptr[h * _numStrips] = 0;
+					// FIXME: needs better abstraction
 				}
 			}
 		}
-
-#ifdef DEBUG_MASKS
+		
+#if 0
 		// HACK: blit mask(s) onto normal screen. Useful to debug masking 
-		for (i = 0; i < numzbuf; i++)
-		{
-			uint32 c = c2pfill16[_vm->getSystemPal(12 + i)];
-
+		for (i = 0; i < numzbuf; i++) {
 			mask_ptr = getMaskBuffer(x, y, i);
-			uint32 *dst = (uint32*)backbuff_ptr;
-			uint32 *dst2 = (uint32*)bgbak_ptr;
-			for (int h = 0; h < height; h++)
-			{
-				uint32 m = rptTable[*mask_ptr];
-				*dst |= m;
-				*dst2 |= m;
-				dst += vs->width >> 3;
-				dst2 += vs->width >> 3;
-				mask_ptr += SCREEN_STRIP_COUNT;
+			byte *dst = backbuff_ptr;
+			byte *dst2 = bgbak_ptr;
+			for (int h = 0; h < height; h++) {
+				int maskbits = *mask_ptr;
+				for (int j = 0; j < 8; j++) {
+					if (maskbits & 0x80)
+						dst[j] = dst2[j] = 12+i;
+					maskbits <<= 1;
+				}
+				dst += vs->width;
+				dst2 += vs->width;
+				mask_ptr += _numStrips;
 			}
 		}
 #endif
@@ -1244,353 +1197,517 @@ next_iter:
  * Reset the background behind an actor or blast object.
  */
 void Gdi::resetBackground(int top, int bottom, int strip) {
-	assert(0 <= strip && strip < SCREEN_STRIP_COUNT);
-
-	int16 y = (int16) top;
-	int16 y2 = (int16) bottom;
-	int16 height = y2 - y;
-	if (height <= 0)
-		return;
-
-	int16 xtile = (int16) strip;
 	VirtScreen *vs = &_vm->virtscr[0];
-	vs->updateDirty(xtile, y, y2);
+	byte *backbuff_ptr, *bgbak_ptr;
+	int offs, numLinesToProcess;
 
-	uint32 offs = MUL160(y) + (((vs->xstart>>3) + xtile) << 2);
-	byte* dst = (byte*) vs->screenPtr + offs;
+	assert(0 <= strip && strip < _numStrips);
 
-	if (_vm->isLightOn())
-	{
-		const byte* src = vs->backBuf + offs;
-		
-		int16 rx = (strip<<3);
-		const Common::Rect& textRect = _vm->_charset->_mask;
-		if (_vm->_charset->_hasMask && (rx < textRect.right) && (textRect.left < (rx + 8)) && (y < textRect.bottom) && (textRect.top < y2))
-		{
-			if (y < textRect.top)
-			{
-				int16 b = textRect.top;
-				if (b > y2) b = y2;
-				int16 h = b - y;
-				copyStrip(dst, src, SCREEN_WIDTH>>3, h);
-				y += h; if (y >= y2) return;
-				dst += MUL160(h);
-				src += MUL160(h);
+	if (top < vs->tdirty[strip])
+		vs->tdirty[strip] = top;
+
+	if (bottom > vs->bdirty[strip])
+		vs->bdirty[strip] = bottom;
+
+	offs = top * vs->width + vs->xstart + strip * 8;
+	byte *mask_ptr = _vm->getMaskBuffer(strip * 8, top, 0);
+	bgbak_ptr = vs->backBuf + offs;
+	backbuff_ptr = vs->screenPtr + offs;
+
+	numLinesToProcess = bottom - top;
+	if (numLinesToProcess) {
+		if (_vm->isLightOn()) {
+			if (_vm->_charset->hasCharsetMask(strip * 8, top, (strip + 1) * 8, bottom))
+				draw8ColWithMasking(backbuff_ptr, bgbak_ptr, numLinesToProcess, mask_ptr);
+			else
+				draw8Col(backbuff_ptr, bgbak_ptr, numLinesToProcess);
+		} else {
+			clear8Col(backbuff_ptr, numLinesToProcess);
+		}
+	}
+}
+
+/**
+ * Create and fill a table with offsets to the graphic and mask strips in the
+ * given V2 EGA bitmap.
+ * @param src		the V2 EGA bitmap
+ * @param width		the width of the bitmap
+ * @param height	the height of the bitmap
+ * @param table		the strip table to fill
+ * @return filled strip table
+ */
+StripTable *Gdi::generateStripTable(const byte *src, int width, int height, StripTable *table) {
+
+	// If no strip table was given to use, allocate a new one
+	if (table == 0)
+		table = (StripTable *)calloc(1, sizeof(StripTable));
+
+	const byte *bitmapStart = src;
+	byte color = 0, data = 0;
+	int x, y, length = 0;
+	byte run = 1;
+
+	// Decode the graphics strips, and memorize the run/color values
+	// as well as the byte offset.
+	for (x = 0 ; x < width; x++) {
+
+		if ((x % 8) == 0) {
+			assert(x / 8 < 160);
+			table->run[x / 8] = run;
+			table->color[x / 8] = color;
+			table->offsets[x / 8] = src - bitmapStart;
+		}
+
+		for (y = 0; y < height; y++) {
+			if (--run == 0) {
+				data = *src++;
+				if (data & 0x80) {
+					run = data & 0x7f;
+				} else {
+					run = data >> 4;
+				}
+				if (run == 0) {
+					run = *src++;
+				}
+				color = data & 0x0f;
 			}
+		}
+	}
 
-			if (y < textRect.bottom)
-			{
-				int16 b = textRect.bottom;
-				if (b > y2) b = y2;
-				int16 h = b - y;
+	// The mask data follows immediately after the graphics.
+	x = 0;
+	y = height;
+	width /= 8;
+	
+	for (;;) {
+		length = *src++;
+		const byte runFlag = length & 0x80;
+		if (runFlag) {
+			length &= 0x7f;
+			data = *src++;
+		}
+		do {
+			if (!runFlag)
+				data = *src++;
+			if (y == height) {
+				assert(x < 120);
+				table->zoffsets[x] = src - bitmapStart - 1;
+				table->zrun[x] = length | runFlag;
+			}
+			if (--y == 0) {
+				if (--width == 0)
+					return table;
+				x++;
+				y = height;
+			}
+		} while (--length);
+	}
 
-				uint32 m;
-				uint32* dptr = (uint32*) dst;
-				const byte* mptr = _vm->getMaskBuffer(rx, y, 0);
-				const uint32* sptr = (const uint32*) src;
+	return table;
+}
 
-				y += h;
-				while (h > 7) {
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40;
-					h -= 8;
+void Gdi::drawStripC64Background(byte *dst, int stripnr, int height) {
+	int charIdx;
+	height /= 8;
+	for (int y = 0; y < height; y++) {
+		_C64Colors[3] = (_C64ColorMap[y + stripnr * height] & 7);
+		// Check for room color change in V1 zak
+		if (_roomPalette[0] == 255) {
+			_C64Colors[2] = _roomPalette[2];
+			_C64Colors[1] = _roomPalette[1];
+		}
+
+		charIdx = _C64PicMap[y + stripnr * height] * 8;
+		for (int i = 0; i < 8; i++) {
+			byte c = _C64CharMap[charIdx + i];
+			dst[0] = dst[1] = _C64Colors[(c >> 6) & 3];
+			dst[2] = dst[3] = _C64Colors[(c >> 4) & 3];
+			dst[4] = dst[5] = _C64Colors[(c >> 2) & 3];
+			dst[6] = dst[7] = _C64Colors[(c >> 0) & 3];
+			dst += _vm->_screenWidth;
+		}
+	}
+}
+
+void Gdi::drawStripC64Object(byte *dst, int stripnr, int width, int height) {
+	int charIdx;
+	height /= 8;
+	width /= 8;
+	for (int y = 0; y < height; y++) {
+		_C64Colors[3] = (_C64ObjectMap[(y + height) * width + stripnr] & 7);
+		charIdx = _C64ObjectMap[y * width + stripnr] * 8;
+		for (int i = 0; i < 8; i++) {
+			byte c = _C64CharMap[charIdx + i];
+			dst[0] = dst[1] = _C64Colors[(c >> 6) & 3];
+			dst[2] = dst[3] = _C64Colors[(c >> 4) & 3];
+			dst[4] = dst[5] = _C64Colors[(c >> 2) & 3];
+			dst[6] = dst[7] = _C64Colors[(c >> 0) & 3];
+			dst += _vm->_screenWidth;
+		}
+	}
+}
+
+void Gdi::drawStripC64Mask(byte *dst, int stripnr, int width, int height) {
+	int maskIdx;
+	height /= 8;
+	width /= 8;
+	for (int y = 0; y < height; y++) {
+		if (_C64ObjectMode)
+			maskIdx = _C64ObjectMap[(y + 2 * height) * width + stripnr] * 8;
+		else
+			maskIdx = _C64MaskMap[y + stripnr * height] * 8;
+		for (int i = 0; i < 8; i++) {
+			byte c = _C64MaskChar[maskIdx + i];
+
+			// V1/C64 masks are inverted compared to what ScummVM expects
+			*dst = c ^ 0xFF;
+			dst += _numStrips;
+		}
+	}
+}
+
+void Gdi::decodeC64Gfx(const byte *src, byte *dst, int size) {
+	int x, z;
+	byte color, run, common[4];
+
+	for (z = 0; z < 4; z++) {
+		common[z] = *src++;
+	}
+
+	x = 0;
+	while (x < size) {
+		run = *src++;
+		if (run & 0x80) {
+			color = common[(run >> 5) & 3];
+			run &= 0x1F;
+			for (z = 0; z <= run; z++) {
+				dst[x++] = color;
+			}
+		} else if (run & 0x40) {
+			run &= 0x3F;
+			color = *src++;
+			for (z = 0; z <= run; z++) {
+				dst[x++] = color;
+			}
+		} else {
+			for (z = 0; z <= run; z++) {
+				dst[x++] = *src++;
+			}
+		}
+	}
+}
+
+void Gdi::decodeStripEGA(byte *dst, const byte *src, int height) {
+	byte color = 0;
+	int run = 0, x = 0, y = 0, z;
+
+	while (x < 8) {
+		color = *src++;
+		
+		if (color & 0x80) {
+			run = color & 0x3f;
+
+			if (color & 0x40) {
+				color = *src++;
+
+				if (run == 0) {
+					run = *src++;
 				}
-				while (h) {
-					m = rptTable[*mptr]; *dptr = (*dptr & m) | (*sptr & ~m); sptr += 40; dptr += 40; mptr += 40; h--;
+				for (z = 0; z < run; z++) {
+					*(dst + y * _vm->_screenWidth + x) = (z & 1) ? _roomPalette[color & 0xf] : _roomPalette[color >> 4];
+
+					y++;
+					if (y >= height) {
+						y = 0;
+						x++;
+					}
 				}
-				if (y >= y2) return;
-				dst = (byte*) dptr;
-				src = (const byte*) sptr;
+			} else {
+				if (run == 0) {
+					run = *src++;
+				}
+
+				for (z = 0; z < run; z++) {
+					*(dst + y * _vm->_screenWidth + x) = *(dst + y * _vm->_screenWidth + x - 1);
+
+					y++;
+					if (y >= height) {
+						y = 0;
+						x++;
+					}
+				}
+			}
+		} else {
+			run = color >> 4;
+			if (run == 0) {
+				run = *src++;
 			}
 			
-			copyStrip(dst, src, SCREEN_WIDTH>>3, y2 - y);
-		}
-		else
-		{
-			copyStrip(dst, src, SCREEN_WIDTH>>3, height);
+			for (z = 0; z < run; z++) {
+				*(dst + y * _vm->_screenWidth + x) = _roomPalette[color & 0xf];
+
+				y++;
+				if (y >= height) {
+					y = 0;
+					x++;
+				}
+			}
 		}
 	}
-	else
-	{
-		fillStrip(dst, 0, height);
+}
+
+bool Gdi::decompressBitmap(byte *bgbak_ptr, const byte *src, int numLinesToProcess) {
+	assert(numLinesToProcess);
+
+	byte code = *src++;
+
+	bool useOrDecompress = false;
+	_decomp_shr = code % 10;
+	_decomp_mask = 0xFF >> (8 - _decomp_shr);
+	
+	switch (code) {
+	case 1:
+		unkDecode7(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 2:
+		unkDecode8(bgbak_ptr, src, numLinesToProcess);       /* Ender - Zak256/Indy256 */
+		break;
+
+	case 3:
+		unkDecode9(bgbak_ptr, src, numLinesToProcess);       /* Ender - Zak256/Indy256 */
+		break;
+
+	case 4:
+		unkDecode10(bgbak_ptr, src, numLinesToProcess);      /* Ender - Zak256/Indy256 */
+		break;
+
+	case 7:
+		unkDecode11(bgbak_ptr, src, numLinesToProcess);      /* Ender - Zak256/Indy256 */
+		break;
+	// FIXME implement these codecs...
+	// 8/9 used in 3do version of puttputt joins the parade maybe others
+	case 8:
+	case 9:
+		error("decompressBitmap: Graphics codec %d not yet supported\n", code);
+	// used in amiga version of Monkey Island
+	case 10:
+		decodeStripEGA(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 14:
+	case 15:
+	case 16:
+	case 17:
+	case 18:
+		unkDecodeC(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 28:
+		unkDecodeB(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 34:
+	case 35:
+	case 36:
+	case 37:
+	case 38:
+		useOrDecompress = true;
+		unkDecodeC_trans(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 44:
+	case 45:
+	case 46:
+	case 47:
+	case 48:
+		useOrDecompress = true;
+		unkDecodeB_trans(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 64:
+	case 65:
+	case 66:
+	case 67:
+	case 68:
+	case 104:
+	case 105:
+	case 106:
+	case 107:
+	case 108:
+		unkDecodeA(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	case 84:
+	case 85:
+	case 86:
+	case 87:
+	case 88:
+	case 124:
+	case 125:
+	case 126:
+	case 127:
+	case 128:
+		useOrDecompress = true;
+		unkDecodeA_trans(bgbak_ptr, src, numLinesToProcess);
+		break;
+
+	default:
+		error("Gdi::decompressBitmap: default case %d", code);
 	}
+	
+	return useOrDecompress;
 }
 
 void Gdi::draw8ColWithMasking(byte *dst, const byte *src, int height, byte *mask) {
-	debug(2,"  d8cm");
-	uint32* dptr = (uint32*)dst;
-	const byte* mptr = (byte*)mask;
-	int16 count = height;
-#ifndef DEBUG_REDRAWSTRIP
-	const uint32* sptr = (uint32*)src;
-	while (count)
-	{
-		uint32 m = *mptr;
-		if (m) {
-			m = rptTable[m];
-			*dptr = (*dptr & m) | (*sptr & ~m);
+	byte maskbits;
+
+	do {
+		maskbits = *mask;
+		if (maskbits) {
+			if (!(maskbits & 0x80))
+				dst[0] = src[0];
+			if (!(maskbits & 0x40))
+				dst[1] = src[1];
+			if (!(maskbits & 0x20))
+				dst[2] = src[2];
+			if (!(maskbits & 0x10))
+				dst[3] = src[3];
+			if (!(maskbits & 0x08))
+				dst[4] = src[4];
+			if (!(maskbits & 0x04))
+				dst[5] = src[5];
+			if (!(maskbits & 0x02))
+				dst[6] = src[6];
+			if (!(maskbits & 0x01))
+				dst[7] = src[7];
 		} else {
-			*dptr = *sptr;
-		}
-		sptr += 40; dptr += 40; mptr += 40; count--;
-	}
+#if defined(SCUMM_NEED_ALIGNMENT)
+			memcpy(dst, src, 8);
 #else
-	uint32 px = c2pfill256[_debugStripColor & 15];
-	while (count)
-	{
-		uint32 m = *mptr;
-		if (m) { m = rptTable[m]; *dptr = (*dptr & m) | (px & ~m); }
-		else { *dptr = px; }
-		dptr += 40; mptr += 40; count--;
-	}
+			((uint32 *)dst)[0] = ((const uint32 *)src)[0];
+			((uint32 *)dst)[1] = ((const uint32 *)src)[1];
 #endif
+		}
+		src += _vm->_screenWidth;
+		dst += _vm->_screenWidth;
+		mask += _numStrips;
+	} while (--height);
 }
 
 void Gdi::clear8ColWithMasking(byte *dst, int height, byte *mask) {
-	debug(2,"  c8cm");
-	uint32* dptr = (uint32*)dst;
-	const byte* mptr = (byte*)mask;
-	int16 count = height;
-	while (count)
-	{
-		uint32 m = *mptr;
-		if (m) {
-			*dptr &= rptTable[m];
+	byte maskbits;
+
+	do {
+		maskbits = *mask;
+		if (maskbits) {
+			if (!(maskbits & 0x80))
+				dst[0] = 0;
+			if (!(maskbits & 0x40))
+				dst[1] = 0;
+			if (!(maskbits & 0x20))
+				dst[2] = 0;
+			if (!(maskbits & 0x10))
+				dst[3] = 0;
+			if (!(maskbits & 0x08))
+				dst[4] = 0;
+			if (!(maskbits & 0x04))
+				dst[5] = 0;
+			if (!(maskbits & 0x02))
+				dst[6] = 0;
+			if (!(maskbits & 0x01))
+				dst[7] = 0;
 		} else {
-			*dptr = 0;
+#if defined(SCUMM_NEED_ALIGNMENT)
+			memset(dst, 0, 8);
+#else
+			((uint32 *)dst)[0] = 0;
+			((uint32 *)dst)[1] = 0;
+#endif
 		}
-		dptr += 40; mptr += 40; count--;
-	}
+		dst += _vm->_screenWidth;
+		mask += _numStrips;
+	} while (--height);
 }
 
 void Gdi::draw8Col(byte *dst, const byte *src, int height) {
-	debug(2,"  d8c");
-#ifndef DEBUG_REDRAWSTRIP
-	copyStrip(dst, (byte*)src, SCREEN_WIDTH>>3, height);
+	do {
+#if defined(SCUMM_NEED_ALIGNMENT)
+		memcpy(dst, src, 8);
 #else
-	uint32 c = (_debugStripColor & 15);
-	fillStrip(dst, c, height);
+		((uint32 *)dst)[0] = ((const uint32 *)src)[0];
+		((uint32 *)dst)[1] = ((const uint32 *)src)[1];
 #endif
+		dst += _vm->_screenWidth;
+		src += _vm->_screenWidth;
+	} while (--height);
 }
-
 void Gdi::clear8Col(byte *dst, int height)
 {
-	debug(2,"  c8c");
-	fillStrip(dst, 0, height);
+	do {
+#if defined(SCUMM_NEED_ALIGNMENT)
+		memset(dst, 0, 8);
+#else
+		((uint32 *)dst)[0] = 0;
+		((uint32 *)dst)[1] = 0;
+#endif
+		dst += _vm->_screenWidth;
+	} while (--height);
 }
 
-void Gdi::decompressMaskImg(byte *dst, const byte *src, int16 height, int16 yoffs) {
-	byte c; byte b = *src++;
+void Gdi::decompressMaskImg(byte *dst, const byte *src, int height) {
+	byte b, c;
 
-	// skip yoffs
-	while (yoffs)
-	{
-		byte count = b & 0x7F;
-		if (count > yoffs) {
-			b = (b & 0x80) | (count - yoffs);
-			if ((b & 0x80) == 0)
-				src += (count - yoffs);
-			break;
-		}
-		yoffs -= count;
-		if (b & 0x80) {
-			src += 1;
-		} else {
-			src += count;
-		}
-		b = *src++;
-	}
-
-	// draw
 	while (height) {
-		if (b & 0x80)
-		{
+		b = *src++;
+
+		if (b & 0x80) {
 			b &= 0x7F;
 			c = *src++;
 
 			do {
 				*dst = c;
-				dst += SCREEN_STRIP_COUNT;
+				dst += _numStrips;
 				--height;
 			} while (--b && height);
 		} else {
 			do {
 				*dst = *src++;
-				dst += SCREEN_STRIP_COUNT;
+				dst += _numStrips;
 				--height;
 			} while (--b && height);
 		}
-		b = *src++;
 	}
 }
 
-void Gdi::decompressMaskImgOr(byte *dst, const byte *src, int16 height, int16 yoffs) {
-	byte c; byte b = *src++;
-
-	// skip yoffs
-	while (yoffs)
-	{
-		byte count = b & 0x7F;
-		if (count > yoffs) {
-			b = (b & 0x80) | (count - yoffs);
-			if ((b & 0x80) == 0)
-				src += (count - yoffs);
-			break;
-		}
-		yoffs -= count;
-		if (b & 0x80) {
-			src += 1;
-		} else {
-			src += count;
-		}
-		b = *src++;
-	}
+void Gdi::decompressMaskImgOr(byte *dst, const byte *src, int height) {
+	byte b, c;
 
 	while (height) {
+		b = *src++;
+		
 		if (b & 0x80) {
 			b &= 0x7F;
 			c = *src++;
 
 			do {
 				*dst |= c;
-				dst += SCREEN_STRIP_COUNT;
+				dst += _numStrips;
 				--height;
 			} while (--b && height);
 		} else {
 			do {
 				*dst |= *src++;
-				dst += SCREEN_STRIP_COUNT;
+				dst += _numStrips;
 				--height;
 			} while (--b && height);
 		}
-		b = *src++;
 	}
 }
-
-byte Gdi::convertBitmap(byte* dst, const byte* src, int numLinesToProcess) {
-	byte code = *src++;
-	_decomp_shr = code % 10;
-	_decomp_mask = 0xFF >> (8 - _decomp_shr);
-	const byte codec = 0xFE;
-	const byte codecTransp = 0xFF;
-
-	_horizStripNextInc = 4;
-
-	switch (code) {
-	case 1:
-		unkDecode7<true>(dst, src, numLinesToProcess);
-		return codec;
-		break;
-
-	case 14: case 15: case 16: case 17: case 18:
-		unkDecodeC<true>(dst, src, numLinesToProcess);
-		return codec;
-		break;
-
-	case 24: case 25: case 26: case 27: case 28:
-		unkDecodeB<true>(dst, src, numLinesToProcess);
-		return codec;
-		break;
-
-	case 34: case 35: case 36: case 37: case 38:
-		unkDecodeC_trans<true>(dst, src, numLinesToProcess);
-		return codecTransp;
-		break;
-
-	case 44: case 45: case 46: case 47: case 48:
-		unkDecodeB_trans<true>(dst, src, numLinesToProcess);
-		return codecTransp;
-		break;
-
-	case 64: case 65: case 66: case 67: case 68: case 104: case 105: case 106: case 107: case 108:
-		unkDecodeA<true>(dst, src, numLinesToProcess);
-		return codec;
-		break;
-
-	case 84: case 85: case 86: case 87: case 88: case 124: case 125: case 126: case 127: case 128:
-		unkDecodeA_trans<true>(dst, src, numLinesToProcess);
-		return codecTransp;
-		break;
-	}
-
-	return 0;
-}
-
-
-bool Gdi::decompressBitmap(byte *bgbak_ptr, const byte *src, int16 numLinesToProcess, int16 startLine) {
-	byte code = *src++;
-	bool useOrDecompress = false;
-	/*
-	_decomp_shr = code % 10;
-	_decomp_mask = 0xFF >> (8 - _decomp_shr);
-	*/
-
-	switch (code)
-	{
-		/*
-	case 1:
-		unkDecode7<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 14: case 15: case 16: case 17: case 18:
-		unkDecodeC<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 24: case 25: case 26: case 27: case 28:
-		unkDecodeB<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 34: case 35: case 36: case 37: case 38:
-		useOrDecompress = true;
-		unkDecodeC_trans<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 44: case 45: case 46: case 47: case 48:
-		useOrDecompress = true;
-		unkDecodeB_trans<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 64: case 65: case 66: case 67: case 68: case 104: case 105: case 106: case 107: case 108:
-		unkDecodeA<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-
-	case 84: case 85: case 86: case 87: case 88: case 124: case 125: case 126: case 127: case 128:
-		useOrDecompress = true;
-		unkDecodeA_trans<false>(bgbak_ptr, src, numLinesToProcess);
-		break;
-		*/
-	case 0xFE:
-		{
-			// Atari: 32bit per strip (MOVEP ready format)
-			assert((((uint32)src) & 1) == 0);
-			copyStrip1(bgbak_ptr, (byte*)src + (startLine << 2), numLinesToProcess);
-		}
-		break;
-
-	case 0xFF:
-		{
-			// Atari: 32bit per strip (MOVEP ready format). 8bit mask after bitmap data.
-			useOrDecompress = true;
-			assert((((uint32)src) & 1) == 0);
-			const byte* mask = src + (numLinesToProcess << 2);
-			copyStripMasked1(bgbak_ptr, (byte*)src + (startLine << 2), (byte*)mask + startLine, numLinesToProcess);
-		}
-		break;
-
-	default:
-		error("Gdi::decompressBitmap: default case %d", code);
-		break;
-	}
-	
-	return useOrDecompress;
-}
-
 
 #define READ_BIT (cl--, bit = bits & 1, bits >>= 1, bit)
 #define FILL_BITS do {              \
@@ -1600,30 +1717,18 @@ bool Gdi::decompressBitmap(byte *bgbak_ptr, const byte *src, int16 numLinesToPro
 		}                           \
 	} while (0)
 
-
-#define PXORC2P(_px, _color, _x, _y)	\
-	if(preprocess) \
-		_px |= c2p[(_color) + ((((uint32)(_x) ^ (uint32)(_y)) & 1)<<11)]; \
-	else \
-		_px |= c2p[(_color)];
-
-
-template <bool preprocess> void Gdi::unkDecodeA(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeA(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	byte incm, reps;
-	uint32* d = (uint32*)dst;
-	uint32 dinc = _horizStripNextInc >> 2;
 
 	do {
 		int x = 8;
-		uint32 px = 0;
-		uint32* c2p = c2ptable256;
 		do {
 			FILL_BITS;
-			PXORC2P(px, color, x, height);
+			*dst++ = _roomPalette[color];
 
 		againPos:
 			if (!READ_BIT) {
@@ -1642,59 +1747,38 @@ template <bool preprocess> void Gdi::unkDecodeA(byte *dst, const byte *src, int 
 					FILL_BITS;
 					reps = bits & 0xFF;
 					do {
-						c2p += 256;
 						if (!--x) {
-							*d = px;
-							d += dinc;
-							px = 0;
 							x = 8;
-							c2p = c2ptable256;
+							dst += _vm->_screenWidth - 8;
 							if (!--height)
 								return;
 						}
-						PXORC2P(px, color, x, height);
+						*dst++ = _roomPalette[color];
 					} while (--reps);
 					bits >>= 8;
 					bits |= (*src++) << (cl - 8);
 					goto againPos;
 				}
 			}
-			c2p += 256;
 		} while (--x);
-		*d = px;
-		d += dinc;
+		dst += _vm->_screenWidth - 8;
 	} while (--height);
 }
 
-template <bool preprocess> void Gdi::unkDecodeA_trans(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeA_trans(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	byte incm, reps;
-	uint32* d = (uint32*)dst;
-	uint32 dinc = _horizStripNextInc >> 2;
-	byte* dm;
-	uint32 mask;
-	uint32 maskbit;
-
-	if (preprocess)
-		dm = dst + (height << 2);
 
 	do {
 		int x = 8;
-		uint32 px = 0;
-		mask = 0;
-		maskbit = 0x80;
-		uint32* c2p = c2ptable256;
-		do
-		{
+		do {
 			FILL_BITS;
 			if (color != _transparentColor)
-			{
-				PXORC2P(px, color, x, height);
-				mask |= maskbit;
-			}
+				*dst = _roomPalette[color];
+			dst++;
 
 		againPos:
 			if (!READ_BIT) {
@@ -1713,72 +1797,38 @@ template <bool preprocess> void Gdi::unkDecodeA_trans(byte *dst, const byte *src
 					FILL_BITS;
 					reps = bits & 0xFF;
 					do {
-						c2p += 256;
-						maskbit >>= 1;
-						if (!--x)
-						{
-							if (preprocess)
-							{
-								*d = px;
-								*dm++ = ~((byte)(mask&0xFF));
-							}
-							else
-							{
-								*d = (*d & ~mask) | px;
-							}
-							mask = 0;
-							maskbit = 0x80808080;
-							d += dinc;
-							px = 0;
+						if (!--x) {
 							x = 8;
-							c2p = c2ptable256;
+							dst += _vm->_screenWidth - 8;
 							if (!--height)
 								return;
 						}
 						if (color != _transparentColor)
-						{
-							PXORC2P(px, color, x, height);
-							mask |= maskbit;
-						}
+							*dst = _roomPalette[color];
+						dst++;
 					} while (--reps);
 					bits >>= 8;
 					bits |= (*src++) << (cl - 8);
 					goto againPos;
 				}
 			}
-			c2p += 256;
-			maskbit >>= 1;
 		} while (--x);
-
-		if (preprocess)
-		{
-			*dm++ = ~((byte)(mask&0xFF));
-			*d = px;
-		}
-		else
-		{
-			*d = (*d & ~mask) | px;
-		}
-		d += dinc;
+		dst += _vm->_screenWidth - 8;
 	} while (--height);
 }
 
-template <bool preprocess> void Gdi::unkDecodeB(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeB(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	int8 inc = -1;
-	uint32* d = (uint32*)dst;
-	uint32 dinc = _horizStripNextInc >> 2;
 
 	do {
 		int x = 8;
-		uint32 px = 0;
-		uint32* c2p = c2ptable256;
 		do {
 			FILL_BITS;
-			PXORC2P(px, color, x, height);
+			*dst++ = _roomPalette[color];
 			if (!READ_BIT) {
 			} else if (!READ_BIT) {
 				FILL_BITS;
@@ -1792,41 +1842,25 @@ template <bool preprocess> void Gdi::unkDecodeB(byte *dst, const byte *src, int 
 				inc = -inc;
 				color += inc;
 			}
-			c2p += 256;
 		} while (--x);
-		*d = px;
-		d += dinc;
+		dst += _vm->_screenWidth - 8;
 	} while (--height);
 }
 
-template <bool preprocess> void Gdi::unkDecodeB_trans(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeB_trans(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	int8 inc = -1;
-	uint32* d = (uint32*)dst;
-	uint32 dinc = _horizStripNextInc >> 2;
-	byte* dm; 
-	uint32 mask, maskbit;
-
-	if (preprocess)
-		dm = dst + (height << 2);
 
 	do {
 		int x = 8;
-		uint32 px = 0;
-		mask = 0;
-		maskbit = 0x80808080;
-		uint32* c2p = c2ptable256;
 		do {
 			FILL_BITS;
 			if (color != _transparentColor)
-			{
-				PXORC2P(px, color, x, height);
-				mask |= maskbit;
-			}
-
+				*dst = _roomPalette[color];
+			dst++;
 			if (!READ_BIT) {
 			} else if (!READ_BIT) {
 				FILL_BITS;
@@ -1840,38 +1874,25 @@ template <bool preprocess> void Gdi::unkDecodeB_trans(byte *dst, const byte *src
 				inc = -inc;
 				color += inc;
 			}
-			c2p += 256;
-			maskbit >>= 1;
 		} while (--x);
-		if (preprocess)
-		{
-			*dm++ = ~((byte)(mask & 0xFF));
-			*d = px;
-		}
-		else
-		{
-			*d = (*d & ~mask) | px;
-		}
-		d += dinc;
+		dst += _vm->_screenWidth - 8;
 	} while (--height);
 }
 
-template <bool preprocess> void Gdi::unkDecodeC(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeC(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	int8 inc = -1;
-	byte* dst2 = dst;
 
 	int x = 8;
 	do {
 		int h = height;
-		dst = &_tempDecodeBuffer[8-x];
 		do {
 			FILL_BITS;
-			*dst = color;
-			dst += 8;
+			*dst = _roomPalette[color];
+			dst += _vm->_screenWidth;
 			if (!READ_BIT) {
 			} else if (!READ_BIT) {
 				FILL_BITS;
@@ -1886,37 +1907,25 @@ template <bool preprocess> void Gdi::unkDecodeC(byte *dst, const byte *src, int 
 				color += inc;
 			}
 		} while (--h);
+		dst -= _vertStripNextInc;
 	} while (--x);
-
-	unkDecode7<preprocess>(dst2, _tempDecodeBuffer, height);
 }
 
-template <bool preprocess> void Gdi::unkDecodeC_trans(byte *dst, const byte *src, int height) {
+void Gdi::unkDecodeC_trans(byte *dst, const byte *src, int height) {
 	byte color = *src++;
 	uint bits = *src++;
 	byte cl = 8;
 	byte bit;
 	int8 inc = -1;
-	byte* dst2 = dst;
-	byte* dm;
-	byte maskbit = 0x80;
-	memset(_tempDecodeMask, 0, height);
-	memset(_tempDecodeBuffer, 0, height<<3);
 
 	int x = 8;
 	do {
 		int h = height;
-		dst = &_tempDecodeBuffer[8-x];
-		dm = _tempDecodeMask;
 		do {
 			FILL_BITS;
 			if (color != _transparentColor)
-			{
-				*dst = color;
-				*dm |= maskbit;
-			}
-			dst += 8;
-			dm++;
+				*dst = _roomPalette[color];
+			dst += _vm->_screenWidth;
 			if (!READ_BIT) {
 			} else if (!READ_BIT) {
 				FILL_BITS;
@@ -1931,70 +1940,199 @@ template <bool preprocess> void Gdi::unkDecodeC_trans(byte *dst, const byte *src
 				color += inc;
 			}
 		} while (--h);
-		maskbit >>= 1;
+		dst -= _vertStripNextInc;
 	} while (--x);
-
-	if (preprocess)
-	{
-		unkDecode7<preprocess>(dst2, _tempDecodeBuffer, height);
-		src = _tempDecodeMask;
-		dst = dst2 + (height << 2);
-		for (int i=0; i<height; i++)
-			*dst++ = ~(*src++);
-	}
-	else
-	{
-		uint32 px;
-		uint32* d = (uint32*)dst2;
-		uint32 dinc = _horizStripNextInc >> 2;	
-		src = _tempDecodeBuffer;
-		dm = _tempDecodeMask;
-		do {
-			px  = c2ptable256[0x000 + *src++];
-			px |= c2ptable256[0x100 + *src++];
-			px |= c2ptable256[0x200 + *src++];
-			px |= c2ptable256[0x300 + *src++];
-			px |= c2ptable256[0x400 + *src++];
-			px |= c2ptable256[0x500 + *src++];
-			px |= c2ptable256[0x600 + *src++];
-			px |= c2ptable256[0x700 + *src++];
-			*d = (*d & ~rptTable[*dm++]) | px;
-			d += dinc;
-		} while (--height);
-	}
 }
 
 #undef READ_BIT
 #undef FILL_BITS
 
+/* Ender - Zak256/Indy256 decoders */
+#define READ_256BIT                        \
+		do {                               \
+			if ((mask <<= 1) == 256) {     \
+				buffer = *src++;           \
+				mask = 1;                  \
+			}                              \
+			bits = ((buffer & mask) != 0); \
+		} while (0)
 
-template <bool preprocess> void Gdi::unkDecode7(byte *dst, const byte *src, int height) {
-	uint32 px;
-	uint32* d = (uint32*)dst;
-	uint32 dinc = _horizStripNextInc >> 2;	
-	uint32* c2p = c2ptable256;
+#define NEXT_ROW                           \
+		do {                               \
+			dst += _vm->_screenWidth;      \
+			if (--h == 0) {                \
+				if (!--x)                  \
+					return;                \
+				dst -= _vertStripNextInc;  \
+				h = height;                \
+			}                              \
+		} while (0)
+
+void Gdi::unkDecode7(byte *dst, const byte *src, int height) {
+	uint h = height;
+
+	if (_vm->_features & GF_OLD256) {
+		int x = 8;
+		for (;;) {
+			*dst = *src++;
+			NEXT_ROW;
+		}
+		return;
+	}
+
 	do {
-		px = 0;
-		PXORC2P(px, 0x000 + *src++, src, height);
-		PXORC2P(px, 0x100 + *src++, src, height);
-		PXORC2P(px, 0x200 + *src++, src, height);
-		PXORC2P(px, 0x300 + *src++, src, height);
-		PXORC2P(px, 0x400 + *src++, src, height);
-		PXORC2P(px, 0x500 + *src++, src, height);
-		PXORC2P(px, 0x600 + *src++, src, height);
-		PXORC2P(px, 0x700 + *src++, src, height);
-		*d = px;
-		d += dinc;
+#if defined(SCUMM_NEED_ALIGNMENT)
+		memcpy(dst, src, 8);
+#else
+		((uint32 *)dst)[0] = ((const uint32 *)src)[0];
+		((uint32 *)dst)[1] = ((const uint32 *)src)[1];
+#endif
+		dst += _vm->_screenWidth;
+		src += 8;
 	} while (--height);
 }
 
+void Gdi::unkDecode8(byte *dst, const byte *src, int height) {
+	uint h = height;
+
+	int x = 8;
+	for (;;) {
+		uint run = (*src++) + 1;
+		byte color = *src++;
+
+		do {
+			*dst = _roomPalette[color];
+			NEXT_ROW;
+		} while (--run);
+	}
+}
+
+void Gdi::unkDecode9(byte *dst, const byte *src, int height) {
+	unsigned char c, bits, color, run;
+	int i, j;
+	uint buffer = 0, mask = 128;
+	int h = height;
+	i = j = run = 0;
+
+	int x = 8;
+	for (;;) {
+		c = 0;
+		for (i = 0; i < 4; i++) {
+			READ_256BIT;
+			c += (bits << i);
+		}
+
+		switch (c >> 2) {
+		case 0:
+			color = 0;
+			for (i = 0; i < 4; i++) {
+				READ_256BIT;
+				color += bits << i;
+			}
+			for (i = 0; i < ((c & 3) + 2); i++) {
+				*dst = _roomPalette[run * 16 + color];
+				NEXT_ROW;
+			}
+			break;
+
+		case 1:
+			for (i = 0; i < ((c & 3) + 1); i++) {
+				color = 0;
+				for (j = 0; j < 4; j++) {
+					READ_256BIT;
+					color += bits << j;
+				}
+				*dst = _roomPalette[run * 16 + color];
+				NEXT_ROW;
+			}
+			break;
+
+		case 2:
+			run = 0;
+			for (i = 0; i < 4; i++) {
+				READ_256BIT;
+				run += bits << i;
+			}
+			break;
+		}
+	}
+}
+
+void Gdi::unkDecode10(byte *dst, const byte *src, int height) {
+	int i;
+	unsigned char local_palette[256], numcolors = *src++;
+	uint h = height;
+
+	for (i = 0; i < numcolors; i++)
+		local_palette[i] = *src++;
+
+	int x = 8;
+
+	for (;;) {
+		byte color = *src++;
+		if (color < numcolors) {
+			*dst = _roomPalette[local_palette[color]];
+			NEXT_ROW;
+		} else {
+			uint run = color - numcolors + 1;
+			color = *src++;
+			do {
+				*dst = _roomPalette[color];
+				NEXT_ROW;
+			} while (--run);
+		}
+	}
+}
+
+
+void Gdi::unkDecode11(byte *dst, const byte *src, int height) {
+	int bits, i;
+	uint buffer = 0, mask = 128;
+	unsigned char inc = 1, color = *src++;
+
+	int x = 8;
+	do {
+		int h = height;
+		do {
+			*dst = _roomPalette[color];
+			dst += _vm->_screenWidth;
+			for (i = 0; i < 3; i++) {
+				READ_256BIT;
+				if (!bits)
+					break;
+			}
+			switch (i) {
+			case 1:
+				inc = -inc;
+				color -= inc;
+				break;
+
+			case 2:
+				color -= inc;
+				break;
+
+			case 3:
+				color = 0;
+				inc = 1;
+				for (i = 0; i < 8; i++) {
+					READ_256BIT;
+					color += bits << i;
+				}
+				break;
+			}
+		} while (--h);
+		dst -= _vertStripNextInc;
+	} while (--x);
+}
+
+#undef NEXT_ROW
+#undef READ_256BIT
 
 #pragma mark -
 #pragma mark --- Transition effects ---
 #pragma mark -
 
 void ScummEngine::fadeIn(int effect) {
-	VirtScreen *vs = &virtscr[0];	
 	updatePalette();
 
 	switch (effect) {
@@ -2012,7 +2150,7 @@ void ScummEngine::fadeIn(int effect) {
 		// that broke the FOA intro. Probably other things as well.
 		//
 		// Hopefully it's safe to do it at this point, at least.
-		vs->setDirtyRange(vs->height, 0);
+		virtscr[0].setDirtyRange(0, 0);
  		transitionEffect(effect - 1);
 		break;
 	case 128:
@@ -2034,25 +2172,22 @@ void ScummEngine::fadeIn(int effect) {
 		break;
 	default:
 		warning("Unknown screen effect, %d", effect);
-		break;
 	}
 	_screenEffectFlag = true;
 }
 
 void ScummEngine::fadeOut(int effect) {
 	VirtScreen *vs = &virtscr[0];
-	vs->setDirtyRange(vs->height, 0);
-	camera._last.x = camera._cur.x;
 
-	if (_screenEffectFlag && effect != 0)
-	{
-		_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, vs->dirty.maskBuf(), false);
-		_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, vs->dirty.maskBuf(), false);
-		//_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, 0, false);
-		//_system->update_screen();
+	vs->setDirtyRange(0, 0);
+	if (!(_features & GF_NEW_CAMERA))
+		camera._last.x = camera._cur.x;
 
+	if (_screenEffectFlag && effect != 0) {
+	
 		// Fill screen 0 with black
-		memset(vs->screenPtr + (vs->xstart >> 1), 0, (vs->width * vs->height) >> 1);
+		
+		memset(vs->screenPtr + vs->xstart, 0, vs->width * vs->height);
 	
 		// Fade to black with the specified effect, if any.
 		switch (effect) {
@@ -2066,30 +2201,19 @@ void ScummEngine::fadeOut(int effect) {
 		case 128:
 			unkScreenEffect6();
 			break;
-			/*
 		case 129:
 			// Just blit screen 0 to the display (i.e. display will be black)
 			vs->setDirtyRange(0, vs->height);
-			_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, 0, false);
-			_system->update_screen();
-			vs->dirty.clear();
+			updateDirtyScreen(kMainVirtScreen);
 			break;
-			*/
 		case 134:
 			dissolveEffect(1, 1);
 			break;
-			/*
 		case 135:
 			unkScreenEffect5(1);
 			break;
-			*/
 		default:
 			warning("fadeOut: default case %d", effect);
-			vs->setDirtyRange(0, vs->height);
-			_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, 0, false);
-			_system->update_screen();
-			vs->dirty.clear();
-			break;
 		}
 	}
 
@@ -2110,14 +2234,13 @@ void ScummEngine::fadeOut(int effect) {
  * in a certain order; the exact order determines how the effect appears to the user.
  * @param a		the transition effect to perform
  */
-void ScummEngine::transitionEffect(int a)
-{
+void ScummEngine::transitionEffect(int a) {
 	int delta[16];								// Offset applied during each iteration
 	int tab_2[16];
 	int i, j;
 	int bottom;
 	int l, t, r, b;
-	const int height = MIN((int)virtscr[0].height, SCREEN_HEIGHT);
+	const int height = MIN((int)virtscr[0].height, _screenHeight);
 
 	for (i = 0; i < 16; i++) {
 		delta[i] = transitionEffects[a].deltaTable[i];
@@ -2127,52 +2250,41 @@ void ScummEngine::transitionEffect(int a)
 		tab_2[i] = j;
 	}
 
-	// update system screen with nothing, to clear the prev-frame dirty mask for double buffering
-	VirtScreen* vs = &virtscr[0];
-	vs->dirty.clear();
-
 	bottom = height / 8;
-	for (j = 0; j < transitionEffects[a].numOfIterations; j++)
-	{
-		uint32 t0 = _system->get_msecs();
-		for (i = 0; i < 4; i++)
-		{
+	for (j = 0; j < transitionEffects[a].numOfIterations; j++) {
+		for (i = 0; i < 4; i++) {
 			l = tab_2[i * 4];
 			t = tab_2[i * 4 + 1];
 			r = tab_2[i * 4 + 2];
 			b = tab_2[i * 4 + 3];
 			if (t == b) {
 				while (l <= r) {
-					if (l >= 0 && l < SCREEN_STRIP_COUNT && t < bottom) {
-						vs->updateDirty(l, (t * 8), ((b + 1) * 8));
+					if (l >= 0 && l < gdi._numStrips && t < bottom) {
+						virtscr[0].tdirty[l] = t * 8;
+						virtscr[0].bdirty[l] = (b + 1) * 8;
 					}
 					l++;
 				}
 			} else {
-				if (l < 0 || l >= SCREEN_STRIP_COUNT || b <= t)
+				if (l < 0 || l >= gdi._numStrips || b <= t)
 					continue;
-
 				if (b > bottom)
 					b = bottom;
 				if (t < 0)
 					t = 0;
-				vs->updateDirty(l, (t*8), ((b+1)*8));
+ 				virtscr[0].tdirty[l] = t * 8;
+				virtscr[0].bdirty[l] = (b + 1) * 8;
 			}
+			updateDirtyScreen(kMainVirtScreen);
 		}
 
 		for (i = 0; i < 16; i++)
 			tab_2[i] += delta[i];
 
-		// Draw the current state to the screen and wait half a sec so the user can watch the effect taking place.
-		_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, vs->dirty.maskBuf(), false);
+		// Draw the current state to the screen and wait half a sec so the user
+		// can watch the effect taking place.
 		_system->update_screen();
-		vs->dirty.clear();
-
-		const uint32 delay = 45;
-		uint32 t = _system->get_msecs() - t0;
-		if (t < delay) {
-			waitForTimer(delay - t);
-		}
+		waitForTimer(30);
 	}
 }
 
@@ -2185,17 +2297,6 @@ void ScummEngine::transitionEffect(int a)
  * dissolveEffect(virtsrc[0].width, 1) produces a line-by-line dissolve
  */
 void ScummEngine::dissolveEffect(int width, int height) {
-
-#if 0
-	VirtScreen *vs = &virtscr[0];
-	_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, 0);
-	_system->update_screen();
-	waitForTimer(30);
-#else
-
-	width = 8;
-	height = 8;
-
 	VirtScreen *vs = &virtscr[0];
 	int *offsets;
 	int blits_before_refresh, blits;
@@ -2275,20 +2376,20 @@ void ScummEngine::dissolveEffect(int width, int height) {
 	blits = 0;
 	blits_before_refresh = (3 * w * h) / 25;
 	
-	Common::DirtyMask dirty;
-	dirty.clear();
-	//_system->copy_screen(vs->screenPtr + (vs->xstart >> 1), vs->topline, vs->height, dirty.maskBuf());
+	// Speed up the effect for CD Loom since it uses it so often. I don't
+	// think the original had any delay at all, so on modern hardware it
+	// wasn't even noticeable.
+	if (_gameId == GID_LOOM256)
+		blits_before_refresh *= 2;
 
 	for (i = 0; i < w * h; i++) {
 		x = offsets[i] % vs->width;
 		y = offsets[i] / vs->width;
-		dirty.updateRect(x, y, x+7, y+7);
+		_system->copy_rect(vs->screenPtr + vs->xstart + y * vs->width + x, vs->width, x, y + vs->topline, width, height);
 
 		if (++blits >= blits_before_refresh) {
 			blits = 0;
-			_system->copy_screen(vs->screenPtr + vs->xstart, vs->topline, vs->height, dirty.maskBuf(), false);
 			_system->update_screen();
-			dirty.clear();
 			waitForTimer(30);
 		}
 	}
@@ -2296,21 +2397,12 @@ void ScummEngine::dissolveEffect(int width, int height) {
 	free(offsets);
 
 	if (blits != 0) {
-		_system->copy_screen(vs->screenPtr + vs->xstart, vs->topline, vs->height, dirty.maskBuf(), false);
 		_system->update_screen();
-		dirty.clear();
 		waitForTimer(30);
 	}
-#endif
 }
 
-void ScummEngine::scrollEffect(int dir)
-{
-	return;
-/*
-#ifdef __ATARI_TEMP__
-	warning("stub scrollEffect(%d)", dir);
-#else
+void ScummEngine::scrollEffect(int dir) {
 	VirtScreen *vs = &virtscr[0];
 
 	int x, y;
@@ -2385,12 +2477,14 @@ void ScummEngine::scrollEffect(int dir)
 		}
 		break;
 	}
-#endif
-*/
 }
 
 void ScummEngine::unkScreenEffect6() {
-	dissolveEffect(8, 4);
+	// CD Loom (but not EGA Loom!) uses a more fine-grained dissolve
+	if (_gameId == GID_LOOM256)
+		dissolveEffect(1, 1);
+	else
+		dissolveEffect(8, 4);
 }
 
 void ScummEngine::unkScreenEffect5(int a) {
@@ -2405,11 +2499,8 @@ void ScummEngine::unkScreenEffect5(int a) {
 }
 
 void ScummEngine::setShake(int mode) {
-#ifndef __ATARI__
-	// shake effect doesn't need redraw on atari
 	if (_shakeEnabled != (mode != 0))
 		_fullRedraw = true;
-#endif
 
 	_shakeEnabled = mode != 0;
 	_shakeFrame = 0;
@@ -2418,3 +2509,15 @@ void ScummEngine::setShake(int mode) {
 
 } // End of namespace Scumm
 
+#ifdef __PALM_OS__
+#include "scumm_globals.h"
+
+_GINIT(Gfx)
+_GSETPTR(Scumm::transitionEffects, GBVARS_TRANSITIONEFFECTS_INDEX, Scumm::TransitionEffect, GBVARS_SCUMM)
+_GEND
+
+_GRELEASE(Gfx)
+_GRELEASEPTR(GBVARS_TRANSITIONEFFECTS_INDEX, GBVARS_SCUMM)
+_GEND
+
+#endif

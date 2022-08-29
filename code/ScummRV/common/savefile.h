@@ -32,43 +32,43 @@
 
 class SaveFile {
 public:
-	SaveFile(const char* filename, bool saveOrLoad);
-	~SaveFile();
+	virtual ~SaveFile() {}
 
+	/* Compatible with File API */
 	uint32 read(void *ptr, uint32 size);
 	byte readByte();
-	uint16 readUint16();
-	uint32 readUint32();
+	uint16 readUint16LE();
+	uint32 readUint32LE();
+	uint16 readUint16BE();
+	uint32 readUint32BE();
 	uint32 write(const void *ptr, uint32 size);
 	void writeByte(byte value);
-	void writeUint16(uint16 value);
-	void writeUint32(uint32 value);
+	void writeUint16LE(uint16 value);
+	void writeUint32LE(uint32 value);
+	void writeUint16BE(uint16 value);
+	void writeUint32BE(uint32 value);
 
-	bool isOpen() const;
+	virtual bool isOpen() const = 0;
 
-private:
-	void flushWrites(bool forceFlush);
-	void cacheReads();
-
-	bool mode;
-	uintptr_t buf;
-	uintptr_t bufPtr;
-	FILE* _f;
+protected:
+	/* Only for internal use, use File compatible API above instead */
+	virtual int fread(void *buf, int size, int cnt) = 0;
+	virtual int fwrite(const void *buf, int size, int cnt) = 0;
 };
 
 class SaveFileManager {
 
 public:
-	~SaveFileManager() {}
+	virtual ~SaveFileManager() {}
 
-	SaveFile *open_savefile(const char *filename, const char *directory, bool saveOrLoad);
-	void list_savefiles(const char * /* prefix */,  const char *directory, bool *marks, int num) {
+	virtual SaveFile *open_savefile(const char *filename, const char *directory, bool saveOrLoad);
+	virtual void list_savefiles(const char * /* prefix */,  const char *directory, bool *marks, int num) {
 		memset(marks, true, num * sizeof(bool));
 	}
 
 protected:
 	void join_paths(const char *filename, const char *directory, char *buf, int bufsize);
-	SaveFile *makeSaveFile(const char *filename, bool saveOrLoad);
+	virtual SaveFile *makeSaveFile(const char *filename, bool saveOrLoad);
 };
 
 #endif

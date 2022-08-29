@@ -22,44 +22,6 @@
 #include "stdafx.h"
 #include "scumm/bomp.h"
 #include "scumm/scumm.h"
-#include "scumm/resource.h"
-
-#ifdef __ATARI__
-	#ifdef GAME_SAMNMAX
-		#define CURSOR_SUPPORT_DEFAULT	0
-		#define CURSOR_SUPPORT_GRAB		0
-		#define CURSOR_SUPPORT_IM01		1
-		#define CURSOR_SUPPORT_BOMP		1
-	#else
-		#define CURSOR_SUPPORT_DEFAULT	0
-		#define CURSOR_SUPPORT_GRAB		0
-		#define CURSOR_SUPPORT_IM01		0
-		#define CURSOR_SUPPORT_BOMP		0
-	#endif
-#else
-	#ifdef GAME_SAMNMAX
-		#define CURSOR_SUPPORT_DEFAULT	1
-		#define CURSOR_SUPPORT_GRAB		0
-		#define CURSOR_SUPPORT_IM01		0
-		#define CURSOR_SUPPORT_BOMP		0
-	#else
-		#define CURSOR_SUPPORT_DEFAULT	1
-		#define CURSOR_SUPPORT_GRAB		0
-		#define CURSOR_SUPPORT_IM01		0
-		#define CURSOR_SUPPORT_BOMP		0
-	#endif
-#endif
-
-#define CURSOR_MAX_WIDTH	64
-#define CURSOR_MAX_HEIGHT	32
-
-// todo:
-//
-//	decompress to atari format.
-//	call set_mouse_cursor() with MOVEP data + optional mask
-//	_grabbedCursor is quite large so we can store both img+mask in there
-//	make sure nothing breaks in terms of savegames
-//
 
 
 namespace Scumm {
@@ -67,19 +29,16 @@ namespace Scumm {
 /*
  * Mouse cursor cycle colors (for the default crosshair).
  */
-
-static const byte cursor_dummy_mask[CURSOR_MAX_HEIGHT] = {
-	0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-	0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
-};
-
-#if CURSOR_SUPPORT_DEFAULT
 static const byte default_v1_cursor_colors[4] = {
 	1, 1, 12, 11
 };
+
 static const byte default_cursor_colors[4] = {
 	15, 15, 7, 8
 };
+
+
+
 static const uint16 default_cursor_images[5][16] = {
 	/* cross-hair */
 	{ 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0000, 0x7e3f,
@@ -106,16 +65,10 @@ static const byte default_cursor_hotspots[10] = {
 	8, 7,   8, 7,   1, 1,   5, 0,
 	8, 7, //zak256
 };
-#endif // CURSOR_SUPPORT_DEFAULT
 
-void ScummEngine::setupCursor()
-{
-	debug(1, "setupCursor");
-	_currentCursor = 0;
-	_cursor.state = 0;	
+
+void ScummEngine::setupCursor() {
 	_cursor.animate = 1;
-	_grabbedCursorId = 0;
-	memset(_grabbedCursorTransp, 0xFF, sizeof(_grabbedCursorTransp));
 	if (_gameId == GID_TENTACLE && res.roomno[rtRoom][60]) {
 		// HACK: For DOTT we manually set the default cursor. See also bug #786994
 		setCursorImg(697, 60, 1);
@@ -123,372 +76,239 @@ void ScummEngine::setupCursor()
 	}
 }
 
-void ScummEngine::grabCursor(uint32 id, int16 x, int16 y, int16 w, int16 h)
-{
-	// called by v6 script (but is it ever used in samnmax?)
-	debug(1, "grabCursor: 0x%08x: %d,%d (%dx%d)", id, x, y, w, h);
-#if CURSOR_SUPPORT_GRAB
+void ScummEngine::grabCursor(int x, int y, int w, int h) {
 	VirtScreen *vs = findVirtScreen(y);
-	if (vs == NULL)
+
+	if (vs == NULL) {
+		warning("grabCursor: invalid Y %d", y);
 		return;
-	byte* ptr = vs->screenPtr + (x >> 1) + ((vs->width >> 1) * (y - vs->topline));
-	assertAligned(ptr);
+	}
 
-	w = CLAMP<int16>(w, 0, CURSOR_MAX_WIDTH);
-	h = CLAMP<int16>(h, 0, CURSOR_MAX_HEIGHT);
+	grabCursor(vs->screenPtr + (y - vs->topline) * vs->width + x, w, h);
 
-	#ifndef __ATARI__
-	uint32 size = width * height;
+}
+
+void ScummEngine::grabCursor(byte *ptr, int width, int height) {
+	uint size;
+	byte *dst;
+
+	size = width * height;
 	if (size > sizeof(_grabbedCursor))
 		error("grabCursor: grabbed cursor too big");
-	#endif
 
-	// todo: implement me..
-
-	byte* dst = _grabbedCursor;
-	const byte* src = ptr;
-	int16 numstrips = width >> 3;
-	uint32 srcInc = (pitch - width) >> 1;
-	uint32 dstInc = 0;
-	while(height)
-	{
-		for (uint16 i=0; i<numstrips; ++i)
-		{
-			byte s0 = *src++;
-			byte s1 = *src++;
-			byte s2 = *src++;
-			byte s3 = *src++;
-
-			for (int16 j=8; j!=0; j--)
-			{
-				*dst++ = (s0 >> 7) | ((s1 >> 6) & 2) | ((s2 >> 5) & 4) | ((s3 >> 4) & 8);
-				s0 <<= 1; s1 <<= 1; s2 <<= 1; s3 <<= 1;
-			}
-		}
-		dst += dstInc;
-		src += srcInc;
-		height--;
-	};
-
-	_grabbedCursorId = id;
-	_grabbedCursorTransp[0] = 0xFF;
-	_cursor.width = width;
-	_cursor.height = height;
-	_cursor.animate = 0;
-	updateCursor();
-#else
-	_currentCursor = 0;
-	_cursor.animate = 1;
-	decompressDefaultCursor((_cursor.animateIndex >> 1) & 3);
-#endif
-}
-
-void ScummEngine::useIm01Cursor(uint32 id, const byte *im, int16 width, int16 height)
-{
-	// called from setCursorImg()
-	int16 numstrips = width;
-#if CURSOR_SUPPORT_IM01
-	if (width & 1)
-		width++;
-
-	width <<= 3; height <<= 3;
-	width = CLAMP<int16>(width, 0, CURSOR_MAX_WIDTH);
-	height = CLAMP<int16>(height, 0, CURSOR_MAX_HEIGHT);
-	_grabbedCursorId = id;
-	_grabbedCursorTransp[0] = 0xFF;
 	_cursor.width = width;
 	_cursor.height = height;
 	_cursor.animate = 0;
 
-	bool cached = _system->mouse_cursor_cached(id);
-	debug(1, "useIm01Cursor: 0x%08x: %dx%d %s", id, width, height, cached ? "(CACHED)" : "");
-	if (cached) {
-		updateCursor();
-		return;
-	}
-
-	byte* tempBuffer = _grabbedCursor;
-	byte* maskBuffer = _grabbedCursor + (sizeof(_grabbedCursor)>>1);
-	int16 dstPtrInc = (width >> 1);
-	int16 dstMskInc = (width >> 3);
-
-	const byte* smap_ptr = findResource(MKID('SMAP'), im);
-	if (!smap_ptr)
-		return;
-
-	assertAligned(smap_ptr);
-	int16 stripnr = 0;
-
-	while (stripnr < numstrips)
-	{
-		byte* dstMsk = maskBuffer + (stripnr & ~1);
-		byte* dstPtr = tempBuffer + ((stripnr & ~1) << 2);
-		const byte* stripData = smap_ptr + READ_LE_UINT32(smap_ptr + (stripnr << 2) + 8);
-		byte code = *stripData++;
-		if (code == 0xFE || code == 0xFF)
-		{
-			byte extra = *(stripData - 2);
-			const uint32* srcPtr = (const uint32*)stripData;
-			assertAligned(srcPtr);
-			const byte* mskPtr = (const byte*) (srcPtr + height);
-			if (extra == 2)
-			{
-				// skip standard object mask if any
-				uint32 maskSize = (height + 3) & ~3;
-				if (code & 1)
-					mskPtr += maskSize;
-				// select cursor mask variation
-				if ((id & (1<<1)) == 0)
-					mskPtr += maskSize;
-			}
-			else if ((code & 1) == 0)
-			{
-				mskPtr = cursor_dummy_mask;
-			}
-
-			int16 lines = height;
-			if ((stripnr & 1) == 0)
-			{
-				while (lines)
-				{
-					uint32 px = *srcPtr++;
-					byte pm = *mskPtr++;
-#ifdef __ATARI__
-					*(dstMsk+0) = pm;
-					__asm__ volatile ("movep.l %1,0(%0)\n\t" : : "a"(dstPtr), "d"(px) : "memory");
-#else
-					// todo: PC
-#endif
-					dstMsk += dstMskInc;
-					dstPtr += dstPtrInc;
-					lines--;
-				}
-			}
-			else
-			{
-				while (lines)
-				{
-					uint32 px = *srcPtr++;
-					byte pm = *mskPtr++;
-#ifdef __ATARI__
-					*(dstMsk+1) = pm;
-					__asm__ volatile ("movep.l %1,1(%0)\n\t" : : "a"(dstPtr), "d"(px) : "memory");
-#else
-					// todo: PC
-#endif
-					dstMsk += dstMskInc;
-					dstPtr += dstPtrInc;
-					lines--;
-				}
-			}
-		}
-		stripnr++;
-	}
-	if (numstrips & 1)
-	{
-		byte* mskPtr = maskBuffer + numstrips;
-		while (height) {
-			*mskPtr = 0;
-			mskPtr += width;
-			height--;
-		}
+	dst = _grabbedCursor;
+	for (; height; height--) {
+		memcpy(dst, ptr, width);
+		dst += width;
+		ptr += _screenWidth;
 	}
 
 	updateCursor();
-#else
-	_currentCursor = 0;
-	_cursor.animate = 1;
-	decompressDefaultCursor((_cursor.animateIndex >> 1) & 3);
-#endif
 }
 
+void ScummEngine::useIm01Cursor(const byte *im, int w, int h) {
+	VirtScreen *vs = &virtscr[0];
+	byte *buf, *dst;
+	const byte *src;
+	int i;
 
-#ifdef ENGINE_SCUMM6
-void ScummEngine::useBompCursor(uint32 id, const byte *im, int16 width, int16 height)
-{
-	// called from setCursorImg()
-#if CURSOR_SUPPORT_BOMP
-/*
-	bool cached = _system->mouse_cursor_cached(_grabbedCursorId);
-	debug(1, "useBompCursor: 0x%08x: %dx%d %s", id, width, height, cached ? "(CACHED)" : "");
-	if (cached) {
-		updateCursor();
-		return;
-	}
-*/
-	#ifndef __ATARI__
-	uint32 size = width * height;
-	if (size > sizeof(_grabbedCursor))
-		error("useBompCursor: cursor too big (%d)", size);
-	#endif
+	w *= 8;
+	h *= 8;
 
-	assertAligned(im);
-	const byte*		hdr 		= im + 18;
-	const int16 	scaleIdx 	= 0;
-	const int16 	frameIdx 	= 0;
-	const uint16* 	scaleHeader = (uint16*)(hdr + 4);
-	const byte* 	frameHeader = (byte*)(hdr + READ_BE_UINT16(&scaleHeader[scaleIdx]));
-	int16 			w 			= *(frameHeader + 0);
-	int16			h			= *(frameHeader + 1);
-	const uint32*	offsets		= (uint32*)(frameHeader + 8);
-	const uint32 	offset		= READ_BE_UINT32(&offsets[frameIdx]);
-	const uint32* 	sptr 		= (uint32*)(hdr + offset);
+	dst = buf = (byte *) malloc(w * h);
+	src = vs->screenPtr + vs->xstart;
 
-	uint16 dstMskInc = 0;
-	uint16 dstPtrInc = 0;
-	if (w > width) width = w;
-	if (width & 1) width++;
-	if (width > w) {
-		dstMskInc = (width - w);
-		dstPtrInc = dstMskInc << 2;
-	}
-	if (w & 1)
-		dstPtrInc += 4;
-
-	width = CLAMP<int16>(width<<3, 0, CURSOR_MAX_WIDTH);
-	height = CLAMP<int16>(height<<3, 0, CURSOR_MAX_HEIGHT);
-	_grabbedCursorId = id;
-	_grabbedCursorTransp[0] = 0xFF;
-	_cursor.width = width;
-	_cursor.height = height;
-	_cursor.animate = 0;
-	
-	byte* dstPtr = _grabbedCursor;
-	byte* dstMsk = _grabbedCursor + (sizeof(_grabbedCursor)>>1);
-	memset(dstMsk, 0, (width * height) >> 3);
-
-#ifdef __ATARI__
-	for (int16 y = 0; y < h; y++)
-	{
-		for (int16 x = 0; x < w; x++)
-		{
-			uint32 px, pm;
-
-			px = *sptr++;
-			if ((x & 1) == 0) {
-				__asm__ volatile ("movep.l %1,0(%0)\n\t" : : "a"(dstPtr), "d"(px) : "memory");
-			} else {
-				__asm__ volatile ("movep.l %1,1(%0)\n\t" : : "a"(dstPtr), "d"(px) : "memory");
-				dstPtr += 8;
-			}
-			*dstMsk++ = (byte) *sptr++;
-		}
-#else
-		// todo: PC
-#endif
-		dstPtr += dstPtrInc;
-		dstMsk += dstMskInc;
-		height--;
+	for (i = 0; i < h; i++) {
+		memcpy(dst, src, w);
+		dst += w;
+		src += vs->width;
 	}
 
-	updateCursor();
-#else
-	_currentCursor = 0;
-	_cursor.animate = 1;
-	decompressDefaultCursor((_cursor.animateIndex >> 1) & 3);
-#endif
-}
-#endif //ENGINE_SCUMM6
+	drawBox(0, 0, w - 1, h - 1, 0xFF);
 
-void ScummEngine::decompressDefaultCursor(int16 idx)
-{
-	// todo: decompress to atari format
-	_grabbedCursorId = ((_currentCursor & 0xFFFF) << 8) | ((idx & 0xF) << 4);
-	_grabbedCursorTransp[0] = 0xFF;
-#if CURSOR_SUPPORT_DEFAULT
-	_cursor.width = 16;
-	_cursor.height = 16;
-	byte currentCursor = _currentCursor;
-	_cursor.hotspotX = default_cursor_hotspots[2 * currentCursor];
-	_cursor.hotspotY = default_cursor_hotspots[2 * currentCursor + 1];
-	bool cached = _system->mouse_cursor_cached(_grabbedCursorId);
-	debug(1, "decompressDefaultCursor: %d,%d %s", _currentCursor, idx, cached ? "(CACHED)" : "");
-	if (!cached)
-	{
-		byte color = default_cursor_colors[idx];
-		memset(_grabbedCursor, 0xFF, sizeof(_grabbedCursor));
-		for (int16 i = 0; i < 16; i++) {
-			for (int16 j = 0; j < 16; j++) {
-				if (default_cursor_images[currentCursor][i] & (1 << j))	
-					_grabbedCursor[(i * 16) + 15 - j] = color;
-			}
-		}
+	vs->hasTwoBuffers = false;
+	gdi.disableZBuffer();
+	gdi.drawBitmap(im, vs, _screenStartStrip, 0, w, h, 0, w / 8, 0);
+	vs->hasTwoBuffers = true;
+	gdi.enableZBuffer();
+
+	grabCursor(vs->screenPtr + vs->xstart, w, h);
+
+	src = buf;
+	dst = vs->screenPtr + vs->xstart;
+
+	for (i = 0; i < h; i++) {
+		memcpy(dst, src, w);
+		dst += vs->width;
+		src += w;
 	}
-#endif
-	updateCursor();
+
+	free(buf);
 }
 
-void ScummEngine::setCursor(int16 cursor)
-{
-	if ((cursor & ~3) == 0)
+void ScummEngine::setCursor(int cursor) {
+	if (cursor >= 0 && cursor <= 3)
 		_currentCursor = cursor;
 	else
 		warning("setCursor(%d)", cursor);
 }
 
-void ScummEngine::setCursorHotspot(int16 x, int16 y) {
+void ScummEngine::setCursorHotspot(int x, int y) {
 	_cursor.hotspotX = x;
 	_cursor.hotspotY = y;
+	// FIXME this hacks around offset cursor in the humongous games
+	if (_features & GF_HUMONGOUS) {
+		_cursor.hotspotX += 15;
+		_cursor.hotspotY += 15;
+	}
 }
 
-void ScummEngine::updateCursor()
-{
-	byte* mask = _grabbedCursor + (sizeof(_grabbedCursor) >> 1);
-	_system->set_mouse_cursor(_grabbedCursorId, _grabbedCursor, mask, _cursor.width, _cursor.height, _cursor.hotspotX, _cursor.hotspotY);
+void ScummEngine::updateCursor() {
+	_system->set_mouse_cursor(_grabbedCursor, _cursor.width, _cursor.height,
+							_cursor.hotspotX, _cursor.hotspotY);
 }
 
-void ScummEngine::animateCursor()
-{
-	if (_cursor.animate)
-	{
-		if (!(_cursor.animateIndex & 0x1))
-		{
+void ScummEngine::animateCursor() {
+	if (_cursor.animate) {
+		if (!(_cursor.animateIndex & 0x1)) {
 			decompressDefaultCursor((_cursor.animateIndex >> 1) & 3);
 		}
 		_cursor.animateIndex++;
 	}
 }
 
-void ScummEngine::makeCursorColorTransparent(int16 a)
-{
-#if CURSOR_SUPPORT_DEFAULT || CURSOR_SUPPORT_IM01 || CURSOR_SUPPORT_BOMP
-	debug(1, "makeCursorColorTransparent: %d", a);
+void ScummEngine::useBompCursor(const byte *im, int width, int height) {
+	uint size;
 
-	// ignore if bomp
-	if (_grabbedCursorId & 1)
-		return;
+	width *= 8;
+	height *= 8;
 
-	// sanity check room
-	int16 room = (_grabbedCursorId >> 24) & 0xFF;
-	if (room == 0 || room == 0xFF)
-		return;
+	size = width * height;
+	if (size > sizeof(_grabbedCursor))
+		error("useBompCursor: cursor too big (%d)", size);
 
-	// interaction outline?
-	if (a == 180)
-	{
-		if ((_grabbedCursorId & (1 << 1)) == 0)
-		{
-			int16 img = (_grabbedCursorId >> 8) & 0xFFFF;
-			int16 imgindex = (_grabbedCursorId >> 4) & 0xF;
-			setCursorImg(img, room, imgindex, 1);
-		}
+	_cursor.width = width;
+	_cursor.height = height;
+	_cursor.animate = 0;
+
+	// Skip the header
+	if (_version == 8) {
+		im += 16;
+	} else {
+		im += 18;
 	}
+	decompressBomp(_grabbedCursor, im, width, height);
 
-	// save calls
-	const int16 maxCursorTransp = sizeof(_grabbedCursorTransp) - 1;
-	for (int16 i = 0; i != maxCursorTransp; i++)
-	{
-		if (_grabbedCursorTransp[i] == 0xFF)
-		{
-			_grabbedCursorTransp[i] = a;
-			_grabbedCursorTransp[i+1] = 0xFF;
+	updateCursor();
+}
+
+void ScummEngine::decompressDefaultCursor(int idx) {
+	int i, j;
+	byte color;
+
+	memset(_grabbedCursor, 0xFF, sizeof(_grabbedCursor));
+
+	if (_version == 1)
+		color = default_v1_cursor_colors[idx];
+	else
+		color = default_cursor_colors[idx];
+
+	// FIXME: None of the stock cursors are right for Loom. Why is that?
+
+	if (_gameId == GID_LOOM || _gameId == GID_LOOM256) {
+		int w = 0;
+
+		_cursor.width = 8;
+		_cursor.height = 8;
+		_cursor.hotspotX = 0;
+		_cursor.hotspotY = 0;
+		
+		for (i = 0; i < 8; i++) {
+			w += (i >= 6) ? -2 : 1;
+			for (j = 0; j < w; j++)
+				_grabbedCursor[i * 8 + j] = color;
 		}
-		if (_grabbedCursorTransp[i] == a)
-			break;
-	}
+	} else if (_version <= 2) {
+		_cursor.width = 23;
+		_cursor.height = 21;
+		_cursor.hotspotX = 11;
+		_cursor.hotspotY = 10;
 
-	//updateCursor();
+		byte *hotspot = _grabbedCursor + _cursor.hotspotY * _cursor.width + _cursor.hotspotX;
+
+		// Crosshair, slightly assymetric
+
+		for (i = 0; i < 7; i++) {
+			*(hotspot - 5 - i) = color;
+			*(hotspot + 5 + i) = color;
+		}
+
+		for (i = 0; i < 8; i++) {
+			*(hotspot - _cursor.width * (3 + i)) = color;
+			*(hotspot + _cursor.width * (3 + i)) = color;
+		}
+
+		// Arrow heads, diagonal lines
+
+		for (i = 1; i <= 3; i++) {
+			*(hotspot - _cursor.width * i - 5 - i) = color;
+			*(hotspot + _cursor.width * i - 5 - i) = color;
+			*(hotspot - _cursor.width * i + 5 + i) = color;
+			*(hotspot + _cursor.width * i + 5 + i) = color;
+			*(hotspot - _cursor.width * (i + 3) - i) = color;
+			*(hotspot - _cursor.width * (i + 3) + i) = color;
+			*(hotspot + _cursor.width * (i + 3) - i) = color;
+			*(hotspot + _cursor.width * (i + 3) + i) = color;
+		}
+
+		// Final touches
+
+		*(hotspot - _cursor.width - 7) = color;
+		*(hotspot - _cursor.width + 7) = color;
+		*(hotspot + _cursor.width - 7) = color;
+		*(hotspot + _cursor.width + 7) = color;
+		*(hotspot - (_cursor.width * 5) - 1) = color;
+		*(hotspot - (_cursor.width * 5) + 1) = color;
+		*(hotspot + (_cursor.width * 5) - 1) = color;
+		*(hotspot + (_cursor.width * 5) + 1) = color;
+	} else {
+		byte currentCursor = _currentCursor;
+
+#ifdef __PALM_OS__
+		if (_gameId == GID_ZAK256 && currentCursor == 0)
+			currentCursor = 4;
 #endif
+
+		_cursor.width = 16;
+		_cursor.height = 16;
+		_cursor.hotspotX = default_cursor_hotspots[2 * currentCursor];
+		_cursor.hotspotY = default_cursor_hotspots[2 * currentCursor + 1];
+
+		for (i = 0; i < 16; i++) {
+			for (j = 0; j < 16; j++) {
+				if (default_cursor_images[currentCursor][i] & (1 << j))	
+					_grabbedCursor[16 * i + 15 - j] = color;
+			}
+		}
+	}
+
+	updateCursor();
+}
+
+void ScummEngine::makeCursorColorTransparent(int a) {
+	int i, size;
+
+	size = _cursor.width * _cursor.height;
+
+	for (i = 0; i < size; i++)
+		if (_grabbedCursor[i] == (byte)a)
+			_grabbedCursor[i] = 0xFF;
+
+	updateCursor();
 }
 
 } // End of namespace Scumm

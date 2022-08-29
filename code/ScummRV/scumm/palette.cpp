@@ -24,102 +24,102 @@
 #include "scumm/scumm.h"
 #include "scumm/intern.h"
 #include "scumm/resource.h"
-#include "scumm/verbs.h"
 
-
-extern uint32 c2ptable256[];
-extern uint32 c2pfill256[];
 
 namespace Scumm {
 
+void ScummEngine::setupAmigaPalette() {
+	setPalColor( 0,   0,   0,   0);
+	setPalColor( 1,   0,   0, 187);
+	setPalColor( 2,   0, 187,   0);
+	setPalColor( 3,   0, 187, 187);
+	setPalColor( 4, 187,   0,   0);
+	setPalColor( 5, 187,   0, 187);
+	setPalColor( 6, 187, 119,   0);
+	setPalColor( 7, 187, 187, 187);
+	setPalColor( 8, 119, 119, 119);
+	setPalColor( 9, 119, 119, 255);
+	setPalColor(10,   0, 255,   0);
+	setPalColor(11,   0, 255, 255);
+	setPalColor(12, 255, 136, 136);
+	setPalColor(13, 255,   0, 255);
+	setPalColor(14, 255, 255,   0);
+	setPalColor(15, 255, 255, 255);
+}
 
-#define MAKE_PC_COLOR(_r,_g,_b) _r,_g,_b,0
-//#define MAKE_PC_COLOR(_r,_g,_b) ((_r + 15) & 0xE0), ((_g+15) & 0xE0), ((_b+15) & 0xE0), 0
+void ScummEngine::setupEGAPalette() {
+	setPalColor( 0,   0,   0,   0);
+	setPalColor( 1,   0,   0, 170);
+	setPalColor( 2,   0, 170,   0);
+	setPalColor( 3,   0, 170, 170);
+	setPalColor( 4, 170,   0,   0);
+	setPalColor( 5, 170,   0, 170);
+	setPalColor( 6, 170,  85,   0);
+	setPalColor( 7, 170, 170, 170);
+	setPalColor( 8,  85,  85,  85);
+	setPalColor( 9,  85,  85, 255);
+	setPalColor(10,  85, 255,  85);
+	setPalColor(11,  85, 255, 255);
+	setPalColor(12, 255,  85,  85);
+	setPalColor(13, 255,  85, 255);
+	setPalColor(14, 255, 255,  85);
+	setPalColor(15, 255, 255, 255);
+}
 
+void ScummEngine::setupV1ManiacPalette() {
+	setPalColor( 0,   0,   0,   0);
+	setPalColor( 1, 255, 255, 255);
+	setPalColor( 2, 170,   0,   0);
+	setPalColor( 3,   0, 170, 170);
+	setPalColor( 4, 170,   0, 170);
+	setPalColor( 5,   0, 170,   0);
+	setPalColor( 6,   0,   0, 170);
+	setPalColor( 7, 255, 255,  85);
+	setPalColor( 8, 255,  85,  85);
+	setPalColor( 9, 170,  85,   0);
+	setPalColor(10, 255,  85,  85);
+	setPalColor(11,  85,  85,  85);
+	setPalColor(12, 170, 170, 170);
+	setPalColor(13,  85, 255,  85);
+	setPalColor(14,  85,  85, 255);
+	setPalColor(15,  85,  85,  85);
+	setPalColor(16, 255,  85, 255);
+}
 
-unsigned char system_colors[16*4] =	
-{
-#if 0 //#if defined(GAME_ATLANTIS)
-	MAKE_PC_COLOR( 8,  8,   8),
-	// brown/skin
-	MAKE_PC_COLOR( 64,  32,   0),
-	MAKE_PC_COLOR( 96,  64,  64),
-	MAKE_PC_COLOR(160, 128, 128),
-	MAKE_PC_COLOR(192, 160, 128),
-
-	// red
-	MAKE_PC_COLOR( 96,   0,   0),
-	// yellow
-	MAKE_PC_COLOR(224, 224, 128),
-	// grays
-	MAKE_PC_COLOR(128, 128, 128),
-	MAKE_PC_COLOR(224, 224, 224),
-	// greens
-	MAKE_PC_COLOR( 32,  32,  32),
-	MAKE_PC_COLOR( 64,  96,  64),
-	MAKE_PC_COLOR(192, 192, 160),
-	// blues
-	MAKE_PC_COLOR( 32,  32,  64),
-	MAKE_PC_COLOR( 64,  64,  96),
-	MAKE_PC_COLOR( 96,  96, 128),
-	MAKE_PC_COLOR(192, 192, 224)
-
-#elif defined(GAME_MONKEY2)
-	#if 0
-		// wip new palette
-		MAKE_PC_COLOR(6,6,6), MAKE_PC_COLOR(48,48,48), MAKE_PC_COLOR(32,32,109),	MAKE_PC_COLOR(78,74,78),
-		MAKE_PC_COLOR(133,76,48), MAKE_PC_COLOR(32,64,32), MAKE_PC_COLOR(208,70,72), MAKE_PC_COLOR(128,128,128),
-		MAKE_PC_COLOR(89,125,206), MAKE_PC_COLOR(210,125,44), MAKE_PC_COLOR(160,160,161), MAKE_PC_COLOR(96,160,32),
-		MAKE_PC_COLOR(64,56,20),MAKE_PC_COLOR(109,160,224), MAKE_PC_COLOR(218,212,94), MAKE_PC_COLOR(224,224,224)
-	#else
-		MAKE_PC_COLOR(20,12,28), MAKE_PC_COLOR(68,36,52), MAKE_PC_COLOR(48,52,109),	MAKE_PC_COLOR(78,74,78),
-		MAKE_PC_COLOR(133,76,48), MAKE_PC_COLOR(52,101,36), MAKE_PC_COLOR(208,70,72), MAKE_PC_COLOR(117,113,97),
-		MAKE_PC_COLOR(89,125,206), MAKE_PC_COLOR(210,125,44), MAKE_PC_COLOR(133,149,161), MAKE_PC_COLOR(109,170,44),
-		MAKE_PC_COLOR(210,170,153), MAKE_PC_COLOR(109,194,202), MAKE_PC_COLOR(218,212,94), MAKE_PC_COLOR(222,238,214)
-	#endif
-#elif defined(GAME_MONKEY1)
-	#if 0
-		MAKE_PC_COLOR(0,0,0), MAKE_PC_COLOR(6,6,64), MAKE_PC_COLOR(64,32,24), MAKE_PC_COLOR(96,96,96),
-		MAKE_PC_COLOR(128,64,32), MAKE_PC_COLOR(52,101,36), MAKE_PC_COLOR(208,70,72), MAKE_PC_COLOR(128,128,128),
-		MAKE_PC_COLOR(89,125,206), MAKE_PC_COLOR(196,128,32), MAKE_PC_COLOR(133,149,165), MAKE_PC_COLOR(109,170,44),
-		MAKE_PC_COLOR(210,170,153), MAKE_PC_COLOR(109,194,202), MAKE_PC_COLOR(218,212,94), MAKE_PC_COLOR(222,238,214)
-	#else
-		MAKE_PC_COLOR(20,12,28), MAKE_PC_COLOR(68,36,52), MAKE_PC_COLOR(48,52,109),	MAKE_PC_COLOR(78,74,78),
-		MAKE_PC_COLOR(133,76,48), MAKE_PC_COLOR(52,101,36), MAKE_PC_COLOR(208,70,72), MAKE_PC_COLOR(117,113,97),
-		MAKE_PC_COLOR(89,125,206), MAKE_PC_COLOR(210,125,44), MAKE_PC_COLOR(133,149,161), MAKE_PC_COLOR(109,170,44),
-		MAKE_PC_COLOR(210,170,153), MAKE_PC_COLOR(109,194,202), MAKE_PC_COLOR(218,212,94), MAKE_PC_COLOR(222,238,214)
-	#endif
-
-#else
-	MAKE_PC_COLOR(20,12,28),
-	MAKE_PC_COLOR(68,36,52),
-	MAKE_PC_COLOR(48,52,109),
-	MAKE_PC_COLOR(78,74,78),
-	MAKE_PC_COLOR(133,76,48),
-	MAKE_PC_COLOR(52,101,36),
-	MAKE_PC_COLOR(208,70,72),
-	MAKE_PC_COLOR(117,113,97),
-	MAKE_PC_COLOR(89,125,206),
-	MAKE_PC_COLOR(210,125,44),
-	MAKE_PC_COLOR(133,149,161),
-	MAKE_PC_COLOR(109,170,44),
-	MAKE_PC_COLOR(210,170,153),
-	MAKE_PC_COLOR(109,194,202),
-	MAKE_PC_COLOR(218,212,94),
-	MAKE_PC_COLOR(222,238,214)
-#endif
-};
-
-
-
+void ScummEngine::setupV1ZakPalette() {
+	setPalColor( 0,   0,   0,   0);
+	setPalColor( 1, 255, 255, 255);
+	setPalColor( 2, 170,   0,   0);
+	setPalColor( 3,   0, 170, 170);
+	setPalColor( 4, 170,   0, 170);
+	setPalColor( 5,   0, 170,   0);
+	setPalColor( 6,   0,   0, 170);
+	setPalColor( 7, 255, 255,  85);
+	setPalColor( 8, 255,  85,  85);
+	setPalColor( 9, 170,  85,   0);
+	setPalColor(10, 255,  85,  85);
+	setPalColor(11,  85,  85,  85);
+	setPalColor(12, 170, 170, 170);
+	setPalColor(13,  85, 255,  85);
+	setPalColor(14,  85,  85, 255);
+	setPalColor(15, 170, 170, 170);
+	setPalColor(16, 255,  85, 255);
+}
 
 void ScummEngine::setPaletteFromPtr(const byte *ptr) {
-
 	int i;
 	byte *dest, r, g, b;
 	int numcolor;
 
-	numcolor = getResourceDataSize(ptr) / 3;
+	if (_features & GF_SMALL_HEADER) {
+		if (_features & GF_OLD256)
+			numcolor = 256;
+		else
+			numcolor = READ_LE_UINT16(ptr + 6) / 3;
+		ptr += 8;
+	} else {
+		numcolor = getResourceDataSize(ptr) / 3;
+	}
 
 	checkRange(256, 0, numcolor, "Too many colors (%d) in Palette");
 
@@ -137,7 +137,7 @@ void ScummEngine::setPaletteFromPtr(const byte *ptr) {
 		// off there, too... I wonder if it hurts other games, too? What exactly is broken
 		// if we remove this patch?
 		// Since it also causes problems in Zak256, I am turning it off for all V4 games and older.
-		if (i <= 15 || r < 252 || g < 252 || b < 252) {
+		if ((_version <= 4) || (_version >= 7) || (i <= 15 || r < 252 || g < 252 || b < 252)) {
 			*dest++ = r;
 			*dest++ = g;
 			*dest++ = b;
@@ -155,117 +155,56 @@ void ScummEngine::setPaletteFromRes() {
 }
 
 void ScummEngine::setDirtyColors(int min, int max) {
-	//debug(1, "setDirtyColors %d, %d", min, max);
-
 	if (_palDirtyMin > min)
 		_palDirtyMin = min;
 	if (_palDirtyMax < max)
 		_palDirtyMax = max;
-
-	mapSystemPalette(min, (max - min) + 1);
-
-	if (!_verbColorsDirty)
-	{
-		for (int i=0; i<_numVerbs; i++)
-		{
-			VerbSlot *vs = &_verbs[i];
-			if (!vs->saveid && vs->curmode && vs->verbid)
-			{
-				if (vs->type != kImageVerbType)
-				{
-					if ((vs->dimcolor >= min && vs->dimcolor <= max) ||
-						(vs->hicolor >= min && vs->hicolor <= max) ||
-						(vs->color >= min && vs->color <= max) ||
-						(vs->bkcolor >= min && vs->bkcolor <= max))
-					{
-						_verbColorsDirty = true;
-						break;		
-					}
-
-					// opt: assume all verbs use same color scheme so bail after identifying the first one
-					break;
-				}
-			}
-		}
-	}
 }
-
-
-byte ScummEngine::getSystemPal(byte idx)
-{
-	byte* c = &_currentPalette[idx * 3];
-	return findClosestSystemColor(c[0], c[1], c[2]);
-}
-
-
-void ScummEngine::mapSystemPalette(int start, int num)
-{
-	debug(1, "** mapsystempal %d, %d", start, num);
-	byte* data = _currentPalette + MUL3(start);
-	byte* roomPalette = _roomPalette + start;
-
-	uint32* c2p = (uint32*) &c2ptable256[start];
-
-	for (int i=0; i<num; ++i)
-	{
-		byte r = *data++;
-		byte g = *data++;
-		byte b = *data++;
-		byte idx = findClosestSystemColor(r, g, b);
-		*roomPalette++ = idx;
-
-#ifdef __ATARI__
-		c2p[0 * 256] = ((idx & 1) << 31) | ((idx & 2) << 22) | ((idx & 4) << 13) | ((idx & 8) << 4);
-		c2p[1 * 256] = ((idx & 1) << 30) | ((idx & 2) << 21) | ((idx & 4) << 12) | ((idx & 8) << 3);
-		c2p[2 * 256] = ((idx & 1) << 29) | ((idx & 2) << 20) | ((idx & 4) << 11) | ((idx & 8) << 2);
-		c2p[3 * 256] = ((idx & 1) << 28) | ((idx & 2) << 19) | ((idx & 4) << 10) | ((idx & 8) << 1);
-		c2p[4 * 256] = ((idx & 1) << 27) | ((idx & 2) << 18) | ((idx & 4) <<  9) | ((idx & 8)     );
-		c2p[5 * 256] = ((idx & 1) << 26) | ((idx & 2) << 17) | ((idx & 4) <<  8) | ((idx & 8) >> 1);
-		c2p[6 * 256] = ((idx & 1) << 25) | ((idx & 2) << 16) | ((idx & 4) <<  7) | ((idx & 8) >> 2);
-		c2p[7 * 256] = ((idx & 1) << 24) | ((idx & 2) << 15) | ((idx & 4) <<  6) | ((idx & 8) >> 3);
-#else
-		c2p[0 * 256] = ((idx & 1) << 7) | ((idx & 2) << 14) | ((idx & 4) << 21) | ((idx & 8) << 28);
-		c2p[1 * 256] = ((idx & 1) << 6) | ((idx & 2) << 13) | ((idx & 4) << 20) | ((idx & 8) << 27);
-		c2p[2 * 256] = ((idx & 1) << 5) | ((idx & 2) << 12) | ((idx & 4) << 19) | ((idx & 8) << 26);
-		c2p[3 * 256] = ((idx & 1) << 4) | ((idx & 2) << 11) | ((idx & 4) << 18) | ((idx & 8) << 25);
-		c2p[4 * 256] = ((idx & 1) << 3) | ((idx & 2) << 10) | ((idx & 4) << 17) | ((idx & 8) << 24);
-		c2p[5 * 256] = ((idx & 1) << 2) | ((idx & 2) <<  9) | ((idx & 4) << 16) | ((idx & 8) << 23);
-		c2p[6 * 256] = ((idx & 1) << 1) | ((idx & 2) <<  8) | ((idx & 4) << 15) | ((idx & 8) << 22);
-		c2p[7 * 256] = ((idx & 1)     ) | ((idx & 2) <<  7) | ((idx & 4) << 14) | ((idx & 8) << 21);	
-#endif
-		c2pfill256[start + i] = c2p[0*256] | c2p[1*256] | c2p[2*256] | c2p[3*256] | c2p[4*256] | c2p[5*256] | c2p[6*256] | c2p[7*256];
-		c2p++;
-	}
-}
-
 
 void ScummEngine::initCycl(const byte *ptr) {
-/*
 	int j;
 	ColorCycle *cycl;
 
 	memset(_colorCycle, 0, sizeof(_colorCycle));
 
-	while ((j = *ptr++) != 0) {
-		if (j < 1 || j > 16) {
-			error("Invalid color cycle index %d", j);
-		}
-		cycl = &_colorCycle[j - 1];
+	if (_features & GF_SMALL_HEADER) {
+		cycl = _colorCycle;
+		ptr += 6;
+		for (j = 0; j < 16; ++j, ++cycl) {
+			uint16 delay = READ_BE_UINT16(ptr);
+			ptr += 2;
+			byte start = *ptr++;
+			byte end = *ptr++;
 
-		ptr += 2;
-		cycl->counter = 0;
-		cycl->delay = 16384 / READ_BE_UINT16(ptr);
-		ptr += 2;
-		cycl->flags = READ_BE_UINT16(ptr);
-		ptr += 2;
-		cycl->start = *ptr++;
-		cycl->end = *ptr++;
+			if (!delay || delay == 0x0aaa || start >= end)
+				continue;
+
+			cycl->counter = 0;
+			cycl->delay = 16384 / delay;
+			cycl->flags = 2;
+			cycl->start = start;
+			cycl->end = end;
+		}
+	} else {
+		while ((j = *ptr++) != 0) {
+			if (j < 1 || j > 16) {
+				error("Invalid color cycle index %d", j);
+			}
+			cycl = &_colorCycle[j - 1];
+
+			ptr += 2;
+			cycl->counter = 0;
+			cycl->delay = 16384 / READ_BE_UINT16(ptr);
+			ptr += 2;
+			cycl->flags = READ_BE_UINT16(ptr);
+			ptr += 2;
+			cycl->start = *ptr++;
+			cycl->end = *ptr++;
+		}
 	}
-*/
 }
 
 void ScummEngine::stopCycle(int i) {
-/*
 	ColorCycle *cycl;
 
 	checkRange(16, 0, i, "Stop Cycle %d Out Of Range");
@@ -276,16 +215,12 @@ void ScummEngine::stopCycle(int i) {
 
 	for (i = 0, cycl = _colorCycle; i < 16; i++, cycl++)
 		cycl->delay = 0;
-*/
 }
-
-
 
 /**
  * Cycle the colors in the given palette in the intervael [cycleStart, cycleEnd]
  * either one step forward or backward.
  */
-/*
 static void doCyclePalette(byte *palette, int cycleStart, int cycleEnd, int size, bool forward) {
 	byte *start = palette + cycleStart * size;
 	byte *end = palette + cycleEnd * size;
@@ -304,27 +239,37 @@ static void doCyclePalette(byte *palette, int cycleStart, int cycleEnd, int size
 		memmove(end, tmp, size);
 	}
 }
-*/
 
 /**
- * Perform color cycling on the palManipulate data, too, otherwise
- * color cycling will be disturbed by the palette fade.
+ * Adjust an 'indirect' color palette for the color cycling performed on its
+ * master palette. An indirect palette is a palette which contains indices
+ * pointing into another palette - it provides a level of indirection to map
+ * palette colors to other colors. Now when the target palette is cycled, the
+ * indirect palette suddenly point at the wrong color(s). This function takes
+ * care of adjusting an indirect palette by searching through it and replacing
+ * all indices that are in the cycle range by the new (cycled) index.
+ *
+ * Finally, the palette entries still have to be cycled normally.
  */
-/*
-void ScummEngine::moveMemInPalRes(int start, int end, byte direction) {
-	if (!_palManipCounter)
-		return;
-
-	doCyclePalette(_palManipPalette, start, end, 3, !direction);
-	doCyclePalette(_palManipIntermediatePal, start, end, 6, !direction);
+static void doCycleIndirectPalette(byte *palette, int cycleStart, int cycleEnd, bool forward) {
+	int num = cycleEnd - cycleStart + 1;
+	int i;
+	int offset = forward ? 1 : num - 1;
+	
+	for (i = 0; i < 256; i++) {
+		if (cycleStart <= palette[i] && palette[i] <= cycleEnd) {
+			palette[i] = (palette[i] - cycleStart + offset) % num + cycleStart;
+		}
+	}
+	
+	doCyclePalette(palette, cycleStart, cycleEnd, 1, forward);
 }
-*/
+
 
 void ScummEngine::cyclePalette() {
-/*
 	ColorCycle *cycl;
 	int valueToAdd;
-	int i;
+	int i, j;
 
 	if (VAR_TIMER == 0xFF) {
 		// FIXME - no idea if this is right :-/
@@ -350,19 +295,37 @@ void ScummEngine::cyclePalette() {
 			moveMemInPalRes(cycl->start, cycl->end, cycl->flags & 2);
 
 			doCyclePalette(_currentPalette, cycl->start, cycl->end, 3, !(cycl->flags & 2));
+
+			// Also cycle the other, indirect palettes
+			if (_proc_special_palette) {
+				doCycleIndirectPalette(_proc_special_palette, cycl->start, cycl->end, !(cycl->flags & 2));
+			}
+
+			if (_shadowPalette) {
+				if (_version >= 7) {
+					for (j = 0; j < NUM_SHADOW_PALETTE; j++)
+						doCycleIndirectPalette(_shadowPalette + j * 256, cycl->start, cycl->end, !(cycl->flags & 2));
+				} else {
+					doCycleIndirectPalette(_shadowPalette, cycl->start, cycl->end, !(cycl->flags & 2));
+				}
+			}
 		}
 	}
-*/
 }
 
+/**
+ * Perform color cycling on the palManipulate data, too, otherwise
+ * color cycling will be disturbed by the palette fade.
+ */
+void ScummEngine::moveMemInPalRes(int start, int end, byte direction) {
+	if (!_palManipCounter)
+		return;
 
-
+	doCyclePalette(_palManipPalette, start, end, 3, !direction);
+	doCyclePalette(_palManipIntermediatePal, start, end, 6, !direction);
+}
 
 void ScummEngine::palManipulateInit(int resID, int start, int end, int time) {
-
-	debug(1, "palManipulateInit %d,%d,%d,%d", resID, start, end, time);
-
-
 	byte *pal, *target, *between;
 	byte *string1, *string2, *string3;
 	int i;
@@ -408,8 +371,6 @@ void ScummEngine::palManipulateInit(int resID, int start, int end, int time) {
 	_palManipCounter = time;
 }
 
-
-#ifdef ENGINE_SCUMM6
 void ScummEngine_v6::palManipulateInit(int resID, int start, int end, int time) {
 	byte *pal, *target, *between;
 	const byte *new_pal;
@@ -446,10 +407,9 @@ void ScummEngine_v6::palManipulateInit(int resID, int start, int end, int time) 
 
 	_palManipCounter = time;
 }
-#endif //ENGINE_SCUMM6
+
 
 void ScummEngine::palManipulate() {
-/*
 	byte *target, *pal, *between;
 	int i, j;
 
@@ -473,13 +433,40 @@ void ScummEngine::palManipulate() {
 	}
 	setDirtyColors(_palManipStart, _palManipEnd);
 	_palManipCounter--;
-*/
+}
+
+void ScummEngine::setupShadowPalette(int slot, int redScale, int greenScale, int blueScale, int startColor, int endColor) {
+	byte *table;
+	int i;
+	byte *curpal;
+
+	if (slot < 0 || slot >= NUM_SHADOW_PALETTE)
+		error("setupShadowPalette: invalid slot %d", slot);
+
+	if (startColor < 0 || startColor > 255 || endColor < 0 || startColor > 255 || endColor < startColor)
+		error("setupShadowPalette: invalid range from %d to %d", startColor, endColor);
+
+	table = _shadowPalette + slot * 256;
+	for (i = 0; i < 256; i++)
+		table[i] = i;
+
+	table += startColor;
+	curpal = _currentPalette + startColor * 3;
+	for (i = startColor; i <= endColor; i++) {
+		*table++ = remapPaletteColor((curpal[0] * redScale) >> 8,
+									 (curpal[1] * greenScale) >> 8,
+									 (curpal[2] * blueScale) >> 8,
+									 (uint) - 1);
+		curpal += 3;
+	}
+}
+
+static inline uint colorWeight(int red, int green, int blue) {
+	return 3 * red * red + 6 * green * green + 2 * blue * blue;
 }
 
 
-
 void ScummEngine::setupShadowPalette(int redScale, int greenScale, int blueScale, int startColor, int endColor) {
-/*
 	const byte *basepal = getPalettePtr(_curPalIndex);
 	const byte *pal = basepal;
 	const byte *compareptr;
@@ -550,47 +537,61 @@ void ScummEngine::setupShadowPalette(int redScale, int greenScale, int blueScale
 		}
 		*table++ = bestitem;
 	}
-*/
+}
+
+/** This function create the specialPalette used for semi-transparency in SamnMax */
+void ScummEngine::createSpecialPalette(int16 from, int16 to, int16 redScale, int16 greenScale, int16 blueScale,
+			int16 startColor, int16 endColor) {
+	const byte *palPtr, *curPtr;
+	const byte *searchPtr;
+
+	uint bestResult;
+	uint currentResult;
+
+	byte currentIndex;
+
+	int i, j;
+
+	palPtr = getPalettePtr(_curPalIndex);
+
+	for (i = 0; i < 256; i++)
+		_proc_special_palette[i] = i;
+
+	curPtr = palPtr + startColor * 3;
+
+	for (i = startColor; i < endColor; i++) {
+		int r = (int) (*curPtr++ * redScale) >> 8;
+		int g = (int) (*curPtr++ * greenScale) >> 8;
+		int b = (int) (*curPtr++ * blueScale) >> 8;
+
+		if (r > 255)
+			r = 255;
+		if (g > 255)
+			g = 255;
+		if (b > 255)
+			b = 255;
+
+		searchPtr = palPtr + from * 3;
+		bestResult = (uint)-1;
+		currentIndex = (byte) from;
+
+		for (j = from; j <= to; j++) {
+			int ar = (*searchPtr++);
+			int ag = (*searchPtr++);
+			int ab = (*searchPtr++);
+
+			currentResult = colorWeight(ar - r, ag - g, ab - b);
+
+			if (currentResult < bestResult) {
+				_proc_special_palette[i] = currentIndex;
+				bestResult = currentResult;
+			}
+			currentIndex++;
+		}
+	}
 }
 
 void ScummEngine::darkenPalette(int redScale, int greenScale, int blueScale, int startColor, int endColor) {
-
-	debug(1, "darkenPalette %d,%d,%d,%d,%d (%d)", redScale, greenScale, blueScale, startColor,endColor,_currentRoom);
-
-	// hack for samnmax intro
-	#ifdef GAME_SAMNMAX
-	if (_currentRoom == 3)
-	{
-		extern bool _hack_samnmax_intro;
-		if (redScale == 0 && startColor == 16 && endColor == 255)
-			_hack_samnmax_intro = true;
-		else if (redScale >= 224 && startColor == 16 && endColor == 255)
-			_hack_samnmax_intro = false;
-	}
-	#endif
-
-	// hack for Monkey2 intro
-	#ifdef GAME_MONKEY2
-	if (_currentRoom == 103)
-	{
-		extern bool _hack_clear_bg_on_next_drawString;
-		static int oldr = 0; static int oldg = 0; static int oldb = 0; static int olds = 0; static int olde = 0;
-		if ((redScale == 0 && greenScale == 0 && blueScale == 0 && oldr == 255 && oldg == 255 && oldb == 255) ||
-			(redScale == 255 && greenScale == 255 && blueScale == 255 && oldr == 204 && oldg == 204 && oldb == 204) ||
-			(redScale == 0 && greenScale == 0 && blueScale == 0 && oldr == 51 && oldg == 51 && oldb == 51)) {
-			_hack_clear_bg_on_next_drawString = true;
-		}
-		else if (redScale == 0 && greenScale == 0 && blueScale == 0 && oldr == 0 && oldg == 0 && oldb == 0 && olds == 16 && olde == 91 && startColor == 104 && endColor == 177) {
-			_fullRedraw = true;	_hack_clear_bg_on_next_drawString = false;
-		}
-		else {
-			_hack_clear_bg_on_next_drawString = false;
-		}
-		oldr = redScale; oldg = greenScale; oldb = blueScale; olds = startColor; olde = endColor;
-	}
-	#endif
-
-/*
 	if (_roomResource == 0) // FIXME - HACK to get COMI demo working
 		return;
 
@@ -631,70 +632,103 @@ void ScummEngine::darkenPalette(int redScale, int greenScale, int blueScale, int
 		}
 		setDirtyColors(startColor, endColor);
 	}
-*/
 }
 
-static inline uint colorWeight(int r, int g, int b) {
-	int r2 = (r < 0) ? -r : r;
-	int g2 = (g < 0) ? -g : g;
-	int b2 = (b < 0) ? -b : b;
-	r2 = MULSQUARE(r2);
-	g2 = MULSQUARE(g2);
-	b2 = MULSQUARE(b2);
-	return MUL3(r2) + MUL6(g2) + MUL2(b2);
+static int HSL2RGBHelper(int n1, int n2, int hue) {
+	if (hue > 360)
+		hue = hue - 360;
+	else if (hue < 0)
+		hue = hue + 360;
+
+	if (hue < 60)
+		return n1 + (n2 - n1) * hue / 60;
+	if (hue < 180)
+		return n2;
+	if (hue < 240)
+		return n1 + (n2 - n1) * (240 - hue) / 60;
+	return n1;
 }
 
-byte ScummEngine::findClosestGameColor(int r, int g, int b)
-{
-	byte bestitem = 0;
-	uint bestsum = (uint) - 1;
-	byte *pal = _currentPalette;
+/**
+ * This function scales the HSL (Hue, Saturation and Lightness)
+ * components of the palette colors. It's used in CMI when Guybrush
+ * walks from the beach towards the swamp.
+ */
+void ScummEngine::desaturatePalette(int hueScale, int satScale, int lightScale, int startColor, int endColor) {
 
-	r &= ~3; g &= ~3; b &= ~3;
-	for (int i = 0; i < 256; i++, pal += 4) {
-		int ar = pal[0] & ~3;
-		int ag = pal[1] & ~3;
-		int ab = pal[2] & ~3;
-		if (ar == r && ag == g && ab == b)
-			return i;
+	if (startColor <= endColor) {
+		const byte *cptr;
+		byte *cur;
+		int j;
 
-		uint sum = colorWeight(ar - r, ag - g, ab - b);
-		if (sum < bestsum) {
-			bestsum = sum;
-			bestitem = i;
+		cptr = getPalettePtr(_curPalIndex) + startColor * 3;
+		cur = _currentPalette + startColor * 3;
+
+		for (j = startColor; j <= endColor; j++) {
+			int R = *cptr++;
+			int G = *cptr++;
+			int B = *cptr++;
+
+			// RGB to HLS (Foley and VanDam)
+
+			const int min = MIN(R, MIN(G, B));
+			const int max = MAX(R, MAX(G, B));
+			const int diff = (max - min);
+			const int sum = (max + min);
+
+			if (diff != 0) {
+				int H, S, L;
+				
+				if (sum <= 255)
+					S = 255 * diff / sum;
+				else
+					S = 255 * diff / (255 * 2 - sum);
+
+				if (R == max)
+					H = 60 * (G - B) / diff;
+				else if (G == max)
+					H = 120 + 60 * (B - R) / diff;
+				else
+					H = 240 + 60 * (R - G) / diff;
+
+				if (H < 0)
+					H = H + 360;
+
+				// Scale the result
+	
+				H = (H * hueScale) / 255;
+				S = (S * satScale) / 255;
+				L = (sum * lightScale) / 255;
+	
+				// HLS to RGB (Foley and VanDam)
+	
+				int m1, m2;
+				if (L <= 255)
+					m2 = L * (255 + S) / (255 * 2);
+				else
+					m2 = L * (255 - S) / (255 * 2) + S;
+
+				m1 = L - m2;
+
+				R = HSL2RGBHelper(m1, m2, H + 120);
+				G = HSL2RGBHelper(m1, m2, H);
+				B = HSL2RGBHelper(m1, m2, H - 120);
+			} else {
+				// Maximal color = minimal color -> R=G=B -> it's a grayscale.
+				R = G = B = (R * lightScale) / 255;
+			}
+
+			*cur++ = R;
+			*cur++ = G;
+			*cur++ = B;
 		}
+
+		setDirtyColors(startColor, endColor);
 	}
-	return bestitem;
-}
-
-byte ScummEngine::findClosestSystemColor(int r, int g, int b)
-{
-	byte bestitem = 0;
-	uint bestsum = (uint) - 1;
-	byte *pal = system_colors;
-
-	r &= ~3; g &= ~3; b &= ~3;
-	for (int i = 0; i < 16; i++, pal += 4) {
-		int ar = pal[0] & ~3;
-		int ag = pal[1] & ~3;
-		int ab = pal[2] & ~3;
-		if (ar == r && ag == g && ab == b)
-			return i;
-
-		uint sum = colorWeight(ar - r, ag - g, ab - b);
-		if (sum < bestsum) {
-			bestsum = sum;
-			bestitem = i;
-		}
-	}
-	return bestitem;
 }
 
 
 int ScummEngine::remapPaletteColor(int r, int g, int b, uint threshold) {
-	debug(1,"remapPaletteColor %d,%d,%d,%d", r, g, b, threshold);
-	// TODO_ATARI: used by script_v6, don't delete.
-	// make it look in our fixed palette
 	int i;
 	int ar, ag, ab;
 	uint sum, bestsum, bestitem = 0;
@@ -727,8 +761,7 @@ int ScummEngine::remapPaletteColor(int r, int g, int b, uint threshold) {
 			bestitem = i;
 		}
 	}
-/*
-	// atari: don't modify the palette
+
 	if (threshold != (uint) - 1 && bestsum > colorWeight(threshold, threshold, threshold)) {
 		// Best match exceeded threshold. Try to find an unused palette entry and
 		// use it for our purpose.
@@ -740,13 +773,11 @@ int ScummEngine::remapPaletteColor(int r, int g, int b, uint threshold) {
 			}
 		}
 	}
-*/
+
 	return bestitem;
 }
 
 void ScummEngine::swapPalColors(int a, int b) {
-	// used by script_v6
-/*
 	byte *ap, *bp;
 	byte t;
 
@@ -768,12 +799,9 @@ void ScummEngine::swapPalColors(int a, int b) {
 
 	setDirtyColors(a, a);
 	setDirtyColors(b, b);
-*/
 }
 
 void ScummEngine::copyPalColor(int dst, int src) {
-//	used by script_v6
-/*
 	byte *dp, *sp;
 
 	if ((uint) dst >= 256 || (uint) src >= 256)
@@ -787,16 +815,9 @@ void ScummEngine::copyPalColor(int dst, int src) {
 	dp[2] = sp[2];
 
 	setDirtyColors(dst, dst);
-*/
 }
 
 void ScummEngine::setPalColor(int idx, int r, int g, int b) {
-	debug(1, "setPalColor %d, %d,%d,%d", idx,r,g,b);
-
-	// hacks: disable pal issues in dott (cigar salesman, flash white)
-	if ((r == 255) && (g == 255) && (b == 255))
-		return;
-
 	_currentPalette[idx * 3 + 0] = r;
 	_currentPalette[idx * 3 + 1] = g;
 	_currentPalette[idx * 3 + 2] = b;
@@ -804,8 +825,8 @@ void ScummEngine::setPalColor(int idx, int r, int g, int b) {
 }
 
 void ScummEngine::setPalette(int palindex) {
-	debug(1,"*** setPalette %d ***", palindex);
 	const byte *pals;
+
 	_curPalIndex = palindex;
 	pals = getPalettePtr(_curPalIndex);
 	setPaletteFromPtr(pals);
@@ -849,7 +870,7 @@ void ScummEngine::updatePalette() {
 	if (_palDirtyMax == -1)
 		return;
 
-	/*
+	bool noir_mode = (_gameId == GID_SAMNMAX && readVar(0x8000));
 	int first = _palDirtyMin;
 	int num = _palDirtyMax - first + 1;
 	int i;
@@ -858,17 +879,39 @@ void ScummEngine::updatePalette() {
 	byte *p = palette_colors;
 
 	for (i = _palDirtyMin; i <= _palDirtyMax; i++) {
-		byte *data = _currentPalette + i * 3;
-		*p++ = data[0];
-		*p++ = data[1];
-		*p++ = data[2];
-		*p++ = 0;
+		byte *data;
+
+		if (_features & GF_SMALL_HEADER && _version > 2)
+			data = _currentPalette + _shadowPalette[i] * 3;
+		else
+			data = _currentPalette + i * 3;
+
+		// Sam & Max film noir mode. Convert the colours to grayscale
+		// before uploading them to the backend.
+
+		if (noir_mode) {
+			int r, g, b;
+			byte brightness;
+
+			r = data[0];
+			g = data[1];
+			b = data[2];
+
+			brightness = (byte)((0.299 * r + 0.587 * g + 0.114 * b) + 0.5);
+
+			*p++ = brightness;
+			*p++ = brightness;
+			*p++ = brightness;
+			*p++ = 0;
+		} else {
+			*p++ = data[0];
+			*p++ = data[1];
+			*p++ = data[2];
+			*p++ = 0;
+		}
 	}
-	*/
-
-
-	//_system->set_palette(palette_colors, first, num);
-	_system->set_palette(system_colors, 0, 16);
+	
+	_system->set_palette(palette_colors, first, num);
 
 	_palDirtyMax = -1;
 	_palDirtyMin = 256;

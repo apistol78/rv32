@@ -23,14 +23,14 @@
 #include "stdafx.h"
 #include "scumm/scumm.h"
 #include "scumm/actor.h"
+#include "scumm/akos.h"
 #include "scumm/boxes.h"
 #include "scumm/charset.h"
 #include "scumm/costume.h"
 #include "scumm/resource.h"
 #include "scumm/saveload.h"
 #include "scumm/sound.h"
-
-extern bool g_slowMachine;
+#include "scumm/usage_bits.h"
 
 namespace Scumm {
 
@@ -39,15 +39,16 @@ ScummEngine *Actor::_vm = 0;
 
 void Actor::initActorClass(ScummEngine *scumm) {
 	_vm = scumm;
+	if (_vm->_features & GF_SMALL_HEADER) {
+		kInvalidBox = 255;
+	}
 }
 
 Actor::Actor() {
 	assert(_vm != 0);
 	top = bottom = 0;
-	left = right = 0;
 	number = 0;
 	needRedraw = needBgReset = costumeNeedsInit = visible = false;
-	customPalette = true;
 	flip = false;
 	speedx = 8;
 	speedy = 2;
@@ -108,16 +109,24 @@ void Actor::initActor(int mode) {
 	talkPan = 64;
 	talkVolume = 127;
 
-	initFrame = 1;
-	walkFrame = 2;
-	standFrame = 3;
-	talkStartFrame = 4;
-	talkStopFrame = 5;
+	if (_vm->_version <= 2) {
+		initFrame = 2;
+		walkFrame = 0;
+		standFrame = 1;
+		talkStartFrame = 5;
+		talkStopFrame = 4;
+	} else {
+		initFrame = 1;
+		walkFrame = 2;
+		standFrame = 3;
+		talkStartFrame = 4;
+		talkStopFrame = 5;
+	}
 
 	walkScript = 0;
 	talkScript = 0;
 
-	_vm->_classData[number] = 0;
+	_vm->_classData[number] = (_vm->_version >= 7) ? _vm->_classData[0] : 0;
 }
 
 void Actor::stopActorMoving() {
@@ -140,14 +149,19 @@ void Actor::setActorWalkSpeed(uint newSpeedX, uint newSpeedY) {
 }
 
 int ScummEngine::getAngleFromPos(int x, int y) const {
-	if (abs(y) * 2 < abs(x)) {
-		if (x > 0)
-			return 90;
-		return 270;
+	if (_gameId == GID_DIG || _gameId == GID_CMI) {
+		double temp = 0.0; // anders.pistol atan2((double)x, (double)-y);
+		return normalizeAngle((int)(temp * 180 / 3.1415926535));
 	} else {
-		if (y > 0)
-			return 180;
-		return 0;
+		if (abs(y) * 2 < abs(x)) {
+			if (x > 0)
+				return 90;
+			return 270;
+		} else {
+			if (y > 0)
+				return 180;
+			return 0;
+		}
 	}
 }
 
@@ -215,7 +229,7 @@ int Actor::remapDirection(int dir, bool is_walking) {
 	// not necessary here because we never call the function unless the
 	// actor is in the current room anyway.
 	
-	if (!ignoreBoxes) {
+	if (!ignoreBoxes || (_vm->_gameId == GID_LOOM || _vm->_gameId == GID_LOOM256)) {
 		specdir = _vm->_extraBoxFlags[walkbox];
 		if (specdir) {
 			if (specdir & 0x8000) {
@@ -250,15 +264,29 @@ int Actor::remapDirection(int dir, bool is_walking) {
 
 		switch (flags & 7) {
 		case 1:
-			if (is_walking)	                       // Actor is walking
-				return flipX ? 90 : 270;
-			else	                               // Actor is standing/turning
-				return (dir == 90) ? 90 : 270;
+			if (_vm->_version >= 7) {
+				if (dir < 180)
+					return 90;
+				else
+					return 270;
+			} else {
+				if (is_walking)	                       // Actor is walking
+					return flipX ? 90 : 270;
+				else	                               // Actor is standing/turning
+					return (dir == 90) ? 90 : 270;
+			}
 		case 2:
-			if (is_walking)	                       // Actor is walking
-				return flipY ? 180 : 0;
-			else	                               // Actor is standing/turning
-				return (dir == 0) ? 0 : 180;
+			if (_vm->_version >= 7) {
+				if (dir > 90 && dir < 270)
+					return 180;
+				else
+					return 0;
+			} else {
+				if (is_walking)	                       // Actor is walking
+					return flipY ? 180 : 0;
+				else	                               // Actor is standing/turning
+					return (dir == 0) ? 0 : 180;
+			}
 		case 3:
 			return 270;
 		case 4:
@@ -282,11 +310,17 @@ int Actor::updateActorDirection(bool is_walking) {
 	if ((_vm->_version == 6) && ignoreTurns)
 		return facing;
 
-	dirType = 0;
+	dirType = (_vm->_version >= 7) ? _vm->akos_hasManyDirections(costume) : false;
+
 	from = toSimpleDir(dirType, facing);
 	dir = remapDirection(targetFacing, is_walking);
 
-	shouldInterpolate = (dir & 1024) ? true : false;
+	if (_vm->_version >= 7)
+		// Direction interpolation interfers with walk scripts in Dig; they perform
+		// (much better) interpolation themselves.
+		shouldInterpolate = false;	
+	else
+		shouldInterpolate = (dir & 1024) ? true : false;
 	dir &= 1023;
 
 	if (shouldInterpolate) {
@@ -321,7 +355,6 @@ int Actor::actorWalkStep() {
 	int distX, distY;
 	int nextFacing;
 
-	debug(2, "actorWalkStep %d\n\r", number);
 	needRedraw = true;
 
 	nextFacing = updateActorDirection(true);
@@ -369,13 +402,19 @@ int Actor::actorWalkStep() {
 
 void Actor::setupActorScale() {
 
+	if (_vm->_features & GF_NO_SCALING) {
+		scalex = 0xFF;
+		scaley = 0xFF;
+		return;
+	}
+
 	if (ignoreBoxes)
 		return;
 
 	// For some boxes, we ignore the scaling and use whatever values the
 	// scripts set. This is used e.g. in the Mystery Vortex in Sam&Max.
 	// Older games used the flag 0x20 differently, though.
-	if (_vm->_version == 6 && (_vm->getBoxFlags(walkbox) & kBoxIgnoreScale))
+	if (_vm->_version >= 6 && (_vm->getBoxFlags(walkbox) & kBoxIgnoreScale))
 		return;
 
 	uint16 scale = _vm->getScale(walkbox, _pos.x, _pos.y);
@@ -385,47 +424,92 @@ void Actor::setupActorScale() {
 }
 
 void Actor::startAnimActor(int f) {
+	if (_vm->_version >= 7) {
+		switch (f) {
+		case 1001:
+			f = initFrame;
+			break;
+		case 1002:
+			f = walkFrame;
+			break;
+		case 1003:
+			f = standFrame;
+			break;
+		case 1004:
+			f = talkStartFrame;
+			break;
+		case 1005:
+			f = talkStopFrame;
+			break;
+		}
 
-	switch (f) {
-	case 0x38:
-		f = initFrame;
-		break;
-	case 0x39:
-		f = walkFrame;
-		break;
-	case 0x3A:
-		f = standFrame;
-		break;
-	case 0x3B:
-		f = talkStartFrame;
-		break;
-	case 0x3C:
-		f = talkStopFrame;
-		break;
-	}
+		frame = f;
 
-	assert(f != 0x3E);
-	frame = f;
+		if (costume != 0) {
+			animProgress = 0;
+			needRedraw = true;
+			if (f == initFrame)
+				cost.reset();
+			_vm->akos_decodeData(this, f, (uint) - 1);
+		}
+	} else {
+		switch (f) {
+		case 0x38:
+			f = initFrame;
+			break;
+		case 0x39:
+			f = walkFrame;
+			break;
+		case 0x3A:
+			f = standFrame;
+			break;
+		case 0x3B:
+			f = talkStartFrame;
+			break;
+		case 0x3C:
+			f = talkStopFrame;
+			break;
+		}
 
-	if (isInCurrentRoom() && costume != 0) {
-		animProgress = 0;
-		cost.animCounter = 0;
-		needRedraw = true;
-		if (f == initFrame)
-			cost.reset();
-		_vm->cost_decodeData(this, f, (uint) - 1);
+		assert(f != 0x3E);
+		frame = f;
+
+		if (isInCurrentRoom() && costume != 0) {
+			animProgress = 0;
+			cost.animCounter = 0;
+			needRedraw = true;
+			// V1 - V2 games don't seem to need a cost.reset() at this point.
+			// Causes Zak to lose his body in several scenes, see bug #771508
+			if (_vm->_version >= 3 && f == initFrame)
+				cost.reset();
+			if (_vm->_features & GF_NEW_COSTUMES)
+				_vm->akos_decodeData(this, f, (uint) - 1);
+			else
+				_vm->cost_decodeData(this, f, (uint) - 1);
+		}
 	}
 }
 
 void Actor::animateActor(int anim) {
 	int cmd, dir;
 
+	if (_vm->_version >= 7) {
 
-	cmd = anim / 4;
-	dir = oldDirToNewDir(anim % 4);
+		if (anim == 0xFF)
+			anim = 2000;
 
-	// Convert into old cmd code
-	cmd = 0x3F - cmd + 2;
+		cmd = anim / 1000;
+		dir = anim % 1000;
+
+	} else {
+
+		cmd = anim / 4;
+		dir = oldDirToNewDir(anim % 4);
+
+		// Convert into old cmd code
+		cmd = 0x3F - cmd + 2;
+
+	}
 
 	switch (cmd) {
 	case 2:				// stop walking
@@ -439,7 +523,10 @@ void Actor::animateActor(int anim) {
 		turnToDirection(dir);
 		break;
 	default:
-		startAnimActor(anim);
+		if (_vm->_version <= 2)
+			startAnimActor(anim / 4);
+		else
+			startAnimActor(anim);
 	}
 }
 
@@ -465,8 +552,10 @@ void Actor::setDirection(int direction) {
 		vald = cost.frame[i];
 		if (vald == 0xFFFF)
 			continue;
-
-		_vm->cost_decodeData(this, vald, aMask);
+		if (_vm->_features & GF_NEW_COSTUMES)
+			_vm->akos_decodeData(this, vald, aMask);
+		else
+			_vm->cost_decodeData(this, vald, aMask);
 	}
 
 	needRedraw = true;
@@ -488,25 +577,6 @@ void Actor::putActor(int dstX, int dstY, byte newRoom) {
 	_pos.y = dstY;
 	room = newRoom;
 	needRedraw = true;
-
-#if defined(GAME_ATLANTIS)
-	if (g_slowMachine)
-	{
-		// HACK: hide expensive lamp in New York
-		if ((newRoom == 10 && number == 11 && dstY == 142)
-		// HACK: hide expensive tree in Azores
-		//|| (newRoom == 19 && (number == 11 || number == 12) && dstY == 160)
-		)
-		{
-			_pos.y = 512;
-			hideActor();
-			needRedraw = false;
-			needBgReset = false;
-			return;
-		}
-	}
-#endif
-
 
 	if (_vm->VAR(_vm->VAR_EGO) == number) {
 		_vm->_egoPositioned = true;
@@ -544,7 +614,7 @@ AdjustBoxResult Actor::adjustXYToBeInBox(int dstX, int dstY) {
 	int tmpDist, bestDist, threshold, numBoxes;
 	byte flags, bestBox;
 	int box;
-	const int firstValidBox = 1;
+	const int firstValidBox = (_vm->_features & GF_SMALL_HEADER) ? 0 : 1;
 
 	abr.x = dstX;
 	abr.y = dstY;
@@ -561,6 +631,8 @@ AdjustBoxResult Actor::adjustXYToBeInBox(int dstX, int dstY) {
 			return abr;
 
 		bestDist = 0xFFFF;
+		if (_vm->_version <= 2)
+			bestDist *= 8*2;	// Adjust for the fact that we multiply x by 8 and y by 2
 		bestBox = kInvalidBox;
 
 		// We iterate (backwards) over all boxes, searching the one closest
@@ -662,7 +734,10 @@ void Actor::turnToDirection(int newdir) {
 	moving &= ~MF_TURN;
 
 	if (newdir != facing) {
-		moving |= MF_TURN;
+		if (_vm->_version <= 3)
+			moving = MF_TURN;
+		else
+			moving |= MF_TURN;
 		targetFacing = newdir;
 	}
 }
@@ -691,10 +766,17 @@ void Actor::showActor() {
 
 	if (costumeNeedsInit) {
 		startAnimActor(initFrame);
+		if (_vm->_version <= 2) {
+			startAnimActor(standFrame);
+			startAnimActor(talkStopFrame);
+		}
 		costumeNeedsInit = false;
 	}
 
-	debug(2, "showActor %d\n\r", number);
+	// FIXME: Evil hack to work around bug #770717
+	if (!moving && _vm->_version <= 2)
+		startAnimActor(standFrame);
+
 	moving = 0;
 	visible = true;
 	needRedraw = true;
@@ -703,11 +785,17 @@ void Actor::showActor() {
 // V1 Maniac doesn't have a ScummVar for VAR_TALK_ACTOR, and just uses
 // an internal variable. Emulate this to prevent overwriting script vars...
 int ScummEngine::talkingActor() {
-	return VAR(VAR_TALK_ACTOR);
+	if (_gameId == GID_MANIAC && _version == 1)
+		return _V1_talkingActor;
+	else
+		return VAR(VAR_TALK_ACTOR);
 };
 
 void ScummEngine::talkingActor(int value) {
-	VAR(VAR_TALK_ACTOR) = value;
+	if (_gameId == GID_MANIAC && _version == 1)
+		_V1_talkingActor = value;
+	else
+		VAR(VAR_TALK_ACTOR) = value;
 };
 
 void ScummEngine::showActors() {
@@ -724,7 +812,10 @@ void ScummEngine::walkActors() {
 
 	for (i = 1; i < _numActors; i++) {
 		if (_actors[i].isInCurrentRoom())
-			_actors[i].walkActor();
+			if (_version <= 3)
+				_actors[i].walkActorOld();
+			else
+				_actors[i].walkActor();
 	}
 }
 
@@ -744,7 +835,6 @@ void ScummEngine::playActorSounds() {
 	}
 }
 
-#ifndef RELEASEBUILD
 Actor *ScummEngine::derefActor(int id, const char *errmsg) const {
 	if (id == 0)
 		debugC(DEBUG_ACTORS, "derefActor(0, \"%s\") in script %d, opcode 0x%x", 
@@ -771,14 +861,6 @@ Actor *ScummEngine::derefActorSafe(int id, const char *errmsg) const {
 	}
 	return &_actors[id];
 }
-
-#else
-
-Actor *ScummEngine::derefActorNoMsg(int id) const {
-	return &_actors[id];
-}
-
-#endif
 
 static int compareDrawOrder(const void* a, const void* b)
 {
@@ -813,16 +895,17 @@ void ScummEngine::processActors() {
 
 	// TODO : put this actors as a member array. It never has to grow or shrink
 	// since _numActors is constant within a game.
-	//Actor** actors = new Actor * [_numActors];
-
+	Actor** actors = new Actor * [_numActors];
+	
 	// Make a list of all actors in this room
-	Actor* actors[MAX_NUM_ACTORS];
 	for (int i = 1; i < _numActors; i++) {
+		if (_version == 8 && _actors[i].layer < 0)
+			continue;
 		if (_actors[i].isInCurrentRoom() && _actors[i].costume)
 			actors[numactors++] = &_actors[i];
 	}
 	if (!numactors) {
-		//delete [] actors;
+		delete [] actors;
 		return;
 	}
 
@@ -841,7 +924,7 @@ void ScummEngine::processActors() {
 		a->animateCostume();
 	}
 	
-	//delete [] actors;
+	delete [] actors;
 }
 
 // Used in Scumm v8, to allow the verb coin to be drawn over the inventory
@@ -863,8 +946,6 @@ void Actor::drawActorCostume() {
 	if (!needRedraw)
 		return;
 
-//	debug(1, "drawActorCostume");
-
 	needRedraw = false;
 
 	setupActorScale();
@@ -875,47 +956,70 @@ void Actor::drawActorCostume() {
 
 	bcr->_actorX = _pos.x - _vm->virtscr[0].xstart;
 	bcr->_actorY = _pos.y - elevation;
+
+	if (_vm->_version <= 2) {
+		// HACK: We have to adjust the x position by one strip (8 pixels) in
+		// V2 games. However, it is not quite clear to me why. And to fully
+		// match the original, it seems we have to offset by 2 strips if the
+		// actor is facing left (270 degree).
+		// V1 games are once again slightly different, here we only have
+		// to adjust the 270 degree case...
+		if (facing == 270)
+			bcr->_actorX += 16;
+		else if (_vm->_version == 2)
+			bcr->_actorX += 8;
+	}
+
 	bcr->_scaleX = scalex;
 	bcr->_scaleY = scaley;
 
+	bcr->_shadow_mode = shadow_mode;
+	if (_vm->_features & GF_SMALL_HEADER)
+		bcr->_shadow_table = NULL;
+	else
+		bcr->_shadow_table = _vm->_shadowPalette;
+
 	bcr->setCostume(costume);
-	bcr->setPalette(customPalette ? palette : 0);
+	bcr->setPalette(palette);
 	bcr->setFacing(this);
 
-	if (forceClip)
+	if (_vm->_version >= 7) {
+
 		bcr->_zbuf = forceClip;
-	else if (isInClass(kObjectClassNeverClip))
-		bcr->_zbuf = 0;
-	else {
-		bcr->_zbuf = _vm->getMaskFromBox(walkbox);
-		if (bcr->_zbuf > _vm->gdi._numZBuffer-1)
-			bcr->_zbuf = _vm->gdi._numZBuffer-1;
+		if (bcr->_zbuf == 100) {
+			bcr->_zbuf = _vm->getMaskFromBox(walkbox);
+			if (bcr->_zbuf > _vm->gdi._numZBuffer-1)
+				bcr->_zbuf = _vm->gdi._numZBuffer-1;
+		}
+
+		bcr->_draw_top = top = 0x7fffffff;
+
+	} else {
+		if (forceClip)
+			bcr->_zbuf = forceClip;
+		else if (isInClass(kObjectClassNeverClip))
+			bcr->_zbuf = 0;
+		else {
+			bcr->_zbuf = _vm->getMaskFromBox(walkbox);
+			if (bcr->_zbuf > _vm->gdi._numZBuffer-1)
+				bcr->_zbuf = _vm->gdi._numZBuffer-1;
+		}
+
+		bcr->_draw_top = top = 0xFF;
 	}
 
-	bcr->_draw_top = top = 0xFF;
-	bcr->_draw_left = left = 0x7FFF;
 	bcr->_draw_bottom = bottom = 0;
-	bcr->_draw_right = right = 0;
 	bcr->_skipLimb = (skipLimb != 0);
 
-#if 1
-	bcr->drawCostume(_vm->virtscr[0], cost);
-#else
 	// If the actor is partially hidden, redraw it next frame.
 	// Only done for pre-AKOS, though.
-	if (bcr->drawCostume(_vm->virtscr[0], cost) & 1)
-	{
-		debug(2, "drawActorCostume ph %d\n\r", number);
-		needRedraw = true;
+	if (bcr->drawCostume(_vm->virtscr[0], cost) & 1) {
+		needRedraw = (_vm->_version <= 6);
 	}
-#endif
-	
 
 	// Record the vertical extent of the drawn actor
 	top = bcr->_draw_top;
 	bottom = bcr->_draw_bottom;
-	left = ((bcr->_draw_left >> 3) + _vm->_screenStartStrip) << 3;
-	right = (((bcr->_draw_right+7) >> 3) + _vm->_screenStartStrip) << 3;
 }
 
 void Actor::animateCostume() {
@@ -926,211 +1030,127 @@ void Actor::animateCostume() {
 	if (animProgress >= animSpeed) {
 		animProgress = 0;
 
-		LoadedCostume lc(_vm);
-		lc.loadCostume(costume);
-		if (lc.increaseAnims(this))
-		{
-			debug(2, "animatecostume %d\n\r", number);
-			needRedraw = true;
+		if (_vm->_features & GF_NEW_COSTUMES) {
+			byte *akos = _vm->getResourceAddress(rtCostume, costume);
+			assert(akos);
+			if (_vm->akos_increaseAnims(akos, this)) {
+				needRedraw = true;
+			}
+		} else {
+			LoadedCostume lc(_vm);
+			lc.loadCostume(costume);
+			if (lc.increaseAnims(this)) {
+				needRedraw = true;
+			}
 		}
+	}
+}
+
+void Actor::animateLimb(int limb, int f) {
+	// This methods is very similiar to animateCostume(). 
+	// However, instead of animating *all* the limbs, it only animates
+	// the specified limb to be at the frame specified by "f". 
+
+	if (!f)
+		return;
+
+	animProgress++;
+	if (animProgress >= animSpeed) {
+		animProgress = 0;
+
+		if (costume == 0)
+			return;
+
+		const byte *aksq, *akfo;
+		uint size;
+		byte *akos = _vm->getResourceAddress(rtCostume, costume);
+		assert(akos);
+
+		aksq = _vm->findResourceData(MKID('AKSQ'), akos);
+		akfo = _vm->findResourceData(MKID('AKFO'), akos);
+	
+		size = _vm->getResourceDataSize(akfo) / 2;
+	
+		while (f--) {
+			if (cost.active[limb] != 0)
+				_vm->akos_increaseAnim(this, limb, aksq, (const uint16 *)akfo, size);
+		}
+
+//		needRedraw = true;
+//		needBgReset = true;
 	}
 }
 
 void ScummEngine::setActorRedrawFlags() {
-	static bool wasFullRedraw = false;
-	if (_fullRedraw || wasFullRedraw)
-	{
-		for (int16 j = 1; j < _numActors; j++) {
+	int i, j;
+
+	if (_fullRedraw) {
+		for (j = 1; j < _numActors; j++) {
 			_actors[j].needRedraw = true;
 		}
-		wasFullRedraw = _fullRedraw;
-	}
-	else
-	{
-	#if 1
-
-		bool cameraMoved = (camera._last.x != camera._cur.x);
-
-		// actors which has not yet been drawn will do a rough check against gfxUsageBits.
-		// redraw if BG is marked as dirty or if another actor occupies the same strips.
-		for (int16 strip = _screenStartStrip; strip < _screenStartStrip + SCREEN_STRIP_COUNT; strip++) {
-			uint32 usageBits = gfxUsageBits[strip];
-			if (usageBits & 0x3FFFFFFF) {
-				uint32 actorBit = 2;
-				for (int16 j = 1; j < _numActors; j++) {
-					if ((usageBits & actorBit) && (usageBits & ~actorBit)) {
-						if ((_actors[j].right <= _actors[j].left) || cameraMoved) {
-							_actors[j].needRedraw = true;
-						}
-					}
-					actorBit <<= 1;
-				}
-			}
-		}
-
-		// fetch actors we care about
-		Actor* activeActors[30];
-		int16 numActiveActors = 0;
-		for (int16 j=1; j<_numActors; j++) {
-			Actor* a = &_actors[j];
-			if ((a->right > a->left) && a->isInCurrentRoom() && a->costume)
-				activeActors[numActiveActors++] = a;
-		}
-
-		// mark actors for redraw if background is dirty
-		VirtScreen* vs = &virtscr[0];
-		int16 startx = (_screenStartStrip << 3);
-		for (int16 j = 0; j < numActiveActors; j++) {
-			Actor* a = activeActors[j];
-			if (!a->needRedraw) {
-				int16 l = a->left-startx; int16 r = a->right-startx;
-				if(vs->dirty.isDirty(l, a->top, r, a->bottom)) {
-					a->needRedraw = true;
-				}
-			}
-		}	
-
-		// mark actors for redraw if any intersecting actor is redrawing
-		Common::DirtyMask dirty;
-		dirty.clear();
-		for (int16 j = 0; j < numActiveActors; j++) {
-			Actor* a = activeActors[j];
-			if (a->needRedraw) {
-				int16 l = a->left-startx; int16 r = a->right-startx;
-				dirty.updateRect(l, a->top, r, a->bottom);
-			}
-		}
-		for (int16 j = 0; j < numActiveActors; j++) {
-			Actor* a = activeActors[j];
-			if (!a->needRedraw) {
-				int16 l = a->left-startx; int16 r = a->right-startx;
-				if (dirty.isDirty(l, a->top, r, a->bottom)) {
-					dirty.updateRect(l, a->top, r, a->bottom);
-					a->needRedraw = true;
-					j = 0;
-					continue;
-				}
-			}
-		}
-
-	#else
-
-		for (int16 i = 0; i < SCREEN_STRIP_COUNT; i++)
-		{
+	} else {
+		for (i = 0; i < gdi._numStrips; i++) {
 			int strip = _screenStartStrip + i;
-			uint32 usageBits = gfxUsageBits[strip];
-
-			// ignore strip if no actors are here
-			if ((usageBits & 0x3FFFFFFF) == 0)
-				continue;
-
-			uint32 actorBit = 2;
-			for (int16 j = 1; j < _numActors; j++)
-			{
-				// is actor in this strip?
-				if (usageBits & actorBit)
-				{
-					// is background dirty, or is another actor in the same strip?
-					if (usageBits & ~actorBit)
-					{
-						// redraw
+			if (testGfxAnyUsageBits(strip)) {
+				for (j = 1; j < _numActors; j++) {
+					if (testGfxUsageBit(strip, j) && testGfxOtherUsageBits(strip, j)) {
 						_actors[j].needRedraw = true;
 					}
 				}
-				actorBit <<= 1;
 			}
 		}
-
-	#endif
 	}
 }
 
 void ScummEngine::resetActorBgs() {
-	uint16 resetList[30];
-	for (int16 i = 0; i < SCREEN_STRIP_COUNT; i++)
-	{
-		// find spans to reset
-		uint16 resetCount = 0;
+	int i, j;
+
+	for (i = 0; i < gdi._numStrips; i++) {
 		int strip = _screenStartStrip + i;
 		clearGfxUsageBit(strip, USAGE_BIT_DIRTY);
 		clearGfxUsageBit(strip, USAGE_BIT_RESTORED);
-
-		for (int16 j = 1; j < _numActors; j++)
-		{
-			if (testGfxUsageBit(strip, j) && (_actors[j].needRedraw || _actors[j].needBgReset))
-			{
+		for (j = 1; j < _numActors; j++) {
+			if (testGfxUsageBit(strip, j) &&
+				((_actors[j].top != 0xFF && _actors[j].needRedraw) || _actors[j].needBgReset)) {
 				clearGfxUsageBit(strip, j);
-
-				if (_actors[j].bottom <= 0)
-					continue;
-				if (_actors[j].top >= SCREEN_HEIGHT)
-					continue;
-				if (_actors[j].bottom < _actors[j].top)
-					continue;
-
-				resetList[resetCount++] = _actors[j].top << 8 | _actors[j].bottom;
-				//gdi.resetBackground(_actors[j].top, _actors[j].bottom, i);
-			}
-		}
-
-		// merge intersecting spans
-		for (int16 j = resetCount-1; j > 0; j--)
-		{
-			uint16 t0 = resetList[j] & 0xFF00;
-			uint16 b0 = resetList[j] & 0x00FF;
-			for (int16 k = j - 1; k >= 0; k--)
-			{
-				uint16 t1 = resetList[k] & 0xFF00;
-				uint16 b1 = resetList[k] & 0x00FF;
-				if (((t0>>8) < b1) && (b0 > (t1>>8)))
-				{
-					if (t0 < t1) t1 = t0;
-					if (b0 > b1) b1 = b0;
-					resetList[k] = t1 | b1;
-					resetList[j] = 0;
-					break;
-				}
-			} 
-		}
-
-		// reset background
-		for (int16 j = 0; j < resetCount; j++)
-		{
-			uint16 t = resetList[j];
-			if ((t & 0xFF) != 0)
-			{
-				gdi.resetBackground(t>>8, t&0xFF, i);
+				if ((_actors[j].bottom - _actors[j].top) >= 0)
+					gdi.resetBackground(_actors[j].top, _actors[j].bottom, i);
 			}
 		}
 	}
 
-	for (int16 i = 1; i < _numActors; i++)
-	{
+	for (i = 1; i < _numActors; i++) {
 		_actors[i].needBgReset = false;
 	}
 }
 
 int ScummEngine::getActorFromPos(int x, int y) {
+	int i;
+
 	if (!testGfxAnyUsageBits(x / 8))
 		return 0;
-
-	for (int16 i = 1; i < _numActors; i++)
-	{
-		if (testGfxUsageBit(x / 8, i) && !getClass(i, kObjectClassUntouchable) && y >= _actors[i].top && y <= _actors[i].bottom)
-		{
-//			if (_version > 2 || i != VAR(VAR_EGO))
+	for (i = 1; i < _numActors; i++) {
+		if (testGfxUsageBit(x / 8, i) && !getClass(i, kObjectClassUntouchable)
+			&& y >= _actors[i].top && y <= _actors[i].bottom) {
+			if (_version > 2 || i != VAR(VAR_EGO))
 				return i;
 		}
 	}
 	return 0;
 }
 
-void ScummEngine::actorTalk(){
+void ScummEngine::actorTalk() {
 	Actor *a;
 
 	_msgPtrToAdd = _charsetBuffer;
 	_messagePtr = addMessageToStack(_messagePtr);
 	assert((int)(_msgPtrToAdd - _charsetBuffer) < (int)(sizeof(_charsetBuffer)));
+
+	// FIXME: Workaround for bugs #770039 and #770049 
+	if (_gameId == GID_LOOM || _gameId == GID_LOOM256) {
+		if (!*_charsetBuffer)
+			return;
+	}
 
 	if (_actorToPrintStrFor == 0xFF) {
 		if (!_keepText)
@@ -1139,8 +1159,14 @@ void ScummEngine::actorTalk(){
 	} else {
 		int oldact;
 		
+		// FIXME: Workaround for bug #770724
+		if (_gameId == GID_LOOM && _roomResource == 23 &&
+			vm.slot[_currentScript].number == 232 && _actorToPrintStrFor == 0) {
+			_actorToPrintStrFor = 2;	// Could be anything from 2 to 5. Maybe compare to original?
+		}
+		
 		a = derefActor(_actorToPrintStrFor, "actorTalk");
-		if (!a->isInCurrentRoom()) {
+		if (!a->isInCurrentRoom() && (_version <= 6)) {
 			oldact = 0xFF;
 		} else {
 			if (!_keepText)
@@ -1156,7 +1182,7 @@ void ScummEngine::actorTalk(){
 			return;
 	}
 
-	if (talkingActor() > 0x7F) {
+	if (((_gameId == GID_MANIAC) && (_version == 1)) || talkingActor() > 0x7F) {
 		_charsetColor = (byte)_string[0].color;
 	} else {
 		a = derefActor(talkingActor(), "actorTalk(2)");
@@ -1182,12 +1208,15 @@ void ScummEngine::stopTalk() {
 	act = talkingActor();
 	if (act && act < 0x80) {
 		Actor *a = derefActor(act, "stopTalk");
-		if (a->isInCurrentRoom() && _useTalkAnims) {
+		if ((a->isInCurrentRoom() && _useTalkAnims) || (_features & GF_NEW_COSTUMES)) {
 			a->startAnimActor(a->talkStopFrame);
 			_useTalkAnims = false;
 		}
-		talkingActor(0xFF);
+		if (!(_features & GF_HUMONGOUS))
+			talkingActor(0xFF);
 	}
+	if (_features & GF_HUMONGOUS)
+		talkingActor(0);
 	_keepText = false;
 	_charset->restoreCharsetBg();
 }
@@ -1200,26 +1229,63 @@ void ScummEngine::clearMsgQueue() {
 void Actor::setActorCostume(int c) {
 	int i;
 
-	costumeNeedsInit = true;
-	
-	if (visible) {
-		hideActor();
-		cost.reset();
-		costume = c;
-		showActor();
-	} else {
-		costume = c;
-		cost.reset();
+	if ((_vm->_features & GF_HUMONGOUS) && (c == -1  || c == -2)) {
+		skipLimb = (c == -1);
+		needRedraw = true;
+		return;
 	}
 
-	customPalette = false;
-	for (i = 0; i < 32; i++)
-		palette[i] = 0xFF;
+	costumeNeedsInit = true;
+	
+	if (_vm->_features & GF_NEW_COSTUMES) {
+		cost.reset();
+		memset(animVariable, 0, sizeof(animVariable));
+		costume = c;
+		
+		if (visible) {
+			if (costume) {
+				_vm->ensureResourceLoaded(rtCostume, costume);
+			}
+			startAnimActor(initFrame);
+		}
+	} else {
+		if (visible) {
+			hideActor();
+			cost.reset();
+			costume = c;
+			showActor();
+		} else {
+			costume = c;
+			cost.reset();
+		}
+	}
+
+
+	// V1 zak uses palette[] as a dynamic costume color array.
+	if (_vm->_version == 1)
+		return;
+
+	if (_vm->_features & GF_NEW_COSTUMES) {
+		for (i = 0; i < 256; i++)
+			palette[i] = 0xFF;
+	} else if (_vm->_features & GF_OLD_BUNDLE) {
+		for (i = 0; i < 16; i++)
+			palette[i] = i;
+	} else {
+		for (i = 0; i < 32; i++)
+			palette[i] = 0xFF;
+	}
 }
 
 void Actor::startWalkActor(int destX, int destY, int dir) {
 	AdjustBoxResult abr;
-	abr = adjustXYToBeInBox(destX, destY);
+
+	if (_vm->_version <= 3) {
+		abr.x = destX;
+		abr.y = destY;
+	} else {
+		abr = adjustXYToBeInBox(destX, destY);
+	}
 
 	if (!isInCurrentRoom()) {
 		_pos.x = abr.x;
@@ -1297,6 +1363,21 @@ void Actor::startWalkAnim(int cmd, int angle) {
 void Actor::walkActor() {
 	int new_dir, next_box;
 	Common::Point foundPath;
+
+	if (_vm->_version >= 7) {
+		// FIXME - this is kind of a hack right now but it fixes the
+		// walk scripts in The Dig.
+		if (moving & MF_FROZEN) {
+			if (moving & MF_TURN) {
+				new_dir = updateActorDirection(false);
+				if (facing != new_dir)
+					setDirection(new_dir);
+				else
+					moving &= ~MF_TURN;
+			}
+			return;
+		}
+	}
 
 	if (!moving)
 		return;
@@ -1411,6 +1492,116 @@ void Actor::walkActorV12() {
 }
 */
 
+void Actor::walkActorOld() {
+	Common::Point p2, p3;	// Gate locations
+	int new_dir, next_box, loopCtr = 0;
+
+	if (!moving)
+		return;
+	
+	if (!(moving & MF_NEW_LEG)) {
+		if (moving & MF_IN_LEG && actorWalkStep())
+			return;
+
+		if (moving & MF_LAST_LEG) {
+			moving = 0;
+			startWalkAnim(3, walkdata.destdir);
+			return;
+		}
+
+		if (moving & MF_TURN) {
+			new_dir = updateActorDirection(false);
+			if (facing != new_dir)
+				setDirection(new_dir);
+			else
+				moving = 0;
+			return;
+		}
+
+		if (walkdata.point3.x != 32000) {
+			if (calcMovementFactor(walkdata.point3)) {
+				walkdata.point3.x = 32000;
+				return;
+			}
+			walkdata.point3.x = 32000;
+		}
+
+		setBox(walkdata.curbox);
+		moving &= MF_IN_LEG;
+	}
+
+	moving &= ~MF_NEW_LEG;
+	do {
+		loopCtr++;
+
+		if (walkbox == kInvalidBox) {
+			setBox(walkdata.destbox);
+			walkdata.curbox = walkdata.destbox;
+			break;
+		}
+
+		if (walkbox == walkdata.destbox)
+			break;
+
+		next_box = _vm->getPathToDestBox(walkbox, walkdata.destbox);
+		if (next_box < 0) {
+			moving |= MF_LAST_LEG;
+			return;
+		}
+		
+		// Can't walk through locked boxes
+		int flags = _vm->getBoxFlags(next_box);
+		if (flags & kBoxLocked && !(flags & kBoxPlayerOnly && !isPlayer())) {
+			moving |= MF_LAST_LEG;
+// FIXME: Work in progress
+//			walkdata.destdir = facing;
+			return;
+		}
+
+		walkdata.curbox = next_box;
+
+		if (_vm->_version <= 2) {
+			_vm->getClosestPtOnBox(walkdata.curbox, _pos.x, _pos.y, p2.x, p2.y);
+			_vm->getClosestPtOnBox(walkbox, p2.x, p2.y, p3.x, p3.y);
+// FIXME: Work in progress
+//			calcMovementFactor(p3);
+//			return;
+		} else {
+			findPathTowardsOld(walkbox, next_box, walkdata.destbox, p2, p3);
+			if (p2.x == 32000 && p3.x == 32000) {
+				break;
+			}
+	
+			if (p2.x != 32000) {
+				if (calcMovementFactor(p2)) {
+					walkdata.point3 = p3;
+					return;
+				}
+			}
+		}
+		if (calcMovementFactor(p3))
+			return;
+
+		// FIXME: Fingolfin changed the destbox to curbox, matching walkActor.
+		// Motivation for this was comparision with some MI EGA disasm...
+		// However, that caused a regression in Indy3 (bug #809547).
+		// On the other hand, curbox is needed to fix bug #830106... <sigh>
+		if (_vm->_version >= 3)
+			setBox(walkdata.destbox);
+		else
+			setBox(walkdata.curbox);
+
+		// FIXME: Ender added this recursion counter as a hack around
+		//        a infinite loop in Maniac V1 - see bug #862245
+		if (loopCtr > 10000) {
+			moving |= MF_LAST_LEG;
+			return;
+		}
+	} while (1);
+
+	moving |= MF_LAST_LEG;
+	calcMovementFactor(walkdata.dest);
+}
 
 byte *Actor::getActorName() {
 	byte *ptr = _vm->getResourceAddress(rtActorName, number);
@@ -1418,6 +1609,94 @@ byte *Actor::getActorName() {
 		warning("Failed to find name of actor %d", number);
 	}
 	return ptr;
+}
+
+void Actor::remapActorPaletteColor(int color, int new_color) {
+	const byte *akos, *akpl;
+	int akpl_size, i;
+	byte akpl_color;
+
+	akos = _vm->getResourceAddress(rtCostume, costume);
+	if (!akos) {
+		warning("Can't remap actor %d, costume %d not found", number, costume);
+		return;
+	}
+
+	akpl = findResource(MKID('AKPL'), akos);
+	if (!akpl) {
+		warning("Can't remap actor %d, costume %d doesn't contain an AKPL block", number, costume);
+		return;
+	}
+
+	//get num palette entries
+	akpl_size = RES_SIZE(akpl) - 8;
+
+	//skip resource header
+	akpl = RES_DATA(akpl);
+
+	for (i = 0; i < akpl_size; i++) {
+		akpl_color = *akpl++;
+		if (akpl_color == color) {
+			palette[i] = new_color;
+			return;
+		}
+	}
+}
+
+void Actor::remapActorPalette(int r_fact, int g_fact, int b_fact, int threshold) {
+	const byte *akos, *rgbs, *akpl;
+	int akpl_size, i;
+	int r, g, b;
+	byte akpl_color;
+
+	if (!isInCurrentRoom() || costume < 1 || costume >= _vm->_numCostumes - 1)
+			return;
+
+	akos = _vm->getResourceAddress(rtCostume, costume);
+	if (!akos) {
+		warning("Can't remap actor %d, costume %d not found", number, costume);
+		return;
+	}
+
+	akpl = findResource(MKID('AKPL'), akos);
+	if (!akpl) {
+		warning("Can't remap actor %d, costume %d doesn't contain an AKPL block", number, costume);
+		return;
+	}
+
+	//get num palette entries
+	akpl_size = RES_SIZE(akpl) - 8;
+
+	//skip resource header
+	akpl = RES_DATA(akpl);
+
+	rgbs = findResource(MKID('RGBS'), akos);
+
+	if (!rgbs) {
+		warning("Can't remap actor %d costume %d doesn't contain an RGB block", number, costume);
+		return;
+	}
+	// skip resource header
+	rgbs = RES_DATA(rgbs);
+
+	for (i = 0; i < akpl_size; i++) {
+		r = *rgbs++;
+		g = *rgbs++;
+		b = *rgbs++;
+
+		akpl_color = *akpl++;
+
+		// allow remap of generic palette entry?
+		if (!shadow_mode || akpl_color >= 16) {
+			if (r_fact != 256)
+				r = (r * r_fact) >> 8;
+			if (g_fact != 256)
+				g = (g * g_fact) >> 8;
+			if (b_fact != 256)
+				b = (b * b_fact) >> 8;
+			palette[i] = _vm->remapPaletteColor(r, g, b, threshold);
+		}
+	}
 }
 
 void Actor::classChanged(int cls, bool value) {
@@ -1432,7 +1711,10 @@ bool Actor::isInClass(int cls) {
 }
 
 bool Actor::isPlayer() {
-	return isInClass(kObjectClassPlayer);
+	if (_vm->_version <= 2)
+		return _vm->VAR(42) <= number && number <= _vm->VAR(43);
+	else
+		return isInClass(kObjectClassPlayer);
 }
 
 
@@ -1471,7 +1753,6 @@ const SaveLoadEntry *Actor::getSaveLoadEntries() {
 		MKLINE(Actor, cost.soundCounter, sleByte, VER(8)),
 	
 		// Actor palette grew from 64 to 256 bytes
-		MKLINE(Actor, customPalette, sleByte, VER(33)),
 		MKARRAY_OLD(Actor, palette[0], sleByte, 64, VER(8), VER(9)),
 		MKARRAY(Actor, palette[0], sleByte, 256, VER(10)),
 	

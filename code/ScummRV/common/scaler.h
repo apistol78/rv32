@@ -21,8 +21,6 @@
 #ifndef COMMON_SCALER_H
 #define COMMON_SCALER_H
 
-#ifndef __ATARI__
-
 extern void InitScalers(uint32 BitFormat);
 
 typedef void ScalerProc(const uint8 *srcPtr, uint32 srcPitch,
@@ -32,9 +30,18 @@ typedef void ScalerProc(const uint8 *srcPtr, uint32 srcPitch,
 	extern void x(const uint8 *srcPtr, uint32 srcPitch, uint8 *dstPtr, \
 					uint32 dstPitch, int width, int height)
 
-
+DECLARE_SCALER(_2xSaI);
+DECLARE_SCALER(Super2xSaI);
+DECLARE_SCALER(SuperEagle);
+DECLARE_SCALER(AdvMame2x);
+DECLARE_SCALER(AdvMame3x);
 DECLARE_SCALER(Normal1x);
 DECLARE_SCALER(Normal2x);
+DECLARE_SCALER(Normal3x);
+DECLARE_SCALER(TV2x);
+DECLARE_SCALER(DotMatrix);
+DECLARE_SCALER(HQ2x);
+DECLARE_SCALER(HQ3x);
 
 FORCEINLINE int real2Aspect(int y) {
 	return y + (y + 1) / 5;
@@ -44,23 +51,28 @@ FORCEINLINE int aspect2Real(int y) {
 	return (y * 5 + 4) / 6;
 }
 
-//extern void makeRectStretchable(int &x, int &y, int &w, int &h);
+extern void makeRectStretchable(int &x, int &y, int &w, int &h);
 
-//extern int stretch200To240(uint8 *buf, uint32 pitch, int width, int height, int srcX, int srcY, int origSrcY);
+extern int stretch200To240(uint8 *buf, uint32 pitch, int width, int height, int srcX, int srcY, int origSrcY);
 
 enum {
 	GFX_NORMAL = 0,
 	GFX_DOUBLESIZE = 1,
+	GFX_TRIPLESIZE = 2,
+	GFX_2XSAI = 3,
+	GFX_SUPER2XSAI = 4,
+	GFX_SUPEREAGLE = 5,
+	GFX_ADVMAME2X = 6,
+	GFX_ADVMAME3X = 7,
+	GFX_HQ2X = 8,
+	GFX_HQ3X = 9,
+	GFX_TV2X = 10,
+	GFX_DOTMATRIX = 11,
+
+	GFX_FLIPPING = 100,	// Palmos
+	GFX_BUFFERED = 101,	// Palmos
+	GFX_WIDE = 102 // palmos
 };
-
-#else //__ATARI__
-
-enum {
-	GFX_NORMAL = 0,
-
-};
-
-#endif //__ATARI__
 
 
 #endif

@@ -84,7 +84,6 @@ public:
 public:
 	Common::Point _pos;
 	int top, bottom;
-	int left, right;
 	uint width;
 	byte number;
 	uint16 costume;
@@ -100,7 +99,6 @@ public:
 	byte forceClip;
 	byte initFrame, walkFrame, standFrame, talkStartFrame, talkStopFrame;
 	bool needRedraw, needBgReset, visible;
-	bool customPalette;
 	byte shadow_mode;
 	bool flip;
 	byte frame;
@@ -153,9 +151,12 @@ public:
 	void faceToObject(int obj);
 	void turnToDirection(int newdir);
 	void walkActor();
+	void walkActorOld();
 	void drawActorCostume();
 	void animateCostume();
 	void setActorCostume(int c);
+	
+	void animateLimb(int limb, int f);
 	
 	byte *getActorName();
 	void startWalkActor(int x, int y, int dir);
@@ -164,6 +165,9 @@ protected:
 	void startWalkAnim(int cmd, int angle);
 public:
 	void startAnimActor(int frame);
+
+	void remapActorPalette(int r_fact, int g_fact, int b_fact, int threshold);
+	void remapActorPaletteColor(int slot, int color);
 
 	void animateActor(int anim);
 
@@ -205,18 +209,11 @@ public:
 	}
 	
 	void setPalette(int idx, int val) {
-		debug(2, "actor %d - setPalette %d, %d\n\r", number, idx, val);
 		palette[idx] = val;
 		needRedraw = true;
-		customPalette = true;
-	}
-
-	byte getPalette(int idx) {
-		return palette[idx];
 	}
 	
 	void setScale(int sx, int sy) {
-		debug(2, "actor %d - setScale %d, %d\n\r", number, sx, sy);
 		if (sx != -1)
 			scalex = sx;
 		if (sy != -1)
@@ -235,6 +232,7 @@ protected:
 	bool isPlayer();
 
 	bool findPathTowards(byte box, byte box2, byte box3, Common::Point &foundPath);
+	void findPathTowardsOld(byte box, byte box2, byte box3, Common::Point &p2, Common::Point &p3);
 };
 
 } // End of namespace Scumm

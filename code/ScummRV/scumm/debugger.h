@@ -21,70 +21,7 @@
 #ifndef DEBUGGER_H
 #define DEBUGGER_H
 
-#ifndef DISABLE_DEBUGGER
-
-namespace Common {
-
-template <class T>
-class Debugger {
-public:
-	Debugger();
-	virtual ~Debugger();
-	
-	int DebugPrintf(const char *format, ...);
-
-	virtual void onFrame();
-
-	virtual void attach(const char *entry = 0);
-	bool isAttached() const { return _isAttached; }
-
-protected:
-	typedef bool (T::*DebugProc)(int argc, const char **argv);
-	
-	enum {
-		DVAR_INT,
-		DVAR_BOOL,
-		DVAR_INTARRAY,
-		DVAR_STRING
-	};
-	
-	struct DVar {
-		char name[30];
-		void *variable;
-		int type, optional;
-	};
-	
-	struct DCmd {
-		char name[30];
-		DebugProc function;
-	};
-	
-	int _frame_countdown, _dvar_count, _dcmd_count;
-	DVar _dvars[256];
-	DCmd _dcmds[256];
-	bool _detach_now;
-
-private:
-	bool _isAttached;
-	char *_errStr;
-	bool _firstTime;
-
-protected:
-	void detach();
-	void enter();
-
-	virtual void preEnter() = 0;
-	virtual void postEnter() = 0;
-
-	bool RunCommand(const char *input);
-	bool TabComplete(const char *input, char*& completion);
-
-	void DVar_Register(const char *varname, void *pointer, int type, int optional);
-	void DCmd_Register(const char *cmdname, DebugProc pointer);
-};
-
-}	// End of namespace Common
-
+#include "common/debugger.h"
 
 namespace Scumm {
 
@@ -135,5 +72,4 @@ protected:
 
 } // End of namespace Scumm
 
-#endif
 #endif

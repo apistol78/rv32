@@ -23,130 +23,122 @@
 #include "common/util.h"
 #include "common/savefile.h"
 
-#define SAVEFILE_CACHESIZE	(16 * 1024)
-
-static uintptr_t _tempBuf = 0;
-static bool _fileIsOpen = false;
-
-SaveFile::SaveFile(const char* filename, bool saveOrLoad) {
-	assert(!_fileIsOpen);
-	_f = fopen(filename, (saveOrLoad ? "wb" : "rb"));
-	if (_f) {
-		if (!_tempBuf) {
-#ifdef __ATARI__
-			// prefer ST ram because file operations would have to go through FRB otherwise
-			_tempBuf = (uintptr_t) atari_alloc(SAVEFILE_CACHESIZE, ALLOC_STRAM_PREFER);
-#else
-			_tempBuf = (uintptr_t) malloc(SAVEFILE_CACHESIZE);
+#ifdef USE_ZLIB
+#include <zlib.h>
 #endif
-		}
-		mode = saveOrLoad;
-		buf = _tempBuf;
-		bufPtr = buf;
-		_fileIsOpen = true;
-	}
-}
-
-SaveFile::~SaveFile() {
-	if(_f) {
-		if (mode) {
-			flushWrites(true);
-		}
-		fclose(_f);
-		_fileIsOpen = false;
-	}
-}
-
-bool SaveFile::isOpen() const
-{
-	return (_f != 0);
-}
 
 uint32 SaveFile::read(void *ptr, uint32 size) {
-	if (size == 0)
-		return 0;
-
-	cacheReads();
-	uint32 remaining = SAVEFILE_CACHESIZE - (bufPtr - buf);
-	if (remaining >= size)
-	{
-		memcpy(ptr, (void*)bufPtr, size);
-		bufPtr += size;
-		return size;
-	}
-
-	byte* dst = (byte*)ptr;
-	if (remaining > 0)
-	{
-		memcpy(dst, (void*)bufPtr, remaining);
-		bufPtr += remaining;
-		size -= remaining;
-		dst += remaining;
-	}
-	return fread(dst, 1, size, _f) + remaining;
+	return fread(ptr, 1, size);
 }
 
 byte SaveFile::readByte() {
-	cacheReads();
-	byte val = *((byte*)bufPtr++);
-	return val;
+	byte b;
+	// TODO: Proper error handling
+	if (fread(&b, 1, 1) != 1)
+		return 0;
+	return b;
 }
 
-uint16 SaveFile::readUint16() {
+uint16 SaveFile::readUint16LE() {
 	uint16 a = readByte();
 	uint16 b = readByte();
 	return a | (b << 8);
 }
 
-uint32 SaveFile::readUint32() {
-	uint32 a = readByte();
-	uint32 b = readByte();
-	uint32 c = readByte();
-	uint32 d = readByte();
-	return a | (b << 8) | (c << 16) | (d << 24);
+uint32 SaveFile::readUint32LE() {
+	uint32 a = readUint16LE();
+	uint32 b = readUint16LE();
+	return (b << 16) | a;
+}
+
+uint16 SaveFile::readUint16BE() {
+	uint16 b = readByte();
+	uint16 a = readByte();
+	return a | (b << 8);
+}
+
+uint32 SaveFile::readUint32BE() {
+	uint32 b = readUint16BE();
+	uint32 a = readUint16BE();
+	return (b << 16) | a;
 }
 
 uint32 SaveFile::write(const void *ptr, uint32 size) {
-	flushWrites(true);
-	return fwrite(ptr, 1, size, _f);
+	return fwrite(ptr, 1, size);
 }
 
 void SaveFile::writeByte(byte value) {
-	*((byte*)bufPtr++) = value;
-	flushWrites(false);
+	fwrite(&value, 1, 1);
 }
 
-void SaveFile::writeUint16(uint16 value) {
-	writeByte(value & 0xFF); value >>= 8;
-	writeByte(value & 0xFF);
+void SaveFile::writeUint16LE(uint16 value) {
+	writeByte((byte)(value & 0xff));
+	writeByte((byte)(value >> 8));
 }
 
-void SaveFile::writeUint32(uint32 value) {
-	writeByte(value & 0xFF); value >>= 8;
-	writeByte(value & 0xFF); value >>= 8;
-	writeByte(value & 0xFF); value >>= 8;
-	writeByte(value & 0xFF);
+void SaveFile::writeUint32LE(uint32 value) {
+	writeUint16LE((uint16)(value & 0xffff));
+	writeUint16LE((uint16)(value >> 16));
 }
 
-void SaveFile::flushWrites(bool forceFlush)
-{
-	uint32 size = bufPtr - buf;
-	if ((size >= SAVEFILE_CACHESIZE) || (forceFlush && (size > 0)))
-	{
-		fwrite((void*)buf, 1, size, _f);
-		bufPtr = buf;
+void SaveFile::writeUint16BE(uint16 value) {
+	writeByte((byte)(value >> 8));
+	writeByte((byte)(value & 0xff));
+}
+
+void SaveFile::writeUint32BE(uint32 value) {
+	writeUint16BE((uint16)(value >> 16));
+	writeUint16BE((uint16)(value & 0xffff));
+}
+
+
+class StdioSaveFile : public SaveFile {
+private:
+	FILE *fh;
+public:
+	StdioSaveFile(const char *filename, bool saveOrLoad)
+		{ fh = ::fopen(filename, (saveOrLoad? "wb" : "rb")); }
+	~StdioSaveFile()
+		{ if(fh) ::fclose(fh); }
+
+	bool isOpen() const { return fh != 0; }
+
+protected:
+	int fread(void *buf, int size, int cnt)
+		{ return ::fread(buf, size, cnt, fh); }
+	int fwrite(const void *buf, int size, int cnt)
+		{ return ::fwrite(buf, size, cnt, fh); }
+};
+
+
+#ifdef USE_ZLIB
+class GzipSaveFile : public SaveFile {
+private:
+	gzFile fh;
+public:
+	GzipSaveFile(const char *filename, bool saveOrLoad)
+		{ fh = ::gzopen(filename, (saveOrLoad? "wb" : "rb")); }
+	~GzipSaveFile()
+		{ if(fh) ::gzclose(fh); }
+
+	bool isOpen() const { return fh != 0; }
+
+protected:
+	int fread(void *buf, int size, int cnt) {
+		return ::gzread(fh, buf, size * cnt);
 	}
-}
-
-void SaveFile::cacheReads()
-{
-	uint usedSize = bufPtr - buf;
-	if ((usedSize == 0) || (usedSize >= SAVEFILE_CACHESIZE))
-	{
-		fread((void*)buf, 1, SAVEFILE_CACHESIZE, _f);
-		bufPtr = buf;
+	int fwrite(const void *buf, int size, int cnt) {
+		// Due to a "bug" in the zlib headers (or maybe I should say,
+		// a bug in the C++ spec? Whatever <g>) we have to be a bit
+		// hackish here and remove the const qualifier.
+		// Note that gzwrite's buf param is declared as "const voidp"
+		// which you might think is the same as "const void *" but it
+		// is not - rather it is equal to "void const *" which is the 
+		// same as "void *". Hrmpf
+		return ::gzwrite(fh, const_cast<void *>(buf), size * cnt);
 	}
-}
+};
+#endif
 
 
 SaveFile *SaveFileManager::open_savefile(const char *filename, const char *directory, bool saveOrLoad) {
@@ -175,7 +167,11 @@ void SaveFileManager::join_paths(const char *filename, const char *directory,
 	const int dirLen = strlen(buf);
 
 	if (dirLen > 0) {
-#if !defined(__ATARI__)
+#ifdef __MORPHOS__
+		if (buf[dirLen-1] != ':' && buf[dirLen-1] != '/')
+#endif
+
+#if !defined(__GP32__) && !defined(__PALM_OS__)
 		strncat(buf, "/", bufsize-1);	// prevent double /
 #endif
 	}
@@ -183,5 +179,9 @@ void SaveFileManager::join_paths(const char *filename, const char *directory,
 }
 
 SaveFile *SaveFileManager::makeSaveFile(const char *filename, bool saveOrLoad) {
-	return new SaveFile(filename, saveOrLoad);
+#ifdef USE_ZLIB
+	return new GzipSaveFile(filename, saveOrLoad);
+#else
+	return new StdioSaveFile(filename, saveOrLoad);
+#endif
 }

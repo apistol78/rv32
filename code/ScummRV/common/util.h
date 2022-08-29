@@ -24,65 +24,29 @@
 #include "common/scummsys.h"
 #include "common/system.h"
 
-extern uint16 squareTable[256];
-extern uint32 rptTable[256];
-extern uint32 c2pfill16[];
-extern uint32 c2pfill16_2[];
-
-#define SCREEN_WIDTH			320
-#define SCREEN_HEIGHT			200
-#define SCREEN_STRIP_COUNT		40
-#define SCREEN_STRIP_SIZE	 	8
-#define SCREEN_STRIP_SHIFT	 	3
-#define SCREEN_TO_STRIP(a)		((a) >> SCREEN_STRIP_SHIFT)
-#define STRIP_TO_SCREEN(a)		((a) << SCREEN_STRIP_SHIFT)
-#define MUL_SCREEN_WIDTH(a)		MUL320(a)
-#define MUL_SCREEN_STRIPS(a)	MUL40(a)
-
-#define MULSQUARE(x)	squareTable[(x)]
-#define MUL2(a)			((a)<<1)
-#define MUL3(a)			(((a)<<1)+(a))
-#define MUL6(a)			(((a)<<2)+((a)<<1))
-#define MUL8(a)			((a)<<3)
-#define MUL20(a)		(((a)<<4)+((a)<<2))
-#define MUL40(a)		(((a)<<5)+((a)<<3))
-#define MUL80(a)		(((a)<<6)+((a)<<4))
-#define MUL160(a)		(((a)<<7)+((a)<<5))
-#define MUL320(a)		(((a)<<8)+((a)<<6))
-#define MUL512(a)		((a)<<9)
-
-#if 1
-#define FILLUINT32(x)			rptTable[x]
-#else
-inline uint32 FILLUINT32(uint8 x)
-{
-	return rptTable[x];
-}
-#endif
-
-template<typename T> inline T ABS (T x)				{ return (x>=0) ? x : -x; }
-template<typename T> inline T MIN (T a, T b)		{ return (a<b) ? a : b; }
-template<typename T> inline T MAX (T a, T b)		{ return (a>b) ? a : b; }
-template<typename T> inline T CLAMP(T a, T b, T c)	{ return (a<b) ? b : (a>c) ? c : a; }
+template<typename T> inline T ABS (T x)			{ return (x>=0) ? x : -x; }
+template<typename T> inline T MIN (T a, T b)	{ return (a<b) ? a : b; }
+template<typename T> inline T MAX (T a, T b)	{ return (a>b) ? a : b; }
 
 /**
  * Template method which swaps the vaulues of its two parameters.
  */
 template<typename T> inline void SWAP(T &a, T &b) { T tmp = a; a = b; b = tmp; }
 
-
-#ifndef ARRAYSIZE
 #define ARRAYSIZE(x) ((int)(sizeof(x) / sizeof(x[0])))
-#endif
 
 namespace Common {
 
-
-namespace Util {
-void Init();
-};
-
 class String;
+
+/**
+ * Print a hexdump of the data passed in. The number of bytes per line is
+ * customizable.
+ * @param data	the data to be dumped
+ * @param len	the lenght of that data
+ * @param bytesPerLine	number of bytes to print per line (default: 16)
+ */
+extern void hexdump(const byte * data, int len, int bytesPerLine = 16);
 
 /**
  * Simple random number generator. Although it is definitely not suitable for
@@ -151,6 +115,19 @@ enum Language {
 	NL_NLD = 23
 };
 
+struct LanguageDescription {
+	const char *code;
+	const char *description;
+	Common::Language id;
+};
+
+extern const LanguageDescription g_languages[];
+
+
+/** Convert a string containing a language name into a Language enum value. */
+extern Language parseLanguage(const String &str);
+extern const char *getLanguageCode(Language id);
+extern const char *getLanguageDescription(Language id);
 
 /**
  * List of game platforms. Specifying a platform for a target can be used to
@@ -172,23 +149,36 @@ enum Platform {
 */
 };
 
+struct PlatformDescription {
+	const char *code;
+	const char *code2;
+	const char *description;
+	Common::Platform id;
+};
+
+extern const PlatformDescription g_platforms[];
+
+
+/** Convert a string containing a platform name into a Platform enum value. */
+extern Platform parsePlatform(const String &str);
+extern const char *getPlatformCode(Platform id);
+extern const char *getPlatformDescription(Platform id);
+
 }	// End of namespace Common
 
 
-#ifndef RELEASEBUILD
-	void CDECL error(const char *s, ...) NORETURN;
-	void CDECL warning(const char *s, ...);
-	void CDECL debug(int level, const char *s, ...);
-	void CDECL debug(const char *s, ...);
-	void checkHeap();
-	#define assertAligned(a) { if(1 & (uint32)a) { debug(1, "FATAL: '" #a "' is not aligned (0x%08x). " __FILE__ ":%d", (uint32)a, __LINE__); exit(0); } }
+
+#if defined(__GNUC__)
+void CDECL error(const char *s, ...) NORETURN;
 #else
-	#define error(...)
-	#define warning(...)
-	#define debug(...)
-	#define checkHeap()
-	#define assertAligned(a) {}
+void CDECL NORETURN error(const char *s, ...);
 #endif
+
+void CDECL warning(const char *s, ...);
+
+void CDECL debug(int level, const char *s, ...);
+void CDECL debug(const char *s, ...);
+void checkHeap();
 
 
 #endif

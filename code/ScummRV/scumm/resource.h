@@ -21,33 +21,6 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-// versions
-// 1: first release
-// 2: new sprite format
-// 3: new palette for Indy4
-// 4: dithering + reverted the unique Indy4 palette
-// 5: costume optimization
-// 6: costume optimization
-// 7: bomp and cursor stuff
-// 8: with resource size fix
-#define ATARI_RESOURCE_VERSION 8
-
-
-// We have been saving images in twice the size needed. Fixing this breaks compatibility with old savegames
-// because ScummVM, in its infinite wisdom, is saving the actual image resouces for inventory items into the savegame files...
-//#define ATARI_OBIM_RESOURCE_SIZE_FIX_SAMNMAX_ONLY
-//#define ATARI_OBIM_RESOURCE_SIZE_FIX_PARTIAL
-#define ATARI_OBIM_RESOURCE_SIZE_FIX
-
-// Insert dummy padding block between OBCD and OBIM so that the OBIM is word aligned.
-// Not sure if this was causing any problems in the older games but it does fix alignment crashes in samnmax.
-// flojects which are loaded from an old savegame (ie; inventory items) are not automatically fixed though.
-// not an issue for samnmax since there are no saves out there yet, but if this is/was causing issues in
-// older games we may want to either break save compatibility or auto-convert when loading from savegame.
-//#ifdef GAME_SAMNMAX
-#define ATARI_FLOBJECT_OBIM_FIX
-//#endif
-
 namespace Scumm {
 
 #if !defined(__GNUC__)
@@ -87,16 +60,17 @@ enum {
 
 
 const byte *findResource(uint32 tag, const byte *searchin);
+const byte *findResourceSmall(uint32 tag, const byte *searchin);
 
 class ResourceIterator {
 	uint32 _size;
 	uint32 _pos;
 	const byte *_ptr;
+	bool _smallHeader;
 public:
-	ResourceIterator(const byte *searchin);
+	ResourceIterator(const byte *searchin, bool smallHeader);
 	const byte *findNext(uint32 tag);
 };
-
 
 } // End of namespace Scumm
 

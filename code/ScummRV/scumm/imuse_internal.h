@@ -146,8 +146,6 @@ struct CommandQueue {
 };
 
 class Player : public MidiDriver {
-	friend class IMuseInternal;
-	
 protected:
 	// Moved from IMuseInternal.
 	// This is only used by one player at a time.
@@ -347,7 +345,7 @@ struct Part {
 // the public version, only contains a set of methods.
 class IMuseInternal {
 	friend class Player;
-	
+
 protected:
 	bool _old_adlib_instruments;
 	bool _enable_multi_midi;
@@ -443,7 +441,6 @@ public:
 	IMuseInternal();
 
 	int initialize(OSystem *syst, SoundMixer *mixer, MidiDriver *midi);
-	void changeMidiDriver(MidiDriver* midi);
 	void reallocateMidiChannels(MidiDriver *midi);
 	void setGlobalAdlibInstrument(byte slot, byte *data);
 	void copyGlobalAdlibInstrument(byte slot, Instrument *dest);
@@ -469,7 +466,6 @@ public:
 	void setBase(byte **base);
 	uint32 property(int prop, uint32 value);
 
-	void changeDriver(MidiDriver *midi, bool native_mt32);
 	static IMuseInternal *create(OSystem *syst, SoundMixer *mixer, MidiDriver *midi);
 };
 

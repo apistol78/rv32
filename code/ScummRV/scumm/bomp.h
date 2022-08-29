@@ -24,14 +24,12 @@
 
 #include "common/scummsys.h"
 
-#ifdef ENGINE_SCUMM6
-
 namespace Scumm {
 
-int16 setupBompScale(byte *scaling, int16 size, byte scale);
+int32 setupBompScale(byte *scaling, int32 size, byte scale);
 
 void bompApplyMask(byte *line_buffer, byte *mask, byte maskbit, int32 size, byte transparency);
-void bompApplyShadow(int shadowMode, const byte *line_buffer, byte *dst, int32 size, byte transparency);
+void bompApplyShadow(int shadowMode, const byte *shadowPalette, const byte *line_buffer, byte *dst, int32 size, byte transparency);
 
 void decompressBomp(byte *dst, const byte *src, int w, int h);
 void bompDecodeLine(byte *dst, const byte *src, int size);
@@ -39,7 +37,4 @@ void bompDecodeLineReverse(byte *dst, const byte *src, int size);
 
 } // End of namespace Scumm
 
-#endif //ENGINE_SCUMM6
-
 #endif
-

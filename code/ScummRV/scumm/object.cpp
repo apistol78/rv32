@@ -26,6 +26,7 @@
 #include "scumm/bomp.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
+#include "scumm/usage_bits.h"
 
 namespace Scumm {
 
@@ -55,6 +56,26 @@ bool ScummEngine::getClass(int obj, int cls) const {
 	checkRange(_numGlobalObjects - 1, 0, obj, "Object %d out of range in getClass");
 	cls &= 0x7F;
 	checkRange(32, 1, cls, "Class %d out of range in getClass");
+
+	if (_features & GF_SMALL_HEADER) {
+		// Translate the new (V5) object classes to the old classes
+		// (for those which differ).
+		switch (cls) {
+		case kObjectClassUntouchable:
+			cls = 24;
+			break;
+		case kObjectClassPlayer:
+			cls = 23;
+			break;
+		case kObjectClassXFlip:
+			cls = 19;
+			break;
+		case kObjectClassYFlip:
+			cls = 18;
+			break;
+		}
+	}
+
 	return (_classData[obj] & (1 << (cls - 1))) != 0;
 }
 
@@ -62,6 +83,25 @@ void ScummEngine::putClass(int obj, int cls, bool set) {
 	checkRange(_numGlobalObjects - 1, 0, obj, "Object %d out of range in putClass");
 	cls &= 0x7F;
 	checkRange(32, 1, cls, "Class %d out of range in putClass");
+
+	if (_features & GF_SMALL_HEADER) {
+		// Translate the new (V5) object classes to the old classes
+		// (for those which differ).
+		switch (cls) {
+		case kObjectClassUntouchable:
+			cls = 24;
+			break;
+		case kObjectClassPlayer:
+			cls = 23;
+			break;
+		case kObjectClassXFlip:
+			cls = 19;
+			break;
+		case kObjectClassYFlip:
+			cls = 18;
+			break;
+		}
+	}
 
 	if (set)
 		_classData[obj] |= (1 << (cls - 1));
@@ -96,6 +136,9 @@ int ScummEngine::getState(int obj) {
 		// assume that 182 and 193 each correspond to one particular side of
 		// the it. Fortunately it does not prevent frustrated players from
 		// blowing up the mansion, should they feel the urge to.
+
+		if (_gameId == GID_MANIAC && (obj == 182 || obj == 193))
+			_objectStateTable[obj] |= 0x08;
 	}
 
 	return _objectStateTable[obj];
@@ -185,7 +228,7 @@ void ScummEngine::getObjectXYPos(int object, int &x, int &y, int &dir) {
 	const byte *ptr;
 	const ImageHeader *imhd;
 
-	if (_version == 6) {
+	if (_version >= 6) {
 		state = getState(object) - 1;
 		if (state < 0)
 			state = 0;
@@ -200,13 +243,24 @@ void ScummEngine::getObjectXYPos(int object, int &x, int &y, int &dir) {
 		}
 		imhd = (const ImageHeader *)findResourceData(MKID('IMHD'), ptr);
 		assert(imhd);
-		x = od.x_pos + (int16)READ_LE_UINT16(&imhd->old.hotspot[state].x);
-		y = od.y_pos + (int16)READ_LE_UINT16(&imhd->old.hotspot[state].y);
+		if (_version == 8) {
+			x = od.x_pos + (int32)READ_LE_UINT32(&imhd->v8.hotspot[state].x);
+			y = od.y_pos + (int32)READ_LE_UINT32(&imhd->v8.hotspot[state].y);
+		} else if (_version == 7) {
+			x = od.x_pos + (int16)READ_LE_UINT16(&imhd->v7.hotspot[state].x);
+			y = od.y_pos + (int16)READ_LE_UINT16(&imhd->v7.hotspot[state].y);
+		} else {
+			x = od.x_pos + (int16)READ_LE_UINT16(&imhd->old.hotspot[state].x);
+			y = od.y_pos + (int16)READ_LE_UINT16(&imhd->old.hotspot[state].y);
+		}
 	} else {
 		x = od.walk_x;
 		y = od.walk_y;
 	}
-	dir = oldDirToNewDir(od.actordir & 3);
+	if (_version == 8)
+		dir = fromSimpleDir(1, od.actordir);
+	else
+		dir = oldDirToNewDir(od.actordir & 3);
 }
 
 static int getDist(int x, int y, int x2, int y2) {
@@ -245,16 +299,29 @@ int ScummEngine::getObjActToObjActDist(int a, int b) {
 		y2 = r.y;
 	}
 
+	// Now compute the distance between the two points
+	if (_version <= 2) {
+		// For V1/V2 games, distances are measured in the original "character"
+		// based coordinate system, instead of pixels. Otherwise various scripts
+		// will break. See bugs #853874, #774529
+		x /= 8;
+		y /= 2;
+		x2 /= 8;
+		y2 /= 2;
+	}
+
 	return getDist(x, y, x2, y2);
 }
 
 int ScummEngine::findObject(int x, int y) {
 	int i, b;
 	byte a;
-	const int mask = 0xF;
+	const int mask = (_version <= 2) ? 0x8 : 0xF;
 
 	for (i = 1; i < _numLocalObjects; i++) {
 		if ((_objs[i].obj_nr < 1) || getClass(_objs[i].obj_nr, kObjectClassUntouchable))
+			continue;
+		if ((_version <= 2) && _objs[i].state & 0x2)
 			continue;
 		b = i;
 		do {
@@ -274,7 +341,7 @@ int ScummEngine::findObject(int x, int y) {
 void ScummEngine::drawRoomObject(int i, int arg) {
 	ObjectData *od;
 	byte a;
-	const int mask = 0xF;
+	const int mask = (_version <= 2) ? 0x8 : 0xF;
 
 	od = &_objs[i];
 	if ((i < 1) || (od->obj_nr < 1) || !od->state)
@@ -283,7 +350,7 @@ void ScummEngine::drawRoomObject(int i, int arg) {
 	do {
 		a = od->parentstate;
 		if (!od->parent) {
-			if (od->fl_object_index == 0)
+			if ((_version <= 6 && !(_features & GF_HUMONGOUS)) || od->fl_object_index == 0)
 				drawObject(i, arg);
 			break;
 		}
@@ -293,7 +360,7 @@ void ScummEngine::drawRoomObject(int i, int arg) {
 
 void ScummEngine::drawRoomObjects(int arg) {
 	int i;
-	const int mask = 0xF;
+	const int mask = (_version <= 2) ? 0x8 : 0xF;
 
 	if (_features & GF_DRAWOBJ_OTHER_ORDER) {
 		for (i = 1; i < _numLocalObjects; i++)
@@ -352,7 +419,11 @@ void ScummEngine::drawObject(int obj, int arg) {
 		return;
 
 	ptr = getOBIMFromObject(od);
-	ptr = getObjectImage(ptr, getState(od.obj_nr));
+
+	if (_features & GF_OLD_BUNDLE)
+		ptr += 0;
+	else
+		ptr = getObjectImage(ptr, getState(od.obj_nr));
 
 	if (!ptr)
 		return;
@@ -370,39 +441,46 @@ void ScummEngine::drawObject(int obj, int arg) {
 		setGfxUsageBit(tmp, USAGE_BIT_DIRTY);
 		if (tmp < x)
 			x = tmp;
-
-		virtscr[0].updateDirty(tmp - _screenStartStrip, ypos, ypos + height);
 		numstrip++;
 	}
 
 	if (numstrip != 0) {
 		byte flags = Gdi::dbAllowMaskOr;
+		if (_version == 1) {
+			gdi._C64ObjectMode = true;
+			gdi.decodeC64Gfx(ptr, gdi._C64ObjectMap, width * (height / 8) * 3);
+		}
 		// Sam & Max needs this to fix object-layering problems with
 		// the inventory and conversation icons.
-		if (_gameId == GID_SAMNMAX && getClass(od.obj_nr, kObjectClassIgnoreBoxes))
+		if ((_version >= 7 || _gameId == GID_SAMNMAX) && getClass(od.obj_nr, kObjectClassIgnoreBoxes))
 			flags |= Gdi::dbDrawMaskOnAll;
-
-		gdi.drawBitmap(ptr, &virtscr[0], x, ypos, width * 8, height, x - xpos, numstrip, 0, flags);
+		gdi.drawBitmap(ptr, &virtscr[0], x, ypos, width * 8, height, x - xpos, numstrip, flags);
 	}
 }
 
 void ScummEngine::clearRoomObjects() {
 	int i;
 
-	// FIXME: Locking/FlObjects stuff?
-	for (i = 0; i < _numLocalObjects; i++) {
-		if (_objs[i].obj_nr < 1)	// Optimise codepath
-			continue;
-
-		// Nuke all non-flObjects (flObjects are nuked in script.cpp)
-		if (_objs[i].fl_object_index == 0) {
+	if (_features & GF_SMALL_HEADER) {
+		for (i = 0; i < _numLocalObjects; i++) {
 			_objs[i].obj_nr = 0;
-		} else {
-			// Nuke all unlocked flObjects
-			if (!(res.flags[rtFlObject][_objs[i].fl_object_index] & RF_LOCK)) {
-				nukeResource(rtFlObject, _objs[i].fl_object_index);
+		}
+	} else {
+		// FIXME: Locking/FlObjects stuff?
+		for (i = 0; i < _numLocalObjects; i++) {
+			if (_objs[i].obj_nr < 1)	// Optimise codepath
+				continue;
+
+			// Nuke all non-flObjects (flObjects are nuked in script.cpp)
+			if (_objs[i].fl_object_index == 0) {
 				_objs[i].obj_nr = 0;
-				_objs[i].fl_object_index = 0;
+			} else {
+				// Nuke all unlocked flObjects
+				if (!(res.flags[rtFlObject][_objs[i].fl_object_index] & RF_LOCK)) {
+					nukeResource(rtFlObject, _objs[i].fl_object_index);
+					_objs[i].obj_nr = 0;
+					_objs[i].fl_object_index = 0;
+				}
 			}
 		}
 	}
@@ -422,18 +500,27 @@ void ScummEngine::loadRoomObjects() {
 	room = getResourceAddress(rtRoom, _roomResource);
 	roomhdr = (const RoomHeader *)findResourceData(MKID('RMHD'), room);
 
-	_numObjectsInRoom = (byte) READ_LE_UINT16(&(roomhdr->old.numObjects));
+	if (_version == 8)
+		_numObjectsInRoom = (byte)READ_LE_UINT32(&(roomhdr->v8.numObjects));
+	else if (_version == 7)
+		_numObjectsInRoom = (byte) READ_LE_UINT16(&(roomhdr->v7.numObjects));
+	else
+		_numObjectsInRoom = (byte) READ_LE_UINT16(&(roomhdr->old.numObjects));
+
 	if (_numObjectsInRoom == 0)
 		return;
 
 	if (_numObjectsInRoom > _numLocalObjects)
 		error("More than %d objects in room %d", _numLocalObjects, _roomResource);
 
-	searchptr = rootptr = room;
+	if (_version == 8)
+		searchptr = rootptr = getResourceAddress(rtRoomScripts, _roomResource);
+	else
+		searchptr = rootptr = room;
 	assert(searchptr);
 
 	// Load in new room objects
-	ResourceIterator	obcds(searchptr);
+	ResourceIterator	obcds(searchptr, false);
 	for (i = 0; i < _numObjectsInRoom; i++) {
 		od = &_objs[findLocalObjectSlot()];
 
@@ -444,21 +531,38 @@ void ScummEngine::loadRoomObjects() {
 		od->OBCDoffset = ptr - rootptr;
 		cdhd = (const CodeHeader *)findResourceData(MKID('CDHD'), ptr);
 
-		if (_version == 6)
+		if (_version >= 7)
+			od->obj_nr = READ_LE_UINT16(&(cdhd->v7.obj_id));
+		else if (_version == 6)
 			od->obj_nr = READ_LE_UINT16(&(cdhd->v6.obj_id));
 		else
 			od->obj_nr = READ_LE_UINT16(&(cdhd->v5.obj_id));
+
+		if (_dumpScripts) {
+			char buf[32];
+			sprintf(buf, "roomobj-%d-", _roomResource);
+			ptr = findResource(MKID('VERB'), ptr);
+			dumpResource(buf, od->obj_nr, ptr);
+		}
+
 	}
 
 	searchptr = room;
-	ResourceIterator	obims(room);
+	ResourceIterator	obims(room, false);
 	for (i = 0; i < _numObjectsInRoom; i++) {
 		ptr = obims.findNext(MKID('OBIM'));
 		if (ptr == NULL)
 			error("Room %d missing image blocks(s)", _roomResource);
 
 		imhd = (const ImageHeader *)findResourceData(MKID('IMHD'), ptr);
-		obim_id = READ_LE_UINT16(&imhd->old.obj_id);
+		if (_version == 8)
+			// In V8, IMHD has no obj_id, but rather a name string. We map the name
+			// back to an object id using a table derived from the DOBJ resource.
+			obim_id = _objectIDMap[imhd->v8.name];
+		else if (_version == 7)
+			obim_id = READ_LE_UINT16(&imhd->v7.obj_id);
+		else
+			obim_id = READ_LE_UINT16(&imhd->old.obj_id);
 
 		for (j = 1; j < _numLocalObjects; j++) {
 			if (_objs[j].obj_nr == obim_id)
@@ -474,19 +578,186 @@ void ScummEngine::loadRoomObjects() {
 	CHECK_HEAP
 }
 
+void ScummEngine::loadRoomObjectsOldBundle() {
+	int i;
+	ObjectData *od;
+	const byte *room, *ptr;
+
+	CHECK_HEAP
+	room = getResourceAddress(rtRoom, _roomResource);
+
+	_numObjectsInRoom = room[20];
+
+	if (_numObjectsInRoom == 0)
+		return;
+
+	if (_numObjectsInRoom > _numLocalObjects)
+		error("More than %d objects in room %d", _numLocalObjects, _roomResource);
+
+	if (_version <= 2)
+		ptr = room + 28;
+	else
+		ptr = room + 29;
+
+	for (i = 0; i < _numObjectsInRoom; i++) {
+		od = &_objs[findLocalObjectSlot()];
+
+		od->OBIMoffset = READ_LE_UINT16(ptr);
+		od->OBCDoffset = READ_LE_UINT16(ptr + 2 * _numObjectsInRoom);
+		setupRoomObject(od, room);
+
+		ptr += 2;
+
+		if (_dumpScripts) {
+			char buf[32];
+			sprintf(buf, "roomobj-%d-", _roomResource);
+			dumpResource(buf, od->obj_nr, room + od->OBCDoffset);
+		}
+	}
+
+	CHECK_HEAP
+}
+
+void ScummEngine::loadRoomObjectsSmall() {
+	int i, j;
+	ObjectData *od;
+	const byte *ptr;
+	uint16 obim_id;
+	const byte *room;
+	const RoomHeader *roomhdr;
+
+	CHECK_HEAP
+	room = getResourceAddress(rtRoom, _roomResource);
+	roomhdr = (const RoomHeader *)findResourceData(MKID('RMHD'), room);
+
+	_numObjectsInRoom = (byte) READ_LE_UINT16(&(roomhdr->old.numObjects));
+
+	if (_numObjectsInRoom == 0)
+		return;
+
+	if (_numObjectsInRoom > _numLocalObjects)
+		error("More than %d objects in room %d", _numLocalObjects, _roomResource);
+
+	ResourceIterator	obcds(room, true);
+	for (i = 0; i < _numObjectsInRoom; i++) {
+		od = &_objs[findLocalObjectSlot()];
+
+		ptr = obcds.findNext(MKID('OBCD'));
+		if (ptr == NULL)
+			error("Room %d missing object code block(s)", _roomResource);
+
+		od->OBCDoffset = ptr - room;
+		od->obj_nr = READ_LE_UINT16(ptr + 6);
+		if (_dumpScripts) {
+			char buf[32];
+			sprintf(buf, "roomobj-%d-", _roomResource);
+			dumpResource(buf, od->obj_nr, ptr);
+		}
+	}
+
+	ResourceIterator	obims(room, true);
+	for (i = 0; i < _numObjectsInRoom; i++) {
+		ptr = obims.findNext(MKID('OBIM'));
+		if (ptr == NULL)
+			error("Room %d missing image blocks(s)", _roomResource);
+
+		obim_id = READ_LE_UINT16(ptr + 6);
+
+		for (j = 1; j < _numLocalObjects; j++) {
+			if (_objs[j].obj_nr == obim_id)
+				_objs[j].OBIMoffset = ptr - room;
+		}
+	}
+
+	for (i = 1; i < _numLocalObjects; i++) {
+		if (_objs[i].obj_nr && !_objs[i].fl_object_index) {
+			setupRoomObject(&_objs[i], room);
+		}
+	}
+
+	CHECK_HEAP
+}
+
 void ScummEngine::setupRoomObject(ObjectData *od, const byte *room, const byte *searchptr) {
 	const CodeHeader *cdhd = NULL;
+	const ImageHeader *imhd = NULL;
 
 	assert(room);
+
+	if (_features & GF_SMALL_HEADER) {
+
+		const byte *ptr = room + od->OBCDoffset;
+
+		if (_features & GF_OLD_BUNDLE)
+			ptr -= 2;
+
+		od->obj_nr = READ_LE_UINT16(ptr + 6);
+
+		od->x_pos = *(ptr + 9) * 8;
+		od->y_pos = ((*(ptr + 10)) & 0x7F) * 8;
+
+		od->parentstate = (*(ptr + 10) & 0x80) ? 1 : 0;
+		if (_version <= 2)
+			od->parentstate *= 8;
+
+		od->width = *(ptr + 11) * 8;
+
+		od->parent = *(ptr + 12);
+
+		if (_version <= 2) {
+			od->walk_x = *(ptr + 13) * 8;
+			od->walk_y = (*(ptr + 14) & 0x1f) * 8;
+			od->actordir = (*(ptr + 15)) & 7;
+			od->height = *(ptr + 15) & 0xf8;
+		} else {
+			od->walk_x = READ_LE_UINT16(ptr + 13);
+			od->walk_y = READ_LE_UINT16(ptr + 15);
+			od->actordir = (*(ptr + 17)) & 7;
+			od->height = *(ptr + 17) & 0xf8;
+		}
+
+		return;
+	}
+
 	if (searchptr == NULL) {
-		searchptr = room;
+		if (_version == 8)
+			searchptr = getResourceAddress(rtRoomScripts, _roomResource);
+		else
+			searchptr = room;
 	}
 		
 	cdhd = (const CodeHeader *)findResourceData(MKID('CDHD'), searchptr + od->OBCDoffset);
 	if (cdhd == NULL)
 		error("Room %d missing CDHD blocks(s)", _roomResource);
 
-	if (_version == 6) {
+	if (_version == 8) {
+		od->obj_nr = READ_LE_UINT16(&(cdhd->v7.obj_id));
+
+		od->parent = cdhd->v7.parent;
+		od->parentstate = cdhd->v7.parentstate;
+
+		imhd = (const ImageHeader *)findResourceData(MKID('IMHD'), room + od->OBIMoffset);
+		od->x_pos = (int)READ_LE_UINT32(&imhd->v8.x_pos);
+		od->y_pos = (int)READ_LE_UINT32(&imhd->v8.y_pos);
+		od->width = (uint)READ_LE_UINT32(&imhd->v8.width);
+		od->height = (uint)READ_LE_UINT32(&imhd->v8.height);
+		// HACK: This is done sinec an angle doesn't fit into a byte (360 > 256)
+		od->actordir = toSimpleDir(1, READ_LE_UINT32(&imhd->v8.actordir));
+
+	} else if (_version == 7) {
+		od->obj_nr = READ_LE_UINT16(&(cdhd->v7.obj_id));
+
+		od->parent = cdhd->v7.parent;
+		od->parentstate = cdhd->v7.parentstate;
+
+		imhd = (const ImageHeader *)findResourceData(MKID('IMHD'), room + od->OBIMoffset);
+		od->x_pos = READ_LE_UINT16(&imhd->v7.x_pos);
+		od->y_pos = READ_LE_UINT16(&imhd->v7.y_pos);
+		od->width = READ_LE_UINT16(&imhd->v7.width);
+		od->height = READ_LE_UINT16(&imhd->v7.height);
+		od->actordir = (byte) READ_LE_UINT16(&imhd->v7.actordir);
+
+	} else if (_version == 6) {
 		od->obj_nr = READ_LE_UINT16(&(cdhd->v6.obj_id));
 
 		od->width = READ_LE_UINT16(&cdhd->v6.w);
@@ -599,22 +870,15 @@ void ScummEngine::clearOwnerOf(int obj) {
 void ScummEngine::markObjectRectAsDirty(int obj) {
 	int i, strip;
 
-	debug(2,"markObjectRectAsDirty %d", obj);
-	VirtScreen* vs = &virtscr[0];
 	for (i = 1; i < _numLocalObjects; i++) {
 		if (_objs[i].obj_nr == (uint16)obj) {
 			if (_objs[i].width != 0) {
-				const int16 y1 = CLAMP<int16>(_objs[i].y_pos, 0, SCREEN_HEIGHT);
-				const int16 y2 = CLAMP<int16>(_objs[i].y_pos + _objs[i].height, 0, SCREEN_HEIGHT);
 				const int minStrip = MAX(_screenStartStrip, _objs[i].x_pos / 8);
 				const int maxStrip = MIN(_screenEndStrip+1, _objs[i].x_pos / 8 + _objs[i].width / 8);
-				for (strip = minStrip; strip < maxStrip; strip++)
-				{
+				for (strip = minStrip; strip < maxStrip; strip++) {
 					setGfxUsageBit(strip, USAGE_BIT_DIRTY);
-					vs->updateDirty(strip - minStrip, y1, y2);
 				}
 			}
-			debug(2,"markObjectRectAsDirty %d - need redraw", obj);
 			_BgNeedsRedraw = true;
 			return;
 		}
@@ -628,7 +892,7 @@ const byte *ScummEngine::getObjOrActorName(int obj) {
 	if (obj < _numActors)
 		return derefActor(obj, "getObjOrActorName")->getActorName();
 
-	if (_version == 6) {
+	if (_version >= 6) {
 		for (i = 0; i < _numNewNames; i++) {
 			if (_newNames[i] == obj) {
 				debug(5, "Found new name for object %d at _newNames[%d]", obj, i);
@@ -641,6 +905,19 @@ const byte *ScummEngine::getObjOrActorName(int obj) {
 	objptr = getOBCDFromObject(obj);
 	if (objptr == NULL)
 		return NULL;
+
+	if (_features & GF_SMALL_HEADER) {
+		byte offset = 0;
+
+		if (_version <= 2)
+			offset = *(objptr + 14);
+		else if (_features & GF_OLD_BUNDLE)
+			offset = *(objptr + 16);
+		else
+			offset = *(objptr + 18);
+
+		return (objptr + offset);
+	}
 
 	return findResourceData(MKID('OBNA'), objptr);
 }
@@ -675,7 +952,8 @@ byte *ScummEngine::getOBCDFromObject(int obj) {
 				if (_objs[i].fl_object_index) {
 					assert(_objs[i].OBCDoffset == 8);
 					ptr = getResourceAddress(rtFlObject, _objs[i].fl_object_index);
-				}
+				} else if (_version == 8)
+					ptr = getResourceAddress(rtRoomScripts, _roomResource);
 				else
 					ptr = getResourceAddress(rtRoom, _roomResource);
 				assert(ptr);
@@ -689,30 +967,45 @@ byte *ScummEngine::getOBCDFromObject(int obj) {
 const byte *ScummEngine::getOBIMFromObject(const ObjectData &od) {
 	const byte *ptr;
 
-	if (od.fl_object_index)
-	{
+	if (od.fl_object_index) {
 		ptr = getResourceAddress(rtFlObject, od.fl_object_index);
-		assertAligned(ptr);
 		ptr = findResource(MKID('OBIM'), ptr);
-		assertAligned(ptr);
-	}
-	else
-	{
+	} else {
 		ptr = getResourceAddress(rtRoom, _roomResource);
-		assertAligned(ptr);
 		if (ptr)
-		{
 			ptr += od.OBIMoffset;
-			assertAligned(ptr);
-		}
 	}
-	assertAligned(ptr);
 	return ptr;
 }
 
 const byte *ScummEngine::getObjectImage(const byte *ptr, int state) {
 	assert(ptr);
-	ptr = findResource(IMxx_tags[state], ptr);
+	if (_features & GF_OLD_BUNDLE)
+		ptr += 0;
+	else if (_features & GF_SMALL_HEADER) {
+		ptr += 8;
+	} else if (_version == 8) {
+		// The OBIM contains an IMAG, which in turn contains a WRAP, which contains
+		// an OFFS chunk and multiple BOMP/SMAP chunks. To find the right BOMP/SMAP,
+		// we use the offsets in the OFFS chunk,
+		ptr = findResource(MKID('IMAG'), ptr);
+		if (!ptr)
+			return 0;
+
+		ptr = findResource(MKID('WRAP'), ptr);
+		if (!ptr)
+			return 0;
+
+		ptr = findResource(MKID('OFFS'), ptr);
+		if (!ptr)
+			return 0;
+
+		// Get the address of the specified SMAP (corresponding to IMxx)
+		ptr += READ_LE_UINT32(ptr + 4 + 4*state);
+	} else {
+		ptr = findResource(IMxx_tags[state], ptr);
+	}
+	
 	return ptr;
 }
 
@@ -733,7 +1026,12 @@ void ScummEngine::addObjectToInventory(uint obj, uint room) {
 		size = READ_BE_UINT32(ptr + 4);
 	} else {
 		findObjectInRoom(&foir, foCodeHeader, obj, room);
-		size = READ_BE_UINT32(foir.obcd + 4);
+		if (_features & GF_OLD_BUNDLE)
+			size = READ_LE_UINT16(foir.obcd);
+		else if (_features & GF_SMALL_HEADER)
+			size = READ_LE_UINT32(foir.obcd);
+		else
+			size = READ_BE_UINT32(foir.obcd + 4);
 		ptr = foir.obcd;
 	}
 
@@ -756,6 +1054,12 @@ void ScummEngine::findObjectInRoom(FindObjectInRoom *fo, byte findWhat, uint id,
 	int id3;
 
 	if (findWhat & foCheckAlreadyLoaded && getObjectIndex(id) != -1) {
+		if (_features & GF_OLD_BUNDLE) {
+			// I am not sure if this is even needed for old games...
+			// but using RES_SIZE definitely won't work with OLD_BUNDLE, since it
+			// assumes the size is 32 bit but in old games it's 16 bit
+			error("findObjectInRoom foCheckAlreadyLoaded NYI for GF_OLD_BUNDLE (id = %d, room = %d)", id, room);
+		}
 		fo->obcd = obcdptr = getOBCDFromObject(id);
 		assert(obcdptr);
 		fo->obim = obimptr = obcdptr + RES_SIZE(obcdptr);
@@ -768,25 +1072,69 @@ void ScummEngine::findObjectInRoom(FindObjectInRoom *fo, byte findWhat, uint id,
 	if (!roomptr)
 		error("findObjectInRoom: failed getting roomptr to %d", room);
 
-	const RoomHeader *roomhdr = (const RoomHeader *)findResourceData(MKID('RMHD'), roomptr);
-	numobj = READ_LE_UINT16(&(roomhdr->old.numObjects));
+	if (_features & GF_OLD_BUNDLE) {
+		numobj = roomptr[20];
+	} else {
+		const RoomHeader *roomhdr = (const RoomHeader *)findResourceData(MKID('RMHD'), roomptr);
+	
+		if (_version == 8)
+			numobj = READ_LE_UINT32(&(roomhdr->v8.numObjects));
+		else if (_version == 7)
+			numobj = READ_LE_UINT16(&(roomhdr->v7.numObjects));
+		else
+			numobj = READ_LE_UINT16(&(roomhdr->old.numObjects));
+	}
 	
 	if (numobj == 0)
 		error("findObjectInRoom: No object found in room %d", room);
 	if (numobj > _numLocalObjects)
 		error("findObjectInRoom: More (%d) than %d objects in room %d", numobj, _numLocalObjects, room);
 
+	if (_features & GF_OLD_BUNDLE) {
+		if (_version <= 2)
+			searchptr = roomptr + 28;
+		else
+			searchptr = roomptr + 29;
+
+		for (i = 0; i < numobj; i++) {
+			obimptr = roomptr + READ_LE_UINT16(searchptr);
+			obcdptr = roomptr + READ_LE_UINT16(searchptr + 2 * _numObjectsInRoom);
+			id2 = READ_LE_UINT16(obcdptr + 4);
+
+			if (id2 == (uint16)id) {
+				if (findWhat & foCodeHeader) {
+					fo->obcd = obcdptr;
+					fo->cdhd = (const CodeHeader *)(obcdptr + 10);	// TODO - FIXME
+				}
+				if (findWhat & foImageHeader) {
+					fo->obim = obimptr;
+					fo->imhd = NULL;
+				}
+				break;
+			}
+			searchptr += 2;
+		}
+		return;
+	}
+
 	if (findWhat & foCodeHeader) {
-		searchptr = roomptr;
+		if (_version == 8)
+			searchptr = getResourceAddress(rtRoomScripts, room);
+		else
+			searchptr = roomptr;
 		assert(searchptr);
-		ResourceIterator	obcds(searchptr);
+		ResourceIterator	obcds(searchptr, (_features & GF_SMALL_HEADER) != 0);
 		for (i = 0;;) {
 			obcdptr = obcds.findNext(MKID('OBCD'));
 			if (obcdptr == NULL)
 				error("findObjectInRoom: Not enough code blocks in room %d", room);
 			cdhd = (const CodeHeader *)findResourceData(MKID('CDHD'), obcdptr);
 
-			if (_version == 6)
+			if (_features & GF_SMALL_HEADER)
+				id2 = READ_LE_UINT16(obcdptr + 6);
+			else if (_version >= 7)
+				id2 = READ_LE_UINT16(&(cdhd->v7.obj_id));
+			else if (_version == 6)
 				id2 = READ_LE_UINT16(&(cdhd->v6.obj_id));
 			else
 				id2 = READ_LE_UINT16(&(cdhd->v5.obj_id));
@@ -803,13 +1151,22 @@ void ScummEngine::findObjectInRoom(FindObjectInRoom *fo, byte findWhat, uint id,
 
 	roomptr = fo->roomptr;
 	if (findWhat & foImageHeader) {
-		ResourceIterator	obims(roomptr);
+		ResourceIterator	obims(roomptr, (_features & GF_SMALL_HEADER) != 0);
 		for (i = 0;;) {
 			obimptr = obims.findNext(MKID('OBIM'));
 			if (obimptr == NULL)
 				error("findObjectInRoom: Not enough image blocks in room %d", room);
 			imhd = (const ImageHeader *)findResourceData(MKID('IMHD'), obimptr);
-			id3 = READ_LE_UINT16(&imhd->old.obj_id);
+			if (_features & GF_SMALL_HEADER)
+				id3 = READ_LE_UINT16(obimptr + 6);
+			else if (_version == 8)
+				// In V8, IMHD has no obj_id, but rather a name string. We map the name
+				// back to an object id using a table derived from the DOBJ resource.
+				id3 = _objectIDMap[imhd->v8.name];
+			else if (_version == 7)
+				id3 = READ_LE_UINT16(&imhd->v7.obj_id);
+			else
+				id3 = READ_LE_UINT16(&imhd->old.obj_id);
 
 			if (id3 == (uint16)id) {
 				fo->obim = obimptr;
@@ -840,7 +1197,7 @@ void ScummEngine::setOwnerOf(int obj, int owner) {
 	// it probably applies to all V6+ games. See bugs #493153 and #907113.
 	// FT disassembly is checked, behaviour is correct. [sev]
 
-	int arg = (_version == 6) ? obj : 0;
+	int arg = (_version >= 6) ? obj : 0;
 
 	if (owner == 0) {
 		clearOwnerOf(obj);
@@ -969,55 +1326,51 @@ int ScummEngine::getDistanceBetween(bool is_obj_1, int b, int c, bool is_obj_2, 
 	return getDist(x, y, x2, y2) * 0xFF / ((i + j) / 2);
 }
 
-void ScummEngine::setCursorImg(int16 img, int16 room, int16 imgindex, byte var)
-{
-	int16 w, h;
-	const byte *dataptr;
+void ScummEngine::setCursorImg(uint img, uint room, uint imgindex) {
+	int w, h;
+	const byte *dataptr, *bomp;
 	uint32 size;
 	FindObjectInRoom foir;
 
-	if (room == -1)
+	if (room == (uint) - 1)
 		room = getObjectRoom(img);
 
-	debug(1,"** SetCursorImg: %d, %d, %d", img, room, imgindex);
-
 	findObjectInRoom(&foir, foCodeHeader | foImageHeader | foCheckAlreadyLoaded, img, room);
+
+	if (_version == 8) {
+		setCursorHotspot(READ_LE_UINT32(&foir.imhd->v8.hotspot[0].x),
+		                  READ_LE_UINT32(&foir.imhd->v8.hotspot[0].y));
+		w = READ_LE_UINT32(&foir.imhd->v8.width) / 8;
+		h = READ_LE_UINT32(&foir.imhd->v8.height) / 8;
+	} else if (_version == 7) {
+		setCursorHotspot(READ_LE_UINT16(&foir.imhd->v7.hotspot[0].x),
+		                  READ_LE_UINT16(&foir.imhd->v7.hotspot[0].y));
+		w = READ_LE_UINT16(&foir.imhd->v7.width) / 8;
+		h = READ_LE_UINT16(&foir.imhd->v7.height) / 8;
+	} else {
+		setCursorHotspot(READ_LE_UINT16(&foir.imhd->old.hotspot[0].x),
+		                  READ_LE_UINT16(&foir.imhd->old.hotspot[0].y));
+		w = READ_LE_UINT16(&foir.cdhd->v6.w) / 8;
+		h = READ_LE_UINT16(&foir.cdhd->v6.h) / 8;
+	}
+
 	dataptr = getObjectImage(foir.obim, imgindex);
-	if (!dataptr)
-	{  
-		warning("setCursorImg %d,%d,%d: Failed to get dataptr", img, room, imgindex);
-		return;
-	}
 	assert(dataptr);
-	size = READ_BE_UINT32(dataptr + 4);
-	if (size > sizeof(_grabbedCursor))
-	{
-		warning("setCursorImg %d,%d,%d: Cursor image too large", img, room, imgindex);
-		return;
+	if (_version == 8) {
+		bomp = dataptr;
+	} else {
+		size = READ_BE_UINT32(dataptr + 4);
+		if (size > sizeof(_grabbedCursor))
+			error("setCursorImg: Cursor image too large");
+		
+		bomp = findResource(MKID('BOMP'), dataptr);
 	}
-
-	setCursorHotspot(READ_LE_UINT16(&foir.imhd->old.hotspot[0].x),
-	                  READ_LE_UINT16(&foir.imhd->old.hotspot[0].y));
-	w = READ_LE_UINT16(&foir.cdhd->v6.w) / 8;
-	h = READ_LE_UINT16(&foir.cdhd->v6.h) / 8;
-
-	debug(1, "SetCursorImg %d,%d,%d", room, img, imgindex);
-
-	uint32 id = ((room & 0xFF) << 24) | ((img & 0xFFFF) << 8) | ((imgindex & 0xF) << 4) | ((var & 1) << 1);
-
-#ifdef ENGINE_SCUMM6
-	const byte* bomp;
-	bomp = findResource(MKID('BOMP'), dataptr);
 
 	if (bomp != NULL)
-	{
-		id |= (1 << 0);
-		useBompCursor(id, bomp, w, h);
-	} else
-#endif
-	{
-		useIm01Cursor(id, dataptr, w, h);
-	}
+		useBompCursor(bomp, w, h);
+	else
+		useIm01Cursor(dataptr, w, h);
+
 }
 
 void ScummEngine::nukeFlObjects(int min, int max) {
@@ -1034,7 +1387,6 @@ void ScummEngine::nukeFlObjects(int min, int max) {
 		}
 }
 
-#ifdef ENGINE_SCUMM6
 void ScummEngine::enqueueObject(int objectNumber, int objectX, int objectY, int objectWidth,
 								int objectHeight, int scaleX, int scaleY, int image, int mode) {
 	BlastObject *eo;
@@ -1072,7 +1424,6 @@ void ScummEngine::enqueueObject(int objectNumber, int objectX, int objectY, int 
 	eo->mode = mode;
 }
 
-
 void ScummEngine::drawBlastObjects() {
 	BlastObject *eo;
 	int i;
@@ -1095,55 +1446,49 @@ void ScummEngine::drawBlastObject(BlastObject *eo) {
 
 	objnum = getObjectIndex(eo->number);
 	if (objnum == -1)
-	{
-		warning("drawBlastObject: getObjectIndex on BlastObject %d failed", eo->number);
-		return;
-	}
+		error("drawBlastObject: getObjectIndex on BlastObject %d failed", eo->number);
 
 	ptr = getOBIMFromObject(_objs[objnum]);
-	assertAligned(ptr);
 	if (!ptr)
-	{
-		warning("BlastObject object %d image not found", eo->number);
-		return;
-	}
+		error("BlastObject object %d image not found", eo->number);
 
 	const byte *img = getObjectImage(ptr, eo->image);
-	assertAligned(img);
-	if (!img)
-	{
-		img = getObjectImage(ptr, 1);	// Backward compatibility with samnmax blast objects
-		assertAligned(img);
-	}
-	if (!img)
-	{
-		warning("drawBlastObject: getObjectImage on BlastObject %d failed", eo->number);
-		return;
+	if (_version == 8) {
+		assert(img);
+		bomp = img + 8;
+	} else {
+		if (!img)
+			img = getObjectImage(ptr, 1);	// Backward compatibility with samnmax blast objects
+		assert(img);
+		bomp = findResourceData(MKID('BOMP'), img);
 	}
 
-	bomp = findResourceData(MKID('BOMP'), img);
-	assertAligned(bomp);
 	if (!bomp)
-	{
-		warning("object %d is not a blast object", eo->number);
-		return;
-	}
+		error("object %d is not a blast object", eo->number);
 
-	bdd.srcwidth = READ_BE_UINT16(&((const BompHeader *)bomp)->old.width);
-	bdd.srcheight = READ_BE_UINT16(&((const BompHeader *)bomp)->old.height);
+	if (_version == 8) {
+		bdd.srcwidth = READ_LE_UINT32(&((const BompHeader *)bomp)->v8.width);
+		bdd.srcheight = READ_LE_UINT32(&((const BompHeader *)bomp)->v8.height);
+	} else {
+		bdd.srcwidth = READ_LE_UINT16(&((const BompHeader *)bomp)->old.width);
+		bdd.srcheight = READ_LE_UINT16(&((const BompHeader *)bomp)->old.height);
+	}
 	
-	bdd.out = vs->screenPtr + (vs->xstart >> 1);
+	bdd.out = vs->screenPtr + vs->xstart;
 	bdd.outwidth = vs->width;
 	bdd.outheight = vs->height;
-	bdd.dataptr = bomp + 10;
+	if (_version == 8) {
+		bdd.dataptr = bomp + 8;	// Why this? See also useBompCursor
+	} else {
+		bdd.dataptr = bomp + 10;	// Why this? See also useBompCursor
+	}
 	bdd.x = eo->rect.left;
 	bdd.y = eo->rect.top;
 	bdd.scale_x = (byte)eo->scaleX;
 	bdd.scale_y = (byte)eo->scaleY;
 
-	/*
-	if ((bdd.scale_x != 255) || (bdd.scale_y != 255))
-	{
+
+	if ((bdd.scale_x != 255) || (bdd.scale_y != 255)) {
 		byte bomp_scaling_x[64], bomp_scaling_y[64];
 		bdd.scalingXPtr = bomp_scaling_x;
 		bdd.scalingYPtr = bomp_scaling_y;
@@ -1151,10 +1496,7 @@ void ScummEngine::drawBlastObject(BlastObject *eo) {
 		bdd.scaleBottom = setupBompScale(bomp_scaling_y, bdd.srcheight, bdd.scale_y);
 		bdd.shadowMode = 0;
 		drawBomp(bdd, false);
-	}
-	else
-	*/
-	{
+	} else {
 		bdd.scalingXPtr = NULL;
 		bdd.scalingYPtr = NULL;
 		bdd.scaleRight = 0;
@@ -1204,14 +1546,18 @@ void ScummEngine::removeBlastObject(BlastObject *eo) {
 
 	if (left_strip < 0)
 		left_strip = 0;
-	if (right_strip >= 200)
-		right_strip = 200;
+	if (_version >= 7) {
+		if (right_strip > 409)
+			right_strip = 409;
+	} else {
+		if (right_strip >= 200)
+			right_strip = 200;
+	}
 	for (i = left_strip; i <= right_strip; i++)
 		gdi.resetBackground(r.top, r.bottom, i);
 
 	markRectAsDirty(kMainVirtScreen, r, USAGE_BIT_RESTORED);
 }
-#endif //ENGINE_SCUMM6
 
 int ScummEngine::findLocalObjectSlot() {
 	int i;
@@ -1241,15 +1587,12 @@ void ScummEngine::loadFlObject(uint object, uint room) {
 	int slot, objslot;
 	ObjectData *od;
 	byte *flob;
-	uint32 obcd_size, opad_size, obim_size, flob_size;
-	bool isRoomLocked;
-	//bool isRoomScriptsLocked;
+	uint32 obcd_size, obim_size, flob_size;
+	bool isRoomLocked, isRoomScriptsLocked;
 
 	// Don't load an already loaded object
 	if (whereIsObject(object) != WIO_NOT_FOUND)
 		return;
-
-//	printf("loadFlObject %d, %d\n\r", object, room);
 
 	// Locate the object in the room resource
 	findObjectInRoom(&foir, foImageHeader | foCodeHeader, object, room);
@@ -1260,24 +1603,30 @@ void ScummEngine::loadFlObject(uint object, uint room) {
 
 	od = &_objs[objslot];
 
+	// Dump object script
+	if (_dumpScripts) {
+		char buf[32];
+		const byte *ptr = foir.obcd;
+		sprintf(buf, "roomobj-%d-", room);
+		ptr = findResource(MKID('VERB'), ptr);
+		dumpResource(buf, object, ptr);
+	}
+
 	// Setup sizes
 	obcd_size = READ_BE_UINT32(foir.obcd + 4);
-	obim_size = READ_BE_UINT32(foir.obim + 4);
-#ifdef ATARI_FLOBJECT_OBIM_FIX
-	opad_size = (obcd_size & 1) ? 9 : 0;
-#else
-	opad_size = 0;
-#endif
 	od->OBCDoffset = 8;
-	od->OBIMoffset = 8 + obcd_size + opad_size;
-	flob_size = 8 + obcd_size + opad_size + obim_size;
+	od->OBIMoffset = obcd_size + 8;
+	obim_size = READ_BE_UINT32(foir.obim + 4);
+	flob_size = obcd_size + obim_size + 8;
 
 	// Lock room/roomScripts for the given room. They contains the OBCD/OBIM
 	// data, and a call to createResource might expire them, hence we lock them.
 	isRoomLocked = ((res.flags[rtRoom][room] & RF_LOCK) != 0);
-	//isRoomScriptsLocked = ((res.flags[rtRoomScripts][room] & RF_LOCK) != 0);
+	isRoomScriptsLocked = ((res.flags[rtRoomScripts][room] & RF_LOCK) != 0);
 	if (!isRoomLocked)
 		lock(rtRoom, room);
+	if (_version == 8 && !isRoomScriptsLocked)
+		lock(rtRoomScripts, room);
 
 	// Allocate slot & memory for floating object
 	slot = findFlObjectSlot();
@@ -1287,21 +1636,15 @@ void ScummEngine::loadFlObject(uint object, uint room) {
 	// Copy object code + object image to floating object
 	((uint32 *)flob)[0] = MKID('FLOB');
 	((uint32 *)flob)[1] = TO_BE_32(flob_size);
-	memcpy(flob + od->OBCDoffset, foir.obcd, obcd_size);
-	memcpy(flob + od->OBIMoffset, foir.obim, obim_size);
 
-	if (opad_size)
-	{
-		byte padding[12];
-		((uint32 *)padding)[0] = MKID('OPAD');
-		((uint32 *)padding)[1] = TO_BE_32(opad_size);
-		((uint32 *)padding)[2] = 0;
-		memcpy(flob + od->OBCDoffset + obcd_size, padding, opad_size);
-	}
+	memcpy(flob + 8, foir.obcd, obcd_size);
+	memcpy(flob + 8 + obcd_size, foir.obim, obim_size);
 
 	// Unlock room/roomScripts
 	if (!isRoomLocked)
 		unlock(rtRoom, room);
+	if (_version == 8 && !isRoomScriptsLocked)
+		unlock(rtRoomScripts, room);
 
 	// Setup local object flags
 	setupRoomObject(od, flob, flob);

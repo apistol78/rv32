@@ -22,10 +22,13 @@
 
 #include "stdafx.h"
 
+#include "common/config-manager.h"
+
 #include "scumm/scumm.h"
 #include "scumm/actor.h"
 #include "scumm/charset.h"
 #include "scumm/dialogs.h"
+#include "scumm/imuse_digi/dimuse.h"
 #include "scumm/verbs.h"
 #include "scumm/sound.h"
 
@@ -48,6 +51,7 @@ void ScummEngine::unkMessage1() {
 	_msgPtrToAdd = buffer;
 	_messagePtr = addMessageToStack(_messagePtr);
 
+//	if ((_gameId == GID_CMI) && _debugMode) {	// In CMI, unkMessage1 is used for printDebug output
 	if ((buffer[0] != 0xFF) && _debugMode) {
 		debug(0, "DEBUG: %s", buffer);
 		return;
@@ -99,16 +103,18 @@ void ScummEngine::CHARSET_1() {
 	if (!_haveMsg)
 		return;
 
-	if ((camera._dest.x / 8) != (camera._cur.x / 8) || camera._cur.x != camera._last.x)
-		return;
+	if (!(_features & GF_NEW_CAMERA) && !(_gameId == GID_ZAK256 && talkingActor() == 0xFF)) {
+		if ((camera._dest.x / 8) != (camera._cur.x / 8) || camera._cur.x != camera._last.x)
+			return;
+	}
 
 	a = NULL;
 	if (talkingActor() != 0xFF)
 		a = derefActorSafe(talkingActor(), "CHARSET_1");
 
 	if (a && _string[0].overhead != 0) {
-		if (_version == 5) {
-			_string[0].xpos = a->_pos.x - camera._cur.x + (SCREEN_WIDTH / 2);
+		if (_version <= 5) {
+			_string[0].xpos = a->_pos.x - camera._cur.x + (_screenWidth / 2);
 
 			if (VAR(VAR_V5_TALK_STRING_Y) < 0) {
 				s = (a->scaley * (int)VAR(VAR_V5_TALK_STRING_Y)) / 0xFF;
@@ -125,7 +131,7 @@ void ScummEngine::CHARSET_1() {
 				_string[0].ypos = _screenTop;
 
 			s = a->scalex * a->talkPosX / 0xFF;
-			_string[0].xpos = ((a->talkPosX - s) / 2) + s + a->_pos.x - camera._cur.x + (SCREEN_WIDTH / 2);
+			_string[0].xpos = ((a->talkPosX - s) / 2) + s + a->_pos.x - camera._cur.x + (_screenWidth / 2);
 		}
 
 		if (_string[0].ypos < 1)
@@ -133,8 +139,8 @@ void ScummEngine::CHARSET_1() {
 
 		if (_string[0].xpos < 80)
 			_string[0].xpos = 80;
-		if (_string[0].xpos > SCREEN_WIDTH - 80)
-			_string[0].xpos = SCREEN_WIDTH - 80;
+		if (_string[0].xpos > _screenWidth - 80)
+			_string[0].xpos = _screenWidth - 80;
 	}
 
 	_charset->_top = _string[0].ypos + _screenTop;
@@ -149,8 +155,9 @@ void ScummEngine::CHARSET_1() {
 	_charset->_right = _string[0].right;
 	_charset->setColor(_charsetColor);
 
-	for (i = 0; i < 4; i++)
-		_charsetColorMap[i] = _charsetData[_charset->getCurID()][i];
+	if (_version > 3)	// FIXME
+		for (i = 0; i < 4; i++)
+			_charsetColorMap[i] = _charsetData[_charset->getCurID()][i];
 
 	if (_keepText) {
 		_charset->_str = _charset->_mask;
@@ -174,9 +181,23 @@ void ScummEngine::CHARSET_1() {
 	// timer", but some of it depends on text strings timing out at
 	// the right moment.
 
+	if (_gameId == GID_LOOM256) {
+		_defaultTalkDelay = 100;
+		VAR(VAR_CHARINC) = 5;
+	}
+
 	_talkDelay = _defaultTalkDelay;
 
 	if (!_keepText) {
+		if (_version <= 3 && _gameId != GID_LOOM) {
+			_charset->_hasMask = true;
+			_charset->_mask.left = _string[0].xpos;
+			_charset->_mask.top = _string[0].ypos;
+			_charset->_mask.bottom = _string[0].ypos + 8;
+			_charset->_mask.right = _screenWidth;
+			if (_string[0].ypos <= 16)	// If we are cleaning the text line, clean 2 lines.
+				_charset->_mask.bottom = 16;
+		}
 		_charset->restoreCharsetBg();
 	}
 
@@ -283,16 +304,32 @@ void ScummEngine::CHARSET_1() {
 		} else {
 			_charset->_left = _charset->_nextLeft;
 			_charset->_top = _charset->_nextTop;
-			if (!_subtitles && (_haveMsg == 0xFE || _sound->_talkChannelHandle.isActive())) {
-				// Subtitles are turned off, and there is a voice version
-				// of this message -> don't print it. 
-			} else {
+			if (c & 0x80 && _CJKMode)
+				if (_language == 6 && ((c > 0x84 && c < 0x88) || (c > 0x9f && c < 0xe0) || (c > 0xea && c <= 0xff)))
+					c = 0x20; //not in S-JIS
+				else
+					c += *buffer++ * 256;
+			if (_version <= 3) {
 				_charset->printChar(c);
+			} else {
+				if (!ConfMan.getBool("subtitles") && (_imuseDigital && _sound->isSoundRunning(kTalkSoundID))) {
+					// Special case for games using imuse digital.for sound
+				} else if ((_gameId == GID_LOOM256) && !ConfMan.getBool("subtitles") && (_sound->pollCD())) {
+					// Special case for loomcd, since it only uses CD audio.for sound
+				} else if (!ConfMan.getBool("subtitles") && (_haveMsg == 0xFE || _sound->_talkChannelHandle.isActive())) {
+					// Subtitles are turned off, and there is a voice version
+					// of this message -> don't print it. 
+				} else
+					_charset->printChar(c);
 			}
 
 			_charset->_nextLeft = _charset->_left;
 			_charset->_nextTop = _charset->_top;
-			_talkDelay += (int)VAR(VAR_CHARINC);
+			if (_version <= 2) {
+				_talkDelay += _defaultTalkDelay / 20;
+				VAR(VAR_CHARCOUNT)++;
+			} else
+				_talkDelay += (int)VAR(VAR_CHARINC);
 		}
 	} while (c != 2 && c != 3);
 
@@ -310,32 +347,9 @@ void ScummEngine::CHARSET_1() {
 
 	_charset->_hasMask = (_charset->_str.left != -1);
 	_charset->_mask = _charset->_str;
-
-	int y = 0;
-	if (_charset->_hasMask)
-	{
-		for (; y < _charset->_mask.top && y < SCREEN_HEIGHT; y++)
-			_charset->_ymask[y] = 0;
-		for (; y < _charset->_mask.bottom && y < SCREEN_HEIGHT; y++)
-			_charset->_ymask[y] = 0xFF;
-	}
-	for (; y < SCREEN_HEIGHT; y++)
-		_charset->_ymask[y] = 0;
 }
 
-bool _hack_clear_bg_on_next_drawString = false;
-
 void ScummEngine::drawString(int a) {
-
-	// MI2 intro hack
-	if (_hack_clear_bg_on_next_drawString)
-	{
-		redrawBGStrip(0, SCREEN_STRIP_COUNT, 0, 200);
-		drawRoomObjects(0);
-		_BgNeedsRedraw = false;
-		_hack_clear_bg_on_next_drawString = false;
-	}
-
 	byte buf[256];
 	byte *space;
 	int i, c;
@@ -353,8 +367,10 @@ void ScummEngine::drawString(int a) {
 	_charset->_disableOffsX = _charset->_firstChar = true;
 	_charset->setCurID(_string[a].charset);
 
-	for (i = 0; i < 4; i++)
-		_charsetColorMap[i] = _charsetData[_charset->getCurID()][i];
+	if (_version > 3) {
+		for (i = 0; i < 4; i++)
+			_charsetColorMap[i] = _charsetData[_charset->getCurID()][i];
+	}
 
 	fontHeight = _charset->getFontHeight();
 
@@ -377,7 +393,16 @@ void ScummEngine::drawString(int a) {
 		_charset->_left -= _charset->getStringWidth(a, buf) / 2;
 	}
 
-	_charset->_ignoreCharsetMask = true;
+	if (_version < 7)
+		_charset->_ignoreCharsetMask = true;
+
+
+	// In Full Throttle (and other games?), verb text should always mask
+	// and never time out. We can't do it blindly for all games, because
+	// it causes problem with the FOA intro.
+
+	if ((_gameId == GID_FT) && a == 4)
+		_talkDelay = -1;
 
 	if (!buf[0]) {
 		buf[0] = ' ';
@@ -413,7 +438,7 @@ void ScummEngine::drawString(int a) {
 				break;
 			}
 		} else {
-			if (a == 1 && _version == 6) {
+			if (a == 1 && _version >= 6) {
 				// FIXME: The following code is a bit nasty. It is used for the
 				// Highway surfing game in Sam&Max; there, _blitAlso is set to
 				// true when writing the highscore numbers. It is also in DOTT
@@ -429,10 +454,11 @@ void ScummEngine::drawString(int a) {
 					// nothing anyway. So just hide that one for brevity.
 					if (c != 32) 
 						debug(1, "Would have set _charset->_blitAlso = true (wanted to print '%c' = %d)", c, c);
-
 					_charset->_blitAlso = true;
 				}
 			}
+			if (c >= 0x80 && _CJKMode)
+				c += buf[i++] * 256;
 			_charset->printChar(c);
 			_charset->_blitAlso = false;
 		}
@@ -447,6 +473,11 @@ void ScummEngine::drawString(int a) {
 
 
 	_string[a].xpos = _charset->_str.right + 8;	// Indy3: Fixes Grail Diary text positioning
+
+	if (_version >= 7) {
+		_charset->_hasMask = true;
+		_charset->_mask.extend(_charset->_str);
+	}
 }
 
 const byte *ScummEngine::addMessageToStack(const byte *msg) {
@@ -469,6 +500,10 @@ const byte *ScummEngine::addMessageToStack(const byte *msg) {
 			if (chr != 1 && chr != 2 && chr != 3 && chr != 8) {
 				buf[num++] = *msg++;	// and some commands are followed by parameters to the functions below
 				buf[num++] = *msg++;	// these are numbers of names, strings, verbs, variables, etc
+				if (_version == 8) {
+					buf[num++] = *msg++;
+					buf[num++] = *msg++;
+				}
 			}
 		}
 	}
@@ -486,7 +521,7 @@ const byte *ScummEngine::addMessageToStack(const byte *msg) {
 				*_msgPtrToAdd++ = 0xFF;
 				*_msgPtrToAdd++ = chr;
 			} else {
-				val = READ_LE_UINT16(buf + num);
+				val = (_version == 8) ? READ_LE_UINT32(buf + num) : READ_LE_UINT16(buf + num);
 				switch (chr) {
 				case 4:
 					addIntToStack(val);
@@ -498,7 +533,14 @@ const byte *ScummEngine::addMessageToStack(const byte *msg) {
 					addNameToStack(val);
 					break;
 				case 7:
-					addStringToStack(val);
+					if (_version <= 2) {
+						while ((chr = (byte) _scummVars[val++])) {
+							if (chr != '@')
+								*_msgPtrToAdd++ = chr;
+						}
+					} else {
+						addStringToStack(val);
+					}
 					break;
 				case 9:
 				case 10:
@@ -510,12 +552,16 @@ const byte *ScummEngine::addMessageToStack(const byte *msg) {
 					*_msgPtrToAdd++ = chr;
 					*_msgPtrToAdd++ = buf[num+0];
 					*_msgPtrToAdd++ = buf[num+1];
+					if (_version == 8) {
+						*_msgPtrToAdd++ = buf[num+2];
+						*_msgPtrToAdd++ = buf[num+3];
+					}
 					break;
 				default:
 					warning("addMessageToStack(): string escape sequence %d unknown", chr);
 					break;
 				}
-				num += 2;
+				num += (_version == 8) ? 4 : 2;
 			}
 		} else {
 			if (chr != '@') {
@@ -559,16 +605,30 @@ void ScummEngine::addNameToStack(int var) {
 	if (num)
 		ptr = getObjOrActorName(num);
 	if (ptr) {
-		addMessageToStack(ptr);
+		if ((_version == 8) && (ptr[0] == '/')) {
+			translateText(ptr, _transText);
+			addMessageToStack(_transText);
+		} else {
+			addMessageToStack(ptr);
+		}
 	}
 }
 
 void ScummEngine::addStringToStack(int var) {
 	const byte *ptr;
+
+	if (_version == 3 || _version >= 6)
+		var = readVar(var);
+
 	if (var) {
 		ptr = getStringAddress(var);
 		if (ptr) {
-			addMessageToStack(ptr);
+			if ((_version == 8) && (ptr[0] == '/')) {
+				translateText(ptr, _transText);
+				addMessageToStack(_transText);
+			} else {
+				addMessageToStack(ptr);
+			}
 		}
 	}
 }
@@ -586,8 +646,6 @@ void ScummEngine::initCharset(int charsetno) {
 		_charsetColorMap[i] = _charsetData[charsetno][i];
 }
 
-
-#ifdef ENGINE_SCUMM6
 void ScummEngine::enqueueText(const byte *text, int x, int y, byte color, byte charset, bool center) {
 	// The Dig will keep enqueueing texts long after they've scrolled off
 	// the screen, eventually overflowing the blast text queue if left
@@ -629,7 +687,7 @@ void ScummEngine::drawBlastTexts() {
 
 		_charset->_top = _blastTextQueue[i].ypos + _screenTop;
 		_charset->_startLeft = _charset->_left = _blastTextQueue[i].xpos;
-		_charset->_right = SCREEN_WIDTH - 1;
+		_charset->_right = _screenWidth - 1;
 		_charset->_center = _blastTextQueue[i].center;
 		_charset->setColor(_blastTextQueue[i].color);
 		_charset->_disableOffsX = _charset->_firstChar = true;
@@ -649,6 +707,8 @@ void ScummEngine::drawBlastTexts() {
 			if (c != 0 && c != 0xFF) {
 				_charset->_left = _charset->_nextLeft;
 				_charset->_top = _charset->_nextTop;
+				if (c >= 0x80 && _CJKMode)
+					c += *buf++ * 256;
 				_charset->printChar(c);
 				_charset->_nextLeft = _charset->_left;
 				_charset->_nextTop = _charset->_top;
@@ -669,8 +729,6 @@ void ScummEngine::removeBlastTexts() {
 	_blastTextQueuePos = 0;
 }
 
-#endif //ENGINE_SCUMM6
-
 int indexCompare(const void *p1, const void *p2) {
 	const LangIndexNode *i1 = (const LangIndexNode *) p1;
 	const LangIndexNode *i2 = (const LangIndexNode *) p2;
@@ -678,6 +736,211 @@ int indexCompare(const void *p1, const void *p2) {
 	return strcmp(i1->tag, i2->tag);
 }
 
+void ScummEngine::loadLanguageBundle() {
+	File file;
+	int32 size;
 
+	if (_gameId == GID_DIG) {
+		file.open("language.bnd", getGameDataPath());
+	} else if (_gameId == GID_CMI) {
+		file.open("language.tab", getGameDataPath());
+	} else {
+		return;
+	}
+	if (file.isOpen() == false) {
+		_existLanguageFile = false;
+		return;
+	}
+	
+	_existLanguageFile = true;
+
+	size = file.size();
+	_languageBuffer = (char *)calloc(1, size+1);
+	file.read(_languageBuffer, size);
+	file.close();
+
+	// Create an index of the language file.
+	// FIXME: Extend this mechanism to also cover The Dig?
+
+	int32 i;
+	char *ptr = _languageBuffer;
+
+	// Count the number of lines in the language file.
+
+	_languageIndexSize = 0;
+
+	for (;;) {
+		ptr = strpbrk(ptr, "\n\r");
+		if (ptr == NULL)
+			break;
+		while (*ptr == '\n' || *ptr == '\r')
+			ptr++;
+		_languageIndexSize++;
+	}
+
+	// Fill the language file index. This is just an array of
+	// tags and offsets. I did consider using a balanced tree
+	// instead, but the extra overhead in the node structure would
+	// easily have doubled the memory consumption of the index.
+
+	_languageIndex = (LangIndexNode *)calloc(_languageIndexSize, sizeof(LangIndexNode));
+
+	ptr = _languageBuffer;
+
+	if (_gameId == GID_DIG) {
+		int lineCount = _languageIndexSize;
+		const char *baseTag = "";
+		byte enc = 0;	// Initially assume the language file is not encoded
+	
+		// We'll determine the real index size as we go.
+		_languageIndexSize = 0;
+		for (i = 0; i < lineCount; i++) {
+			if (*ptr == '!') {
+				// Don't know what a line with '!' means, just ignore it
+			} else if (*ptr == 'e') {
+				// File is encoded!
+				enc = 0x13;
+			} else if (*ptr == '@') {
+				// A new 'base tag'
+				baseTag = ptr + 1;
+			} else if (*ptr == '#') {
+				// Number of subtags following a given basetag. We don't need that
+				// information so we just skip it
+			} else if (isdigit(*ptr)) {
+				int idx = 0;
+				// A number (up to three digits)...
+				while (isdigit(*ptr)) {
+					idx = idx * 10 + (*ptr - '0');
+					ptr++;
+				}
+	
+				// ...followed by a slash...
+				assert(*ptr == '/');
+				ptr++;
+	
+				// ...and then the translated message, possibly encoded
+				_languageIndex[_languageIndexSize].offset = ptr - _languageBuffer;
+	
+				// Decode string if necessary.
+				if (enc) {
+					while (*ptr != '\n' && *ptr != '\r')
+						*ptr++ ^= enc;
+				}
+	
+				// The tag is the basetag, followed by a dot and then the index
+				sprintf(_languageIndex[_languageIndexSize].tag, "%s.%03d", baseTag, idx);
+	
+				// That was another index entry
+				_languageIndexSize++;
+			}
+
+			// Skip over newlines (and turn them into null bytes)
+			ptr = strpbrk(ptr, "\n\r");
+			if (ptr == NULL)
+				break;
+			while (*ptr == '\n' || *ptr == '\r')
+				*ptr++ = 0;
+		}
+	} else {
+		for (i = 0; i < _languageIndexSize; i++) {
+			// First 8 chars in the line give the string ID / 'tag'
+			int j;
+			for (j = 0; j < 8 && !isspace(*ptr); j++, ptr++)
+				_languageIndex[i].tag[j] = toupper(*ptr);
+			_languageIndex[i].tag[j] = 0;
+	
+			// After that follows a single space which we skip
+			assert(isspace(*ptr));
+			ptr++;
+	
+			// Then comes the translated string: we record an offset to that.
+			_languageIndex[i].offset = ptr - _languageBuffer;
+	
+			// Skip over newlines (and turn them into null bytes)
+			ptr = strpbrk(ptr, "\n\r");
+			if (ptr == NULL)
+				break;
+			while (*ptr == '\n' || *ptr == '\r')
+				*ptr++ = 0;
+		}
+	}
+
+	// Sort the index nodes. We'll later use bsearch on it, which is just as efficient
+	// as using a binary tree, speed wise.
+	qsort(_languageIndex, _languageIndexSize, sizeof(LangIndexNode), indexCompare);
+}
+
+const byte *ScummEngine::translateTextAndPlaySpeech(const byte *ptr) {
+	if ((_gameId == GID_DIG || _gameId == GID_CMI) && (ptr[0] == '/')) {
+		char pointer[20];
+		int i, j;
+
+		translateText(ptr, _transText);
+		for (i = 0, j = 0; (ptr[i] != '/' || j == 0) && j < 19; i++) {
+			if (ptr[i] != '/')
+				pointer[j++] = ptr[i];
+		}
+		pointer[j] = 0;
+
+		// Play speech
+		if (!(_features & GF_DEMO) && (_gameId == GID_CMI)) // CMI demo does not have .IMX for voice
+			strcat(pointer, ".IMX");
+		// FIXME: This is a hack to distinguish between 'real' actor speech and
+		// some odd (?) other strings... there is probably a better way to do this.
+		// I just don't know which (yet).
+		if ((_gameId == GID_DIG) || (_gameId == GID_CMI && ptr[i+1] != 0 && ptr[i+1] != 255)) {
+			_sound->stopTalkSound();
+			_imuseDigital->startVoice(kTalkSoundID, pointer);
+			_sound->talkSound(0, 0, 2, -1);
+		}
+
+		ptr = _transText;
+	}
+	return ptr;
+}
+
+void ScummEngine::translateText(const byte *text, byte *trans_buff) {
+	int l;
+	
+	if ((text[0] == '/') && _existLanguageFile) {
+		LangIndexNode target;
+		LangIndexNode *found = NULL;
+
+		// copy name from text /..../
+		for (l = 0; (l < 12) && (text[l + 1] != '/'); l++)
+			target.tag[l] = toupper(text[l + 1]);
+		target.tag[l] = 0;
+
+		// HACK: These are used for the object line when
+		// using one object on another. I don't know if the
+		// text in the language file is a placeholder or if
+		// we're supposed to use it, but at least in the
+		// English version things will work so much better if
+		// we can't find translations for these.
+
+		if (strcmp(target.tag, "PU_M001") != 0 && strcmp(target.tag, "PU_M002") != 0)
+			found = (LangIndexNode *)bsearch(&target, _languageIndex, _languageIndexSize, sizeof(LangIndexNode), indexCompare);
+		if (found != NULL) {
+			strcpy((char *)trans_buff, _languageBuffer + found->offset);
+			return;
+		}
+	}
+	
+	byte *pointer = (byte *)strchr((const char *)text + 1, '/');
+	if (pointer != NULL) {
+		pointer++;
+		if (_gameId == GID_CMI) {
+			memcpy(trans_buff, pointer, resStrLen(pointer) + 1);
+		} else if (_gameId == GID_DIG) {
+			l = 0;
+			while (*pointer != '/' && *pointer != 0xff && *pointer != 0) {
+				trans_buff[l++] = *pointer++;
+			}
+			trans_buff[l] = '\0';
+		}
+	} else {
+		memcpy(trans_buff, text, resStrLen(text) + 1);
+	}
+}
 
 } // End of namespace Scumm

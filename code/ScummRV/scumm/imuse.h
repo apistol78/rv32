@@ -27,10 +27,6 @@
 #include "common/system.h"
 #include "scumm/music.h"
 
-namespace GUI {
-	class OptionsDialog;
-};
-
 class MidiDriver;
 class OSystem;
 class SoundMixer;
@@ -42,7 +38,6 @@ class ScummEngine;
 class Serializer;
 
 class IMuse : public MusicEngine {
-	friend class GUI::OptionsDialog;
 private:
 	OSystem *_system;
 	IMuseInternal *_target;
@@ -82,7 +77,6 @@ public:
 	void setBase(byte **base);
 	uint32 property(int prop, uint32 value);
 	void terminate();
-	void changeDriver(MidiDriver *midi, bool native_mt32);
 
 	// Factory methods
 	static IMuse *create(OSystem *syst, SoundMixer *mixer, MidiDriver *midi);

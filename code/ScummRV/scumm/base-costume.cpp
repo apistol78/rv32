@@ -26,17 +26,23 @@
 namespace Scumm {
 
 byte BaseCostumeRenderer::drawCostume(const VirtScreen &vs, const CostumeData &cost) {
-
-//	return 0;
-
 	int i;
 	byte result = 0;
 
-	_outptr = vs.screenPtr;
-	_outoffs = vs.xstart;
+	_outptr = vs.screenPtr + vs.xstart;
+	_outwidth = vs.width;
 	_outheight = vs.height;
-	_xmove = _ymove = 0;
+	_numStrips = vs.width / 8;
 
+	if (_vm->_version == 1) {
+		_xmove = 0;
+		_ymove = 0;
+	} else if (_vm->_features & GF_OLD_BUNDLE) {
+		_xmove = -72;
+		_ymove = -100;
+	} else {
+		_xmove = _ymove = 0;
+	}
 	for (i = 0; i < 16; i++)
 		result |= drawLimb(cost, i);
 	return result;

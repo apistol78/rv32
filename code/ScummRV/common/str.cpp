@@ -21,7 +21,7 @@
 #include "stdafx.h"
 #include "common/str.h"
 
-//#include <ctype.h>
+#include <ctype.h>
 
 namespace Common {
 
@@ -44,6 +44,7 @@ String::String(const char *str, int len) {
 }
 
 String::String(const ConstString &str) {
+	printf("String::String(const ConstString &str)\n");
 	_refCount = new int(1);
 	if (str._str) {		
 		_capacity = _len = strlen(str._str);

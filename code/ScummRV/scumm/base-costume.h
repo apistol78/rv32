@@ -53,20 +53,24 @@ class BaseCostumeRenderer {
 public:
 	byte _actorID;
 
+	byte _shadow_mode;
+	byte *_shadow_table;
+
 	int _actorX, _actorY;
 	byte _zbuf;
 	byte _scaleX, _scaleY;
 
-	int _draw_top, _draw_bottom, _draw_left, _draw_right;
+	int _draw_top, _draw_bottom;
 	bool _skipLimb;
+
 
 protected:
 	ScummEngine *_vm;
 
 	// Destination
 	byte *_outptr;
-	uint _outheight;
-	uint _outoffs;
+	uint _outwidth, _outheight;
+	int32 _numStrips;
 
 	// Source pointer
 	const byte *_srcptr;
@@ -98,13 +102,15 @@ protected:
 public:
 	BaseCostumeRenderer(ScummEngine *scumm) {
 		_actorID = 0;
+		_shadow_mode = 0;
+		_shadow_table = 0;
 		_actorX = _actorY = 0;
 		_zbuf = 0;
 		_scaleX = _scaleY = 0;
 		_draw_top = _draw_bottom = 0;
-		_draw_left = _draw_right = 0;
 		
 		_vm = scumm;
+		_numStrips = _vm->gdi._numStrips;
 		_srcptr = 0;
 		_xmove = _ymove = 0;
 		_mirror = false;
@@ -113,10 +119,7 @@ public:
 
 		
 		_outptr = 0;
-		_outheight = 0;
-	}
-
-	virtual ~BaseCostumeRenderer() {
+		_outwidth = _outheight = 0;
 	}
 
 	virtual void setPalette(byte *palette) = 0;

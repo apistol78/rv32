@@ -23,10 +23,13 @@
 
 #include "common/str.h"
 #include "gui/about.h"
-#include "gui/options.h"
 #include "gui/dialog.h"
+#include "gui/options.h"
 #include "gui/widget.h"
 
+#ifndef DISABLE_HELP
+#include "scumm/help.h"
+#endif
 
 namespace GUI {
 	class ListWidget;
@@ -62,19 +65,48 @@ public:
 	virtual void close();
 
 protected:
-	GUI::Dialog			*_aboutDialog;
-	SaveLoadChooser		*_saveDialog;
-	SaveLoadChooser		*_loadDialog;
-	GUI::OptionsDialog	*_optionsDialog;
+	GUI::Dialog		*_aboutDialog;
+#ifndef DISABLE_HELP
+	GUI::Dialog		*_helpDialog;
+#endif
+	SaveLoadChooser	*_saveDialog;
+	SaveLoadChooser	*_loadDialog;
 
 	void save();
 	void load();
 };
 
+#ifndef DISABLE_HELP
 
-class ConfigDialog : public ScummDialog {
+class HelpDialog : public ScummDialog {
+public:
+	HelpDialog(ScummEngine *scumm);
+	virtual void handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data);
+
+protected:
+	typedef Common::String String;
+
+	GUI::ButtonWidget *_nextButton;
+	GUI::ButtonWidget *_prevButton;
+
+	GUI::StaticTextWidget *_title;
+	GUI::StaticTextWidget *_key[HELP_NUM_LINES];
+	GUI::StaticTextWidget *_dsc[HELP_NUM_LINES];
+
+	int _page;
+	int _numPages;
+
+	void displayKeyBindings();
+};
+
+#endif
+
+class ConfigDialog : public GUI::OptionsDialog {
 protected:
 	ScummEngine *_vm;
+#ifdef _WIN32_WCE
+	GUI::Dialog		*_keysDialog;
+#endif
 
 public:
 	ConfigDialog(ScummEngine *scumm);

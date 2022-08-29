@@ -23,8 +23,9 @@
 #ifndef SCUMM_H
 #define SCUMM_H
 
-#include "common/engine.h"
+#include "base/engine.h"
 #include "common/file.h"
+#include "common/map.h"
 #include "common/rect.h"
 #include "common/str.h"
 
@@ -33,7 +34,6 @@
 
 namespace GUI {
 	class Dialog;
-	class OptionsDialog;
 }
 using GUI::Dialog;
 class GameDetector;
@@ -45,12 +45,11 @@ class Actor;
 class BaseCostumeRenderer;
 class CharsetRenderer;
 class IMuse;
+class IMuseDigital;
 class Insane;
 class MusicEngine;
 class ScummEngine;
-#ifndef DISABLE_DEBUGGER
 class ScummDebugger;
-#endif
 class Serializer;
 class Sound;
 
@@ -59,6 +58,8 @@ struct BoxCoords;
 struct FindObjectInRoom;
 struct ScummGameSettings;
 
+typedef Common::Map<Common::String, int> ObjectIDMap;
+
 // Use g_scumm from error() ONLY
 extern ScummEngine *g_scumm;
 
@@ -66,6 +67,7 @@ extern ScummEngine *g_scumm;
 enum {
 	NUM_LOCALSCRIPT = 60,
 	NUM_SENTENCE = 6,
+	NUM_SHADOW_PALETTE = 8,
 	KEY_SET_OPTIONS = 3456, // WinCE
 	KEY_ALL_SKIP = 3457   // WinCE
 };
@@ -73,45 +75,32 @@ enum {
 /** SCUMM feature flags. */
 enum GameFeatures {
 	GF_NEW_OPCODES         = 1 << 0,
-//	GF_NEW_CAMERA          = 1 << 1,
-//	GF_NEW_COSTUMES        = 1 << 2,
-//	GF_DIGI_IMUSE          = 1 << 3,
+	GF_NEW_CAMERA          = 1 << 1,
+	GF_NEW_COSTUMES        = 1 << 2,
+	GF_DIGI_IMUSE          = 1 << 3,
 	GF_USE_KEY             = 1 << 4,
 	GF_DRAWOBJ_OTHER_ORDER = 1 << 5,
-//	GF_SMALL_HEADER        = 1 << 6,
-//	GF_SMALL_NAMES         = 1 << 7,
-//	GF_OLD_BUNDLE          = 1 << 8,
-//	GF_16COLOR             = 1 << 9,
-//	GF_OLD256              = 1 << 10,
+	GF_SMALL_HEADER        = 1 << 6,
+	GF_SMALL_NAMES         = 1 << 7,
+	GF_OLD_BUNDLE          = 1 << 8,
+	GF_16COLOR             = 1 << 9,
+	GF_OLD256              = 1 << 10,
 	GF_AUDIOTRACKS         = 1 << 11,
-//	GF_NO_SCALING          = 1 << 12,
-//	GF_FEW_LOCALS          = 1 << 13,
-//	GF_HUMONGOUS           = 1 << 14,
-//	GF_AFTER_HEV7          = 1 << 15,
+	GF_NO_SCALING          = 1 << 12,
+	GF_FEW_LOCALS          = 1 << 13,
+	GF_HUMONGOUS           = 1 << 14,
+	GF_AFTER_HEV7          = 1 << 15,
 	
-//	GF_FMTOWNS             = 1 << 16,
+	GF_FMTOWNS             = 1 << 16,
 	GF_AMIGA               = 1 << 17,
-//	GF_NES                 = 1 << 18,
-//	GF_ATARI_ST            = 1 << 19,
-//	GF_MACINTOSH           = 1 << 20,
+	GF_NES                 = 1 << 18,
+	GF_ATARI_ST            = 1 << 19,
+	GF_MACINTOSH           = 1 << 20,
 	GF_PC                  = 1 << 21,
-//	GF_DEMO                = 1 << 22,
+	GF_DEMO                = 1 << 22,
 	
-//	GF_EXTERNAL_CHARSET    = GF_SMALL_HEADER
+	GF_EXTERNAL_CHARSET    = GF_SMALL_HEADER
 };
-
-struct ScummGameSettings {
-	const char *name;
-	const char *description;
-	byte id, version;
-	int midi; // MidiDriverType values
-	uint32 features;
-	const char *baseFilename;
-};
-
-
-extern const ScummGameSettings scumm_settings[];
-
 
 enum ObjectClass {
 	kObjectClassNeverClip = 20,
@@ -124,13 +113,12 @@ enum ObjectClass {
 };
 
 /* SCUMM Debug Channels */
-#ifndef RELEASEBUILD
 void CDECL debugC(int level, const char *s, ...);
-#else
-#define debugC(a,b,...)
-#endif
 
-
+struct dbgChannelDesc {
+	const char *channel, *desc;
+	uint32 flag;
+};
 
 enum {
 	DEBUG_GENERAL	=	1 << 0,		// General debug
@@ -143,6 +131,16 @@ enum {
 	DEBUG_ACTORS	=	1 << 8		// General Actor Debug
 };
 
+
+// Debug channel lookup table for Debugger console
+static const dbgChannelDesc debugChannels[] = {
+	{"SCRIPTS", "Track script execution", DEBUG_SCRIPTS},
+	{"OPCODES", "Track opcode execution", DEBUG_OPCODES},
+	{"IMUSE", "Track iMUSE events", DEBUG_IMUSE},
+	{"RESOURCE", "Track resource loading/management", DEBUG_RESOURCE},
+	{"VARS", "Track variable changes", DEBUG_VARS},
+	{"ACTORS", "Actor-related debug", DEBUG_ACTORS}
+};
 
 struct MemBlkHeader {
 	uint32 size;
@@ -210,32 +208,26 @@ enum ScummGameId {
 	GID_INDY4,
 	GID_MONKEY,
 	GID_SAMNMAX,
-//	GID_MONKEY_EGA,
-//	GID_PASS,
-//	GID_LOOM256,
-//	GID_ZAK256,
-//	GID_INDY3,
-//	GID_LOOM,
-//	GID_FT,
-//	GID_DIG,
-//	GID_MONKEY_VGA,
-//	GID_CMI,
-//	GID_MANIAC,
-//	GID_ZAK,
-//	GID_PUTTPUTT,
-//	GID_PUTTDEMO,
-//	GID_PUTTMOON,
-//	GID_FBEAR,
-//	GID_PJSDEMO,
-//	GID_MONKEY_SEGA,
+	GID_MONKEY_EGA,
+	GID_PASS,
+	GID_LOOM256,
+	GID_ZAK256,
+	GID_INDY3,
+	GID_LOOM,
+	GID_FT,
+	GID_DIG,
+	GID_MONKEY_VGA,
+	GID_CMI,
+	GID_MANIAC,
+	GID_ZAK,
+	GID_PUTTPUTT,
+	GID_PUTTDEMO,
+	GID_PUTTMOON,
+	GID_FBEAR,
+	GID_PJSDEMO,
+	GID_MONKEY_SEGA,
 	GID_FBPACK
 };
-
-#ifdef GAME_SAMNMAX
-#define MAX_NUM_ACTORS	30
-#else
-#define MAX_NUM_ACTORS	15
-#endif
 
 #define _baseRooms res.address[rtRoom]
 #define _baseScripts res.address[rtScript]
@@ -282,43 +274,30 @@ struct LangIndexNode {
 	int32 offset;
 };
 
-
-
-
 class ScummEngine : public Engine {
-	friend class GUI::OptionsDialog;
-	friend class AtariResourceConverter;
-	friend class AtariSoundConverter;
-
-#ifndef DISABLE_DEBUGGER
 	friend class ScummDebugger;
-#endif
 	friend class SmushPlayer;
 	friend class Insane;
 	friend class CharsetRenderer;
-	friend class CostumeRenderer;
 	
-#ifndef RELEASEBUILD
 	void errorString(const char *buf_input, char *buf_output);
-#endif
 public:
 	/* Put often used variables at the top.
 	 * That results in a shorter form of the opcode
 	 * on some architectures. */
 	IMuse *_imuse;
+	IMuseDigital *_imuseDigital;
 	MusicEngine *_musicEngine;
 	Sound *_sound;
 
 	VerbSlot *_verbs;
 	ObjectData *_objs;
-#ifndef DISABLE_DEBUGGER
 	ScummDebugger *_debugger;
-#endif
 
 	// Core variables
 	byte _gameId;
 	byte _version;
-	uint32 _features;
+	uint32 _features;						// Should only be accessed for reading (TODO enforce it compiler-wise with making it private and creating an accessor)
 
 	/** Random number generator */
 	Common::RandomSource _rnd;
@@ -328,7 +307,7 @@ public:
 
 protected:
 	/** Central resource data. */
-	struct ResData {
+	struct {
 		byte mode[rtNumTypes];
 		uint16 num[rtNumTypes];
 		uint32 tags[rtNumTypes];
@@ -337,9 +316,7 @@ protected:
 		byte *flags[rtNumTypes];
 		byte *roomno[rtNumTypes];
 		uint32 *roomoffs[rtNumTypes];
-	};
-
-	ResData res;
+	} res;
 
 	VirtualMachineState vm;
 
@@ -377,6 +354,11 @@ public:
 	void animateCursor();
 	void updatePalette();
 
+	/* _insane vars */
+	int _smushFrameRate;
+	bool _videoFinished;
+	bool _smushPaused;
+	
 	void pauseGame();
 	void restart();
 	void shutDown();
@@ -386,6 +368,7 @@ public:
 
 protected:
 	Dialog *_pauseDialog;
+	Dialog *_optionsDialog;
 	Dialog *_mainMenuDialog;
 
 protected:
@@ -394,9 +377,10 @@ protected:
 	void confirmrestartDialog();
 	void pauseDialog();
 	void mainMenuDialog();
-
+public:
+	void optionsDialog();	// Used by MainMenuDialog::handleCommand()
 protected:
-	char displayError(const char *altButton, const char *message/*, ...*/);
+	char displayError(const char *altButton, const char *message, ...);
 
 protected:
 	byte _fastMode;
@@ -465,6 +449,7 @@ public:
 protected:
 	int _keyPressed;
 	uint16 _lastKeyHit;
+	bool _keyDownMap[512]; // FIXME - 512 is a guess. it's max(kbd.ascii)
 
 	Common::Point _mouse;
 	Common::Point _virtualMouse;
@@ -476,6 +461,9 @@ protected:
 	int _bootParam;
 	
 	// Various options useful for debugging
+	bool _dumpScripts;
+	bool _hexdumpScripts;
+	bool _showStack;
 	uint16 _debugMode;
 
 	// Save/Load class - some of this may be GUI
@@ -531,13 +519,13 @@ protected:
 	
 	virtual void setupOpcodes() = 0;
 	virtual void executeOpcode(byte i) = 0;
-#ifndef RELEASEBUILD
 	virtual const char *getOpcodeDesc(byte i) = 0;
-#endif
+
 	void initializeLocals(int slot, int *vars);
 	int	getScriptSlot();
 
 	void startScene(int room, Actor *a, int b);
+	void startManiac();
 
 public:
 	void runScript(int script, bool freezeResistant, bool recursive, int *lvarptr);
@@ -598,7 +586,6 @@ protected:
 	File _fileHandle;
 	uint32 _fileOffset;
 	int _resourceHeaderSize;
-	int16 _resourceVersion;
 	Common::String _gameName;	// This is the name we use for opening resource files
 	Common::String _targetName;	// This is the game the user calls it, so use for saving
 	bool _dynamicRoomOffsets;
@@ -623,9 +610,7 @@ protected:
 	void nukeResource(int type, int i);	
 	int getResourceSize(int type, int idx);
 
-
 public:
-	bool convertResourcesForAtari();
 	bool isGlobInMemory(int type, int index) const;
 	bool isResourceLoaded(int type, int index) const;
 	byte *getResourceAddress(int type, int i);
@@ -639,6 +624,7 @@ protected:
 	int convert_extraflags(byte *ptr, byte * src_ptr);
 	void convertMac0Resource(int type, int index, byte *ptr, int size);
 	void convertADResource(int type, int index, byte *ptr, int size);
+	int readSoundResourceSmallHeader(int type, int index);
 	void setResourceCounter(int type, int index, byte flag);
 	bool validateResource(const char *str, int type, int index) const;
 	void increaseResourceCounter();
@@ -646,17 +632,20 @@ protected:
 	void initRoomSubBlocks();
 	void clearRoomObjects();
 	void loadRoomObjects();
+	void loadRoomObjectsSmall();
+	void loadRoomObjectsOldBundle();
 
 	virtual void readArrayFromIndexFile();
-	void readMAXS();
-	void readIndexFile();
-	void loadCharset(int i);
+	virtual void readMAXS();
+	virtual void readIndexFile();
+	virtual void loadCharset(int i);
 	void nukeCharset(int i);
 
 	int _lastLoadedRoom;
 public:
 	const byte *findResourceData(uint32 tag, const byte *ptr);
 	int getResourceDataSize(const byte *ptr) const;
+	void dumpResource(const char *tag, int index, const byte *ptr, int length = -1);
 
 protected:
 	void resourceStats();
@@ -672,6 +661,7 @@ public:
 
 protected:
 	byte *_objectOwnerTable, *_objectRoomTable, *_objectStateTable;
+	ObjectIDMap _objectIDMap;
 	byte _numObjectsInRoom;
 
 	void setupRoomObject(ObjectData *od, const byte *room, const byte *searchptr = NULL);
@@ -741,16 +731,20 @@ protected:
 	void killVerb(int slot);
 	void setVerbObject(uint room, uint object, uint verb);
 
-public:
-	void gotoRoom(uint room);
 
+	// TODO: This should be moved into ScummEngine_v2 if possible
+	V2MouseoverBox v2_mouseover_boxes[7];
+	int8 v2_mouseover_box;
+
+	void initV2MouseOver();
+	void checkV2MouseOver(Common::Point pos);
+	void checkV2Inventory(int x, int y);
+	void redrawV2Inventory();
+
+public:
 	/* Should be in Actor class */
-#ifndef RELEASEBUILD
 	Actor *derefActor(int id, const char *errmsg = 0) const;
 	Actor *derefActorSafe(int id, const char *errmsg) const;
-#else
-	Actor *derefActorNoMsg(int id) const;
-#endif
 
 	uint32 *_classData;
 
@@ -784,17 +778,22 @@ public:
 	void cost_decodeData(Actor *a, int frame, uint usemask);
 	int cost_frameToAnim(Actor *a, int frame);
 
+	// Akos Class
+	bool akos_increaseAnims(const byte *akos, Actor *a);
+	bool akos_increaseAnim(Actor *a, int i, const byte *aksq, const uint16 *akfo, int numakfo);
+	void akos_queCommand(byte cmd, Actor *a, int param_1, int param_2);
+	void akos_decodeData(Actor *a, int frame, uint usemask);
+	int akos_frameToAnim(Actor *a, int frame);
+	bool akos_hasManyDirections(int costume);
+
 protected:
 	/* Should be in Graphics class? */
 	uint16 _screenB, _screenH;
 	int _roomHeight, _roomWidth;
 public:
-//	int SCREEN_HEIGHT, SCREEN_WIDTH;
+	int _screenHeight, _screenWidth;
 	VirtScreen virtscr[4];		// Virtual screen areas
 	CameraData camera;			// 'Camera' - viewport
-	bool _fullRedraw, _BgNeedsRedraw, _verbRedraw, _verbColorsDirty;
-	bool _screenEffectFlag, _completeScreenRedraw;
-
 protected:
 	ColorCycle _colorCycle[16];	// Palette cycles
 
@@ -802,16 +801,19 @@ protected:
 	uint32 _CLUT_offs;
 	uint32 _IM00_offs, _PALS_offs;
 
+	StripTable *_roomStrips;
+
+	//ender: fullscreen
+	bool _fullRedraw, _BgNeedsRedraw, _verbRedraw;
+	bool _screenEffectFlag, _completeScreenRedraw;
+
 	struct {
-		int16 hotspotX, hotspotY, width, height;
+		int hotspotX, hotspotY, width, height;
 		byte animate, animateIndex;
 		int8 state;
 	} _cursor;
-
-	uint32 _grabbedCursorId;	
 	byte _grabbedCursor[8192];
 	byte _currentCursor;
-	byte _grabbedCursorTransp[16];
 
 	byte _newEffect, _switchRoomEffect2, _switchRoomEffect;
 	bool _doEffect;
@@ -832,14 +834,15 @@ protected:
 	void initBGBuffers(int height);
 	void initCycl(const byte *ptr);	// Color cycle
 
+	void createSpecialPalette(int16 a, int16 b, int16 c, int16 d, int16 e, int16 colorMin, int16 colorMax);
+
 	void drawObject(int obj, int arg);	
 	void drawRoomObjects(int arg);
 	void drawRoomObject(int i, int arg);
 	void drawBox(int x, int y, int x2, int y2, int color);
 
-	void restoreCharsetBG(Common::Rect rect);
 	void restoreBG(Common::Rect rect, byte backColor = 0);
-	void redrawBGStrip(int start, int num, int16 y, int16 h);	
+	void redrawBGStrip(int start, int num);	
 	void redrawBGAreas();	
 	
 	void cameraMoved();
@@ -851,9 +854,11 @@ protected:
 	void clampCameraPos(Common::Point *pt);
 	void actorFollowCamera(int act);
 
-	void mapSystemPalette(int start, int num);
-
 	const byte *getPalettePtr(int palindex);
+	void setupAmigaPalette();
+	void setupEGAPalette();
+	void setupV1ManiacPalette();
+	void setupV1ZakPalette();
 	void setPalette(int pal);
 	void setPaletteFromPtr(const byte *ptr);
 	void setPaletteFromRes();
@@ -867,29 +872,24 @@ protected:
 	virtual void palManipulateInit(int resID, int start, int end, int time);
 	void palManipulate();
 public:
-	byte getSystemPal(byte idx);
-
 	int remapPaletteColor(int r, int g, int b, uint threshold);		// Used by Actor::remapActorPalette
 protected:
-	byte findClosestGameColor(int r, int g, int b);
-	byte findClosestSystemColor(int r, int g, int b);
-
 	void moveMemInPalRes(int start, int end, byte direction);
+	void setupShadowPalette(int slot, int redScale, int greenScale, int blueScale, int startColor, int endColor);
 	void setupShadowPalette(int redScale, int greenScale, int blueScale, int startColor, int endColor);
 	void darkenPalette(int redScale, int greenScale, int blueScale, int startColor, int endColor);
+	void desaturatePalette(int hueScale, int satScale, int lightScale, int startColor, int endColor);
 
-	void setCursor(int16 cursor);
-	void setCursorImg(int16 img, int16 room, int16 imgindex, byte var = 0);
-	void setCursorHotspot(int16 x, int16 y);
-	void grabCursor(uint32 id, int16 x, int16 y, int16 width, int16 height);
-	void grabCursor(uint32 id, byte *ptr, int16 width, int16 height, int16 pitch);
-	void makeCursorColorTransparent(int16 a);
+	void setCursor(int cursor);
+	void setCursorImg(uint img, uint room, uint imgindex);
+	void setCursorHotspot(int x, int y);
+	void grabCursor(int x, int y, int w, int h);
+	void grabCursor(byte *ptr, int width, int height);
+	void makeCursorColorTransparent(int a);
 	void setupCursor();
-	void decompressDefaultCursor(int16 index);
-	void useIm01Cursor(uint32 id, const byte *im, int16 width, int16 height);
-#ifdef ENGINE_SCUMM6
-	void useBompCursor(uint32 id, const byte *im, int16 width, int16 height);
-#endif
+	void decompressDefaultCursor(int index);
+	void useIm01Cursor(const byte *im, int w, int h);
+	void useBompCursor(const byte *im, int w, int h);
 
 
 public:
@@ -904,7 +904,6 @@ protected:
 public:
 	VirtScreen *findVirtScreen(int y);
 	byte *getMaskBuffer(int x, int y, int z);
-	bool hasMask(int x0, int y0, int x1, int y1, byte* ptr, int zbuf);
 
 protected:
 	void drawFlashlight();
@@ -920,6 +919,10 @@ protected:
 
 	void blit(byte *dst, const byte *src, int w, int h);
 
+	// bomp
+public:
+	byte *_bompActorPalettePtr;
+	void drawBomp(const BompDrawData &bd, bool mirror);
 
 protected:
 	bool _shakeEnabled;
@@ -930,12 +933,6 @@ public:
 	int _screenStartStrip, _screenEndStrip;
 	int _screenLeft, _screenTop;
 
-
-#ifdef ENGINE_SCUMM6
-	// bomp
-public:
-	byte *_bompActorPalettePtr;
-	void drawBomp(const BompDrawData &bd, bool mirror);
 protected:
 	int _blastObjectQueuePos; 
 	BlastObject _blastObjectQueue[128];
@@ -950,19 +947,16 @@ protected:
 	void enqueueObject(int objectNumber, int objectX, int objectY, int objectWidth,
 	                   int objectHeight, int scaleX, int scaleY, int image, int mode);
 	void clearEnqueue() { _blastObjectQueuePos = 0; }
-
 	void drawBlastObjects();
 	void drawBlastObject(BlastObject *eo);
 	void removeBlastObjects();
 	void removeBlastObject(BlastObject *eo);
-#endif //ENGINE_SCUMM6
 
-protected:
 	int _drawObjectQueNr;
 	byte _drawObjectQue[200];
 	
-	/* For each of the 200 screen strips, gfxUsageBits contains a
-	 * bitmask. The lower 30 bits each correspond to one actor and
+	/* For each of the 410 screen strips, gfxUsageBits contains a
+	 * bitmask. The lower 80 bits each correspond to one actor and
 	 * signify if any part of that actor is currently contained in
 	 * that strip.
 	 * 
@@ -972,49 +966,22 @@ protected:
 	 * The second leftmost bit is set by removeBlastObject() and
 	 * restoreBG(), but I'm not yet sure why.
 	 */
-	enum {
-		USAGE_BIT_DIRTY = 31,
-		USAGE_BIT_RESTORED = 30,
-	};
-
-	uint32 gfxUsageBits[256];
-
-	FORCEINLINE void setGfxUsageBit(int strip, int bit) {
-		assert((bit >= 0) && (bit < 32));
-		assert((strip >= 0) && (strip < 200));
-		if (strip >= 0 && strip < 200)
-			gfxUsageBits[strip] |= (1 << bit);
-	}
-
-	FORCEINLINE void clearGfxUsageBit(int strip, int bit) {
-		assert((bit >= 0) && (bit < 32));
-		assert((strip >= 0) && (strip < 200));
-		if (strip >= 0 && strip < 200)
-			gfxUsageBits[strip] &= ~(1 << bit);
-	}
-
-	FORCEINLINE bool testGfxUsageBit(int strip, int bit) {
-		assert((bit >= 0) && (bit < 32));
-		assert((strip >= 0) && (strip < 200));
-		if (strip >= 0 && strip < 200)
-			return (gfxUsageBits[strip] & (1 << bit)) != 0;
-		return false;
-	}
-
-	FORCEINLINE bool testGfxAnyUsageBits(int strip) {
-		assert((strip >= 0) && (strip < 200));
-		return (gfxUsageBits[strip] & 0x3FFFFFFF) != 0;
-	}
-
-	FORCEINLINE bool testGfxOtherUsageBits(int strip, int bit) {
-		assert((strip >= 0) && (strip < 200));
-		return (gfxUsageBits[strip] & ~(1<<bit)) != 0;
-	}
+	uint32 gfxUsageBits[410 * 3];
+	
+	void upgradeGfxUsageBits();
+	void setGfxUsageBit(int strip, int bit);
+	void clearGfxUsageBit(int strip, int bit);
+	bool testGfxUsageBit(int strip, int bit);
+	bool testGfxAnyUsageBits(int strip);
+	bool testGfxOtherUsageBits(int strip, int bit);
 
 public:
+	byte _proc_special_palette[256];
 	byte _roomPalette[256];
+	byte *_shadowPalette;
 
 protected:
+	int _shadowPaletteSize;
 	byte _currentPalette[3 * 256];
 
 	int _palDirtyMin, _palDirtyMax;
@@ -1032,7 +999,8 @@ protected:
 	bool _native_mt32;
 	int _midiDriver; // Use the MD_ values from mididrv.h
 	bool _copyProtection;
-	bool _subtitles;
+	bool _demoMode;
+	bool _confirmExit;
 
 	Insane *_insane;
 
@@ -1042,6 +1010,7 @@ public:
 	byte getNumBoxes();
 	byte *getBoxMatrixBaseAddr();
 	int getPathToDestBox(byte from, byte to);
+	void getGates(int trap1, int trap2, Common::Point gateA[2], Common::Point gateB[2]);
 	bool inBoxQuickReject(int box, int x, int y, int threshold);
 	int getClosestPtOnBox(int box, int x, int y, int16& outX, int16& outY);
 	int getSpecialBox(int param1, int param2);
@@ -1068,7 +1037,7 @@ protected:
 	ScaleSlot _scaleSlots[20];
 	void setScaleSlot(int slot, int x1, int y1, int scale1, int x2, int y2, int scale2);
 	void setBoxScaleSlot(int box, int slot);
-	//void convertScaleTableToScaleSlot(int slot);
+	void convertScaleTableToScaleSlot(int slot);
 
 	void createBoxMatrix();
 	bool areBoxesNeighbours(int i, int j);
@@ -1105,8 +1074,26 @@ protected:
 public:
 	Common::Language _language;
 protected:
+	bool _existLanguageFile;
+	char *_languageBuffer;
+	LangIndexNode *_languageIndex;
+	int _languageIndexSize;
+	byte _transText[500];
 
-	const byte *translateTextAndPlaySpeech(const byte *ptr) { return ptr; }
+	void loadLanguageBundle();
+	const byte *translateTextAndPlaySpeech(const byte *ptr);
+public:
+	void translateText(const byte *text, byte *trans_buff);	// Used by class ScummDialog
+
+	// Somewhat hackish stuff for 2 byte support (Chinese/Japanese/Korean)
+	bool _CJKMode;
+	int _2byteHeight;
+	int _2byteWidth;
+	byte *get2byteCharPtr(int idx);
+
+protected:
+	byte *_2byteFontPtr;
+
 	
 #if defined(SCUMM_LITTLE_ENDIAN)
 	uint32 fileReadDword() { return _fileHandle.readUint32LE(); }
@@ -1233,8 +1220,6 @@ public:
 	byte VAR_ACTIVE_OBJECT1;
 	byte VAR_ACTIVE_OBJECT2;
 	byte VAR_CLICK_AREA;
-
-	byte VAR_SCREENSAVER_TIME;
 };
 
 // This is a constant lookup table of reverse bit masks
@@ -1247,20 +1232,11 @@ int oldDirToNewDir(int dir);
 int normalizeAngle(int angle);
 int fromSimpleDir(int dirtype, int dir);
 int toSimpleDir(int dirtype, int dir);
-#ifndef RELEASEBUILD
+
 void checkRange(int max, int min, int no, const char *str);
-#endif
 
 const char *tag2str(uint32 tag);
 
 } // End of namespace Scumm
-
-
-#if defined(RELEASEBUILD)
-#define checkRange(max, min, no, str)
-#define derefActor(id, ...)		derefActorNoMsg(id)
-#define derefActorSafe(id, msg)	derefActorNoMsg(id)
-#endif
-
 
 #endif

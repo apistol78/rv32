@@ -27,37 +27,31 @@
 namespace Scumm {
 
 class ScummEngine;
+class NutRenderer;
 struct VirtScreen;
 
 class CharsetRenderer {
 public:
-	CharsetRenderer(ScummEngine *vm);
-	~CharsetRenderer() {}
-
-	void restoreCharsetBg();
-	void clearCharsetMask();
-	bool hasCharsetMask(int left, int top, int right, int bottom);
-
-	void printChar(int chr);
-
-	int getStringWidth(int a, const byte *str);
-	void addLinebreaks(int a, byte *str, int pos, int maxwidth);
 	
-	void setCurID(byte id);
-	int getCurID() { return _curId; }
-
-	int getFontHeight() { return _fontPtr[1]; }
-	
-	void setColor(byte color)	{ _color = color; }
-
-public:
-	byte _ymask[SCREEN_HEIGHT];
+	/**
+	 * Charset mask - rectangle covering the parts of the screen which are 
+	 * currently (partially) masked.
+	 */
 	Common::Rect _mask;
+
 	Common::Rect _str;
 	int _nextLeft, _nextTop;
+
 	int _top;
 	int _left, _startLeft;
 	int _right;
+
+protected:
+	byte _color;
+	byte _shadowColor;
+	bool _dropShadow;
+
+public:
 	bool _center;
 	bool _hasMask;
 	bool _ignoreCharsetMask;
@@ -67,17 +61,100 @@ public:
 
 protected:
 	ScummEngine *_vm;
-	byte *_fontPtr;
 	byte _curId;
-	byte _color;
-	byte _shadowColor;
-	bool _dropShadow;
 
-	void updateColorMap();
-	int getCharWidth(byte chr);
-	template<byte bpp, bool clipping, bool masking> void drawBitsN(VirtScreen *vs, byte *dst, int16 xpos, const byte *src, byte *mask, int16 drawTop, int16 width, int16 height);
+	virtual int getCharWidth(byte chr) = 0;
+
+public:
+	CharsetRenderer(ScummEngine *vm);
+	virtual ~CharsetRenderer() {}
+
+	void restoreCharsetBg();
+	void clearCharsetMask();
+	bool hasCharsetMask(int left, int top, int right, int bottom);
+
+	virtual void printChar(int chr) = 0;
+
+	int getStringWidth(int a, const byte *str);
+	void addLinebreaks(int a, byte *str, int pos, int maxwidth);
+	
+	virtual void setCurID(byte id) = 0;
+	int getCurID() { return _curId; }
+	
+	virtual int getFontHeight() = 0;
+	
+	virtual void setColor(byte color) { _color = color; }
 };
 
+class CharsetRendererCommon : public CharsetRenderer {
+protected:
+	byte *_fontPtr;
+
+	void drawBits1(VirtScreen *vs, byte *dst, const byte *src, byte *mask, int drawTop, int width, int height);
+
+public:
+	CharsetRendererCommon(ScummEngine *vm) : CharsetRenderer(vm) {}
+
+	void setCurID(byte id);
+	
+	int getFontHeight() { return _fontPtr[1]; }
+};
+
+class CharsetRendererClassic : public CharsetRendererCommon {
+protected:
+	int getCharWidth(byte chr);
+
+	void drawBitsN(VirtScreen *vs, byte *dst, const byte *src, byte *mask, byte bpp, int drawTop, int width, int height);
+
+public:
+	CharsetRendererClassic(ScummEngine *vm) : CharsetRendererCommon(vm) {}
+	
+	void printChar(int chr);
+};
+
+class CharsetRendererV3 : public CharsetRendererCommon {
+protected:
+	int _nbChars;
+	byte *_widthTable;
+
+	int getCharWidth(byte chr);
+
+public:
+	CharsetRendererV3(ScummEngine *vm) : CharsetRendererCommon(vm) {}
+	
+	void printChar(int chr);
+	void setCurID(byte id);
+	void setColor(byte color);
+	int getFontHeight() { return 8; }
+};
+
+class CharsetRendererV2 : public CharsetRendererV3 {
+protected:
+	int getCharWidth(byte chr) { return 8; }
+
+public:
+	CharsetRendererV2(ScummEngine *vm, Common::Language language);
+	
+	void setCurID(byte id) {}
+};
+
+class CharsetRendererNut : public CharsetRenderer {
+protected:
+	int getCharWidth(byte chr);
+
+	NutRenderer *_fr[5];
+	NutRenderer *_current;
+
+public:
+	CharsetRendererNut(ScummEngine *vm);
+	~CharsetRendererNut();
+	
+	void printChar(int chr);
+
+	void setCurID(byte id);
+	
+	int getFontHeight();
+};
 
 } // End of namespace Scumm
 

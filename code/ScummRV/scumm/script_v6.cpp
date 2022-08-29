@@ -28,22 +28,23 @@
 #include "scumm/actor.h"
 #include "scumm/charset.h"
 #include "scumm/imuse.h"
+#include "scumm/imuse_digi/dimuse.h"
 #include "scumm/intern.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
 #include "scumm/scumm.h"
 #include "scumm/sound.h"
 #include "scumm/verbs.h"
+#include "scumm/smush/smush_player.h"
+
 #include "sound/mididrv.h"
 #include "sound/mixer.h"
 
+#include "scumm/insane/insane.h"
+
 namespace Scumm {
 
-#ifndef RELEASEBUILD
 #define OPCODE(x)	{ &ScummEngine_v6::x, #x }
-#else
-#define OPCODE(x)	{ &ScummEngine_v6::x }
-#endif
 
 void ScummEngine_v6::setupOpcodes() {
 	static const OpcodeEntryV6 opcodes[256] = {
@@ -377,16 +378,21 @@ void ScummEngine_v6::executeOpcode(byte i) {
 	(this->*op) ();
 }
 
-#ifndef RELEASEBUILD
 const char *ScummEngine_v6::getOpcodeDesc(byte i) {
 	return _opcodesV6[i].desc;
 }
-#endif
 
 int ScummEngine_v6::popRoomAndObj(int *room) {
 	int obj;
-	*room = pop();
-	obj = pop();
+
+	if (_version >= 7) {
+		obj = pop();
+		*room = getObjectRoom(obj);
+	} else {
+		*room = pop();
+		obj = pop();
+	}
+
 	return obj;
 }
 
@@ -395,21 +401,37 @@ ArrayHeader *ScummEngine_v6::defineArray(int array, int type, int dim2, int dim1
 	int size;
 	ArrayHeader *ah;
 
-	if (type != rtSound)
-		type = rtInventory;
+	if (!(_features & GF_HUMONGOUS)) {
+		if (type != rtSound)
+			type = rtInventory;
+	} else {
+		if (type == rtScript || type == rtRoom)
+			type = rtCostume;
+	}
 
 	nukeArray(array);
 
 	id = findFreeArrayId();
 
-	if (array & 0x4000) {
-	}
+	if (_version == 8) {
+		if (array & 0x40000000) {
+		}
+	
+		if (array & 0x80000000) {
+			error("Can't define bit variable as array pointer");
+		}
 
-	if (array & 0x8000) {
-		error("Can't define bit variable as array pointer");
-	}
+		size = (type == 5) ? 32 : 8;
+	} else {
+		if (array & 0x4000) {
+		}
+	
+		if (array & 0x8000) {
+			error("Can't define bit variable as array pointer");
+		}
 
-	size = (type == 5) ? 16 : 8;
+		size = (type == 5) ? 16 : 8;
+	}
 
 	writeVar(array, id);
 
@@ -483,8 +505,10 @@ int ScummEngine_v6::readArray(int array, int idx, int base) {
 	// from the function, but don't just go on overwriting memory!
 	assert(base >= 0 && base < FROM_LE_16(ah->dim1) * FROM_LE_16(ah->dim2));
 
-	if (FROM_LE_16(ah->type) == 4) {
+	if (FROM_LE_16(ah->type) == 4 || (_features & GF_HUMONGOUS && FROM_LE_16(ah->type) == rtCostume)) {
 		return ah->data[base];
+	} else if (_version == 8) {
+		return (int32)READ_LE_UINT32(ah->data + base * 4);
 	} else {
 		return (int16)READ_LE_UINT16(ah->data + base * 2);
 	}
@@ -498,8 +522,15 @@ void ScummEngine_v6::writeArray(int array, int idx, int base, int value) {
 
 	assert(base >= 0 && base < FROM_LE_16(ah->dim1) * FROM_LE_16(ah->dim2));
 
-	if (FROM_LE_16(ah->type) == rtSound) {
+	if (FROM_LE_16(ah->type) == rtSound || (_features & GF_HUMONGOUS && FROM_LE_16(ah->type) == rtCostume)) {
 		ah->data[base] = value;
+	} else if (_version == 8) {
+#if defined(SCUMM_NEED_ALIGNMENT)
+		uint32 tmp = TO_LE_32(value);
+		memcpy(&ah->data[base*4], &tmp, 4);
+#else
+		((uint32 *)ah->data)[base] = TO_LE_32(value);
+#endif
 	} else {
 #if defined(SCUMM_NEED_ALIGNMENT)
 		uint16 tmp = TO_LE_16(value);
@@ -905,6 +936,10 @@ void ScummEngine_v6::o6_cursorCommand() {
 		_userPut--;
 		break;
 	case 0x99:{		// SO_CURSOR_IMAGE Set cursor image
+			if (_features & GF_AFTER_HEV7) {
+				warning("cursorCommand 0x99 PC_SetCursorToID(%d) stub", pop());
+				break;
+			}
 			int room, obj = popRoomAndObj(&room);
 			setCursorImg(obj, room, 1);
 			break;
@@ -919,10 +954,7 @@ void ScummEngine_v6::o6_cursorCommand() {
 	case 0x9D:		// SO_CHARSET_COLOR
 		getStackList(args, ARRAYSIZE(args));
 		for (i = 0; i < 16; i++)
-		{
-			byte c = args[i];
-			_charsetColorMap[i] = _charsetData[_string[1].t_charset][i] = c;
-		}
+			_charsetColorMap[i] = _charsetData[_string[1].t_charset][i] = (unsigned char)args[i];
 		break;
 	case 0xD6:		// SO_CURSOR_TRANSPARENT Set cursor transparent color
 		makeCursorColorTransparent(pop());
@@ -1001,7 +1033,10 @@ void ScummEngine_v6::o6_getOwner() {
 }
 
 void ScummEngine_v6::o6_startSound() {
-	_sound->addSoundToQueue(pop());
+	if (_features & GF_DIGI_IMUSE)
+		_imuseDigital->startSfx(pop());
+	else
+		_sound->addSoundToQueue(pop());
 }
 
 void ScummEngine_v6::o6_stopSound() {
@@ -1009,7 +1044,10 @@ void ScummEngine_v6::o6_stopSound() {
 }
 
 void ScummEngine_v6::o6_startMusic() {
-	_sound->addSoundToQueue(pop());
+	if (_features & GF_DIGI_IMUSE)
+		error("o6_startMusic() It shouldn't be called here for imuse digital");
+	else
+		_sound->addSoundToQueue(pop());
 }
 
 void ScummEngine_v6::o6_stopObjectScript() {
@@ -1017,15 +1055,36 @@ void ScummEngine_v6::o6_stopObjectScript() {
 }
 
 void ScummEngine_v6::o6_panCameraTo() {
-	panCameraTo(pop(), 0);
+	if (_version >= 7) {
+		int y = pop();
+		int x = pop();
+		panCameraTo(x, y);
+	} else {
+		panCameraTo(pop(), 0);
+	}
 }
 
 void ScummEngine_v6::o6_actorFollowCamera() {
-	actorFollowCamera(pop());
+	if (_version >= 7)
+		setCameraFollows(derefActor(pop(), "actorFollowCamera"));
+	else
+		actorFollowCamera(pop());
 }
 
 void ScummEngine_v6::o6_setCameraAt() {
-	setCameraAtEx(pop());
+	if (_version >= 7) {
+		int x, y;
+
+		camera._follows = 0;
+		VAR(VAR_CAMERA_FOLLOWED_ACTOR) = 0;
+
+		y = pop();
+		x = pop();
+
+		setCameraAt(x, y);
+	} else {
+		setCameraAtEx(pop());
+	}
 }
 
 void ScummEngine_v6::o6_loadRoom() {
@@ -1161,7 +1220,8 @@ void ScummEngine_v6::o6_doSentence() {
 	int verb, objectA, objectB, dummy = 0;
 
 	objectB = pop();
-	dummy = pop();	// dummy pop (in Sam&Max, seems to be always 0 or 130)
+	if (_version < 8)
+		dummy = pop();	// dummy pop (in Sam&Max, seems to be always 0 or 130)
 	objectA = pop();
 	verb = pop();
 
@@ -1432,6 +1492,9 @@ void ScummEngine_v6::o6_resourceRoutines() {
 	switch (op) {
 	case 100:		// SO_LOAD_SCRIPT
 		resid = pop();
+		if (_version >= 7)
+			if (resid >= _numGlobalScripts)
+				break;
 		ensureResourceLoaded(rtScript, resid);
 		break;
 	case 101:		// SO_LOAD_SOUND
@@ -1448,6 +1511,9 @@ void ScummEngine_v6::o6_resourceRoutines() {
 		break;
 	case 104:		// SO_NUKE_SCRIPT
 		resid = pop();
+		if (_version >= 7)
+			if (resid >= _numGlobalScripts)
+				break;
 		setResourceCounter(rtScript, resid, 0x7F);
 		debug(5, "nuke script %d", resid);
 		break;
@@ -1543,14 +1609,14 @@ void ScummEngine_v6::o6_roomOps() {
 	case 172:		// SO_ROOM_SCROLL
 		b = pop();
 		a = pop();
-		if (a < (SCREEN_WIDTH / 2))
-			a = (SCREEN_WIDTH / 2);
-		if (b < (SCREEN_WIDTH / 2))
-			b = (SCREEN_WIDTH / 2);
-		if (a > _roomWidth - (SCREEN_WIDTH / 2))
-			a = _roomWidth - (SCREEN_WIDTH / 2);
-		if (b > _roomWidth - (SCREEN_WIDTH / 2))
-			b = _roomWidth - (SCREEN_WIDTH / 2);
+		if (a < (_screenWidth / 2))
+			a = (_screenWidth / 2);
+		if (b < (_screenWidth / 2))
+			b = (_screenWidth / 2);
+		if (a > _roomWidth - (_screenWidth / 2))
+			a = _roomWidth - (_screenWidth / 2);
+		if (b > _roomWidth - (_screenWidth / 2))
+			b = _roomWidth - (_screenWidth / 2);
 		VAR(VAR_CAMERA_MIN_X) = a;
 		VAR(VAR_CAMERA_MAX_X) = b;
 		break;
@@ -1757,13 +1823,19 @@ void ScummEngine_v6::o6_actorOps() {
 		break;
 	case 95:		// SO_IGNORE_BOXES
 		a->ignoreBoxes = 1;
-		a->forceClip = 0;
+		if (_version >= 7)
+			a->forceClip = 100;
+		else
+			a->forceClip = 0;
 		if (a->isInCurrentRoom())
 			a->putActor(a->_pos.x, a->_pos.y, a->room);
 		break;
 	case 96:		// SO_FOLLOW_BOXES
 		a->ignoreBoxes = 0;
-		a->forceClip = 0;
+		if (_version >= 7)
+			a->forceClip = 100;
+		else
+			a->forceClip = 0;
 		if (a->isInCurrentRoom())
 			a->putActor(a->_pos.x, a->_pos.y, a->room);
 		break;
@@ -1771,8 +1843,7 @@ void ScummEngine_v6::o6_actorOps() {
 		a->setAnimSpeed(pop());
 		break;
 	case 98:		// SO_SHADOW
-		i = pop();
-		//a->shadow_mode = i;
+		a->shadow_mode = pop();
 		break;
 	case 99:		// SO_TEXT_OFFSET
 		a->talkPosY = pop();
@@ -1826,6 +1897,12 @@ void ScummEngine_v6::o6_verbOps() {
 	VerbSlot *vs;
 	byte op;
 
+	// Full Throttle implements conversation by creating new verbs, one
+	// for each option, but it never tells when to actually draw them.
+
+	if (_gameId == GID_FT)
+		_verbRedraw = true;
+
 	op = fetchScriptByte();
 	if (op == 196) {
 		_curVerb = pop();
@@ -1850,7 +1927,7 @@ void ScummEngine_v6::o6_verbOps() {
 		break;
 	case 126:		// SO_VERB_COLOR
 		vs->color = pop();
-	break;
+		break;
 	case 127:		// SO_VERB_HICOLOR
 		vs->hicolor = pop();
 		break;
@@ -1923,7 +2000,7 @@ void ScummEngine_v6::o6_verbOps() {
 		}
 		break;
 	case 140:		// SO_VERB_BAKCOLOR
-		vs->bkcolor = pop();	//getSystemPal(pop());
+		vs->bkcolor = pop();
 		break;
 	case 255:
 		drawVerb(slot, 0);
@@ -2017,6 +2094,9 @@ void ScummEngine_v6::o6_saveRestoreVerbs() {
 	a = pop();
 
 	byte subOp = fetchScriptByte();
+	if (_version == 8) {
+		subOp = (subOp - 141) + 0xB4;
+	}
 	
 	switch (subOp) {
 	case 141:		// SO_SAVE_VERBS
@@ -2087,8 +2167,14 @@ void ScummEngine_v6::o6_wait() {
 			break;
 		return;
 	case 170:		// SO_WAIT_FOR_CAMERA Wait for camera
-		if (camera._cur.x / 8 != camera._dest.x / 8)
-			break;
+		if (_version >= 7) {
+			if (camera._dest != camera._cur)
+				break;
+		} else {
+			if (camera._cur.x / 8 != camera._dest.x / 8)
+				break;
+		}
+
 		return;
 	case 171:		// SO_WAIT_FOR_SENTENCE
 		if (_sentenceNum) {
@@ -2188,9 +2274,13 @@ void ScummEngine_v6::o6_delay() {
 
 void ScummEngine_v6::o6_delaySeconds() {
 	uint32 delay = (uint32)pop();
-
-	// FIXME - are we really measuring minutes here?
-	delay = delay * 60;
+	if (_gameId != GID_CMI)
+		// FIXME - are we really measuring minutes here?
+		delay = delay * 60;
+	else
+		// FIXME - Is this the same in ComI? Seem to need a 1.5 minute 
+		// multiplier for correct timing - see patch 664893
+		delay = delay * 90;
 
 	vm.slot[_currentScript].delay = delay;
 	vm.slot[_currentScript].status = ssPaused;
@@ -2374,104 +2464,221 @@ void ScummEngine_v6::o6_kernelSetFunctions() {
 
 	num = getStackList(args, ARRAYSIZE(args));
 
-	switch (args[0]) {
-	case 1:
-		// Used to restore images when decorating cake in
-		// Fatty Bear's Birthday Surprise
-		warning("o6_kernelSetFunctions: stub1()");
-		break;
-	case 3:
-		warning("o6_kernelSetFunctions: nothing in 3");
-		break;
-	case 4:
-		grabCursor(0xFFFFFFFF, args[1], args[2], args[3], args[4]);
-		break;
-	case 5:
-		fadeOut(args[1]);
-		break;
-	case 6:
-		_fullRedraw = 1;
-		redrawBGAreas();
-		setActorRedrawFlags();
-		processActors();
-		fadeIn(args[1]);
-		break;
-	case 8:
-		//startManiac();
-		break;
-	case 9:
-		error("o6_kernelSetFunctions: stub9()");
-		break;
-	case 104:									/* samnmax */
-		nukeFlObjects(args[2], args[3]);
-		break;
-	case 107:									/* set actor scale */
-		a = derefActor(args[1], "o6_kernelSetFunctions: 107");
-		a->setScale((unsigned char)args[2], -1);
-		break;
-	case 108:									/* create proc_special_palette */
-	case 109:
-		// Case 108 and 109 share the same function
-		if (num != 6)
-			warning("o6_kernelSetFunctions sub op %d: expected 6 params but got %d", args[0], num);
-		//createSpecialPalette(args[1], args[2], args[3], args[4], args[5], 0, 256);
-		break;
-	case 110:
-		_charset->clearCharsetMask();
-		break;
-	case 111:
-		a = derefActor(args[1], "o6_kernelSetFunctions: 111");
-		//a->shadow_mode = args[2] + args[3];
-		break;
-	case 112:									/* palette shift? */
-		//createSpecialPalette(args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
-		break;
-	case 114:
-		// Sam & Max film noir mode
-		if (_gameId == GID_SAMNMAX) {
-			// At this point ScummVM will already have set
-			// variable 0x8000 to indicate that the game is
-			// in film noir mode. All we have to do here is
-			// to mark the palette as "dirty", because
-			// updatePalette() will desaturate the colors
-			// as they are uploaded to the backend.
+	if (_version >= 7) {
+		switch (args[0]) {
+		case 4:
+			grabCursor(args[1], args[2], args[3], args[4]);
+			break;
+		case 6: {
+				uint32 speed;
+				assert(getStringAddressVar(VAR_VIDEONAME));
+				if (strcmp((char *)getStringAddressVar(VAR_VIDEONAME), "sq3.san") == 0) {
+					speed = 1000000 / 14;
+				} else {
+					if (_smushFrameRate == 0) 
+						_smushFrameRate = 14;
+					speed = 1000000 / _smushFrameRate;
+				}
+
+				debug(1, "INSANE Arg: %d %d", args[1], args[2]);
+
+				// INSANE mode 0: SMUSH movie playback
+				if (args[1] == 0) {
+					SmushPlayer *sp = new SmushPlayer(this, speed);
+
+					// Correct incorrect smush filename in Macintosh FT demo
+					if ((_gameId == GID_FT) && (_features & GF_DEMO) && (_features & GF_MACINTOSH) &&
+					    (strcmp((char *)getStringAddressVar(VAR_VIDEONAME), "jumpgorge.san") == 0))
+						sp->play("jumpgorg.san", getGameDataPath());
+					else
+						sp->play((char *)getStringAddressVar(VAR_VIDEONAME), getGameDataPath());
+					delete sp;
+				} else if (_gameId == GID_FT) {
+					const int insaneVarNum = ((_features & GF_DEMO) && (_features & GF_PC)) 
+						? 232 : 233;
+
+					_insane->setSmushParams(speed);
+					_insane->runScene(insaneVarNum);
+				}
+			}
+			break;
+		case 12:
+			setCursorImg(args[1], (uint) - 1, args[2]);
+			break;
+		case 13:
+			derefActor(args[1], "o6_kernelSetFunctions:13")->remapActorPalette(args[2], args[3], args[4], -1);
+			break;
+		case 14:
+			derefActor(args[1], "o6_kernelSetFunctions:14")->remapActorPalette(args[2], args[3], args[4], args[5]);
+			break;
+		case 15:
+			_smushFrameRate = args[1];
+			break;
+		case 16:
+		case 17:{
+			const byte *message;
+			byte buf_input[300], buf_output[300];
+			_messagePtr = getStringAddressVar(VAR_STRING2DRAW);
+			message = _msgPtrToAdd = buf_input;
+			addMessageToStack(_messagePtr);
+			if ((_gameId == GID_DIG) && !(_features & GF_DEMO)) {
+				byte buf_trans[300];
+				char *t_ptr = (char *)buf_input;
+				buf_output[0] = 0;
+				while (t_ptr != NULL) {
+					if (*t_ptr == '/') {
+						translateText((byte *)t_ptr, buf_trans);
+						// hack 
+						if (strstr((char *)buf_trans, "%___") != 0) {
+							strcat((char *)buf_output, " ");
+						} else {
+							strcat((char *)buf_output, (char *)buf_trans);
+						}
+					}
+					t_ptr = strchr((char *)t_ptr + 1, '/');
+					if (t_ptr == NULL)
+						break;
+					t_ptr = strchr((char *)t_ptr + 1, '/');
+				}
+				message = buf_output;
+			}
+			enqueueText(message, args[3], args[4], args[2], args[1], true);
+			break;}
+		case 20:
+			// it's used for turn on/off 'RadioChatter' effect for voice in the dig, but i's not needed
+			break;
+		case 107:
+			a = derefActor(args[1], "o6_kernelSetFunctions: 107");
+			a->setScale((unsigned char)args[2], -1);
+			break;
+		case 108:
+			setupShadowPalette(args[1], args[2], args[3], args[4], args[5], args[6]);
+			break;
+		case 109:
+			setupShadowPalette(0, args[1], args[2], args[3], args[4], args[5]);
+			break;
+		case 114:
+			warning("o6_kernelSetFunctions: stub114()");
+			break;
+		case 117:
+			freezeScripts(2);
+			break;
+		case 118:
+			enqueueObject(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 3);
+			break;
+		case 119:
+			enqueueObject(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 0);
+			break;
+		case 124:
+			_saveSound = args[1];
+			break;
+		case 215:
+			ConfMan.set("subtitles", args[1] != 0);
+			break;
+		default:
+			error("o6_kernelSetFunctions: default case %d (param count %d)", args[0], num);
+			break;
+		}
+	} else {
+		switch (args[0]) {
+		case 1:
+			// Used to restore images when decorating cake in
+			// Fatty Bear's Birthday Surprise
+			warning("o6_kernelSetFunctions: stub1()");
+			break;
+		case 3:
+			warning("o6_kernelSetFunctions: nothing in 3");
+			break;
+		case 4:
+			grabCursor(args[1], args[2], args[3], args[4]);
+			break;
+		case 5:
+			fadeOut(args[1]);
+			break;
+		case 6:
+			_fullRedraw = 1;
+			redrawBGAreas();
+			setActorRedrawFlags();
+			processActors();
+			fadeIn(args[1]);
+			break;
+		case 8:
+			startManiac();
+			break;
+		case 9:
+			error("o6_kernelSetFunctions: stub9()");
+			break;
+		case 104:									/* samnmax */
+			nukeFlObjects(args[2], args[3]);
+			break;
+		case 107:									/* set actor scale */
+			a = derefActor(args[1], "o6_kernelSetFunctions: 107");
+			a->setScale((unsigned char)args[2], -1);
+			break;
+		case 108:									/* create proc_special_palette */
+		case 109:
+			// Case 108 and 109 share the same function
+			if (num != 6)
+				warning("o6_kernelSetFunctions sub op %d: expected 6 params but got %d", args[0], num);
+			createSpecialPalette(args[1], args[2], args[3], args[4], args[5], 0, 256);
+			break;
+		case 110:
+			_charset->clearCharsetMask();
+			break;
+		case 111:
+			a = derefActor(args[1], "o6_kernelSetFunctions: 111");
+			a->shadow_mode = args[2] + args[3];
+			break;
+		case 112:									/* palette shift? */
+			createSpecialPalette(args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+			break;
+		case 114:
+			// Sam & Max film noir mode
+			if (_gameId == GID_SAMNMAX) {
+				// At this point ScummVM will already have set
+				// variable 0x8000 to indicate that the game is
+				// in film noir mode. All we have to do here is
+				// to mark the palette as "dirty", because
+				// updatePalette() will desaturate the colors
+				// as they are uploaded to the backend.
+				//
+				// This actually works better than the original
+				// interpreter, where actors would sometimes
+				// still be drawn in color.
+				setDirtyColors(0, 255);
+			} else
+				warning("stub o6_kernelSetFunctions_114()");
+			break;
+		case 117:
+			// Sam & Max uses this opcode in script-43, right
+			// before a screensaver is selected.
 			//
-			// This actually works better than the original
-			// interpreter, where actors would sometimes
-			// still be drawn in color.
-			setDirtyColors(0, 255);
-		} else
-			warning("stub o6_kernelSetFunctions_114()");
-		break;
-	case 117:
-		// Sam & Max uses this opcode in script-43, right
-		// before a screensaver is selected.
-		//
-		// Sam & Max uses variable 132 to specify the number of
-		// minutes of inactivity (no mouse movements) before
-		// starting the screensaver, so setting it to 0 will
-		// help in debugging.
-		freezeScripts(0x80);
-		break;
-	case 119:
-		enqueueObject(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 0);
-		break;
-	case 120:
-		swapPalColors(args[1], args[2]);
-		break;
-	case 122:
-		VAR(VAR_SOUNDRESULT) =
-			(short)_imuse->doCommand (num - 1, &args[1]);
-		break;
-	case 123:
-		copyPalColor(args[2], args[1]);
-		break;
-	case 124:
-		_saveSound = args[1];
-		break;
-	default:
-		error("o6_kernelSetFunctions: default case %d (param count %d)", args[0], num);
-		break;
+			// Sam & Max uses variable 132 to specify the number of
+			// minutes of inactivity (no mouse movements) before
+			// starting the screensaver, so setting it to 0 will
+			// help in debugging.
+			freezeScripts(0x80);
+			break;
+		case 119:
+			enqueueObject(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], 0);
+			break;
+		case 120:
+			swapPalColors(args[1], args[2]);
+			break;
+		case 122:
+			VAR(VAR_SOUNDRESULT) =
+				(short)_imuse->doCommand (num - 1, &args[1]);
+			break;
+		case 123:
+			copyPalColor(args[2], args[1]);
+			break;
+		case 124:
+			_saveSound = args[1];
+			break;
+		default:
+			error("o6_kernelSetFunctions: default case %d (param count %d)", args[0], num);
+			break;
+		}
 	}
 }
 
@@ -2495,28 +2702,14 @@ void ScummEngine_v6::o6_kernelGetFunctions() {
 		// to find out what color to change. I think that what we have
 		// the virtual mouse coordinates, because that's what used
 		// everywhere else in the script.
-		//
-		// Also used in some Sam & Max screensavers
+
 		{
 			VirtScreen *vs = &virtscr[0];
 			if (args[1] < 0 || args[1] >= vs->width || args[2] < 0 || args[2] >= vs->height) {
 				// FIXME: Until we know what to do in this case...
 				push(0);
-			} else {
-				#if 1
-					warning("o6_kernelGetFunctions: 113. Get color from screen (not implemented for ST)");
-					push(0);
-				#else
-					uint16 x = args[1];
-					uint16 y = args[2];
-					uint16 xtile = x & ~7;
-					uint16 xpix = x & 7;
-					uint32* screen = (uint32*)(vs->screenPtr + (xtile<<2) + MUL160(y));
-					uint32 c32 = ((*screen) >> (7 - xpix)) & 0x01010101;
-					byte c = ((c32<<3)&0x8) | ((c32>>6)&0x4) | ((c32>>15)&0x2) | ((c32>>24)&0x1);
-					push(c);
-				#endif
-			}
+			} else
+				push(vs->screenPtr[args[1] + args[2] * vs->width]);
 		}
 		break;
 	case 115:
@@ -2556,27 +2749,7 @@ void ScummEngine_v6::o6_kernelGetFunctions() {
 		   333 = right
 		 */
 
-		// replaced by v0.4.0 code, not sure what game this is for.
-		//push(getKeyState(args[1]));
-		if((args[1] == 27) && (_lastKeyHit == 27)) {
-			push(1); // abort
-			return;
-		}
-		if( ((args[1] == 328) || (args[1] == 336) || (args[1] == 13)) &&
-			((VAR(VAR_LEFTBTN_HOLD)) || (_lastKeyHit == 13) || (_lastKeyHit == 274) ||
-			(_lastKeyHit == 273)) ) {
-			push(1); // thrust
-			return;
-		}
-		if(((args[1] == 97) || (args[1] == 331)) && (_lastKeyHit == 276)) {
-			push(1); // left
-			return;
-		}
-		if(((args[1] == 115) || (args[1] == 333)) && (_lastKeyHit == 275)) {
-			push(1); // right
-			return;
-		}
-		push(0);
+		push(getKeyState(args[1]));
 		break;
 	case 212:
 		a = derefActor(args[1], "o6_kernelGetFunctions:212");
@@ -2601,6 +2774,107 @@ void ScummEngine_v6::o6_kernelGetFunctions() {
 	default:
 		error("o6_kernelGetFunctions: default case %d", args[0]);
 	}
+}
+
+// FIXME: check either some warning will trigger. I am not sure that those
+// keys are queried in scripts at all
+int ScummEngine::getKeyState(int key) {
+	switch(key) {
+	case 0x145:
+		warning("ScummEngine::getKeyState(%x) 'numlock' is probed", key);
+		return 0;
+		break;
+	case 0x164:
+		warning("ScummEngine::getKeyState(%x) 'left shift' is probed", key);
+		return 0;
+		break;
+	case 0x165:
+		warning("ScummEngine::getKeyState(%x) 'right shift' is probed", key);
+		return 0;
+		break;
+	case 0x166:
+	case 0x167:
+		warning("ScummEngine::getKeyState(%x) 'alt' is probed", key);
+		return 0;
+		break;
+	case 0x168:
+		warning("ScummEngine::getKeyState(%x) 'left ctrl' is probed", key);
+		return 0;
+		break;
+	case 0x202a:
+		warning("ScummEngine::getKeyState(%x) 'gray *' is probed", key);
+		return 0;
+		break;
+	case 0x202d:
+		warning("ScummEngine::getKeyState(%x) 'gray -' is probed", key);
+		return 0;
+		break;
+	case 0x147: // Home
+		return (_keyDownMap[0x107] || _keyDownMap[0x115]) ? 1 : 0;
+		break;
+	case 0x148: // Up
+		return (_keyDownMap[0x108] || _keyDownMap[0x111] ||
+				_keyDownMap[0x38]) ? 1 : 0;
+		break;
+	case 0x149: // PgUp
+		return (_keyDownMap[0x109] || _keyDownMap[0x118]) ? 1 : 0;
+		break;
+	case 0x14A: // Gray-
+		return (_keyDownMap[0x10d] || _keyDownMap[0x2d]) ? 1 : 0;
+		break;
+	case 0x14B: // Left
+		return (_keyDownMap[0x104] || _keyDownMap[0x114] ||
+				_keyDownMap[0x34]) ? 1 : 0;
+		break;
+	case 0x14C: // 5
+		return (_keyDownMap[0x105]) ? 1 : 0;
+		break;
+	case 0x14D: // Right
+		return (_keyDownMap[0x106] || _keyDownMap[0x113] ||
+				_keyDownMap[0x36]) ? 1 : 0;
+		break;
+	case 0x14E: // Gray+
+		return (_keyDownMap[0x10e] || 
+				(_keyDownMap[0x13d] && _keyDownMap[0x12f])) ? 1 : 0;
+		break;
+	case 0x14F: // End
+		return (_keyDownMap[0x101] || _keyDownMap[0x117]) ? 1 : 0;
+		break;
+	case 0x150: // Down
+		return (_keyDownMap[0x102] || _keyDownMap[0x112] ||
+				_keyDownMap[0x32]) ? 1 : 0;
+		break;
+	case 0x151: // PgDn
+		return (_keyDownMap[0x103] || _keyDownMap[0x119]) ? 1 : 0;
+		break;
+	case 0x152: // Ins
+		return (_keyDownMap[0x100] || _keyDownMap[0x115]) ? 1 : 0;
+		break;
+	case 0x153: // Del
+		return (_keyDownMap[0x10a] || _keyDownMap[0x7f]) ? 1 : 0;
+		break;
+	default:
+		break;
+	}
+
+	if (key >= 0x13b && key <= 0x144) { // F1-F10
+		key -= 0x13b - 0x11a;
+	} else if (key >= 0x154 && key <= 0x15d) { // Shift+F1-F10
+		key -= 0x154 - 0x11a; // map it to just F1-F10
+
+		warning("ScummEngine::getKeyState(%x) 'Shift-F%d' is probed", key, key-0x153);
+	} else if (key > 0x8000) { // Alt
+		key -= 0x8000;
+		key += 154; // see ScummEngine::parseEvents()
+	} else if (key > 0x4000) { // Ctrl
+		key -= 0x4000;
+		key -= 0x40;
+	} else if (key > 0x2000) { // Gray keys
+		key -= 0x2000;
+		warning("ScummEngine::getKeyState(%x) 'gray key' is probed", key);
+	}
+
+	return (_keyDownMap[key]) ? 1 : 0;
 }
 
 void ScummEngine_v6::o6_delayFrames() {
@@ -2728,7 +3002,7 @@ void ScummEngine_v6::o6_shuffle() {
 void ScummEngine_v6::o6_pickVarRandom() {
 	int num;
 	int args[100];
-	int var_A, var_C;
+	int var_C, var_A;
 
 	num = getStackList(args, ARRAYSIZE(args));
 	int value = fetchScriptWord();
@@ -2751,8 +3025,13 @@ void ScummEngine_v6::o6_pickVarRandom() {
 	num = readArray(value, 0, 0);
 
 	byte *ptr = getResourceAddress(rtString, num);
-	var_A = READ_LE_UINT16(ptr + 2);
-	var_C = READ_LE_UINT16(ptr + 4);
+	if (_version >= 7) {
+		var_A = READ_LE_UINT32(ptr + 4);
+		var_C = READ_LE_UINT32(ptr + 8);
+	} else {
+		var_A = READ_LE_UINT16(ptr + 2);
+		var_C = READ_LE_UINT16(ptr + 4);
+	}
 
 	if (var_A-1 <= num) {
 		int16 var_2 = readArray(value, 0, num - 1);
@@ -2769,8 +3048,7 @@ void ScummEngine_v6::o6_pickVarRandom() {
 }
 
 void ScummEngine_v6::o6_getDateTime() {
-#if 0
-	// TOOD_ATARI: this is probably not used by dott or sam
+#if !defined(__RV__)
 	struct tm *t;
 	time_t now = time(NULL);
 	
@@ -2781,22 +3059,26 @@ void ScummEngine_v6::o6_getDateTime() {
 	VAR(VAR_TIMEDATE_DAY) = t->tm_mday;
 	VAR(VAR_TIMEDATE_HOUR) = t->tm_hour;
 	VAR(VAR_TIMEDATE_MINUTE) = t->tm_min;
+	
+	if (_version == 8)
+		VAR(VAR_TIMEDATE_SECOND) = t->tm_sec;
 #else
-	VAR(VAR_TIMEDATE_YEAR) = 2020;
-	VAR(VAR_TIMEDATE_MONTH) = 4;
-	VAR(VAR_TIMEDATE_DAY) = 4;
-	VAR(VAR_TIMEDATE_HOUR) = 12;
-	VAR(VAR_TIMEDATE_MINUTE) = 0;
+	VAR(VAR_TIMEDATE_YEAR) = 2022;
+	VAR(VAR_TIMEDATE_MONTH) = 1;
+	VAR(VAR_TIMEDATE_DAY) = 1;
+	VAR(VAR_TIMEDATE_HOUR) = 1;
+	VAR(VAR_TIMEDATE_MINUTE) = 1;
+	if (_version == 8)
+		VAR(VAR_TIMEDATE_SECOND) = 0;
 #endif
 }
 
 void ScummEngine_v6::o6_unknownE1() {
-/*	
 	// this opcode check ground area in minigame "Asteroid Lander" in the dig
 	int y = pop();
 	int x = pop();
 
-	if (x > SCREEN_WIDTH - 1) {
+	if (x > _screenWidth - 1) {
 		push(-1);
 		return;
 	}
@@ -2821,8 +3103,6 @@ void ScummEngine_v6::o6_unknownE1() {
 
 	byte area = *(vs->screenPtr + offset);
 	push(area);
-*/
-	push(0);	
 }
 
 void ScummEngine_v6::o6_setBoxSet() {
@@ -2832,7 +3112,7 @@ void ScummEngine_v6::o6_setBoxSet() {
 	int32 dboxSize, mboxSize;
 	int i;
 
-	ResourceIterator boxds(room);
+	ResourceIterator boxds(room, false);
 	for (i = 0; i < arg; i++)
 		boxd = boxds.findNext(MKID('BOXD'));
 
@@ -2845,7 +3125,7 @@ void ScummEngine_v6::o6_setBoxSet() {
 	assert(matrix);
 	memcpy(matrix, boxd, dboxSize);
 
-	ResourceIterator boxms(room);
+	ResourceIterator boxms(room, false);
 	for (i = 0; i < arg; i++)
 		boxm = boxms.findNext(MKID('BOXM'));
 
@@ -2858,7 +3138,8 @@ void ScummEngine_v6::o6_setBoxSet() {
 	assert(matrix);
 	memcpy(matrix, boxm, mboxSize);
 
-	showActors();
+	if(!(_features & GF_HUMONGOUS))
+		showActors();
 }
 
 void ScummEngine_v6::decodeParseString(int m, int n) {

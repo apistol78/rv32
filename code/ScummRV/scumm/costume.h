@@ -23,8 +23,6 @@
 
 #include "scumm/base-costume.h"
 
-// #define ENABLE_ATARI_COST_FORMAT_2
-
 namespace Scumm {
 
 class LoadedCostume {
@@ -61,7 +59,7 @@ protected:
 	
 	byte _scaleIndexX;						/* must wrap at 256 */
 	byte _scaleIndexY;
-	uint32 _palette[32*2];
+	byte _palette[32];
 
 public:
 	CostumeRenderer(ScummEngine *vm) : BaseCostumeRenderer(vm), _loaded(vm) {}
@@ -73,14 +71,12 @@ public:
 protected:
 	byte drawLimb(const CostumeData &cost, int limb);
 
-#ifdef ENABLE_ATARI_COST_FORMAT_2
-	template <bool transp, char dir, byte masking, bool clipping> inline void procAtari2Span(int16& x, int16& len, int16& color, uint32& pm, uint32& px, const byte*& src, uint32*& dst, const byte*& mask) __attribute__((always_inline));
-	template <bool transp, char dir, byte masking, bool clipping> inline void procAtari2Line(int16& x, int16& width, uint32& pm, uint32& px, const byte*& src, uint32*& dst, const byte*& mask) __attribute__((always_inline));
-	template <bool transp, char dir, byte masking, bool clipping> inline void procAtari2Line_Scaled(int16& x, int16& width, const byte*& scalextab, uint32& pm, uint32& px, const byte*& src, uint32*& dst, const byte*& mask) __attribute__((always_inline));
+	void proc3();
+	void proc3_ami();
 
-	template<char dir, byte masking, bool clipping> void procAtari2(uint16 endy);
-	template<char dir, byte masking, bool clipping> void procAtari2_Scaled(uint16 endy);
-#endif
+	void procC64(int actor);
+	void c64_ignorePakCols(int num);
+
 	byte mainRoutine(int xmoveCur, int ymoveCur);
 };
 

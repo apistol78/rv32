@@ -83,11 +83,21 @@ static Common::Point closestPtOnLine(int ulx, int uly, int llx, int lly, int x, 
 
 
 byte ScummEngine::getMaskFromBox(int box) {
+	// Fix for bug #740244 and #755863. This appears to have been a 
+	// long standing bug in the original engine?
+	if (_version <= 3 && box == 255)
+		return 1;
+
 	Box *ptr = getBoxBaseAddr(box);
 	if (!ptr)
 		return 0;
 
-	return ptr->old.mask;
+	if (_version == 8)
+		return (byte) FROM_LE_32(ptr->v8.mask);
+	else if (_version <= 2)
+		return ptr->v2.mask;
+	else
+		return ptr->old.mask;
 }
 
 void ScummEngine::setBoxFlags(int box, int val) {
@@ -100,7 +110,12 @@ void ScummEngine::setBoxFlags(int box, int val) {
 	} else {
 		Box *ptr = getBoxBaseAddr(box);
 		assert(ptr);
-		ptr->old.flags = val;
+		if (_version == 8)
+			ptr->v8.flags = TO_LE_32(val);
+		else if (_version <= 2)
+			ptr->v2.flags = val;
+		else
+			ptr->old.flags = val;
 	}
 }
 
@@ -108,13 +123,23 @@ byte ScummEngine::getBoxFlags(int box) {
 	Box *ptr = getBoxBaseAddr(box);
 	if (!ptr)
 		return 0;
-	return ptr->old.flags;
+	if (_version == 8)
+		return (byte) FROM_LE_32(ptr->v8.flags);
+	else if (_version <= 2)
+		return ptr->v2.flags;
+	else
+		return ptr->old.flags;
 }
 
 void ScummEngine::setBoxScale(int box, int scale) {
 	Box *ptr = getBoxBaseAddr(box);
 	assert(ptr);
-	ptr->old.scale = TO_LE_16(scale);
+	if (_version == 8)
+		ptr->v8.scale = TO_LE_32(scale);
+	else if (_version <= 2)
+		error("This should not ever be called!");
+	else
+		ptr->old.scale = TO_LE_16(scale);
 }
 
 void ScummEngine::setBoxScaleSlot(int box, int slot) {
@@ -124,16 +149,26 @@ void ScummEngine::setBoxScaleSlot(int box, int slot) {
 }
 
 int ScummEngine::getScale(int box, int x, int y) {
+	if (_features & GF_NO_SCALING)
+		return 255;
+
 	Box *ptr = getBoxBaseAddr(box);
 	if (!ptr)
 		return 255;
 		
 	int slot , scale;
-	scale = READ_LE_UINT16(&ptr->old.scale);
-	if (scale & 0x8000)
-		slot = (scale & 0x7FFF) + 1;
-	else
-		slot = 0;
+
+	if (_version == 8) {
+		// COMI has a separate field for the scale slot...
+		slot = FROM_LE_32(ptr->v8.scaleSlot);
+		scale = FROM_LE_32(ptr->v8.scale);
+	} else {
+		scale = READ_LE_UINT16(&ptr->old.scale);
+		if (scale & 0x8000)
+			slot = (scale & 0x7FFF) + 1;
+		else
+			slot = 0;
+	}
 
 	// Was a scale slot specified? If so, we compute the effective scale
 	// from it, ignoring the box scale.
@@ -175,10 +210,15 @@ int ScummEngine::getScale(int box, int x, int y) {
 }
 
 int ScummEngine::getBoxScale(int box) {
+	if (_features & GF_NO_SCALING)
+		return 255;
 	Box *ptr = getBoxBaseAddr(box);
 	if (!ptr)
 		return 255;
-	return READ_LE_UINT16(&ptr->old.scale);
+	if (_version == 8)
+		return FROM_LE_32(ptr->v8.scale);
+	else
+		return READ_LE_UINT16(&ptr->old.scale);
 }
 
 /**
@@ -195,11 +235,6 @@ int ScummEngine::getBoxScale(int box) {
  * To accomodate old savegames, we attempt here to convert rtScaleTable
  * resources to scale slots.
  */
-
-/*
-	// only used for loading savegames of version 22 or older
-	// we don't care...
-
 void ScummEngine::convertScaleTableToScaleSlot(int slot) {
 	assert(1 <= slot && slot <= ARRAYSIZE(_scaleSlots));
 
@@ -219,20 +254,22 @@ void ScummEngine::convertScaleTableToScaleSlot(int slot) {
 		return;
 	}
 	
-	// Essentially, what we are doing here is some kind of "line fitting"
-	// algorithm. The data in the scale table represents a linear graph. What
-	// we want to find is the slope and (vertical) offset of this line. Things
-	// are complicated by the fact that the line is cut of vertically at 1 and
-	// 255. We have to be careful in handling this and some border cases.
-	// 
-	// Some typical graphs look like these:
-	//       ---         ---     ---
-	//      /         ---           \ 
-	//  ___/       ---               \___
-	// 
-	// The method used here is to compute the slope of secants fixed at the
-	// left and right end. For most cases this detects the cut-over points
-	// quite accurately. 
+	/*
+	 * Essentially, what we are doing here is some kind of "line fitting"
+	 * algorithm. The data in the scale table represents a linear graph. What
+	 * we want to find is the slope and (vertical) offset of this line. Things
+	 * are complicated by the fact that the line is cut of vertically at 1 and
+	 * 255. We have to be careful in handling this and some border cases.
+	 * 
+	 * Some typical graphs look like these:
+	 *       ---         ---     ---
+	 *      /         ---           \ 
+	 *  ___/       ---               \___
+	 * 
+	 * The method used here is to compute the slope of secants fixed at the
+	 * left and right end. For most cases this detects the cut-over points
+	 * quite accurately. 
+	 */
 	
 	// Search for the bend on the left side
 	m = (resptr[199] - resptr[0]) / 199.0;
@@ -277,9 +314,7 @@ void ScummEngine::convertScaleTableToScaleSlot(int slot) {
 	int y;
 	int sum = 0;
 	int scale;
-#ifndef __ATARI__
 	float variance;
-#endif
 	for (y = 0; y < 200; y++) {
 		scale = (s.scale2 - s.scale1) * (y - s.y1) / (s.y2 - s.y1) + s.scale1;
 		if (scale < 1)
@@ -289,13 +324,10 @@ void ScummEngine::convertScaleTableToScaleSlot(int slot) {
 
 		sum += (resptr[y] - scale) * (resptr[y] - scale);
 	}
-#ifndef __ATARI__
 	variance = sum / (200.0 - 1.0);
 	if (variance > 1)
 		debug(1, "scale item %d, variance %f exceeds 1 (room %d)", slot, variance, _currentRoom);
-#endif
 }
-*/
 
 void ScummEngine::setScaleSlot(int slot, int x1, int y1, int scale1, int x2, int y2, int scale2) {
 	assert(1 <= slot && slot <= ARRAYSIZE(_scaleSlots));
@@ -312,7 +344,10 @@ byte ScummEngine::getNumBoxes() {
 	byte *ptr = getResourceAddress(rtMatrix, 2);
 	if (!ptr)
 		return 0;
-	return ptr[0];
+	if (_version == 8)
+		return (byte) READ_LE_UINT32(ptr);
+	else
+		return ptr[0];
 }
 
 Box *ScummEngine::getBoxBaseAddr(int box) {
@@ -320,9 +355,36 @@ Box *ScummEngine::getBoxBaseAddr(int box) {
 	if (!ptr || box == 255)
 		return NULL;
 
-	checkRange(ptr[0] - 1, 0, box, "Illegal box %d");
+	// FIXME: In "pass to adventure", the loom demo, when bobbin enters
+	// the tent to the elders, box = 2, but ptr[0] = 2 -> errors out.
+	// Hence we disable the check for now. Maybe in PASS (and other old games)
+	// we shouldn't subtract 1 from ptr[0] when performing the check?
+	// this also seems to be incorrect for atari st demo of zak
+	// and assumingly other v2 games
+	// The same happens in Indy3EGA (see bug #770351)
+	// Also happens in ZakEGA (see bug #771803).
+	//
+	// This *might* mean that we have a bug in our box implementation
+	// OTOH, the original engine, unlike ScummVM, performed no bound
+	// checking at all. All the problems so far have been cases where
+	// the value was exactly one more than what we consider the maximum.
+	// So it's very well possible that all of these are script errors.
+	if ((_gameId == GID_PASS) || ((_features & GF_OLD_BUNDLE)
+	    && (_gameId == GID_INDY3 || _gameId == GID_ZAK))) {
+		checkRange(ptr[0], 0, box, "Illegal box %d");
+	} else
+		checkRange(ptr[0] - 1, 0, box, "Illegal box %d");
 
-	return (Box *)(ptr + box * SIZEOF_BOX + 2);
+	if (_version <= 2)
+		return (Box *)(ptr + box * SIZEOF_BOX_V2 + 1);
+	else if (_version == 3)
+		return (Box *)(ptr + box * SIZEOF_BOX_V3 + 1);
+	else if (_features & GF_SMALL_HEADER)
+		return (Box *)(ptr + box * SIZEOF_BOX + 1);
+	else if (_version == 8)
+		return (Box *)(ptr + box * SIZEOF_BOX_V8 + 4);
+	else
+		return (Box *)(ptr + box * SIZEOF_BOX + 2);
 }
 
 int ScummEngine::getSpecialBox(int x, int y) {
@@ -365,8 +427,8 @@ bool ScummEngine::checkXYInBoxBounds(int b, int x, int y) {
 	if (y > box.ul.y && y > box.ur.y && y > box.lr.y && y > box.ll.y)
 		return false;
 
-	if ((box.ul.x == box.ur.x && box.ul.y == box.ur.y && box.lr.x == box.ll.x && box.lr.y == box.ll.y) ||
-		(box.ul.x == box.ll.x && box.ul.y == box.ll.y && box.ur.x == box.lr.x && box.ur.y == box.lr.y)) {
+	if (box.ul.x == box.ur.x && box.ul.y == box.ur.y && box.lr.x == box.ll.x && box.lr.y == box.ll.y ||
+		box.ul.x == box.ll.x && box.ul.y == box.ll.y && box.ur.x == box.lr.x && box.ur.y == box.lr.y) {
 
 		Common::Point pt;
 		pt = closestPtOnLine(box.ul.x, box.ul.y, box.lr.x, box.lr.y, x, y);
@@ -393,15 +455,55 @@ void ScummEngine::getBoxCoordinates(int boxnum, BoxCoords *box) {
 	Box *bp = getBoxBaseAddr(boxnum);
 	assert(bp);
 
-	box->ul.x = (int16)READ_LE_UINT16(&bp->old.ulx);
-	box->ul.y = (int16)READ_LE_UINT16(&bp->old.uly);
-	box->ur.x = (int16)READ_LE_UINT16(&bp->old.urx);
-	box->ur.y = (int16)READ_LE_UINT16(&bp->old.ury);
+	if (_version == 8) {
+		box->ul.x = (short)FROM_LE_32(bp->v8.ulx);
+		box->ul.y = (short)FROM_LE_32(bp->v8.uly);
+		box->ur.x = (short)FROM_LE_32(bp->v8.urx);
+		box->ur.y = (short)FROM_LE_32(bp->v8.ury);
+	
+		box->ll.x = (short)FROM_LE_32(bp->v8.llx);
+		box->ll.y = (short)FROM_LE_32(bp->v8.lly);
+		box->lr.x = (short)FROM_LE_32(bp->v8.lrx);
+		box->lr.y = (short)FROM_LE_32(bp->v8.lry);
 
-	box->ll.x = (int16)READ_LE_UINT16(&bp->old.llx);
-	box->ll.y = (int16)READ_LE_UINT16(&bp->old.lly);
-	box->lr.x = (int16)READ_LE_UINT16(&bp->old.lrx);
-	box->lr.y = (int16)READ_LE_UINT16(&bp->old.lry);
+		// FIXME: Some walkboxes in CMI appear to have been flipped,
+		// in the sense that for instance the lower boundary is above
+		// the upper one. Can that really be the case, or is there
+		// some more sinister problem afoot?
+		//
+		// Is this fix sufficient, or will we need something more
+		// elaborate?
+
+		if (box->ul.y > box->ll.y && box->ur.y > box->lr.y) {
+			SWAP(box->ul, box->ll);
+			SWAP(box->ur, box->lr);
+		}
+
+		if (box->ul.x > box->ur.x && box->ll.x > box->lr.x) {
+			SWAP(box->ul, box->ur);
+			SWAP(box->ll, box->lr);
+		}
+	} else if (_version <= 2) {
+		box->ul.x = bp->v2.ulx * 8;
+		box->ul.y = bp->v2.uy * 2;
+		box->ur.x = bp->v2.urx * 8;
+		box->ur.y = bp->v2.uy * 2;
+	
+		box->ll.x = bp->v2.llx * 8;
+		box->ll.y = bp->v2.ly * 2;
+		box->lr.x = bp->v2.lrx * 8;
+		box->lr.y = bp->v2.ly * 2;
+	} else {
+		box->ul.x = (int16)READ_LE_UINT16(&bp->old.ulx);
+		box->ul.y = (int16)READ_LE_UINT16(&bp->old.uly);
+		box->ur.x = (int16)READ_LE_UINT16(&bp->old.urx);
+		box->ur.y = (int16)READ_LE_UINT16(&bp->old.ury);
+	
+		box->ll.x = (int16)READ_LE_UINT16(&bp->old.llx);
+		box->ll.y = (int16)READ_LE_UINT16(&bp->old.lly);
+		box->lr.x = (int16)READ_LE_UINT16(&bp->old.lrx);
+		box->lr.y = (int16)READ_LE_UINT16(&bp->old.lry);
+	}
 }
 
 uint ScummEngine::distanceFromPt(int x, int y, int ptx, int pty) {
@@ -607,6 +709,13 @@ int ScummEngine::getPathToDestBox(byte from, byte to) {
 
 	boxm = getBoxMatrixBaseAddr();
 
+	if (_version <= 2) {
+		// The v2 box matrix is a real matrix with numOfBoxes rows and columns.
+		// The first numOfBoxes bytes contain indices to the start of the corresponding
+		// row (although that seems unnecessary to me - the value is easily computable.
+		boxm += numOfBoxes + boxm[from];
+		return (int8)boxm[to];
+	}
 
 	// WORKAROUND #1: It seems that in some cases, the box matrix is corrupt
 	// (more precisely, is too short) in the datafiles already. In
@@ -620,6 +729,13 @@ int ScummEngine::getPathToDestBox(byte from, byte to) {
 	// As a workaround, we add a check for the end of the box matrix
 	// resource, and abort the search once we reach the end.
 	const byte *end = boxm + getResourceSize(rtMatrix, 1);
+
+	// WORKAROUND #2: In addition to the above, we have to add this special
+	// case to fix the scene in Indy3 where Indy meets Hitler in Berlin.
+	// It's one of the places (or maybe even the only one?). See bug #770690
+	// and also bug #774783.
+	if ((_gameId == GID_INDY3) && _roomResource == 46 && from == 1 && to == 0)
+		return 1;
 
 	// Skip up to the matrix data for box 'from'
 	for (i = 0; i < from && boxm < end; i++) {
@@ -671,8 +787,8 @@ bool Actor::findPathTowards(byte box1nr, byte box2nr, byte box3nr, Common::Point
 				}
 
 				if (box1.ul.y > box2.ur.y || box2.ul.y > box1.ur.y ||
-						((box1.ur.y == box2.ul.y || box2.ur.y == box1.ul.y) &&
-						box1.ul.y != box1.ur.y && box2.ul.y != box2.ur.y)) {
+						(box1.ur.y == box2.ul.y || box2.ur.y == box1.ul.y) &&
+						box1.ul.y != box1.ur.y && box2.ul.y != box2.ur.y) {
 					if (flag & 1)
 						SWAP(box1.ul.y, box1.ur.y);
 					if (flag & 2)
@@ -726,8 +842,8 @@ bool Actor::findPathTowards(byte box1nr, byte box2nr, byte box3nr, Common::Point
 				}
 
 				if (box1.ul.x > box2.ur.x || box2.ul.x > box1.ur.x ||
-						((box1.ur.x == box2.ul.x || box2.ur.x == box1.ul.x) &&
-						box1.ul.x != box1.ur.x && box2.ul.x != box2.ur.x)) {
+						(box1.ur.x == box2.ul.x || box2.ur.x == box1.ul.x) &&
+						box1.ul.x != box1.ur.x && box2.ul.x != box2.ur.x) {
 					if (flag & 1)
 						SWAP(box1.ul.x, box1.ur.x);
 					if (flag & 2)
@@ -940,8 +1056,8 @@ bool ScummEngine::areBoxesNeighbours(int box1nr, int box2nr) {
 				}
 				if (box.ur.y < box2.ul.y ||
 						box.ul.y > box2.ur.y ||
-						((box.ul.y == box2.ur.y ||
-						 box.ur.y == box2.ul.y) && box2.ur.y != box2.ul.y && box.ul.y != box.ur.y)) {
+						(box.ul.y == box2.ur.y ||
+						 box.ur.y == box2.ul.y) && box2.ur.y != box2.ul.y && box.ul.y != box.ur.y) {
 					if (n) {
 						SWAP(box2.ur.y, box2.ul.y);
 					}
@@ -971,8 +1087,8 @@ bool ScummEngine::areBoxesNeighbours(int box1nr, int box2nr) {
 				}
 				if (box.ur.x < box2.ul.x ||
 						box.ul.x > box2.ur.x ||
-						((box.ul.x == box2.ur.x ||
-						 box.ur.x == box2.ul.x) && box2.ur.x != box2.ul.x && box.ul.x != box.ur.x)) {
+						(box.ul.x == box2.ur.x ||
+						 box.ur.x == box2.ul.x) && box2.ur.x != box2.ul.x && box.ul.x != box.ur.x) {
 
 					if (n) {
 						SWAP(box2.ur.x, box2.ul.x);
@@ -1016,6 +1132,142 @@ bool ScummEngine::areBoxesNeighbours(int box1nr, int box2nr) {
 	} while (--j);
 
 	return result;
+}
+
+void Actor::findPathTowardsOld(byte trap1, byte trap2, byte final_trap, Common::Point &p2, Common::Point &p3) {
+	Common::Point pt;
+	Common::Point gateA[2];
+	Common::Point gateB[2];
+
+	_vm->getGates(trap1, trap2, gateA, gateB);
+
+	p2.x = 32000;
+	p3.x = 32000;
+
+	// next box (trap2) = final box?
+	if (trap2 == final_trap) {
+		// Is the actor (x,y) between both gates?
+		if (compareSlope(_pos.x, _pos.y, walkdata.dest.x, walkdata.dest.y, gateA[0].x, gateA[0].y) !=
+				compareSlope(_pos.x, _pos.y, walkdata.dest.x, walkdata.dest.y, gateB[0].x, gateB[0].y) &&
+				compareSlope(_pos.x, _pos.y, walkdata.dest.x, walkdata.dest.y, gateA[1].x, gateA[1].y) !=
+				compareSlope(_pos.x, _pos.y, walkdata.dest.x, walkdata.dest.y, gateB[1].x, gateB[1].y)) {
+			return;
+		}
+	}
+
+	pt = closestPtOnLine(gateA[1].x, gateA[1].y, gateB[1].x, gateB[1].y, _pos.x, _pos.y);
+	p3.x = pt.x;
+	p3.y = pt.y;
+
+	if (compareSlope(_pos.x, _pos.y, p3.x, p3.y, gateA[0].x, gateA[0].y) ==
+			compareSlope(_pos.x, _pos.y, p3.x, p3.y, gateB[0].x, gateB[0].y)) {
+		closestPtOnLine(gateA[0].x, gateA[0].y, gateB[0].x, gateB[0].y, _pos.x, _pos.y);
+		p2.x = pt.x;				/* if point 2 between gates, ignore! */
+		p2.y = pt.y;
+	}
+}
+
+/**
+ * Compute the "gate" between two boxes. The gate is a pair of two lines which
+ * both start on box 'trap1' and end on 'trap2'. For both lines, one of its
+ * end points is the corner point of one of the two boxes. The other end point
+ * is a point on the other point closest to first end point.
+ * This way the lines bound a 'corridor' between the two boxes, through which
+ * the actor has to walk to get from trap1 to trap2.
+ */
+void ScummEngine::getGates(int trap1, int trap2, Common::Point gateA[2], Common::Point gateB[2]) {
+	int i, j;
+	int dist[8];
+	int minDist[3];
+	int closest[3];
+	int box[3];
+	BoxCoords coords;
+	Common::Point closestPoint[8];
+	Common::Point boxCorner[8];
+	int line1, line2;
+
+	// For all corner coordinates of the first box, compute the point closest 
+	// to them on the second box (and also compute the distance of these points).
+	getBoxCoordinates(trap1, &coords);
+	boxCorner[0] = coords.ul;
+	boxCorner[1] = coords.ur;
+	boxCorner[2] = coords.lr;
+	boxCorner[3] = coords.ll;
+	for (i = 0; i < 4; i++) {
+		dist[i] = getClosestPtOnBox(trap2, boxCorner[i].x, boxCorner[i].y, closestPoint[i].x, closestPoint[i].y);
+	}
+
+	// Now do the same but with the roles of the first and second box swapped.
+	getBoxCoordinates(trap2, &coords);
+	boxCorner[4] = coords.ul;
+	boxCorner[5] = coords.ur;
+	boxCorner[6] = coords.lr;
+	boxCorner[7] = coords.ll;
+	for (i = 4; i < 8; i++) {
+		dist[i] = getClosestPtOnBox(trap1, boxCorner[i].x, boxCorner[i].y, closestPoint[i].x, closestPoint[i].y);
+	}
+
+	// Find the three closest "close" points between the two boxes.
+	for (j = 0; j < 3; j++) {
+		minDist[j] = 0xFFFF;
+		for (i = 0; i < 8; i++) {
+			if (dist[i] < minDist[j]) {
+				minDist[j] = dist[i];
+				closest[j] = i;
+			}
+		}
+		dist[closest[j]] = 0xFFFF;
+		minDist[j] = 0; // anders.pistol (int)sqrt((double)minDist[j]);
+		box[j] = (closest[j] > 3);	// Is the point on the first or on the second box?
+	}
+
+
+	// Finally, compute the actual "gate".
+
+	if (box[0] == box[1] && abs(minDist[0] - minDist[1]) < 4) {
+		line1 = closest[0];
+		line2 = closest[1];
+
+	} else if (box[0] == box[1] && minDist[0] == minDist[1]) {	// parallel
+		line1 = closest[0];
+		line2 = closest[1];
+	} else if (box[0] == box[2] && minDist[0] == minDist[2]) {	// parallel
+		line1 = closest[0];
+		line2 = closest[2];
+	} else if (box[1] == box[2] && minDist[1] == minDist[2]) {	// parallel
+		line1 = closest[1];
+		line2 = closest[2];
+
+	} else if (box[0] == box[2] && abs(minDist[0] - minDist[2]) < 4) {
+		line1 = closest[0];
+		line2 = closest[2];
+	} else if (abs(minDist[0] - minDist[2]) < 4) {
+		line1 = closest[1];
+		line2 = closest[2];
+	} else if (abs(minDist[0] - minDist[1]) < 4) {
+		line1 = closest[0];
+		line2 = closest[1];
+	} else {
+		line1 = closest[0];
+		line2 = closest[0];
+	}
+
+	// Set the gate
+	if (line1 < 4) {
+		gateA[0] = boxCorner[line1];
+		gateA[1] = closestPoint[line1];
+	} else {
+		gateA[1] = boxCorner[line1];
+		gateA[0] = closestPoint[line1];
+	}
+
+	if (line2 < 4) {
+		gateB[0] = boxCorner[line2];
+		gateB[1] = closestPoint[line2];
+	} else {
+		gateB[1] = boxCorner[line2];
+		gateB[0] = closestPoint[line2];
+	}
 }
 
 } // End of namespace Scumm

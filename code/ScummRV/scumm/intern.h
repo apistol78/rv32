@@ -28,19 +28,15 @@
 
 namespace Scumm {
 
+class NutRenderer; // V8 Font Renderer
 struct ArrayHeader;
-
-#ifdef ENGINE_SCUMM5
 
 class ScummEngine_v5 : public ScummEngine {
 protected:
 	typedef void (ScummEngine_v5::*OpcodeProcV5)();
-
 	struct OpcodeEntryV5 {
 		OpcodeProcV5 proc;
-#ifndef RELEASEBUILD
 		const char *desc;
-#endif
 	};
 	
 	const OpcodeEntryV5 *_opcodesV5;
@@ -51,9 +47,8 @@ public:
 protected:
 	virtual void setupOpcodes();
 	virtual void executeOpcode(byte i);
-#ifndef RELEASEBUILD
 	virtual const char *getOpcodeDesc(byte i);
-#endif
+
 	virtual void setupScummVars();
 	virtual void decodeParseString();
 
@@ -174,10 +169,150 @@ protected:
 	void o5_walkActorToObject();
 };
 
-#endif //ENGINE_SCUMM5
+// FIXME - maybe we should move the opcodes from v5 to v3, and change the inheritance 
+// accordingly - that would be more logical I guess. However, if you do so, take care
+// of preserving the right readIndexFile / loadCharset !!!
+class ScummEngine_v3 : public ScummEngine_v5 {
+public:
+	ScummEngine_v3(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v5(detector, syst, gs) {}
 
+protected:
+	void readIndexFile();
+	void loadCharset(int no);
+	void readMAXS();
+	
+	void readGlobalObjects();
+};
 
-#ifdef ENGINE_SCUMM6
+class ScummEngine_v2 : public ScummEngine_v3 {
+protected:
+	void readIndexFile();
+	void readClassicIndexFile();	// V1
+	void readEnhancedIndexFile();	// V2
+	void loadCharset(int no);
+	void readMAXS();
+
+	typedef void (ScummEngine_v2::*OpcodeProcV2)();
+	struct OpcodeEntryV2 {
+		OpcodeProcV2 proc;
+		const char *desc;
+	};
+
+	const OpcodeEntryV2 *_opcodesV2;
+
+public:
+	ScummEngine_v2(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v3(detector, syst, gs) {}
+
+protected:
+	virtual void setupOpcodes();
+	virtual void executeOpcode(byte i);
+	virtual const char *getOpcodeDesc(byte i);
+
+	virtual void setupScummVars();
+	virtual void decodeParseString();
+
+	virtual int getVar();
+
+	void getResultPosIndirect();
+	virtual void getResultPos();
+	virtual int readVar(uint var);
+	virtual void writeVar(uint var, int value);
+
+	virtual void ifStateCommon(byte type);
+	virtual void ifNotStateCommon(byte type);
+	virtual void setStateCommon(byte type);
+	virtual void clearStateCommon(byte type);
+	
+	void resetSentence();
+	void setUserState(byte state);
+
+	/* Version 2 script opcodes */
+	void o2_actorFromPos();
+	void o2_actorOps();
+	void o2_add();
+	void o2_addIndirect();
+	void o2_animateActor();
+	void o2_assignVarByte();
+	void o2_assignVarWordIndirect();
+	void o2_beginOverride();
+	void o2_chainScript();
+	void o2_clearState01();
+	void o2_clearState02();
+	void o2_clearState04();
+	void o2_clearState08();
+	void o2_cursorCommand();
+	void o2_cutscene();
+	void o2_delay();
+	void o2_doSentence();
+	void o2_drawObject();
+	void o2_drawSentence();
+	void o2_dummy();
+	void o2_endCutscene();
+	void o2_findObject();
+	void o2_getActorWalkBox();
+	void o2_getActorX();
+	void o2_getActorY();
+	void o2_getBitVar();
+	void o2_getObjPreposition();
+	void o2_ifClassOfIs();
+	void o2_ifNotState01();
+	void o2_ifNotState02();
+	void o2_ifNotState04();
+	void o2_ifNotState08();
+	void o2_ifState01();
+	void o2_ifState02();
+	void o2_ifState04();
+	void o2_ifState08();
+	void o2_isGreater();
+	void o2_isGreaterEqual();
+	void o2_isLess();
+	void o2_isLessEqual();
+	void o2_lights();
+	void o2_loadRoomWithEgo();
+	void o2_setBoxFlags();
+	void o2_panCameraTo();
+	void o2_pickupObject();
+	void o2_putActor();
+	void o2_putActorAtObject();
+	void o2_resourceRoutines();
+	void o2_restart();
+	void o2_roomOps();
+	void o2_getActorElevation();
+	void o2_setActorElevation();
+	void o2_setBitVar();
+	void o2_setCameraAt();
+	void o2_setObjectName();
+	void o2_setObjPreposition();
+	void o2_setOwnerOf();
+	void o2_setState01();
+	void o2_setState02();
+	void o2_setState04();
+	void o2_setState08();
+	void o2_startScript();
+	void o2_subtract();
+	void o2_subIndirect();
+	void o2_switchCostumeSet();
+	void o2_verbOps();
+	void o2_waitForActor();
+	void o2_waitForMessage();
+	void o2_waitForSentence();
+	void o2_walkActorTo();
+	void o2_walkActorToObject();
+
+	byte VAR_SENTENCE_VERB;
+	byte VAR_SENTENCE_OBJECT1;
+	byte VAR_SENTENCE_OBJECT2;
+	byte VAR_SENTENCE_PREPOSITION;
+	byte VAR_BACKUP_VERB;
+};
+
+class ScummEngine_v4 : public ScummEngine_v3 {
+public:
+	ScummEngine_v4(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v3(detector, syst, gs) {}
+
+protected:
+	void loadCharset(int no);
+};
 
 class ScummEngine_v6 : public ScummEngine {
 	friend class Insane;
@@ -186,9 +321,7 @@ protected:
 	typedef void (ScummEngine_v6::*OpcodeProcV6)();
 	struct OpcodeEntryV6 {
 		OpcodeProcV6 proc;
-#ifndef RELEASEBUILD
 		const char *desc;
-#endif
 	};
 	
 	const OpcodeEntryV6 *_opcodesV6;
@@ -210,9 +343,8 @@ public:
 protected:
 	virtual void setupOpcodes();
 	virtual void executeOpcode(byte i);
-#ifndef RELEASEBUILD
 	virtual const char *getOpcodeDesc(byte i);
-#endif
+
 	virtual void setupScummVars();
 	virtual void decodeParseString(int a, int b);
 	virtual void readArrayFromIndexFile();
@@ -404,7 +536,139 @@ protected:
 	byte VAR_TIMEDATE_SECOND;
 };
 
-#endif //ENGINE_SCUMM6
+class ScummEngine_v6he : public ScummEngine_v6 {
+protected:
+	typedef void (ScummEngine_v6he::*OpcodeProcV6he)();
+	struct OpcodeEntryV6he {
+		OpcodeProcV6he proc;
+		const char *desc;
+	};
+	
+	const OpcodeEntryV6he *_opcodesV6he;
+
+	File _hFileTable[17];
+	
+public:
+	ScummEngine_v6he(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v6(detector, syst, gs) {}
+
+protected:
+	virtual void setupOpcodes();
+	virtual void executeOpcode(byte i);
+	virtual const char *getOpcodeDesc(byte i);
+
+	virtual void decodeParseString(int a, int b);
+
+	void redimArray(int arrayId, int newX, int newY, int d);
+	int readFileToArray(int slot, int32 size);
+	void writeFileFromArray(int slot, int resID);
+	void seekFilePos(int slot, int offset, int mode);
+
+	/* Version 6 script opcodes */
+	void o6_drawBlastObject();
+	void o6_setBlastObjectWindow();
+	void o6_setState();
+	void o6_startSound();
+	void o6_roomOps();
+	void o6_actorOps();
+	void o6_verbOps();
+	void o6_wait();
+	void o6_soundKludge();
+	void o6_dummy();
+	void o6_kernelSetFunctions();
+	void o6_kernelGetFunctions();
+	void o6_stampObject();
+	void o6_openFile();
+	void o6_closeFile();
+	void o6_deleteFile();
+	void o6_readFile();
+	void o6_rename();
+	void o6_writeFile();
+	void o6_setVolume();
+	void o6_seekFilePos();
+	void o6_localizeArray();
+	void o6_unknownEE();
+	void o6_unknownFA();
+	void o6_redimArray();
+	void o6_readINI();
+	void o6_unknownF9();
+	void o6_readFilePos();
+};
+
+class ScummEngine_v7 : public ScummEngine_v6 {
+public:
+	ScummEngine_v7(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v6(detector, syst, gs) {}
+
+protected:
+	virtual void setupScummVars();
+
+	virtual void setCameraAt(int pos_x, int pos_y);
+	virtual void setCameraFollows(Actor *a);
+	virtual void moveCamera();
+	virtual void panCameraTo(int x, int y);
+};
+
+class ScummEngine_v8 : public ScummEngine_v7 {
+protected:
+	typedef void (ScummEngine_v8::*OpcodeProcV8)();
+	struct OpcodeEntryV8 {
+		OpcodeProcV8 proc;
+		const char *desc;
+	};
+	
+	const OpcodeEntryV8 *_opcodesV8;
+	
+public:
+	ScummEngine_v8(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs) : ScummEngine_v7(detector, syst, gs) {}
+
+protected:
+	virtual void setupOpcodes();
+	virtual void executeOpcode(byte i);
+	virtual const char *getOpcodeDesc(byte i);
+
+	virtual void setupScummVars();
+	virtual void decodeParseString(int m, int n);
+	virtual void readArrayFromIndexFile();
+
+	virtual uint fetchScriptWord();
+	virtual int fetchScriptWordSigned();
+	
+	virtual int readVar(uint var);
+	virtual void writeVar(uint var, int value);
+
+	/* Version 8 script opcodes */
+	void o8_mod();
+	void o8_wait();
+
+	void o8_dimArray();
+	void o8_dim2dimArray();
+	void o8_arrayOps();
+	void o8_blastText();
+
+	void o8_cursorCommand();
+	void o8_createBoxMatrix();
+	void o8_resourceRoutines();
+	void o8_roomOps();
+	void o8_actorOps();
+	void o8_cameraOps();
+	void o8_verbOps();
+	
+	void o8_system();
+	void o8_startVideo();
+	void o8_kernelSetFunctions();
+	void o8_kernelGetFunctions();
+
+	void o8_getActorChore();
+	void o8_getActorZPlane();
+
+	void o8_drawObject();
+	void o8_getObjectImageX();
+	void o8_getObjectImageY();
+	void o8_getObjectImageWidth();
+	void o8_getObjectImageHeight();
+	
+	void o8_getStringWidth();
+
+};
 
 } // End of namespace Scumm
 

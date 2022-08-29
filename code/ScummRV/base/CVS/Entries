@@ -1,0 +1,11 @@
+/.cvsignore/1.1/Wed Sep 17 22:40:55 2003//Trelease-0-6-0
+/engine.cpp/1.14.2.1/Thu Mar  4 21:13:38 2004//Trelease-0-6-0
+/engine.h/1.11/Mon Feb  9 01:27:27 2004//Trelease-0-6-0
+/gameDetector.cpp/1.69.2.1/Mon Mar  8 02:42:37 2004//Trelease-0-6-0
+/gameDetector.h/1.26/Sun Jan 18 20:46:11 2004//Trelease-0-6-0
+/main.cpp/1.35.2.2/Sun Mar 14 13:45:12 2004//Trelease-0-6-0
+/module.mk/1.5/Fri Jan 30 21:54:27 2004//Trelease-0-6-0
+/plugins.cpp/1.27/Thu Feb  5 00:19:54 2004//Trelease-0-6-0
+/plugins.h/1.16/Tue Jan  6 12:45:27 2004//Trelease-0-6-0
+/version.h/1.1/Mon Feb  9 01:27:26 2004//Trelease-0-6-0
+D

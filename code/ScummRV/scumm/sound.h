@@ -50,6 +50,12 @@ protected:
 	uint16 _mouthSyncTimes[64];
 	uint _curSoundPos;
 
+	MP3OffsetTable *offset_table;	// SO3 MP3 compressed audio
+	int num_sound_effects;		// SO3 MP3 compressed audio
+	bool _vorbis_mode;	// true if using SOG, false if using SO3
+
+	int _currentCDSound;
+
 	ScummEngine *_vm;
 
 public:
@@ -75,7 +81,15 @@ public:
 	void talkSound(uint32 a, uint32 b, int mode, int frame);
 	void setupSound();
 	void pauseSounds(bool pause);
-	bool hasSfxFile() { return _sfxFile != NULL; }
+
+	void startCDTimer();
+	void stopCDTimer();
+
+	void playCDTrack(int track, int numLoops, int startFrame, int duration);
+	void stopCD();
+	int pollCD() const;
+	void updateCD();
+	int getCurrentCDSound() const { return _currentCDSound; }
 
 protected:
 	File *openSfxFile();

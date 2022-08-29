@@ -22,32 +22,42 @@
 
 #include "stdafx.h"
 
-#include "common/gameDetector.h"
+#include "backends/fs/fs.h"
+
+#include "base/gameDetector.h"
+#include "base/plugins.h"
 
 #include "common/config-manager.h"
+#include "common/md5.h"
 
 #include "gui/message.h"
 #include "gui/newgui.h"
 
 #include "scumm/actor.h"
+#include "scumm/akos.h"
 #include "scumm/boxes.h"
 #include "scumm/charset.h"
 #include "scumm/costume.h"
+#include "scumm/debugger.h"
 #include "scumm/dialogs.h"
+#include "scumm/imuse_digi/dimuse.h"
 #include "scumm/imuse.h"
 #include "scumm/intern.h"
 #include "scumm/object.h"
+#include "scumm/player_v1.h"
+#include "scumm/player_v2.h"
+#include "scumm/player_v2a.h"
+#include "scumm/player_v3a.h"
 #include "scumm/resource.h"
 #include "scumm/scumm.h"
+#include "scumm/scumm-md5.h"
 #include "scumm/sound.h"
 #include "scumm/verbs.h"
-#ifndef DISABLE_DEBUGGER
-#include "scumm/debugger.h"
-#endif
+
+#include "scumm/insane/insane.h"
 
 #include "sound/mididrv.h"
 #include "sound/mixer.h"
-
 
 #ifdef MACOSX
 #include <sys/types.h>
@@ -57,15 +67,6 @@
 #ifdef _WIN32_WCE
 extern bool isSmartphone(void);
 #endif
-
-
-extern uint16 g_debugLevel;
-extern bool g_slowMachine;
-
-void SCUMM_Goto_Room(int aRoom) {
-	Scumm::g_scumm->gotoRoom(aRoom);
-}
-
 
 namespace Scumm {
 
@@ -77,71 +78,264 @@ enum MouseButtonStatus {
 // Use g_scumm from error() ONLY
 ScummEngine *g_scumm = 0;
 
-#ifndef RELEASEBUILD
-void CDECL debugC(int channel, const char *s, ...)
-{
+struct ScummGameSettings {
+	const char *name;
+	const char *description;
+	byte id, version;
+	int midi; // MidiDriverType values
+	uint32 features;
+	const char *baseFilename;
 
-	char buf[256];
-	va_list va;
-
-	// FIXME: Still spew all debug at -d9, for crashes in startup etc.
-	//	  Add setting from commandline ( / abstract channel interface)
-	if (!(g_scumm->_debugFlags & channel) && (g_debugLevel < 9))
-		return;
-
-	va_start(va, s);
-	vsprintf(buf, s, va);
-	va_end(va);
-
-	debug(buf);
+	GameSettings toGameSettings() const {
+		GameSettings dummy = { name, description, features };
+		return dummy;
+	}
 };
-#endif
-
-void ScummEngine::gotoRoom(uint room)
-{
-	_actors[VAR(VAR_EGO)].room = room;
-	_sound->stopAllSounds();
-	startScene(room, 0, 0);
-	_fullRedraw = 1;	
-}
 
 
-const ScummGameSettings scumm_settings[] = {
-	// Scumm version 5 
-	{"monkey", "The Secret of Monkey Island", GID_MONKEY, 5, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_USE_KEY /*| GF_AUDIOTRACKS*/, 0},
-	{"monkey2", "Monkey Island 2: LeChuck's revenge", GID_MONKEY2, 5, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_USE_KEY, 0},
-	{"atlantis", "Indiana Jones and the Fate of Atlantis", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE, GF_USE_KEY, 0},
-	// Scumm Version 6
-	{"tentacle", "Day Of The Tentacle", GID_TENTACLE, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_NEW_OPCODES | GF_USE_KEY, 0},
-	{"samnmax", "Sam & Max: Hit the Road", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+static const ScummGameSettings scumm_settings[] = {
+	/* Scumm Version 1 */
+	/* Scumm Version 2 */
+
+	{"maniac", "Maniac Mansion", GID_MANIAC, 2, MDT_PCSPK,
+	 GF_SMALL_HEADER | GF_USE_KEY | GF_SMALL_NAMES | GF_16COLOR | GF_OLD_BUNDLE | GF_NO_SCALING, 0},
+	//{"maniacnes", "Maniac Mansion (NES)", GID_MANIAC, 2, MDT_NONE,
+	// GF_SMALL_HEADER | GF_USE_KEY | GF_SMALL_NAMES | GF_16COLOR | GF_OLD_BUNDLE | GF_NO_SCALING | GF_NES},
+	{"zak",         "Zak McKracken and the Alien Mindbenders", GID_ZAK, 2, MDT_PCSPK,
+	 GF_SMALL_HEADER | GF_USE_KEY | GF_SMALL_NAMES | GF_16COLOR | GF_OLD_BUNDLE | GF_NO_SCALING, 0},
+
+	/* Scumm Version 3 */
+	{"indy3EGA", "Indiana Jones and the Last Crusade", GID_INDY3, 3, MDT_PCSPK | MDT_ADLIB,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_USE_KEY | GF_16COLOR | GF_OLD_BUNDLE, 0},
+	{"indy3Towns", "Indiana Jones and the Last Crusade (FM Towns)", GID_INDY3, 3, MDT_TOWNS,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_OLD256 | GF_FEW_LOCALS | GF_FMTOWNS | GF_AUDIOTRACKS, 0},
+	{"indy3", "Indiana Jones and the Last Crusade (256)", GID_INDY3, 3, MDT_PCSPK | MDT_ADLIB,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_OLD256 | GF_FEW_LOCALS, 0},
+	{"zak256", "Zak McKracken 256 (deprecated)", GID_ZAK256, 3, MDT_TOWNS,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_OLD256 | GF_FMTOWNS | GF_AUDIOTRACKS, 0},
+	{"zakTowns", "Zak McKracken and the Alien Mindbenders (FM Towns)", GID_ZAK256, 3, MDT_TOWNS,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_OLD256 | GF_FMTOWNS | GF_AUDIOTRACKS, 0},
+	{"loom", "Loom", GID_LOOM, 3, MDT_PCSPK | MDT_ADLIB | MDT_NATIVE,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_USE_KEY | GF_16COLOR | GF_OLD_BUNDLE, 0},
+	{"loomTowns", "Loom (FM Towns)", GID_LOOM, 3, MDT_TOWNS,
+	 GF_SMALL_HEADER | GF_SMALL_NAMES | GF_NO_SCALING | GF_OLD256 | GF_FMTOWNS | GF_AUDIOTRACKS, 0},
+
+	/* Scumm Version 4 */
+	{"monkeyEGA", "Monkey Island 1 (EGA)", GID_MONKEY_EGA, 4, MDT_PCSPK | MDT_ADLIB | MDT_NATIVE,
+	 GF_SMALL_HEADER | GF_USE_KEY | GF_16COLOR, 0},
+	{"pass", "Passport to Adventure", GID_PASS, 4, MDT_PCSPK | MDT_ADLIB,
+	 GF_SMALL_HEADER | GF_USE_KEY | GF_16COLOR, 0},
+
+	/* Scumm version 5 */
+	{"monkeyVGA", "Monkey Island 1 (256 color Floppy version)", GID_MONKEY_VGA,  4, MDT_PCSPK | MDT_ADLIB | MDT_NATIVE,
+	 GF_SMALL_HEADER | GF_USE_KEY, 0},
+	{"loomcd", "Loom (256 color CD version)", GID_LOOM256, 4, MDT_NONE,
+	 GF_SMALL_HEADER | GF_USE_KEY | GF_AUDIOTRACKS, 0},
+	{"monkey", "Monkey Island 1", GID_MONKEY, 5, /*MDT_PCSPK |*/ MDT_ADLIB,
+	 GF_USE_KEY | GF_AUDIOTRACKS, 0},
+	{"monkey1", "Monkey Island 1 (alt)", GID_MONKEY, 5, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY | GF_AUDIOTRACKS, 0},
+	{"game", "Monkey Island 1 (SegaCD version)", GID_MONKEY_SEGA, 5, MDT_NONE,
+	 GF_USE_KEY | GF_AUDIOTRACKS, 0},
+	{"monkey2", "Monkey Island 2: LeChuck's revenge", GID_MONKEY2, 5, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+	{"mi2demo", "Monkey Island 2: LeChuck's revenge (Demo)", GID_MONKEY2, 5, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+
+	{"atlantis", "Indiana Jones and the Fate of Atlantis", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+	{"playfate", "Indiana Jones and the Fate of Atlantis (Demo)", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+	{"fate", "Indiana Jones and the Fate of Atlantis (Demo)", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+	{"indy4", "Indiana Jones and the Fate of Atlantis (FM Towns)", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+	{"indydemo", "Indiana Jones and the Fate of Atlantis (FM Towns Demo)", GID_INDY4, 5, MDT_ADLIB | MDT_NATIVE,
+	 GF_USE_KEY, 0},
+
+	/* Scumm Version 6 */
+	{"puttputt", "Putt-Putt Joins The Parade (DOS)", GID_PUTTPUTT, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"puttdemo", "Putt-Putt Joins The Parade (DOS Demo)", GID_PUTTDEMO, 6, MDT_ADLIB | MDT_NATIVE,
+	  GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS, 0},
+	{"moondemo", "Putt-Putt Goes To The Moon (DOS Demo)", GID_PUTTMOON, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"puttmoon", "Putt-Putt Goes To The Moon (DOS)", GID_PUTTMOON, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"funpack", "Putt-Putt's Fun Pack", GID_PUTTMOON, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"fbpack", "Fatty Bear's Fun Pack", GID_FBPACK, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"fbear", "Fatty Bear's Birthday Surprise (DOS)", GID_FBEAR, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"fbdemo", "Fatty Bear's Birthday Surprise (DOS Demo)", GID_FBEAR, 6, MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	{"tentacle", "Day Of The Tentacle", GID_TENTACLE, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY, 0},
+	{"dottdemo", "Day Of The Tentacle (Demo)", GID_TENTACLE, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY, 0},
+
+	{"samnmax", "Sam & Max", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+	{"samdemo", "Sam & Max (Demo)", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+	{"snmdemo", "Sam & Max (Demo)", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+	{"snmidemo", "Sam & Max (Interactive WIP Demo)", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+	 GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+
+//	{"test", "Test demo game", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_NEW_OPCODES, 0},
+
+	/* Scumm Version 7 */
+	{"ft", "Full Throttle", GID_FT, 7, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE, 0},
+	{"ftdemo", "Full Throttle (Mac Demo)", GID_FT, 7, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEMO, 0},
+	{"ftpcdemo", "Full Throttle (PC Demo)", GID_FT, 7, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEMO, "ft"},
+
+
+	{"dig", "The Dig", GID_DIG, 7, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE, 0},
+	{"digdemo", "The Dig (Demo)", GID_DIG, 7, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEMO, "dig"},
+
+#ifndef __PALM_OS__
+	/* Scumm Version 8 */
+	{"comi", "The Curse of Monkey Island", GID_CMI, 8, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEFAULT_TO_1X_SCALER, 0},
+	{"comidemo", "The Curse of Monkey Island (Demo)", GID_CMI, 8, MDT_NONE,
+	 GF_NEW_OPCODES | GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEFAULT_TO_1X_SCALER | GF_DEMO, "comi"},
+
+	 /* Note that both full versions of Humongous games and demos were often released for
+	  * several interpreter versions... */
+#ifdef HEGAMES
+	{"puttwin", "Putt-Putt Joins The Parade (Windows)", GID_PUTTPUTT, 6, MDT_NONE,
+	GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, "puttputt"},
+
+	// Humongous Entertainment Scumm Version 7 
+	{"catalog", "Humongous Interactive Catalog", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"farm", "Let's Explore the Farm with Buzzy", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"farmdemo", "Let's Explore the Farm with Buzzy (Demo)", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"airport", "Let's Explore the Airport with Buzzy", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"airdemo", "Let's Explore the Airport with Buzzy (Demo)", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"jungle", "Let's Explore the Jungle with Buzzy", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"puttzoo", "Putt-Putt Saves the Zoo", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"zoodemo", "Putt-Putt Saves the Zoo (Demo)", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"freddi", "Freddi Fish 1: The Case of the Missing Kelp Seeds", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"freddemo", "Freddi Fish 1: The Case of the Missing Kelp Seeds (Demo)", GID_PUTTPUTT, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	// Humongous Entertainment Scumm Version 8.0 ?  Scummsrc.80 
+	{"pajama", "Pajama Sam 1: No Need to Hide When It's Dark Outside", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"pjs-demo", "Pajama Sam 1: No Need to Hide When It's Dark Outside (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"ffhsdemo", "Freddi Fish 2: The Case of the Haunted Schoolhouse (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"ff2-demo", "Freddi Fish 2: The Case of the Haunted Schoolhouse (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"freddi2", "Freddi Fish 2: The Case of the Haunted Schoolhouse", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	// Humongous Entertainment Scumm Version 9.0 ?  Scummsys.90
+	{"timedemo", "Putt-Putt Travels Through Time (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"f3-mdemo", "Freddi Fish 3: The Case of the Stolen Conch Shell (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"spyfox", "Spyfox 1: Dry Cereal", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"foxdemo", "Spyfox 1: Dry Cereal (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"spydemo", "Spyfox 1: Dry Cereal (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"kinddemo", "Big Thinkers Kindergarten (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"1grademo", "Big Thinkers First Grade (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	// Humongous Entertainment Scumm Version 9.5 ?  Scummsys.95
+	{"pj2demo", "Pajama Sam 2: Thunder and Lightning Aren't so Frightening (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"pajama2", "Pajama Sam 2: Thunder and Lightning Aren't so Frightening", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	// Humongous Entertainment Scumm Version 9.8 ?  Scummsys.98
+	// these and later games can easily be identified by the .(a) file instead of a .he1
+	{"racedemo", "Putt-Putt Enters the Race (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"puttrace", "Putt-Putt Enters the Race", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"freddi4", "Freddi Fish 4: The Case of the Hogfish Rustlers of Briny Gulch", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"f4-demo", "Freddi Fish 4: The Case of the Hogfish Rustlers of Briny Gulch (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+
+	// Humongous Entertainment Scumm Version ?  engine moved to c++ 
+	{"pj3-demo", "Pajama Sam 3: You Are What You Eat From Your Head to Your Feet (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"pajama3", "Pajama Sam 3: You Are What You Eat From Your Head to Your Feet", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"ff5demo", "Freddi Fish 5: The Case of the Creature of Coral Cave (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"freddicove", "Freddi Fish 5: The Case of the Creature of Coral Cave", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"putttime", "Putt-Putt Travels Through Time", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"sf2-demo", "Spyfox 2: Some Assembly Required (Demo)", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"spyfox2", "Spyfox 2: Some Assembly Required", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+	{"spyozon", "Spyfox 3: Operation Ozone", GID_PJSDEMO, 6, MDT_NONE,
+	 GF_NEW_OPCODES | GF_AFTER_HEV7 | GF_USE_KEY | GF_HUMONGOUS | GF_NEW_COSTUMES, 0},
+#endif // HEGAMES
+
+#endif // __PALM_OS__
 	{NULL, NULL, 0, 0, MDT_NONE, 0, 0}
 };
 
+static int compareMD5Table(const void *a, const void *b) {
+	const char *key = (const char *)a;
+	const MD5Table *elem = (const MD5Table *)b;
+	return strcmp(key, elem->md5);
+}
 
 ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameSettings &gs)
 	: Engine(syst),
 	  _gameId(gs.id),
 	  _version(gs.version),
 	  _features(gs.features),
-	  gdi(this), _pauseDialog(0), _mainMenuDialog(0),
+	  gdi(this), _pauseDialog(0), _optionsDialog(0), _mainMenuDialog(0),
 	  _targetName(detector->_targetName) {
-
-	//OSystem::Property prop;
+	OSystem::Property prop;
 
 	// Init all vars - maybe now we can get rid of our custom new/delete operators?
 	_imuse = NULL;
+	_imuseDigital = NULL;
 	_musicEngine = NULL;
 	_verbs = NULL;
 	_objs = NULL;
-#ifndef DISABLE_DEBUGGER
 	_debugger = NULL;
-#endif
 	_debugFlags = 0;
 	_sound = NULL;
 	memset(&res, 0, sizeof(res));
 	memset(&vm, 0, sizeof(vm));
+	_smushFrameRate = 0;
+	_videoFinished = false;
+	_smushPaused = false;
 	_quit = false;
 	_pauseDialog = NULL;
+	_optionsDialog = NULL;
 	_mainMenuDialog = NULL;
 	_fastMode = 0;
 	_actors = NULL;
@@ -180,6 +374,7 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	_leftBtnPressed = 0;
 	_rightBtnPressed = 0;
 	_bootParam = 0;
+	_dumpScripts = false;
 	_debugMode = 0;
 	_objectOwnerTable = NULL;
 	_objectRoomTable = NULL;
@@ -188,7 +383,6 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	_userPut = 0;
 	_userState = 0;
 	_resourceHeaderSize = 0;
-	_resourceVersion = 0;
 	_saveLoadFlag = 0;
 	_saveLoadSlot = 0;
 	_lastSaveTime = 0;
@@ -228,6 +422,8 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	_screenH = 0;
 	_roomHeight = 0;
 	_roomWidth = 0;
+	_screenHeight = 0;
+	_screenWidth = 0;
 	memset(virtscr, 0, sizeof(virtscr));
 	memset(&camera, 0, sizeof(CameraData));
 	memset(_colorCycle, 0, sizeof(_colorCycle));
@@ -239,41 +435,40 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	_fullRedraw = false;
 	_BgNeedsRedraw = false;
 	_verbRedraw = false;
-	_verbColorsDirty = false;
 	_screenEffectFlag = false;
 	_completeScreenRedraw = false;
 	memset(&_cursor, 0, sizeof(_cursor));
 	memset(_grabbedCursor, 0, sizeof(_grabbedCursor));
-	memset(_grabbedCursorTransp, 0xFF, sizeof(_grabbedCursorTransp));
 	_currentCursor = 0;
-	_grabbedCursorId = 0;
 	_newEffect = 0;
 	_switchRoomEffect2 = 0;
 	_switchRoomEffect = 0;
 	_doEffect = false;
 	memset(&_flashlight, 0, sizeof(_flashlight));
+	_roomStrips = 0;
+	_bompActorPalettePtr = NULL;
 	_shakeEnabled= false;
 	_shakeFrame = 0;
 	_screenStartStrip = 0;
 	_screenEndStrip = 0;
 	_screenLeft = 0;
 	_screenTop = 0;
-#ifdef ENGINE_SCUMM6
-	_bompActorPalettePtr = NULL;
 	_blastObjectQueuePos = 0;
 	memset(_blastObjectQueue, 0, sizeof(_blastObjectQueue));
 	_blastTextQueuePos = 0;
 	memset(_blastTextQueue, 0, sizeof(_blastTextQueue));
 	_drawObjectQueNr = 0;
 	memset(_drawObjectQue, 0, sizeof(_drawObjectQue));
-#endif //ENGINE_SCUMM6
 	_palManipStart = 0;
 	_palManipEnd = 0;
 	_palManipCounter = 0;
 	_palManipPalette = NULL;
 	_palManipIntermediatePal = NULL;
 	memset(gfxUsageBits, 0, sizeof(gfxUsageBits));
+	_shadowPalette = NULL;
+	_shadowPaletteSize = 0;
 	memset(_currentPalette, 0, sizeof(_currentPalette));
+	memset(_proc_special_palette, 0, sizeof(_proc_special_palette));
 	_palDirtyMin = 0;
 	_palDirtyMax = 0;
 	_haveMsg = 0;
@@ -291,11 +486,18 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	_charsetBufPos = 0;
 	memset(_charsetBuffer, 0, sizeof(_charsetBuffer));
 	_copyProtection = false;
+	_demoMode = false;
+	_confirmExit = false;
 	_msgPtrToAdd = NULL;
 	_messagePtr = NULL;
 	_talkDelay = 0;
 	_keepText = false;
+	_existLanguageFile = false;
+	_languageBuffer = NULL;
+	_languageIndex = NULL;
+	memset(_transText, 0, sizeof(_transText));
 	_costumeRenderer = NULL;
+	_2byteFontPtr = 0;
 	_V1_talkingActor = 0;
 
 	//
@@ -422,65 +624,195 @@ ScummEngine::ScummEngine(GameDetector *detector, OSystem *syst, const ScummGameS
 	g_scumm = this;
 
 	// Read settings from the detector & config manager
-	_debugMode = GetConfig(kConfig_DebugLevel);
-	_bootParam = 0;
+	_debugMode = ConfMan.hasKey("debuglevel");
+	_dumpScripts = detector->_dumpScripts;
+	_bootParam = ConfMan.getInt("boot_param");
 
 	// Allow the user to override the game name with a custom string.
 	// This allows some game versions to work which use filenames
 	// differing from the regular version(s) of that game.
-	_gameName = gs.baseFilename ? gs.baseFilename : gs.name;
+	_gameName = ConfMan.hasKey("basename") ? ConfMan.get("basename") : gs.baseFilename ? gs.baseFilename : gs.name;
 
 	_midiDriver = GameDetector::detectMusicDriver(gs.midi);
 
-	_copyProtection = false;
-	_subtitles = GetConfig(kConfig_Subtitles);
-
-	_defaultTalkDelay = 60;
-	
-
-	_native_mt32 = false;
-	if (_midiDriver == MD_STMIDI_MT32)
-		_native_mt32 = true;
-
-
-	_language = (Common::Language) GetConfig(kConfig_Language);
+	_copyProtection = ConfMan.getBool("copy_protection");
+	_demoMode = ConfMan.getBool("demo_mode");
+	if (ConfMan.hasKey("nosubtitles")) {
+		warning("Configuration key 'nosubtitles' is deprecated. Use 'subtitles' instead");
+		if (!ConfMan.hasKey("subtitles"))
+			ConfMan.set("subtitles", !ConfMan.getBool("nosubtitles"));
+	}
+	_confirmExit = ConfMan.getBool("confirm_exit");
+	_defaultTalkDelay = ConfMan.getInt("talkspeed");
+	_native_mt32 = ConfMan.getBool("native_mt32");
+	// TODO: We shouldn't rely on the global Language values matching those COMI etc. expect.
+	// Rather we should explicitly translate them.
+	_language = Common::parseLanguage(ConfMan.get("language"));
 	memset(&res, 0, sizeof(res));
+	_hexdumpScripts = false;
+	_showStack = false;
+
+	if (_features & GF_FMTOWNS) {	// FMTowns V3 games use 320x240
+		_screenWidth = 320;
+		_screenHeight = 240;
+	} else if (_gameId == GID_CMI) {
+		_screenWidth = 640;
+		_screenHeight = 480;
+	} else if (_features & GF_NES) {
+		_screenWidth = 256;
+		_screenHeight = 240;
+	} else {
+		_screenWidth = 320;
+		_screenHeight = 200;
+	}
 
 	// Initialize backend
-	syst->init_size(SCREEN_WIDTH, SCREEN_HEIGHT);
-	//prop.cd_num = 0;
+	syst->init_size(_screenWidth, _screenHeight);
+	prop.cd_num = ConfMan.getInt("cdrom");
+	if (prop.cd_num >= 0 && (_features & GF_AUDIOTRACKS))
+		syst->property(OSystem::PROP_OPEN_CD, &prop);
+
+	// Setup GDI object
+	gdi._numStrips = _screenWidth / 8;
 
 	_sound = new Sound(this);
 
+#ifndef __GP32__ //ph0x FIXME, "quick dirty hack"
 	/* Bind the mixer to the system => mixer will be invoked
 	 * automatically when samples need to be generated */
 	if (!_mixer->isReady()) {
-		//warning("Sound mixer initialization failed");
-		if (_midiDriver == MD_ADLIB ) {
+		warning("Sound mixer initialization failed");
+		if (_midiDriver == MD_ADLIB ||
+				_midiDriver == MD_PCSPK ||
+				_midiDriver == MD_PCJR)	{
 			_midiDriver = MD_NULL;
-			//warning("MIDI driver depends on sound mixer, switching to null MIDI driver");
+			warning("MIDI driver depends on sound mixer, switching to null MIDI driver");
 		}
 	}
-	_mixer->setVolume(GetConfig(kConfig_SfxVolume) * GetConfig(kConfig_MasterVolume) / 255);
-	_mixer->setMusicVolume(GetConfig(kConfig_MusicVolume));
+	_mixer->setVolume(ConfMan.getInt("sfx_volume") * ConfMan.getInt("master_volume") / 255);
+	_mixer->setMusicVolume(ConfMan.getInt("music_volume"));
 
 	// Init iMuse
-	MidiDriver *driver = GameDetector::createMidi(_midiDriver);
-	if (driver && _native_mt32)
-		driver->property (MidiDriver::PROP_CHANNEL_MASK, 0x03FE);
-	_musicEngine = _imuse = IMuse::create(syst, _mixer, driver);
-	if (_imuse) {
-		_imuse->property(IMuse::PROP_OLD_ADLIB_INSTRUMENTS, 0);
-		_imuse->property(IMuse::PROP_MULTI_MIDI, GetConfig(kConfig_MultiMidi) && _midiDriver != MD_NULL && (gs.midi & MDT_ADLIB));
-		_imuse->property(IMuse::PROP_NATIVE_MT32, _native_mt32);
-		_imuse->set_music_volume(GetConfig(kConfig_MusicVolume));
+	if (_features & GF_DIGI_IMUSE) {
+		_musicEngine = _imuseDigital = new IMuseDigital(this);
+	} else if ((_features & GF_AMIGA) && (_version == 2)) {
+		_musicEngine = new Player_V2A(this);
+	} else if ((_features & GF_AMIGA) && (_version == 3)) {
+		_musicEngine = new Player_V3A(this);
+	} else if ((_features & GF_AMIGA) && (_version < 5)) {
+		_musicEngine = NULL;
+	} else if (((_midiDriver == MD_PCJR) || (_midiDriver == MD_PCSPK)) && ((_version > 2) && (_version < 5))) {
+		_musicEngine = new Player_V2(this, _midiDriver != MD_PCSPK);
+	} else if (_version > 2) {
+		MidiDriver *driver = GameDetector::createMidi(_midiDriver);
+		if (driver && _native_mt32)
+			driver->property (MidiDriver::PROP_CHANNEL_MASK, 0x03FE);
+		_musicEngine = _imuse = IMuse::create(syst, _mixer, driver);
+		if (_imuse) {
+			if (ConfMan.hasKey("tempo"))
+				_imuse->property(IMuse::PROP_TEMPO_BASE, ConfMan.getInt("tempo"));
+			_imuse->property(IMuse::PROP_OLD_ADLIB_INSTRUMENTS, (_features & GF_SMALL_HEADER) ? 1 : 0);
+			_imuse->property(IMuse::PROP_MULTI_MIDI, ConfMan.getBool("multi_midi") &&
+			                 _midiDriver != MD_NULL && (gs.midi & MDT_ADLIB));
+			_imuse->property(IMuse::PROP_NATIVE_MT32, _native_mt32);
+			if (_features & GF_HUMONGOUS || gs.midi == MDT_TOWNS) {
+				_imuse->property(IMuse::PROP_LIMIT_PLAYERS, 1);
+				_imuse->property(IMuse::PROP_RECYCLE_PLAYERS, 1);
+			}
+			if (gs.midi == MDT_TOWNS)
+				_imuse->property(IMuse::PROP_DIRECT_PASSTHROUGH, 1);
+			_imuse->set_music_volume(ConfMan.getInt("music_volume"));
+		}
+	}
+#endif // ph0x-hack
+
+	// Load game from specified slot, if any
+	if (ConfMan.hasKey("save_slot")) {
+		requestLoad(ConfMan.getInt("save_slot"));
+	}
+	loadLanguageBundle();
+
+	// Load CJK font
+	_CJKMode = false;
+	if ((_gameId == GID_DIG || _gameId == GID_CMI) && (_language == Common::KO_KOR || _language == Common::JA_JPN || _language == Common::ZH_TWN)) {
+		File fp;
+		const char *fontFile = NULL;
+		switch(_language) {
+		case Common::KO_KOR:
+			fontFile = "korean.fnt";
+			break;
+		case Common::JA_JPN:
+			fontFile = (_gameId == GID_DIG) ? "kanji16.fnt" : "japanese.fnt";
+			break;
+		case Common::ZH_TWN:
+			if (_gameId == GID_CMI) {
+				fontFile = "chinese.fnt";
+			}
+			break;
+		default:
+			break;
+		}
+		if (fontFile && fp.open(fontFile, getGameDataPath())) {
+			debug(2, "Loading CJK Font");
+			_CJKMode = true;
+			fp.seek(2, SEEK_CUR);
+			_2byteWidth = fp.readByte();
+			_2byteHeight = fp.readByte();
+
+			int numChar = 0;
+			switch(_language) {
+			case Common::KO_KOR:
+				numChar = 2350;
+				break;
+			case Common::JA_JPN:
+				numChar = (_gameId == GID_DIG) ? 1024 : 2048; //FIXME
+				break;
+			case Common::ZH_TWN:
+				numChar = 1; //FIXME
+				break;
+			default:
+				break;
+			}
+			_2byteFontPtr = new byte[((_2byteWidth + 7) / 8) * _2byteHeight * numChar];
+			fp.read(_2byteFontPtr, ((_2byteWidth + 7) / 8) * _2byteHeight * numChar);
+			fp.close();
+		}
+	} else if (_language == Common::JA_JPN && _version == 5) { //FM Towns Kanji
+		File fp;
+		int numChar = 256 * 32;
+		_2byteWidth = 16;
+		_2byteHeight = 16;
+		//use FM Towns font rom, since game files don't have kanji font resources
+		if (fp.open("fmt_fnt.rom", getGameDataPath()) || fp.open("fmt_fnt.rom", "./")) { 
+			_CJKMode = true;
+			debug(2, "Loading FM Towns Kanji rom");
+			_2byteFontPtr = new byte[((_2byteWidth + 7) / 8) * _2byteHeight * numChar];
+			fp.read(_2byteFontPtr, ((_2byteWidth + 7) / 8) * _2byteHeight * numChar);
+			fp.close();
+		}
 	}
 
 	// Create the charset renderer
-	_charset = new CharsetRenderer(this);
+	if (_version <= 2)
+		_charset = new CharsetRendererV2(this, _language);
+	else if (_version == 3)
+		_charset = new CharsetRendererV3(this);
+	else if (_version == 8)
+		_charset = new CharsetRendererNut(this);
+	else
+		_charset = new CharsetRendererClassic(this);
 
 	// Create the costume renderer
-	_costumeRenderer = new CostumeRenderer(this);
+	if (_features & GF_NEW_COSTUMES)
+		_costumeRenderer = new AkosRenderer(this);
+	else
+		_costumeRenderer = new CostumeRenderer(this);
+
+	// Create FT INSANE object
+	if (_gameId == GID_FT)
+		_insane = new Insane((ScummEngine_v6 *)this);
+	else
+		_insane = 0;
 }
 
 ScummEngine::~ScummEngine() {
@@ -493,15 +825,20 @@ ScummEngine::~ScummEngine() {
 
 	delete [] _actors;
 
+	delete _2byteFontPtr;
 	delete _charset;
 	delete _pauseDialog;
+	delete _optionsDialog;
 	delete _mainMenuDialog;
 
 	delete _sound;
+	free(_languageBuffer);
 	free(_audioNames);
 
 	delete _costumeRenderer;
 
+	free(_shadowPalette);
+	
 	freeResources();
 
 	free(_objectStateTable);
@@ -514,6 +851,11 @@ ScummEngine::~ScummEngine() {
 	free(_bitVars);
 	free(_newNames);
 	free(_classData);
+
+	free(_roomStrips);
+	free(_languageIndex);
+
+	delete _debugger;
 }
 
 void ScummEngine::go() {
@@ -527,13 +869,19 @@ void ScummEngine::go() {
 
 void ScummEngine::launch() {
 
-
-	// TEMP -- not sure where this will go
-	convertResourcesForAtari();
-	// TEMP -- not sure where this will go
-
-
-	_maxHeapThreshold = 550000;
+#ifdef __PALM_OS__
+	if (_features & GF_NEW_COSTUMES)
+		_maxHeapThreshold = gVars->memory[kMemScummNewCostGames];
+	else
+		_maxHeapThreshold = gVars->memory[kMemScummOldCostGames];
+#else
+	// Since the new costumes are very big, we increase the heap limit, to avoid having
+	// to constantly reload stuff from the data files.
+	if (_features & GF_NEW_COSTUMES)
+		_maxHeapThreshold = 2500000;
+	else
+		_maxHeapThreshold = 550000;
+#endif
 	_minHeapThreshold = 400000;
 
 	_verbRedraw = false;
@@ -544,9 +892,19 @@ void ScummEngine::launch() {
 
 	setupOpcodes();
 
-	_numActors = MAX_NUM_ACTORS;
+	if (_version == 8)
+		_numActors = 80;
+	else if ((_version == 7) || (_gameId == GID_SAMNMAX))
+		_numActors = 30;
+	else if (_gameId == GID_MANIAC)
+		_numActors = 25;
+	else 
+		_numActors = 13;
 
-	OF_OWNER_ROOM = 0x0F;
+	if (_version >= 7)
+		OF_OWNER_ROOM = 0xFF;
+	else
+		OF_OWNER_ROOM = 0x0F;
 
 	// if (_gameId==GID_MONKEY2 && _bootParam == 0)
 	//	_bootParam = 10001;
@@ -555,41 +913,42 @@ void ScummEngine::launch() {
 		_bootParam = -7873;
 	}
 
-	_resourceHeaderSize = 8;
+	if (_features & GF_OLD_BUNDLE)
+		_resourceHeaderSize = 4; // FIXME - to be rechecked
+	else if (_features & GF_SMALL_HEADER)
+		_resourceHeaderSize = 6;
+	else
+		_resourceHeaderSize = 8;
 
 	readIndexFile();
-
-	if (_resourceVersion != ATARI_RESOURCE_VERSION)
-	{
-		const char* msg = "Incompatible data, please reinstall.";
-		InfoDialog dialog(this, msg);
-		runDialog(dialog);
-		g_system->quit();
-	}
 
 	scummInit();
 
 	if (_version > 2) {
 		if (_version < 7)
 			VAR(VAR_VERSION) = 21;
+	
+		if (!((_features & GF_MACINTOSH) && (_version == 3))) {
+			// This is NOT for the Mac version of Indy3/Loom
+			VAR(VAR_DEBUGMODE) = _debugMode;
+		}
 	}
 
-	if (_gameId == GID_MONKEY)
+	if (_gameId == GID_MONKEY || _gameId == GID_MONKEY_SEGA)
 		_scummVars[74] = 1225;
 
 	if (_imuse) {
 		_imuse->setBase(res.address[rtSound]);
 
-		_imuse->setMasterVolume(GetConfig(kConfig_MasterVolume));
-		_imuse->set_music_volume(GetConfig(kConfig_MusicVolume));
+		_imuse->setMasterVolume(ConfMan.getInt("master_volume"));
+		_imuse->set_music_volume(ConfMan.getInt("music_volume"));
 	}
 	_sound->setupSound();
 
 	// Create debugger
-#ifndef DISABLE_DEBUGGER
 	if (!_debugger)
 		_debugger = new ScummDebugger(this);
-#endif
+
 
 	// If requested, load a save game instead of running the boot script
 	if (_saveLoadFlag != 2 || !loadState(_saveLoadSlot, _saveTemporaryState)) {
@@ -598,7 +957,10 @@ void ScummEngine::launch() {
 		args[0] = _bootParam;	
 
 		_saveLoadFlag = 0;
-		runScript(1, 0, 0, args);
+		if (_gameId == GID_MANIAC && _demoMode)
+			runScript(9, 0, 0, args);
+		else
+			runScript(1, 0, 0, args);
 	} else {
 		_saveLoadFlag = 0;
 	}
@@ -610,12 +972,50 @@ void ScummEngine::scummInit() {
 	tempMusic = 0;
 	debug(9, "scummInit");
 
-	initScreens(16, 144);
+	if ((_gameId == GID_MANIAC) && (_version == 1)) {
+		initScreens(16, 152);
+	} else if (_version >= 7) {
+		initScreens(0, _screenHeight);
+	} else {
+		initScreens(16, 144);
+	}
 
 	for (i = 0; i < 256; i++)
 		_roomPalette[i] = i;
+	if (_version == 1) {
+		// Use 17 color table for v1 games to allow
+		// correct color for inventory and sentence
+		// line
+		// Original games used some kind of dynamic
+		// color table remapping between rooms
+		if (_gameId == GID_MANIAC)
+			setupV1ManiacPalette();
+		else
+			setupV1ZakPalette();
+	} else if (_features & GF_16COLOR) {
+		for (i = 0; i < 16; i++)
+			_shadowPalette[i] = i;
+		if ((_features & GF_AMIGA) || (_features & GF_ATARI_ST))
+			setupAmigaPalette();
+		else
+			setupEGAPalette();
+	}
 
-	loadCharset(1);
+	if (_version <= 2) {
+		initV2MouseOver();
+
+		// Seems in V2 there was only a single room effect (iris),
+		// so we set that here.
+		_switchRoomEffect2 = 1;
+		_switchRoomEffect = 5;
+	}
+	
+	if (_version > 3 && _version < 8)
+		loadCharset(1);
+	
+	if (_features & GF_OLD_BUNDLE)
+		loadCharset(0);	// FIXME - HACK ?
+
 	setShake(0);
 	setupCursor();
 	
@@ -625,6 +1025,21 @@ void ScummEngine::scummInit() {
 	for (i = 0; i < _numActors; i++) {
 		_actors[i].number = i;
 		_actors[i].initActor(1);
+	
+		// this is from IDB
+		if ((_version == 1) || (_gameId == GID_MANIAC && _demoMode))
+			_actors[i].setActorCostume(i);
+	}
+
+	// HACK Some palette changes needed for demo script
+	// in Maniac Mansion (Enchanced)
+	if (_gameId == GID_MANIAC && _version == 2 && _demoMode) {
+		_actors[3].setPalette(3, 1);
+		_actors[9].talkColor = 15;
+		_actors[10].talkColor = 7;
+		_actors[11].talkColor = 2;
+		_actors[13].talkColor = 5;
+		_actors[23].talkColor = 14;
 	}
 
 	vm.numNestedScripts = 0;
@@ -635,7 +1050,7 @@ void ScummEngine::scummInit() {
 
 	for (i = 0; i < _numVerbs; i++) {
 		_verbs[i].verbid = 0;
-		_verbs[i].curRect.right = SCREEN_WIDTH - 1;
+		_verbs[i].curRect.right = _screenWidth - 1;
 		_verbs[i].oldRect.left = -1;
 		_verbs[i].type = 0;
 		_verbs[i].color = 2;
@@ -647,9 +1062,11 @@ void ScummEngine::scummInit() {
 		_verbs[i].key = 0;
 	}
 
-	camera._leftTrigger = 10;
-	camera._rightTrigger = 30;
-	camera._mode = 0;
+	if (!(_features & GF_NEW_CAMERA)) {
+		camera._leftTrigger = 10;
+		camera._rightTrigger = 30;
+		camera._mode = 0;
+	}
 	camera._follows = 0;
 
 	virtscr[0].xstart = 0;
@@ -693,13 +1110,22 @@ void ScummEngine::scummInit() {
 	clearDrawObjectQueue();
 
 	for (i = 0; i < 6; i++) {
-		_string[i].t_xpos = 2;
-		_string[i].t_ypos = 5;
-		_string[i].t_right = SCREEN_WIDTH - 1;
+		if (_version == 3) { // FIXME - what is this?
+			_string[i].t_xpos = 0;
+			_string[i].t_ypos = 0;
+		} else {
+			_string[i].t_xpos = 2;
+			_string[i].t_ypos = 5;
+		}
+		_string[i].t_right = _screenWidth - 1;
 		_string[i].t_color = 0xF;
 		_string[i].t_center = 0;
 		_string[i].t_charset = 0;
 	}
+
+	// all keys are released
+	for (i = 0; i < 512; i++)
+		_keyDownMap[i] = false;
 
 	initScummVars();
 
@@ -709,45 +1135,78 @@ void ScummEngine::scummInit() {
 
 void ScummEngine::initScummVars() {
 
+	// FIXME
+	if (_version <= 2) {
+		// This needs to be at least greater than 40 to get the more
+		// elaborate version of the EGA Zak into. I don't know where
+		// else it makes any difference.
+		VAR(VAR_MACHINE_SPEED) = 0x7FFF;
+		return;
+	}
+
 	if (_version < 6)
 		VAR(VAR_V5_TALK_STRING_Y) = -0x50;
 
-	VAR(VAR_CURRENTDRIVE) = 0;
-	VAR(VAR_FIXEDDISK) = true;
-	switch (_midiDriver) {
-	case MD_NULL:  VAR(VAR_SOUNDCARD) = 0; break;
-	case MD_ADLIB: VAR(VAR_SOUNDCARD) = 3; break;
-	case MD_PCSPK:
-	case MD_PCJR:  VAR(VAR_SOUNDCARD) = 1; break;
-	default:       
-		VAR(VAR_SOUNDCARD) = 3;
-	}
-
-	if (g_slowMachine)
-	{
-		VAR(VAR_MACHINE_SPEED) = 1;	// slow machine
-#if defined(GAME_MONKEY2)
-		VAR(VAR_VIDEOMODE) = 13;	// EGA
-#else
-		VAR(VAR_VIDEOMODE) = 19;	// VGA
-#endif
-	}
-	else
-	{
-		VAR(VAR_MACHINE_SPEED) = 2;	// fast machine
-		VAR(VAR_VIDEOMODE) = 19;	// VGA
-	}
-
-	VAR(VAR_HEAPSPACE) = 1400;
-	VAR(VAR_MOUSEPRESENT) = true; // FIXME - used to be 0, but that seems odd?!?
-	VAR(VAR_SOUNDPARAM) = 0;
-	VAR(VAR_SOUNDPARAM2) = 0;
-	VAR(VAR_SOUNDPARAM3) = 0;
-	if (_version == 6 && VAR_V6_EMSSPACE != 0xFF)
+	if (_version == 8) {	// Fixme: How do we deal with non-cd installs?
+		VAR(VAR_CURRENTDISK) = 1;
+		VAR(VAR_LANGUAGE) = _language;
+	} else if (_version >= 7) {
 		VAR(VAR_V6_EMSSPACE) = 10000;
+	} else {
+		VAR(VAR_CURRENTDRIVE) = 0;
+		VAR(VAR_FIXEDDISK) = true;
+		switch (_midiDriver) {
+		case MD_NULL:  VAR(VAR_SOUNDCARD) = 0; break;
+		case MD_ADLIB: VAR(VAR_SOUNDCARD) = 3; break;
+		case MD_PCSPK:
+		case MD_PCJR:  VAR(VAR_SOUNDCARD) = 1; break;
+		default:       
+			if ((_gameId == GID_MONKEY_EGA || _gameId == GID_MONKEY_VGA || _gameId == GID_LOOM)
+			   &&  (_features & GF_PC)) {
+				if (_gameId == GID_LOOM) {
+					char buf[50];
+					uint i = 82;
+					File f;
+					while (i < 85) {
+						sprintf(buf, "%d.LFL", i);
+						f.open(buf, _gameDataPath);
+						if (f.isOpen() == false)
+							error("Native MIDI support requires Roland patch from LucasArts");
+						f.close();
+						i++;
+					}
+				} else if (_gameId == GID_MONKEY_EGA) {
+						File f;
+						f.open("DISK09.LEC", _gameDataPath);
+						if (f.isOpen() == false)
+							error("Native MIDI support requires Roland patch from LucasArts");
+				}
+				VAR(VAR_SOUNDCARD) = 4;
+			} else
+				VAR(VAR_SOUNDCARD) = 3;
+		}
+		VAR(VAR_VIDEOMODE) = 0x13;
+		VAR(VAR_HEAPSPACE) = 1400;
+		VAR(VAR_MOUSEPRESENT) = true; // FIXME - used to be 0, but that seems odd?!?
+		if (_features & GF_HUMONGOUS) {
+			VAR(VAR_SOUNDPARAM) = 1; // soundblaster for music
+			VAR(VAR_SOUNDPARAM2) = 1; // soundblaster for sfx
+		} else {
+			VAR(VAR_SOUNDPARAM) = 0;
+			VAR(VAR_SOUNDPARAM2) = 0;
+		}
+		VAR(VAR_SOUNDPARAM3) = 0;
+		if (_version >= 6 && VAR_V6_EMSSPACE != 0xFF)
+			VAR(VAR_V6_EMSSPACE) = 10000;
 
-	VAR(59) = 3;	// FIXME: What is this good for?
+		VAR(59) = 3;	// FIXME: What is this good for?
+	}
 	
+	if ((_features & GF_MACINTOSH) && (_version == 3)) {
+		// This is the for the Mac version of Indy3/Loom
+		VAR(39) = 320;
+	}
+
 	if (VAR_CURRENT_LIGHTS != 0xFF) {
 		// Setup light
 		VAR(VAR_CURRENT_LIGHTS) = LIGHTMODE_actor_base | LIGHTMODE_actor_color | LIGHTMODE_screen;
@@ -767,9 +1226,6 @@ void ScummEngine::mainRun() {
 
 	while (!_quit) {
 
-		if (_mixer)
-			_mixer->collectGarbage();
-
 		updatePalette();
 		_system->update_screen();
 
@@ -782,7 +1238,8 @@ void ScummEngine::mainRun() {
 			delta = 1;  // by not decreasing sleepers.
 
 		if (_quit) {
-			confirmexitDialog();
+			// TODO: Maybe perform an autosave on exit?
+			// TODO: Also, we could optionally show a "Do you really want to quit?" dialog here
 		}
 	}
 }
@@ -795,29 +1252,21 @@ void ScummEngine::waitForTimer(int msec_delay) {
 	else if (_fastMode & 1)
 		msec_delay = 10;
 
-	uint32 end_time = _system->get_msecs();
-	if (msec_delay >= 0)
-		end_time += msec_delay;
+	start_time = _system->get_msecs();
 
-	while (!_quit)
-	{
+	while (!_quit) {
 		parseEvents();
 
-		uint32 now_time = _system->get_msecs();
-		if (now_time >= end_time)
+		_sound->updateCD(); // Loop CD Audio if needed
+		if (_system->get_msecs() >= start_time + msec_delay)
 			break;
-
-		uint32 d = end_time - now_time;
-		if (d > 10) d = 10;
-		_system->delay_msecs(d);
+		_system->delay_msecs(10);
 	}
 }
 
 int ScummEngine::scummLoop(int delta) {
-#ifndef DISABLE_DEBUGGER
 	if (_debugger->isAttached())
 		_debugger->onFrame();
-#endif
 
 	// Randomize the PRNG by calling it at regular intervals. This ensures
 	// that it will be in a different state each time you run the program.
@@ -831,11 +1280,8 @@ int ScummEngine::scummLoop(int delta) {
 	if (VAR_TMR_4 != 0xFF)
 		VAR(VAR_TMR_4) += delta;
 
-	//if (delta > 15)
-	//	delta = 15;
-
-	if (delta > 60)
-		delta = 60;
+	if (delta > 15)
+		delta = 15;
 
 	decreaseScriptDelay(delta);
 
@@ -851,36 +1297,67 @@ int ScummEngine::scummLoop(int delta) {
 
 	// Record the current ego actor before any scripts (including input scripts)
 	// get a chance to run.
-//	int oldEgo = 0;
-//	if (VAR_EGO != 0xFF)
-//		oldEgo = VAR(VAR_EGO);
+	int oldEgo = 0;
+	if (VAR_EGO != 0xFF)
+		oldEgo = VAR(VAR_EGO);
+
+	// In V1-V3 games, CHARSET_1 is called much earlier than in newer games.
+	// See also bug #770042 for a case were this makes a difference.
+	// FIXME: Actually I am only sure that this is correct for V1-V2 and Loom.
+	// We should also check Indy3 & Zak256.
+	if (_version <= 3)
+		CHARSET_1();
 
 	processKbd(false);
 
-	VAR(VAR_CAMERA_POS_X) = camera._cur.x;
-
+	if (_features & GF_NEW_CAMERA) {
+		VAR(VAR_CAMERA_POS_X) = camera._cur.x;
+		VAR(VAR_CAMERA_POS_Y) = camera._cur.y;
+	} else if (_version <= 2) {
+		VAR(VAR_CAMERA_POS_X) = camera._cur.x / 8;
+	} else {
+		VAR(VAR_CAMERA_POS_X) = camera._cur.x;
+	}
 	VAR(VAR_HAVE_MSG) = (_haveMsg == 0xFE) ? 0xFF : _haveMsg;
-	VAR(VAR_VIRT_MOUSE_X) = _virtualMouse.x;
-	VAR(VAR_VIRT_MOUSE_Y) = _virtualMouse.y;
-	VAR(VAR_MOUSE_X) = _mouse.x;
-	VAR(VAR_MOUSE_Y) = _mouse.y;
+	if (_version <= 2) {
+		VAR(VAR_VIRT_MOUSE_X) = _virtualMouse.x / 8;
+		VAR(VAR_VIRT_MOUSE_Y) = _virtualMouse.y / 2;
+	} else {
+		VAR(VAR_VIRT_MOUSE_X) = _virtualMouse.x;
+		VAR(VAR_VIRT_MOUSE_Y) = _virtualMouse.y;
+		VAR(VAR_MOUSE_X) = _mouse.x;
+		VAR(VAR_MOUSE_Y) = _mouse.y;
+		if ((_features & GF_MACINTOSH) && (_version == 3))  {
+			// This is for the Mac version of Indy3/Loom
+			VAR(VAR_DEBUGMODE) = _debugMode;
+		}
+	}
 
 	if (_features & GF_AUDIOTRACKS) {
 		// Covered automatically by the Sound class
-	} else 	if (_musicEngine && VAR_MUSIC_TIMER != 0xFF) {
+	} else if (_musicEngine && VAR_MUSIC_TIMER != 0xFF) {
 		// The music engine generates the timer data for us.
 		VAR(VAR_MUSIC_TIMER) = _musicEngine->getMusicTimer();
+	} else if (_features & GF_SMALL_HEADER) {
+		// Used for Money Island 1 (Amiga)
+		// TODO: The music delay (given in milliseconds) might have to be tuned a little
+		// to get it correct for all games. Without the ability to watch/listen to the
+		// original games, I can't do that myself.
+		const int MUSIC_DELAY = 350;
+		tempMusic += delta * 15;	// Convert delta to milliseconds
+		if (tempMusic >= MUSIC_DELAY) {
+			tempMusic -= MUSIC_DELAY;
+			VAR(VAR_MUSIC_TIMER) += 1;
+		}
 	}
 
 	// Trigger autosave all 5 minutes.
-	/*
 	if (!_saveLoadFlag && _system->get_msecs() > _lastSaveTime + 5 * 60 * 1000) {
 		_saveLoadSlot = 0;
 		sprintf(_saveLoadName, "Autosave %d", _saveLoadSlot);
 		_saveLoadFlag = 1;
 		_saveTemporaryState = false;
 	}
-	*/
 
 	if (VAR_GAME_LOADED != 0xFF)
 		VAR(VAR_GAME_LOADED) = 0;
@@ -893,27 +1370,37 @@ load_game:
 		if (_saveLoadFlag == 1) {
 			success = saveState(_saveLoadSlot, _saveTemporaryState);
 			if (!success)
-				errMsg = "Failed to save game\n\n";
+				errMsg = "Failed to save game state to file:\n\n%s";
 
-			if (success && _saveTemporaryState)
+			// Ender: Disabled for small_header games, as can overwrite game
+			//  variables (eg, Zak256 cashcard values). Temp disabled for V8
+			// because of odd timing issue with scripts and the variable reset
+			if (success && _saveTemporaryState && !(_features & GF_SMALL_HEADER) && _version < 8)
 				VAR(VAR_GAME_LOADED) = 201;
 		} else {
 			success = loadState(_saveLoadSlot, _saveTemporaryState);
 			if (!success)
-				errMsg = "Failed to load game\n\n";
+				errMsg = "Failed to load game state from file:\n\n%s";
 
-			if (success && _saveTemporaryState)
+			// Ender: Disabled for small_header games, as can overwrite game
+			//  variables (eg, Zak256 cashcard values).
+			if (success && _saveTemporaryState && !(_features & GF_SMALL_HEADER))
 				VAR(VAR_GAME_LOADED) = 203;
 		}
 
 		makeSavegameName(filename, _saveLoadSlot, _saveTemporaryState);
 		if (!success) {
-			displayError(0, errMsg);
+			displayError(0, errMsg, filename);
 		} else if (_saveLoadFlag == 1 && _saveLoadSlot != 0 && !_saveTemporaryState) {
 			// Display "Save successful" message, except for auto saves
-			const char* msg = "Successfully saved game\n\n";
+#ifdef __PALM_OS__
+			char buf[256]; // 1024 is too big overflow the stack
+#else
+			char buf[1024];
+#endif
+			sprintf(buf, "Successfully saved game state in file:\n\n%s", filename);
 	
-			GUI::TimedMessageDialog dialog(msg, 1500);
+			GUI::TimedMessageDialog dialog(buf, 1500);
 			runDialog(dialog);
 		}
 		if (success && _saveLoadFlag != 1)
@@ -923,30 +1410,39 @@ load_game:
 		_lastSaveTime = _system->get_msecs();
 	}
 
-	if (_verbColorsDirty)
-	{
-		debug(2, "Redraw _verbColorsDirty");
-		_verbColorsDirty = false;
-		debug(2, "%d,%d, %d,%d", virtscr[0].topline, virtscr[0].height, virtscr[2].topline, virtscr[2].height);
-		if ((virtscr[kMainVirtScreen].height < SCREEN_HEIGHT) && (virtscr[kVerbVirtScreen].topline > 0) && (virtscr[kVerbVirtScreen].height < SCREEN_HEIGHT))
-		{
-			for (int i = 0; i < _numVerbs; i++)
-				drawVerb(i, 0);
-			verbMouseOver(0);
-			_verbRedraw = false;
-		}
-	}
-
 	if (_completeScreenRedraw) {
-		debug(2, "Redraw _completeScreenRedraw");
 		_completeScreenRedraw = false;
 		_charset->clearCharsetMask();
 		_charset->_hasMask = false;
 
-		for (int i = 0; i < _numVerbs; i++)
-			drawVerb(i, 0);
+		// HACK as in game save stuff isn't supported currently
+		if (_gameId == GID_LOOM || _gameId == GID_LOOM256) {
+			int args[16];
+			uint value;
+			memset(args, 0, sizeof(args));
+			args[0] = 2;
+
+			if (_features & GF_MACINTOSH)
+				value = 105;
+			else
+ 				value = (_gameId == GID_LOOM256) ? 150 : 100;
+			byte restoreScript = (_features & GF_FMTOWNS) ? 17 : 18;
+			// if verbs should be shown restore them
+			if (VAR(value) == 2)
+				runScript(restoreScript, 0, 0, args);
+		} else if (_version > 3) {
+			for (int i = 0; i < _numVerbs; i++)
+				drawVerb(i, 0);
+		} else {
+			redrawVerbs();
+		}
 
 		verbMouseOver(0);
+
+		if (_version <= 2) {
+			redrawV2Inventory();
+			checkV2MouseOver(_mouse);
+		}
 
 		_verbRedraw = false;
 		_fullRedraw = true;
@@ -967,20 +1463,19 @@ load_game:
 		goto load_game;
 	}
 	
-	static uint32 framenum = 0;
-	framenum++;
-	debug(2, "-- frame %d start -- %d,%d,%d\n\r", framenum, _fullRedraw, _BgNeedsRedraw, _verbRedraw);
-
 	if (_currentRoom == 0) {
-		CHARSET_1();
+		if (_version > 3)
+			CHARSET_1();
 		drawDirtyScreenParts();
 	} else {
 		walkActors();
 		moveCamera();
 		fixObjectFlags();
-		CHARSET_1();
+		if (_version > 3)
+			CHARSET_1();
 
-		if (camera._cur.x != camera._last.x || _BgNeedsRedraw || _fullRedraw) {
+		if (camera._cur.x != camera._last.x || _BgNeedsRedraw || _fullRedraw
+				|| ((_features & GF_NEW_CAMERA) && camera._cur.y != camera._last.y)) {
 			redrawBGAreas();
 		}
 
@@ -1017,23 +1512,37 @@ load_game:
 		}
 		_verbRedraw = false;
 
-#ifdef ENGINE_SCUMM6
-		drawBlastObjects();
-		drawBlastTexts();
-#endif
+		if (_version <= 2) {
+			if (oldEgo != VAR(VAR_EGO)) {
+				// FIXME/TODO: Reset and redraw the sentence line
+				oldEgo = VAR(VAR_EGO);
+				_inventoryOffset = 0;
+				redrawV2Inventory();
+			}
+			checkV2MouseOver(_mouse);
+		}
 
+		// For the Full Throttle credits to work properly, the blast
+		// texts have to be drawn before the blast objects. Unless
+		// someone can think of a better way to achieve this effect.
+
+		if (_gameId == GID_FT) {
+			drawBlastTexts();
+			drawBlastObjects();
+		} else {
+			drawBlastObjects();
+			drawBlastTexts();
+		}
+
+		if (_version == 8)
+			processUpperActors();
 		drawDirtyScreenParts();
-
-#ifdef ENGINE_SCUMM6
 		removeBlastTexts();
 		removeBlastObjects();
-#endif
 
-		if (_version == 5)
+		if (_version <= 5)
 			playActorSounds();
 	}
-
-	debug(2, "-- frame end --\n\r");
 
 	_sound->processSoundQues();
 	camera._last = camera._cur;
@@ -1057,15 +1566,13 @@ load_game:
 #pragma mark --- Events / Input ---
 #pragma mark -
 
-void ScummEngine::parseEvents()
-{
+void ScummEngine::parseEvents() {
 	OSystem::Event event;
-	while (_system->poll_event(&event))
-	{
-		switch(event.event_code)
-		{
+
+	while (_system->poll_event(&event)) {
+
+		switch(event.event_code) {
 		case OSystem::EVENT_KEYDOWN:
-#ifndef __ATARI__
 			if (event.kbd.keycode >= '0' && event.kbd.keycode <= '9'
 				&& (event.kbd.flags == OSystem::KBD_ALT ||
 					event.kbd.flags == OSystem::KBD_CTRL)) {
@@ -1078,41 +1585,26 @@ void ScummEngine::parseEvents()
 				sprintf(_saveLoadName, "Quicksave %d", _saveLoadSlot);
 				_saveLoadFlag = (event.kbd.flags == OSystem::KBD_ALT) ? 1 : 2;
 				_saveTemporaryState = false;
-			}
-			else if (event.kbd.flags == OSystem::KBD_CTRL)
-			{
-				if (event.kbd.keycode == 't')
-				{
-					SCUMM_Goto_Room(27);	// ball of twine
-					//SCUMM_Goto_Room(37);	// vortex outside
-					//SCUMM_Goto_Room(79);	// vortex snow globe
-				}
-				else if (event.kbd.keycode == 'v')
-					VAR(VAR_SCREENSAVER_TIME) = 0;
-				else if (event.kbd.keycode == 'f')
+			} else if (event.kbd.flags == OSystem::KBD_CTRL) {
+				if (event.kbd.keycode == 'f')
 					_fastMode ^= 1;
 				else if (event.kbd.keycode == 'g')
 					_fastMode ^= 2;
-#ifndef DISABLE_DEBUGGER
 				else if (event.kbd.keycode == 'd')
 					_debugger->attach();
-#endif
 				else if (event.kbd.keycode == 's')
 					resourceStats();
 				else
 					_keyPressed = event.kbd.ascii;	// Normal key press, pass on to the game.
-			}
-			else if (event.kbd.flags & OSystem::KBD_ALT)
-			{
+			} else if (event.kbd.flags & OSystem::KBD_ALT) {
 				// The result must be 273 for Alt-W
 				// because that's what MI2 looks for in
 				// its "instant win" cheat.
 				_keyPressed = event.kbd.keycode + 154;
-			}
-			else
-#endif
-			if (_gameId == GID_INDY4 && event.kbd.ascii >= '0' && event.kbd.ascii <= '9')
-			{
+			} else if (event.kbd.ascii == 315 && _gameId == GID_CMI) {
+				// FIXME: support in-game menu screen. For now, this remaps F1 to F5 in COMI
+				_keyPressed = 319;
+			} else if (_gameId == GID_INDY4 && event.kbd.ascii >= '0' && event.kbd.ascii <= '9') {
 				// To support keyboard fighting in FOA, we need to remap the number keys.
 				// FOA apparently expects PC scancode values (see script 46 if you want
 				// to know where I got these numbers from).
@@ -1123,7 +1615,7 @@ void ScummEngine::parseEvents()
 						327, 328, 329
 					};
 				_keyPressed = numpad[event.kbd.ascii - '0'];
-			} else if (event.kbd.ascii < 273 || event.kbd.ascii > 276) {
+			} else if (event.kbd.ascii < 273 || event.kbd.ascii > 276 || _gameId == GID_FT) {
 				// don't let game have arrow keys as we currently steal them
 				// for keyboard cursor control
 				// this fixes bug with up arrow (273) corresponding to
@@ -1134,9 +1626,19 @@ void ScummEngine::parseEvents()
 				_keyPressed = event.kbd.ascii;	// Normal key press, pass on to the game.
 			}
 
+			if (_keyPressed >= 512)
+				warning("_keyPressed > 512 (%d)", _keyPressed);
+			else
+				_keyDownMap[_keyPressed] = true;
 			break;
 
 		case OSystem::EVENT_KEYUP:
+			// FIXME: for some reason OSystem::KBD_ALT is set sometimes
+			// possible to a bug in sdl-common.cpp
+			if (event.kbd.ascii >= 512)
+				warning("keyPressed > 512 (%d)", event.kbd.ascii);
+			else
+				_keyDownMap[event.kbd.ascii] = false;
 			break;
 
 		case OSystem::EVENT_MOUSEMOVE:
@@ -1169,8 +1671,10 @@ void ScummEngine::parseEvents()
 			break;
 	
 		case OSystem::EVENT_QUIT:
-			//confirmexitDialog();
-			_quit = true;
+			if (_confirmExit)
+				confirmexitDialog();
+			else
+				_quit = true;
 			break;
 	
 		default:
@@ -1191,21 +1695,28 @@ void ScummEngine::processKbd(bool smushMode) {
 
 	_lastKeyHit = _keyPressed;
 	_keyPressed = 0;
+	if (((_version <= 2) || (_features & GF_FMTOWNS)) && 315 <= _lastKeyHit && _lastKeyHit < 315+12) {
+		// Convert F-Keys for V1/V2 games (they start at 1 instead of at 315)
+		_lastKeyHit -= 314;
+	}
+	
 	
 	//
 	// Clip the mouse coordinates, and compute _virtualMouse.x (and clip it, too)
 	//
 	if (_mouse.x < 0)
 		_mouse.x = 0;
-	if (_mouse.x > SCREEN_WIDTH-1)
-		_mouse.x = SCREEN_WIDTH-1;
+	if (_mouse.x > _screenWidth-1)
+		_mouse.x = _screenWidth-1;
 	if (_mouse.y < 0)
 		_mouse.y = 0;
-	if (_mouse.y > SCREEN_HEIGHT-1)
-		_mouse.y = SCREEN_HEIGHT-1;
+	if (_mouse.y > _screenHeight-1)
+		_mouse.y = _screenHeight-1;
 
 	_virtualMouse.x = _mouse.x + virtscr[0].xstart;
 	_virtualMouse.y = _mouse.y - virtscr[0].topline;
+	if (_features & GF_NEW_CAMERA)
+		_virtualMouse.y += _screenTop;
 
 	if (_virtualMouse.y < 0)
 		_virtualMouse.y = -1;
@@ -1235,10 +1746,40 @@ void ScummEngine::processKbd(bool smushMode) {
 		// mouse buttons also skips the current cutscene.
 		_mouseButStat = 0;
 		_lastKeyHit = (uint)VAR(VAR_CUTSCENEEXIT_KEY);
+	} else if (_rightBtnPressed & msClicked && (_version < 4 && _gameId != GID_LOOM)) {
+		// Pressing right mouse button is treated as if you pressed
+		// the cutscene exit key (i.e. ESC in most games). That mimicks
+		// the behaviour of the original engine where pressing right
+		// mouse button also skips the current cutscene.
+		_mouseButStat = 0;
+		_lastKeyHit = (uint)VAR(VAR_CUTSCENEEXIT_KEY);
 	} else if (_leftBtnPressed & msClicked) {
 		_mouseButStat = MBS_LEFT_CLICK;
 	} else if (_rightBtnPressed & msClicked) {
 		_mouseButStat = MBS_RIGHT_CLICK;
+	}
+
+	if (_version == 8) {
+		VAR(VAR_MOUSE_BUTTONS) = 0;
+		VAR(VAR_MOUSE_HOLD) = 0;
+		VAR(VAR_RIGHTBTN_HOLD) = 0;
+
+		if (_leftBtnPressed & msClicked)
+			VAR(VAR_MOUSE_BUTTONS) += 1;
+
+		if (_rightBtnPressed & msClicked)
+			VAR(VAR_MOUSE_BUTTONS) += 2;
+
+		if (_leftBtnPressed & msDown)
+			VAR(VAR_MOUSE_HOLD) += 1;
+
+		if (_rightBtnPressed & msDown) {
+			VAR(VAR_RIGHTBTN_HOLD) = 1;
+			VAR(VAR_MOUSE_HOLD) += 2;
+		}
+	} else if (_version == 7) {
+		VAR(VAR_LEFTBTN_HOLD) = (_leftBtnPressed & msDown) != 0;
+		VAR(VAR_RIGHTBTN_HOLD) = (_rightBtnPressed & msDown) != 0;
 	}
 
 	_leftBtnPressed &= ~msClicked;
@@ -1247,16 +1788,42 @@ void ScummEngine::processKbd(bool smushMode) {
 	if (!_lastKeyHit)
 		return;
 
-/*
 	// If a key script was specified (a V8 feature), and it's trigger
 	// key was pressed, run it.
 	if (_keyScriptNo && (_keyScriptKey == _lastKeyHit)) {
 		runScript(_keyScriptNo, 0, 0, 0);
 		return;
 	}
-*/
 
-	if (VAR_RESTART_KEY != 0xFF && _lastKeyHit == VAR(VAR_RESTART_KEY)) {
+#ifdef _WIN32_WCE
+	if (_lastKeyHit == KEY_SET_OPTIONS) {
+		//_newgui->optionsDialog();
+		return;
+	}
+
+	if (_lastKeyHit == KEY_ALL_SKIP) {
+		// Skip cutscene
+		if (smushMode) {
+			// Eek this is literally shouting for trouble...
+			// Probably should set _lastKey to VAR_CUTSCENEEXIT_KEY instead!
+			_videoFinished = true;
+			return;
+		}
+		else
+		if (vm.cutScenePtr[vm.cutSceneStackPointer])
+			_lastKeyHit = (uint16)VAR(VAR_CUTSCENEEXIT_KEY);
+		else 
+		// Skip talk 
+		if (_talkDelay > 0) 
+			_lastKeyHit = (uint16)VAR(VAR_TALKSTOP_KEY);
+		else
+		// Escape
+			_lastKeyHit = 27;
+	}
+#endif
+
+	if (VAR_RESTART_KEY != 0xFF && _lastKeyHit == VAR(VAR_RESTART_KEY) ||
+	   (((_version <= 2) || (_features & GF_FMTOWNS)) && _lastKeyHit == 8)) {
 		confirmrestartDialog();
 		return;
 	}
@@ -1267,7 +1834,9 @@ void ScummEngine::processKbd(bool smushMode) {
 		return;
 	}
 
-	if (_gameId == GID_SAMNMAX)
+	if ((_version <= 2) || (_features & GF_FMTOWNS))
+		saveloadkey = 5;	// F5
+	else if ((_version <= 3) || (_gameId == GID_SAMNMAX) || (_gameId == GID_CMI))
 		saveloadkey = 319;	// F5
 	else
 		saveloadkey = VAR(VAR_MAINMENU_KEY);
@@ -1277,8 +1846,20 @@ void ScummEngine::processKbd(bool smushMode) {
 		// Skip cutscene (or active SMUSH video). For the V2 games, which
 		// normally use F4 for this, we add in a hack that makes escape work,
 		// too (just for convenience).
-		abortCutscene();
-
+		if (smushMode) {
+			if (_gameId == GID_FT)
+				_insane->escapeKeyHandler();
+			else
+				_videoFinished = true;
+		}
+		if (!smushMode || _videoFinished)
+			abortCutscene();
+		if (_version <= 2) {
+			// Ensure that the input script also sees the key press.
+			// This is necessary so you can abort the airplane travel
+			// in Zak.
+			VAR(VAR_KEYPRESS) = VAR(VAR_CUTSCENEEXIT_KEY);
+		}
 	} else if (_lastKeyHit == saveloadkey) {
 		if (VAR_SAVELOAD_SCRIPT != 0xFF && _currentRoom != 0)
 			runScript(VAR(VAR_SAVELOAD_SCRIPT), 0, 0, 0);
@@ -1300,18 +1881,18 @@ void ScummEngine::processKbd(bool smushMode) {
 		}
 		return;
 	} else if (_lastKeyHit == '[') { // [ Music volume down
-		int vol = GetConfig(kConfig_MusicVolume);
+		int vol = ConfMan.getInt("music_volume");
 		if (!(vol & 0xF) && vol)
 			vol -= 16;
 		vol = vol & 0xF0;
-		SetConfig(kConfig_MusicVolume, vol);
+		ConfMan.set("music_volume", vol);
 		if (_imuse)
 			_imuse->set_music_volume (vol);
 	} else if (_lastKeyHit == ']') { // ] Music volume up
-		int vol = GetConfig(kConfig_MusicVolume);
+		int vol = ConfMan.getInt("music_volume");
 		vol = (vol + 16) & 0xFF0;
 		if (vol > 255) vol = 255;
-		SetConfig(kConfig_MusicVolume, vol);
+		ConfMan.set("music_volume", vol);
 		if (_imuse)
 			_imuse->set_music_volume (vol);
 	} else if (_lastKeyHit == '-') { // - text speed down
@@ -1326,12 +1907,18 @@ void ScummEngine::processKbd(bool smushMode) {
 			_defaultTalkDelay = 5;
 
 		VAR(VAR_CHARINC) = _defaultTalkDelay / 20;
-	}
-#ifndef DISABLE_DEBUGGER
-	else if (_lastKeyHit == '~' || _lastKeyHit == '#') { // Debug console
+	} else if (_lastKeyHit == '~' || _lastKeyHit == '#') { // Debug console
 		_debugger->attach();
+	} else if (_version <= 2) {
+		// Store the input type. So far we can't distinguish
+		// between 1, 3 and 5.
+		// 1) Verb	2) Scene	3) Inv.		4) Key
+		// 5) Sentence Bar
+
+		if (_lastKeyHit) {		// Key Input
+			VAR(VAR_KEYPRESS) = _lastKeyHit;
+		}
 	}
-#endif
 
 	_mouseButStat = _lastKeyHit;
 }
@@ -1347,15 +1934,8 @@ void ScummEngine::processKbd(bool smushMode) {
 void ScummEngine::startScene(int room, Actor *a, int objectNr) {
 	int i, where;
 
-#ifdef GAME_SAMNMAX
-	extern bool _hack_samnmax_intro;
-	_hack_samnmax_intro = false;
-#endif
-
 	CHECK_HEAP;
 	debugC(DEBUG_GENERAL, "Loading room %d", room);
-
-	_system->setIsLoading(true);
 
 	clearMsgQueue();
 
@@ -1371,20 +1951,26 @@ void ScummEngine::startScene(int room, Actor *a, int objectNr) {
 			_currentScript = 0xFF;
 		} else if (ss->where == WIO_LOCAL) {
 			if (ss->cutsceneOverride != 0) {
-				error("Script %d stopped with active cutscene/override in exit", ss->number);
+				if (_gameId == GID_ZAK256 && _roomResource == 15 && ss->number == 202) {
+					// HACK to make Zak256 work (see bug #770093)
+					warning("Script %d stopped with active cutscene/override in exit", ss->number);
+				} else if (_gameId == GID_INDY3 && (_features & GF_OLD_BUNDLE) && _roomResource == 3) {
+					// HACK to make Indy3 Demo work
+					warning("Script %d stopped with active cutscene/override in exit", ss->number);
+				} else {
+					error("Script %d stopped with active cutscene/override in exit", ss->number);
+				}
 			}
 			_currentScript = 0xFF;
 		}
 	}
 
-	if (VAR_NEW_ROOM != 0xFF)
-		VAR(VAR_NEW_ROOM) = room;
+	if (!(_features & GF_SMALL_HEADER) && VAR_NEW_ROOM != 0xFF)  // Disable for SH games. Overwrites
+		VAR(VAR_NEW_ROOM) = room; // gamevars, eg Zak cashcards
 
 	runExitScript();
 	killScriptsAndResources();
-#ifdef ENGINE_SCUMM6
 	clearEnqueue();
-#endif
 	stopCycle(0);
 	_sound->processSoundQues();
 
@@ -1392,8 +1978,13 @@ void ScummEngine::startScene(int room, Actor *a, int objectNr) {
 		_actors[i].hideActor();
 	}
 
-	for (i = 0; i < 256; i++) {
-		_roomPalette[i] = i;
+	if (_version < 7) {
+		for (i = 0; i < 256; i++) {
+			_roomPalette[i] = i;
+			_shadowPalette[i] = i;
+		}
+		if (_features & GF_SMALL_HEADER)
+			setDirtyColors(0, 255);
 	}
 
 	clearDrawObjectQueue();
@@ -1422,30 +2013,39 @@ void ScummEngine::startScene(int room, Actor *a, int objectNr) {
 	if (_currentRoom == 0) {
 		_ENCD_offs = _EXCD_offs = 0;
 		_numObjectsInRoom = 0;
-		_system->setIsLoading(false);
 		return;
 	}
 
 	initRoomSubBlocks();
-	loadRoomObjects();
+	if (_features & GF_OLD_BUNDLE)
+		loadRoomObjectsOldBundle();
+	else if (_features & GF_SMALL_HEADER)
+		loadRoomObjectsSmall();
+	else
+		loadRoomObjects();
 
+	
 	if (VAR_V6_SCREEN_WIDTH != 0xFF && VAR_V6_SCREEN_HEIGHT != 0xFF) {
 		VAR(VAR_V6_SCREEN_WIDTH) = _roomWidth;
 		VAR(VAR_V6_SCREEN_HEIGHT) = _roomHeight;
 	}
 
-	VAR(VAR_CAMERA_MIN_X) = SCREEN_WIDTH / 2;
-	VAR(VAR_CAMERA_MAX_X) = _roomWidth - (SCREEN_WIDTH / 2);
+	VAR(VAR_CAMERA_MIN_X) = _screenWidth / 2;
+	VAR(VAR_CAMERA_MAX_X) = _roomWidth - (_screenWidth / 2);
 
-	camera._mode = kNormalCameraMode;
-	camera._cur.x = camera._dest.x = SCREEN_WIDTH / 2;
-	camera._cur.y = camera._dest.y = SCREEN_HEIGHT / 2;
+	if (_features & GF_NEW_CAMERA) {
+		VAR(VAR_CAMERA_MIN_Y) = _screenHeight / 2;
+		VAR(VAR_CAMERA_MAX_Y) = _roomHeight - (_screenHeight / 2);
+		setCameraAt(_screenWidth / 2, _screenHeight / 2);
+	} else {
+		camera._mode = kNormalCameraMode;
+		if (_version > 2)
+			camera._cur.x = camera._dest.x = _screenWidth / 2;
+		camera._cur.y = camera._dest.y = _screenHeight / 2;
+	}
 
 	if (_roomResource == 0)
-	{
-		_system->setIsLoading(false);
 		return;
-	}
 
 	memset(gfxUsageBits, 0, sizeof(gfxUsageBits));
 
@@ -1465,16 +2065,40 @@ void ScummEngine::startScene(int room, Actor *a, int objectNr) {
 
 	_egoPositioned = false;
 	runEntryScript();
-	if (a && !_egoPositioned) {
-		int x, y;
-		getObjectXYPos(objectNr, x, y);
-		a->putActor(x, y, _currentRoom);
-		a->moving = 0;
+	if (_version <= 2)
+		runScript(5, 0, 0, 0);
+	else if (_version >= 5 && _version <= 6) {
+		if (a && !_egoPositioned) {
+			int x, y;
+			getObjectXYPos(objectNr, x, y);
+			a->putActor(x, y, _currentRoom);
+			a->moving = 0;
+		}
+	} else if (_version >= 7) {
+		if (a) {
+			// FIXME: This hack mostly is there to fix the tomb/statue room
+			// in The Dig. What happens there is that when you enter, you are
+			// placed at object 399, coords (307,141), which is in box 25.
+			// But then the entry script locks that and other boxes. Hence
+			// after the entry script runs, you basically can only do one thing
+			// in that room, and that is to leave it - which means the game
+			// is unfinishable.
+			// By calling adjustActorPos, we can solve the problem in this case:
+			// there is a very close box (box 12) which contains point (307,144).
+			// If we call adjustActorPos, Commander Low is moved into that box,
+			// and we can go on. But aqudran looked this up in his IMB DB for
+			// The DIG; and nothing like this is done there. Also I am pretty
+			// sure this used to work in 0.3.1. So apparently something broke
+			// down here, and I have no clue what that might be :-/
+			a->adjustActorPos();
+		}
+		if (camera._follows) {
+			a = derefActor(camera._follows, "startScene: follows");
+			setCameraAt(a->_pos.x, a->_pos.y);
+		}
 	}
 
 	_doEffect = true;
-
-	_system->setIsLoading(false);
 
 	CHECK_HEAP;
 }
@@ -1502,69 +2126,188 @@ void ScummEngine::initRoomSubBlocks() {
 
 	// Determine the room and room script base address
 	roomResPtr = roomptr = getResourceAddress(rtRoom, _roomResource);
+	if (_version == 8)
+		roomResPtr = getResourceAddress(rtRoomScripts, _roomResource);
 	if (!roomptr || !roomResPtr)
 		error("Room %d: data not found (" __FILE__  ":%d)", _roomResource, __LINE__);
+
+	// Reset room color for V1 zak
+	if (_version == 1)
+		_roomPalette[0] = 0;
 
 	//
 	// Determine the room dimensions (width/height)
 	//
-	rmhd = (const RoomHeader *)findResourceData(MKID('RMHD'), roomptr);
-	_roomWidth = READ_LE_UINT16(&(rmhd->old.width));
-	_roomHeight = READ_LE_UINT16(&(rmhd->old.height));
+	if (_features & GF_OLD_BUNDLE)
+		rmhd = (const RoomHeader *)(roomptr + 4);
+	else
+		rmhd = (const RoomHeader *)findResourceData(MKID('RMHD'), roomptr);
+	
+	if (_version == 1) {
+		_roomWidth = roomptr[4] * 8;
+		_roomHeight = roomptr[5] * 8;
+	} else if (_version == 8) {
+		_roomWidth = READ_LE_UINT32(&(rmhd->v8.width));
+		_roomHeight = READ_LE_UINT32(&(rmhd->v8.height));
+	} else if (_version == 7) {
+		_roomWidth = READ_LE_UINT16(&(rmhd->v7.width));
+		_roomHeight = READ_LE_UINT16(&(rmhd->v7.height));
+	} else {
+		_roomWidth = READ_LE_UINT16(&(rmhd->old.width));
+		_roomHeight = READ_LE_UINT16(&(rmhd->old.height));
+	}
 
 	//
 	// Find the room image data
 	//
-	_IM00_offs = findResource(MKID('IM00'), findResource(MKID('RMIM'), roomptr)) - roomptr;
+	if (_version == 1) {
+		_IM00_offs = 0;
+		for (i = 0; i < 4; i++){
+			gdi._C64Colors[i] = roomptr[6 + i];
+		}
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 10), gdi._C64CharMap, 2048);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 12), gdi._C64PicMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 14), gdi._C64ColorMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 16), gdi._C64MaskMap, roomptr[4] * roomptr[5]);
+		gdi.decodeC64Gfx(roomptr + READ_LE_UINT16(roomptr + 18) + 2, gdi._C64MaskChar, READ_LE_UINT16(roomptr + READ_LE_UINT16(roomptr + 18)));
+		gdi._C64ObjectMode = true;
+	} else if (_features & GF_OLD_BUNDLE) {
+		_IM00_offs = READ_LE_UINT16(roomptr + 0x0A);
+		if (_version == 2)
+			_roomStrips = gdi.generateStripTable(roomptr + _IM00_offs, _roomWidth, _roomHeight, _roomStrips);
+	} else if (_version == 8) {
+		_IM00_offs = getObjectImage(roomptr, 1) - roomptr;
+	} else if (_features & GF_SMALL_HEADER) {
+		_IM00_offs = findResourceData(MKID('IM00'), roomptr) - roomptr;
+	} else {
+		_IM00_offs = findResource(MKID('IM00'), findResource(MKID('RMIM'), roomptr)) - roomptr;
+	}
 
 	//
 	// Look for an exit script
 	//
-	ptr = findResourceData(MKID('EXCD'), roomResPtr);
-	if (ptr)
-		_EXCD_offs = ptr - roomResPtr;
+	int EXCD_len = -1;
+	if (_version <= 2) {
+		_EXCD_offs = READ_LE_UINT16(roomptr + 0x18);
+		EXCD_len = READ_LE_UINT16(roomptr + 0x1A) - _EXCD_offs + _resourceHeaderSize;	// HACK
+	} else if (_features & GF_OLD_BUNDLE) {
+		_EXCD_offs = READ_LE_UINT16(roomptr + 0x19);
+		EXCD_len = READ_LE_UINT16(roomptr + 0x1B) - _EXCD_offs + _resourceHeaderSize;	// HACK
+	} else {
+		ptr = findResourceData(MKID('EXCD'), roomResPtr);
+		if (ptr)
+			_EXCD_offs = ptr - roomResPtr;
+	}
+	if (_dumpScripts && _EXCD_offs)
+		dumpResource("exit-", _roomResource, roomResPtr + _EXCD_offs - _resourceHeaderSize, EXCD_len);
 
 	//
 	// Look for an entry script
 	//
-	ptr = findResourceData(MKID('ENCD'), roomResPtr);
-	if (ptr)
-		_ENCD_offs = ptr - roomResPtr;
+	int ENCD_len = -1;
+	if (_version <= 2) {
+		_ENCD_offs = READ_LE_UINT16(roomptr + 0x1A);
+		ENCD_len = READ_LE_UINT16(roomptr) - _ENCD_offs + _resourceHeaderSize; // HACK
+	} else if (_features & GF_OLD_BUNDLE) {
+		_ENCD_offs = READ_LE_UINT16(roomptr + 0x1B);
+		// FIXME - the following is a hack which assumes that immediately after
+		// the entry script the first local script follows.
+		int num_objects = *(roomResPtr + 20);
+		int num_sounds = *(roomResPtr + 23);
+		int num_scripts = *(roomResPtr + 24);
+		ptr = roomptr + 29 + num_objects * 4 + num_sounds + num_scripts;
+		ENCD_len = READ_LE_UINT16(ptr + 1) - _ENCD_offs + _resourceHeaderSize; // HACK
+	} else {
+		ptr = findResourceData(MKID('ENCD'), roomResPtr);
+		if (ptr)
+			_ENCD_offs = ptr - roomResPtr;
+	}
+	if (_dumpScripts && _ENCD_offs)
+		dumpResource("entry-", _roomResource, roomResPtr + _ENCD_offs - _resourceHeaderSize, ENCD_len);
 
 	//
 	// Load box data
 	//
-	ptr = findResourceData(MKID('BOXD'), roomptr);
-	if (ptr) {
-		int size = getResourceDataSize(ptr);
-		createResource(rtMatrix, 2, size);
-		roomptr = getResourceAddress(rtRoom, _roomResource);
-		ptr = findResourceData(MKID('BOXD'), roomptr);
-		memcpy(getResourceAddress(rtMatrix, 2), ptr, size);
-	}
+	if (_features & GF_SMALL_HEADER) {
+		if (_version <= 2)
+			ptr = roomptr + *(roomptr + 0x15);
+		else if (_features & GF_OLD_BUNDLE)
+			ptr = roomptr + READ_LE_UINT16(roomptr + 0x15);
+		else
+			ptr = findResourceData(MKID('BOXD'), roomptr);
+		if (ptr) {
+			byte numOfBoxes = *ptr;
+			int size;
+			if (_version <= 2)
+				size = numOfBoxes * SIZEOF_BOX_V2 + 1;
+			else if (_version == 3)
+				size = numOfBoxes * SIZEOF_BOX_V3 + 1;
+			else
+				size = numOfBoxes * SIZEOF_BOX + 1;
 
-	ptr = findResourceData(MKID('BOXM'), roomptr);
-	if (ptr) {
-		int size = getResourceDataSize(ptr);
-		createResource(rtMatrix, 1, size);
-		roomptr = getResourceAddress(rtRoom, _roomResource);
+			createResource(rtMatrix, 2, size);
+			memcpy(getResourceAddress(rtMatrix, 2), ptr, size);
+			ptr += size;
+			if (_version <= 2) {
+				size = numOfBoxes * (numOfBoxes + 1);
+			} else if (_features & GF_OLD_BUNDLE)
+				// FIXME. This is an evil HACK!!!
+				size = (READ_LE_UINT16(roomptr + 0x0A) - READ_LE_UINT16(roomptr + 0x15)) - size;
+			else
+				size = getResourceDataSize(ptr - size - 6) - size;
+
+			if (size > 0) {					// do this :)
+				createResource(rtMatrix, 1, size);
+				memcpy(getResourceAddress(rtMatrix, 1), ptr, size);
+			}
+
+		}
+	} else {
+		ptr = findResourceData(MKID('BOXD'), roomptr);
+		if (ptr) {
+			int size = getResourceDataSize(ptr);
+			createResource(rtMatrix, 2, size);
+			roomptr = getResourceAddress(rtRoom, _roomResource);
+			ptr = findResourceData(MKID('BOXD'), roomptr);
+			memcpy(getResourceAddress(rtMatrix, 2), ptr, size);
+		}
+
 		ptr = findResourceData(MKID('BOXM'), roomptr);
-		memcpy(getResourceAddress(rtMatrix, 1), ptr, size);
+		if (ptr) {
+			int size = getResourceDataSize(ptr);
+			createResource(rtMatrix, 1, size);
+			roomptr = getResourceAddress(rtRoom, _roomResource);
+			ptr = findResourceData(MKID('BOXM'), roomptr);
+			memcpy(getResourceAddress(rtMatrix, 1), ptr, size);
+		}
 	}
 
 	//
 	// Load scale data
 	//
-	ptr = findResourceData(MKID('SCAL'), roomptr);
+	if (_features & GF_OLD_BUNDLE)
+		ptr = 0;
+	else
+		ptr = findResourceData(MKID('SCAL'), roomptr);
 	if (ptr) {
 		int s1, s2, y1, y2;
-		for (i = 1; i < res.num[rtScaleTable]; i++, ptr += 8) {
-			s1 = READ_LE_UINT16(ptr);
-			y1 = READ_LE_UINT16(ptr + 2);
-			s2 = READ_LE_UINT16(ptr + 4);
-			y2 = READ_LE_UINT16(ptr + 6);
-			if (s1 || y1 || s2 || y2) {
+		if (_version == 8) {
+			for (i = 1; i < res.num[rtScaleTable]; i++, ptr += 16) {
+				s1 = READ_LE_UINT32(ptr);
+				y1 = READ_LE_UINT32(ptr + 4);
+				s2 = READ_LE_UINT32(ptr + 8);
+				y2 = READ_LE_UINT32(ptr + 12);
 				setScaleSlot(i, 0, y1, s1, 0, y2, s2);
+			}
+		} else {
+			for (i = 1; i < res.num[rtScaleTable]; i++, ptr += 8) {
+				s1 = READ_LE_UINT16(ptr);
+				y1 = READ_LE_UINT16(ptr + 2);
+				s2 = READ_LE_UINT16(ptr + 4);
+				y2 = READ_LE_UINT16(ptr + 6);
+				if (s1 || y1 || s2 || y2) {
+					setScaleSlot(i, 0, y1, s1, 0, y2, s2);
+				}
 			}
 		}
 	}
@@ -1575,24 +2318,105 @@ void ScummEngine::initRoomSubBlocks() {
 
 	// Determine the room script base address
 	roomResPtr = roomptr = getResourceAddress(rtRoom, _roomResource);
+	if (_version == 8)
+		roomResPtr = getResourceAddress(rtRoomScripts, _roomResource);
 	searchptr = roomResPtr;
 
-	ResourceIterator localScriptIterator(searchptr);
-	while ((ptr = localScriptIterator.findNext(MKID('LSCR'))) != NULL) {
-		int id = 0;
+	if (_features & GF_OLD_BUNDLE) {
+		int num_objects = *(roomResPtr + 20);
+		int num_sounds;
+		int num_scripts;
 
-		ptr += _resourceHeaderSize;	/* skip tag & size */
-		id = ptr[0];
-		_localScriptList[id - _numGlobalScripts] = ptr + 1 - roomResPtr;
+		if (_version <= 2) {
+			num_sounds = *(roomResPtr + 22);
+			num_scripts = *(roomResPtr + 23);
+			ptr = roomptr + 28 + num_objects * 4;
+			while (num_sounds--)
+				loadResource(rtSound, *ptr++);
+			while (num_scripts--)
+				loadResource(rtScript, *ptr++);
+		} else if (_version == 3) {
+			num_sounds = *(roomResPtr + 23);
+			num_scripts = *(roomResPtr + 24);
+			ptr = roomptr + 29 + num_objects * 4 + num_sounds + num_scripts;
+			while (*ptr) {
+				int id = *ptr;
+
+				_localScriptList[id - _numGlobalScripts] = READ_LE_UINT16(ptr + 1);
+				ptr += 3;
+	
+				if (_dumpScripts) {
+					char buf[32];
+					sprintf(buf, "room-%d-", _roomResource);
+
+					// HACK: to determine the sizes of the local scripts, we assume that
+					// a) their order in the data file is the same as in the index
+					// b) the last script at the same time is the last item in the room "header"
+					int len = - (int)_localScriptList[id - _numGlobalScripts] + _resourceHeaderSize;
+					if (*ptr)
+						len += READ_LE_UINT16(ptr + 1);
+					else
+						len += READ_LE_UINT16(roomResPtr);
+					dumpResource(buf, id, roomResPtr + _localScriptList[id - _numGlobalScripts] - _resourceHeaderSize, len);
+				}
+			}
+		}
+	} else if (_features & GF_SMALL_HEADER) {
+		ResourceIterator localScriptIterator(searchptr, true);
+		while ((ptr = localScriptIterator.findNext(MKID('LSCR'))) != NULL) {
+			int id = 0;
+			ptr += _resourceHeaderSize;	/* skip tag & size */
+			id = ptr[0];
+
+			if (_dumpScripts) {
+				char buf[32];
+				sprintf(buf, "room-%d-", _roomResource);
+				dumpResource(buf, id, ptr - _resourceHeaderSize);
+			}
+
+			_localScriptList[id - _numGlobalScripts] = ptr + 1 - roomptr;
+		}
+	} else {
+		ResourceIterator localScriptIterator(searchptr, false);
+		while ((ptr = localScriptIterator.findNext(MKID('LSCR'))) != NULL) {
+			int id = 0;
+
+			ptr += _resourceHeaderSize;	/* skip tag & size */
+
+			if (_version == 8) {
+				id = READ_LE_UINT32(ptr);
+				checkRange(NUM_LOCALSCRIPT + _numGlobalScripts, _numGlobalScripts, id, "Invalid local script %d");
+				_localScriptList[id - _numGlobalScripts] = ptr + 4 - roomResPtr;
+			} else if (_version == 7) {
+				id = READ_LE_UINT16(ptr);
+				checkRange(NUM_LOCALSCRIPT + _numGlobalScripts, _numGlobalScripts, id, "Invalid local script %d");
+				_localScriptList[id - _numGlobalScripts] = ptr + 2 - roomResPtr;
+			} else {
+				id = ptr[0];
+				_localScriptList[id - _numGlobalScripts] = ptr + 1 - roomResPtr;
+			}
+
+			if (_dumpScripts) {
+				char buf[32];
+				sprintf(buf, "room-%d-", _roomResource);
+				dumpResource(buf, id, ptr - _resourceHeaderSize);
+			}
+		}
 	}
 
-	ptr = findResourceData(MKID('CLUT'), roomptr);
+	if (_features & GF_OLD_BUNDLE)
+		ptr = 0; // TODO ? do 16 bit games use a palette?!?
+	else if (_features & GF_SMALL_HEADER)
+		ptr = findResourceSmall(MKID('CLUT'), roomptr);
+	else
+		ptr = findResourceData(MKID('CLUT'), roomptr);
+
 	if (ptr) {
 		_CLUT_offs = ptr - roomptr;
 		setPaletteFromRes();
 	}
 
-	if (_version == 6) {
+	if (_version >= 6) {
 		ptr = findResource(MKID('PALS'), roomptr);
 		if (ptr) {
 			_PALS_offs = ptr - roomptr;
@@ -1601,17 +2425,28 @@ void ScummEngine::initRoomSubBlocks() {
 	}
 
 	// Color cycling
-	ptr = findResourceData(MKID('CYCL'), roomptr);
-	if (ptr) {
-		initCycl(ptr);
+	if (_version >= 4) {
+		if (_features & GF_SMALL_HEADER)
+			ptr = findResourceSmall (MKID('CYCL'), roomptr);
+		else 
+			ptr = findResourceData(MKID('CYCL'), roomptr);
+		if (ptr) {
+			initCycl(ptr);
+		}
 	}
 
 	// Transparent color
-	ptr = findResourceData(MKID('TRNS'), roomptr);
-	if (ptr)
-		gdi._transparentColor = ptr[0];
-	else
-		gdi._transparentColor = 255;
+	if (_features & GF_OLD_BUNDLE)
+		gdi._transparentColor = 255;	// TODO - FIXME
+	else {
+		ptr = findResourceData(MKID('TRNS'), roomptr);
+		if (ptr)
+			gdi._transparentColor = ptr[0];
+		else if (_version == 8)
+			gdi._transparentColor = 5;	// FIXME
+		else
+			gdi._transparentColor = 255;
+	}
 
 	initBGBuffers(_roomHeight);
 }
@@ -1654,16 +2489,23 @@ void ScummEngine::restart() {
 	}
 	_sound->setupSound();               // Reinit sound engine
 
-	if (_gameId == GID_MONKEY)
+	if (_gameId == GID_MONKEY || _gameId == GID_MONKEY_SEGA)
 		_scummVars[74] = 1225;
 
 	// Re-run bootscript
 	int args[16];
 	memset(args, 0, sizeof(args));
 	args[0] = _bootParam;	
-	runScript(1, 0, 0, args);
+	if (_gameId == GID_MANIAC && _version == 1 && _demoMode)
+		runScript(9, 0, 0, args);
+	else
+		runScript(1, 0, 0, args);
 }
 
+void ScummEngine::startManiac() {
+	warning("stub startManiac()");
+	displayError("Alright", "Usually, Maniac Mansion would start now. But ScummVM doesn't do that yet. To play it, go to 'Add Game' in the ScummVM start menu and select the 'Maniac' directory inside the Tentacle game directory.");
+}
 
 #pragma mark -
 #pragma mark --- GUI ---
@@ -1673,18 +2515,18 @@ int ScummEngine::runDialog(Dialog &dialog) {
 	// Pause sound & video
 	bool old_soundsPaused = _sound->_soundsPaused;
 	_sound->pauseSounds(true);
+	bool oldSmushPaused = _smushPaused;
+	_smushPaused = true;
 
 	// Open & run the dialog
 	int result = dialog.runModal();
-
-	// full redraw necessary
-	_fullRedraw = true;
 
 	// Restore old cursor
 	updateCursor();
 
 	// Resume sound & video
 	_sound->pauseSounds(old_soundsPaused);
+	_smushPaused = oldSmushPaused;
 	
 	// Return the result
 	return result;
@@ -1702,9 +2544,18 @@ void ScummEngine::mainMenuDialog() {
 	runDialog(*_mainMenuDialog);
 }
 
+void ScummEngine::optionsDialog() {
+	if (!_optionsDialog)
+		_optionsDialog = new ConfigDialog(this);
+	runDialog(*_optionsDialog);
+}
+
 void ScummEngine::confirmexitDialog() {
 	ConfirmDialog confirmExitDialog(this, "Do you really want to quit (y/n)?");
-	_quit = runDialog(confirmExitDialog);
+
+	if (runDialog(confirmExitDialog)) {
+		_quit = true;
+	}
 }
 
 void ScummEngine::confirmrestartDialog() {
@@ -1715,8 +2566,7 @@ void ScummEngine::confirmrestartDialog() {
 	}
 }
 
-char ScummEngine::displayError(const char *altButton, const char *message/*, ...*/) {
-/*
+char ScummEngine::displayError(const char *altButton, const char *message, ...) {
 #ifdef __PALM_OS__
 	char buf[256]; // 1024 is too big overflow the stack
 #else
@@ -1727,8 +2577,8 @@ char ScummEngine::displayError(const char *altButton, const char *message/*, ...
 	va_start(va, message);
 	vsprintf(buf, message, va);
 	va_end(va);
-*/
-	GUI::MessageDialog dialog(message, "OK", altButton);
+
+	GUI::MessageDialog dialog(buf, "OK", altButton);
 	return runDialog(dialog);
 }
 
@@ -1814,23 +2664,65 @@ int SJIStoFMTChunk(int f, int s) //convert sjis code to fmt font offset
 	return ((chunk_f + chunk) * 32 + (s - base)) + cr;
 }
 
+byte *ScummEngine::get2byteCharPtr(int idx) {
+	switch(_language) {
+	case Common::KO_KOR:
+		idx = ((idx % 256) - 0xb0) * 94 + (idx / 256) - 0xa1;
+		break;
+	case Common::JA_JPN:
+		idx = SJIStoFMTChunk((idx % 256), (idx / 256));
+		break;
+	case Common::ZH_TWN:
+	default:
+		idx = 0;
+	}
+	return 	_2byteFontPtr + ((_2byteWidth + 7) / 8) * _2byteHeight * idx;
+}
+
 
 const char *ScummEngine::getGameDataPath() const {
+#ifdef MACOSX
+	if (_version == 8 && !memcmp(_gameDataPath.c_str(), "/Volumes/MONKEY3_", 17)) {
+		// Special case for COMI on Mac OS X. The mount points on OS X depend
+		// on the volume name. Hence if playing from CD, we'd get a problem.
+		// So if loading of a resource file fails, we fall back to the (fixed)
+		// CD mount points (/Volumes/MONKEY3_1 and /Volumes/MONKEY3_2).
+		//
+		// The check for whether we play from CD or not is very hackish, though.
+		static char buf[256];
+		struct stat st;
+		int disk = (_scummVars && _scummVars[VAR_CURRENTDISK] == 2) ? 2 : 1;
+		sprintf(buf, "/Volumes/MONKEY3_%d", disk);
+	
+		if (!stat(buf, &st)) {
+			return buf;
+		}
+	
+		// Apparently that disk is not inserted. However since many data files
+		// (fonts, comi.la0) are on both disks, we also try the other CD.
+		disk = (disk == 1) ? 2 : 1;
+		sprintf(buf, "/Volumes/MONKEY3_%d", disk);
+		return buf;
+	}
+#endif
+
 	return _gameDataPath.c_str();
 }
 
-#ifndef RELEASEBUILD
-void ScummEngine::errorString(const char *buf1, char *buf2)
-{
-	if (_currentScript != 0xFF)
-	{
+void ScummEngine::errorString(const char *buf1, char *buf2) {
+	if (_currentScript != 0xFF) {
 		ScriptSlot *ss = &vm.slot[_currentScript];
 		sprintf(buf2, "(%d:%d:0x%X): %s", _roomResource,
 			ss->number, _scriptPointer - _scriptOrgPointer, buf1);
 	} else {
 		strcpy(buf2, buf1);
 	}
-#ifndef DISABLE_DEBUGGER
+
+#ifdef _WIN32_WCE
+	if (isSmartphone())
+		return;
+#endif
+
 	// Unless an error -originated- within the debugger, spawn the debugger. Otherwise
 	// exit out normally.
 	if (_debugger && !_debugger->isAttached()) {
@@ -1838,23 +2730,23 @@ void ScummEngine::errorString(const char *buf1, char *buf2)
 		_debugger->attach(buf2);
 		_debugger->onFrame();
 	}
-#endif
 }
-#endif
 
 #pragma mark -
 #pragma mark --- Utilities ---
 #pragma mark -
 
-#ifndef RELEASEBUILD
 void checkRange(int max, int min, int no, const char *str) {
 	if (no < min || no > max) {
+#ifdef __PALM_OS__
 		char buf[256]; // 1024 is too big overflow the stack
+#else
+		char buf[1024];
+#endif
 		sprintf(buf, str, no);
 		error("Value %d is out of bounds (%d,%d) (%s)", no, min, max, buf);
 	}
 }
-#endif
 
 /**
  * Convert an old style direction to a new style one (angle),
@@ -1933,7 +2825,94 @@ const char *tag2str(uint32 tag) {
 
 using namespace Scumm;
 
+GameList Engine_SCUMM_gameList() {
+	const ScummGameSettings *g = scumm_settings;
+	GameList games;
+	while (g->name) {
+		games.push_back(g->toGameSettings());
+		g++;
+	}
+	return games;
+}
 
+DetectedGameList Engine_SCUMM_detectGames(const FSList &fslist) {
+	DetectedGameList detectedGames;
+	const ScummGameSettings *g;
+	char detectName[128];
+	char detectName2[128];
+	
+	typedef Common::Map<Common::String, bool> StringSet;
+	StringSet fileSet;
+
+	for (g = scumm_settings; g->name; ++g) {
+		// Determine the 'detectname' for this game, that is, the name of a 
+		// file that *must* be presented if the directory contains the data
+		// for this game. For example, FOA requires atlantis.000
+		if (g->version <= 3) {
+			strcpy(detectName, "00.LFL");
+			detectName2[0] = '\0';
+		} else if (g->version == 4) {
+			strcpy(detectName, "000.LFL");
+			detectName2[0] = '\0';
+		} else {
+			const char *base = g->baseFilename ? g->baseFilename : g->name;
+			strcpy(detectName, base);
+			strcat(detectName, ".000");
+			strcpy(detectName2, base);
+			if (g->features & GF_HUMONGOUS) {
+				strcat(detectName2, ".he0");
+			} else if (g->version >= 7) {
+				strcat(detectName2, ".la0");
+			} else
+				strcat(detectName2, ".sm0");
+		}
+
+		// Iterate over all files in the given directory
+		for (FSList::const_iterator file = fslist.begin(); file != fslist.end(); ++file) {
+			const char *name = file->displayName().c_str();
+
+			if ((0 == scumm_stricmp(detectName, name))  || 
+				(0 == scumm_stricmp(detectName2, name))) {
+				// Match found, add to list of candidates, then abort inner loop.
+				detectedGames.push_back(g->toGameSettings());
+				fileSet.addKey(file->path());
+				break;
+			}
+		}
+	}
+	
+	// Now, we check the MD5 sums of the 'candidate' files. If we have an exact match,
+	// only return that.
+	bool exactMatch = false;
+	for (StringSet::const_iterator iter = fileSet.begin(); iter != fileSet.end(); ++iter) {
+		uint8 md5sum[16];
+		const char *name = iter->_key.c_str();
+		if (md5_file(name, md5sum)) {
+			char md5str[32+1];
+			for (int j = 0; j < 16; j++) {
+				sprintf(md5str + j*2, "%02x", (int)md5sum[j]);
+			}
+
+			const MD5Table *elem;
+			elem = (const MD5Table *)bsearch(md5str, md5table, ARRAYSIZE(md5table)-1, sizeof(MD5Table), compareMD5Table);
+			if (elem) {
+				if (!exactMatch)
+					detectedGames.clear();	// Clear all the non-exact candidates
+				// Find the GameSettings for that target
+				for (g = scumm_settings; g->name; ++g) {
+					if (0 == scumm_stricmp(g->name, elem->target))
+						break;
+				}
+				assert(g->name);
+				// Insert the 'enhanced' game data into the candidate list
+				detectedGames.push_back(DetectedGame(g->toGameSettings(), elem->language, elem->platform));
+				exactMatch = true;
+			}
+		}
+	}
+	
+	return detectedGames;
+}
 
 Engine *Engine_SCUMM_create(GameDetector *detector, OSystem *syst) {
 	Engine *engine;
@@ -1950,30 +2929,63 @@ Engine *Engine_SCUMM_create(GameDetector *detector, OSystem *syst) {
 
 	ScummGameSettings game = *g;
 
-	byte platform = GetConfig(kConfig_Platform);
-	switch (platform)
-	{
+	if (ConfMan.hasKey("amiga")) {
+		warning("Configuration key 'amiga' is deprecated. Use 'platform=amiga' instead");
+		if (ConfMan.getBool("amiga"))
+			game.features |= GF_AMIGA;
+	}
+
+	switch (Common::parsePlatform(ConfMan.get("platform"))) {
 	case Common::kPlatformAmiga:
 		game.features |= GF_AMIGA;
 		break;
+	case Common::kPlatformAtariST:
+		game.features |= GF_ATARI_ST;
+		break;
+	case Common::kPlatformMacintosh:
+		game.features |= GF_MACINTOSH;
+		break;
+	case Common::kPlatformFMTowns:
+		if (game.version == 3) {
+			// The V5 FM-TOWNS games are mostly identical to the PC versions, it seems?
+			game.features |= GF_FMTOWNS;
+			game.midi = MDT_TOWNS;
+		}
+		break;
 	default:
-		game.features |= GF_PC;
+		if (!(game.features & GF_FMTOWNS))
+			game.features |= GF_PC;
 		break;
 	}
 
 	switch (game.version) {
-#ifdef ENGINE_SCUMM5
+	case 1:
+	case 2:
+		engine = new ScummEngine_v2(detector, syst, game);
+		break;
+	case 3:
+		engine = new ScummEngine_v3(detector, syst, game);
+		break;
+	case 4:
+		engine = new ScummEngine_v4(detector, syst, game);
+		break;
 	case 5:
 		engine = new ScummEngine_v5(detector, syst, game);
 		break;
-#endif //ENGINE_SCUMM5
-
-#ifdef ENGINE_SCUMM6
 	case 6:
-		engine = new ScummEngine_v6(detector, syst, game);
+		if (game.features & GF_HUMONGOUS)
+			engine = new ScummEngine_v6he(detector, syst, game);
+		else
+			engine = new ScummEngine_v6(detector, syst, game);
 		break;
-#endif //ENGINE_SCUMM6
-
+	case 7:
+		engine = new ScummEngine_v7(detector, syst, game);
+		break;
+#ifndef __PALM_OS__
+	case 8:
+		engine = new ScummEngine_v8(detector, syst, game);
+		break;
+#endif
 	default:
 		error("Engine_SCUMM_create(): Unknown version of game engine");
 	}
@@ -1981,3 +2993,4 @@ Engine *Engine_SCUMM_create(GameDetector *detector, OSystem *syst) {
 	return engine;
 }
 
+REGISTER_PLUGIN("Scumm Engine", Engine_SCUMM_gameList, Engine_SCUMM_create, Engine_SCUMM_detectGames)

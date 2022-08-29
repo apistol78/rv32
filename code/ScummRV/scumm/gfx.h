@@ -24,10 +24,6 @@
 #define GFX_H
 
 #include "common/rect.h"
-#include "common/dirty.h"
-
-extern uint32 c2ptable256[];
-extern uint32 c2pfill256[];
 
 namespace Scumm {
 
@@ -99,7 +95,7 @@ struct VirtScreen {
 	 */
 	uint16 topline;
 	
-	/** Width of the virtual screen (currently always identical to SCREEN_WIDTH). */
+	/** Width of the virtual screen (currently always identical to _screenWidth). */
 	uint16 width;
 
 	/** Height of the virtual screen. */
@@ -141,65 +137,35 @@ struct VirtScreen {
 	/**
 	 * Array containing for each visible strip of this virtual screen the
 	 * coordinate at which the dirty region of that strip starts.
+	 * 't' stands for 'top' - the top coordinate of the dirty region.
+	 * This together with bdirty is used to do efficient redrawing of
+	 * the screen.
 	 */
-	Common::DirtyMask dirty;
+	uint16 tdirty[80];
+
+	/**
+	 * Array containing for each visible strip of this virtual screen the
+	 * coordinate at which the dirty region of that strip end.
+	 * 'b' stands for 'bottom' - the bottom coordinate of the dirty region.
+	 * This together with tdirty is used to do efficient redrawing of
+	 * the screen.
+	 */
+	uint16 bdirty[80];
+
+	/**
+	 * Convenience method to set the whole tdirty and bdirty arrays to one
+	 * specific value each. This is mostly used to mark every as dirty in
+	 * a single step, like so:
+	 *   vs->setDirtyRange(0, vs->height);
+	 * or to mark everything as clean, like so:
+	 *   vs->setDirtyRange(0, 0);
+	 */
 	void setDirtyRange(int top, int bottom) {
-		dirty.setRange(top, bottom);
-	}
-
-	void setDirty(int strip, int top, int bottom) {
-		dirty.setStrip(strip, top, bottom);
-	}
-	
-	void updateDirty(int strip, int top, int bottom) {
-		dirty.updateStrip(strip, top, bottom);
-	}
-
-
-	/*
-	uint16 dirty[SCREEN_STRIP_COUNT];
-	#define DIRTY_TILE_HEIGHT		1
-	#if DIRT_TILE_HEIGHT == 1
-		#define DIRTY_ADJUST_TOP(_y)	(byte)CLAMP<int>(_y, 0, 255)	
-		#define DIRTY_ADJUST_BOT(_y)	(byte)CLAMP<int>(_y, 0, 255)	
-	#else
-		#define DIRTY_ADJUST_TOP(_y)	(byte)CLAMP<int>((_y&~(DIRTY_TILE_HEIGHT-1)), 0, 255)	
-		#define DIRTY_ADJUST_BOT(_y)	(byte)CLAMP<int>(((_y+(DIRTY_TILE_HEIGHT-1))&~(DIRTY_TILE_HEIGHT-1)), 0, 255)	
-	#endif
-
-	void setDirtyRange(int top, int bottom) {
-		byte t = DIRTY_ADJUST_TOP(top);
-		byte b = DIRTY_ADJUST_BOT(bottom);
-		byte* dirt = (byte*)dirty;
-		byte count = SCREEN_STRIP_COUNT;
-		while(count)
-		{
-			*dirt++ = t;
-			*dirt++ = b;
-			count--;
+		for (int i = 0; i < 80; i++) {
+			tdirty[i] = top;
+			bdirty[i] = bottom;
 		}
 	}
-
-	void setDirty(int strip, int top, int bottom) {
-		if (strip < 0 || strip >= SCREEN_STRIP_COUNT)
-			return;
-		byte* dirt = (byte*)&dirty[strip];
-		*dirt++ = DIRTY_ADJUST_TOP(top);
-		*dirt++ = DIRTY_ADJUST_BOT(bottom);
-	}
-	
-	void updateDirty(int strip, int top, int bottom) {
-		if (strip < 0 || strip >= SCREEN_STRIP_COUNT)
-			return;
-		byte* dirt = (byte*)&dirty[strip];
-		byte t = *(dirt+0);
-		byte b = *(dirt+1);
-		byte nt = DIRTY_ADJUST_TOP(top);
-		byte nb = DIRTY_ADJUST_BOT(bottom);
-		if (nt < t)	*(dirt+0) = nt;
-		if (nb > b) *(dirt+1) = nb;
-	}
-	*/
 };
 
 /** Palette cycles */
@@ -223,15 +189,14 @@ struct BlastObject {
 /** Bomp graphics data, used as parameter to ScummEngine::drawBomp. */
 struct BompDrawData {
 	byte *out;
-	uint outoffs;
-	int16 outwidth, outheight;
-	int16 x, y;
+	int outwidth, outheight;
+	int x, y;
 	byte scale_x, scale_y;
 	const byte *dataptr;
-	int16 srcwidth, srcheight;
+	int srcwidth, srcheight;
 	uint16 shadowMode;
 
-	int16 scaleRight, scaleBottom;
+	int32 scaleRight, scaleBottom;
 	byte *scalingXPtr, *scalingYPtr;
 	byte *maskPtr;
 	
@@ -242,12 +207,13 @@ struct StripTable;
 
 class Gdi {
 	friend class ScummEngine;	// Mostly for the code in saveload.cpp ...
-	friend class AtariResourceConverter;
 	ScummEngine *_vm;
 
 public:
 	int _numZBuffer;
 	int _imgBufOffs[8];
+	int32 _numStrips;
+	byte _C64Colors[4];
 	
 	Gdi(ScummEngine *vm);
 
@@ -255,37 +221,51 @@ protected:
 	byte *_roomPalette;
 	byte _decomp_shr, _decomp_mask;
 	byte _transparentColor;
-	uint32 _horizStripNextInc;
-	byte _tempDecodeBuffer[8*200];
-	byte _tempDecodeMask[200];
+	uint32 _vertStripNextInc;
+
 	bool _zbufferDisabled;
 
+	byte _C64CharMap[2048], _C64ObjectMap[2048], _C64PicMap[4096], _C64ColorMap[4096];
+	byte _C64MaskMap[4096], _C64MaskChar[4096];
+	bool _C64ObjectMode;
+
 	/* Bitmap decompressors */
-	byte convertBitmap(byte* dst, const byte* src, int numLinesToProcess);
-	bool decompressBitmap(byte *bgbak_ptr, const byte *src, int16 numLinesToProcess, int16 startLine = 0);
-	template <bool preprocess> void unkDecodeA(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecodeB(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecodeC(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecode7(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecodeA_trans(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecodeB_trans(byte *dst, const byte *src, int height);
-	template <bool preprocess> void unkDecodeC_trans(byte *dst, const byte *src, int height);
+	bool decompressBitmap(byte *bgbak_ptr, const byte *src, int numLinesToProcess);
+	void decodeStripEGA(byte *dst, const byte *src, int height);
+	void decodeC64Gfx(const byte *src, byte *dst, int size);
+	void drawStripC64Object(byte *dst, int stripnr, int width, int height);
+	void drawStripC64Background(byte *dst, int stripnr, int height);
+	void drawStripC64Mask(byte *dst, int stripnr, int width, int height);
+	void unkDecodeA(byte *dst, const byte *src, int height);
+	void unkDecodeA_trans(byte *dst, const byte *src, int height);
+	void unkDecodeB(byte *dst, const byte *src, int height);
+	void unkDecodeB_trans(byte *dst, const byte *src, int height);
+	void unkDecodeC(byte *dst, const byte *src, int height);
+	void unkDecodeC_trans(byte *dst, const byte *src, int height);
+
+	void unkDecode7(byte *dst, const byte *src, int height);
+	void unkDecode8(byte *dst, const byte *src, int height);
+	void unkDecode9(byte *dst, const byte *src, int height);
+	void unkDecode10(byte *dst, const byte *src, int height);
+	void unkDecode11(byte *dst, const byte *src, int height);
 
 	void draw8ColWithMasking(byte *dst, const byte *src, int height, byte *mask);
 	void draw8Col(byte *dst, const byte *src, int height);
 	void clear8ColWithMasking(byte *dst, int height, byte *mask);
 	void clear8Col(byte *dst, int height);
-	void decompressMaskImgOr(byte *dst, const byte *src, int16 height, int16 yoffs);
-	void decompressMaskImg(byte *dst, const byte *src, int16 height, int16 yoffs);
+	void decompressMaskImgOr(byte *dst, const byte *src, int height);
+	void decompressMaskImg(byte *dst, const byte *src, int height);
 
+	void drawStripToScreen(VirtScreen *vs, int x, int w, int t, int b);
 	void updateDirtyScreen(VirtScreen *vs);
 	
 	byte *getMaskBuffer(int x, int y, int z = 0);
 
-
 public:
+	void drawBitmap(const byte *ptr, VirtScreen *vs, int x, int y, const int width, const int height,
+	                int stripnr, int numstrip, byte flag, StripTable *table = 0);
+	StripTable *generateStripTable(const byte *src, int width, int height, StripTable *table);
 
-	void drawBitmap(const byte *ptr, VirtScreen *vs, int16 x, int16 y, const int16 width, const int16 height, int16 stripnr, int16 numstrip, int16 yoffs, byte flag);
 	void disableZBuffer() { _zbufferDisabled = true; }
 	void enableZBuffer() { _zbufferDisabled = false; }
 
@@ -297,6 +277,26 @@ public:
 		dbClear = 4
 	};
 };
+
+
+// If you want to try buggy hacked smooth scrolling support in The Dig, enable
+// the following preprocessor flag by uncommenting it.
+//
+// Note: This is purely experimental, NOT WORKING COMPLETLY and very buggy.
+// Please do not make reports about problems with it - this is only in CVS
+// to get it fixed and so that really interested parties can experiment it.
+// It is NOT FIT FOR GENERAL USAGE! You have been warned.
+//
+// Doing this correctly will be complicated. Basically, with smooth scrolling,
+// the virtual screen strips don't match the display screen strips. Hence we
+// either have to draw partial strips (but that'd be rather cumbersome). Or the
+// alternative (and IMHO more elegant) solution is to simply use a screen pitch
+// that is 8 pixel wider than the real screen width, and always draw one strip
+// more than needed to the backbuf. This will still require quite some code to
+// be changed but should otherwise be relatively easy to understand, and using
+// VirtScreen::pitch will actually clean up the code.
+//
+// #define V7_SMOOTH_SCROLLING_HACK
 
 
 } // End of namespace Scumm
