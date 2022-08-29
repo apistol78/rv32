@@ -31,3 +31,13 @@ uint8_t uart_rx_u8(uint8_t port)
 {
 	return (uint8_t)*c_base[port];
 }
+
+uint32_t uart_rx_u32(uint8_t port)
+{
+	uint8_t tmp[4];
+	tmp[0] = uart_rx_u8(port);
+	tmp[1] = uart_rx_u8(port);
+	tmp[2] = uart_rx_u8(port);
+	tmp[3] = uart_rx_u8(port);
+	return *(uint32_t*)tmp;
+}

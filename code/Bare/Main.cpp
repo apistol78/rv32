@@ -13,16 +13,6 @@
 #include "Console.h"
 #include "ELF.h"
 
-static uint32_t uart_rx_u32(uint8_t port)
-{
-	uint8_t tmp[4];
-	tmp[0] = uart_rx_u8(port);
-	tmp[1] = uart_rx_u8(port);
-	tmp[2] = uart_rx_u8(port);
-	tmp[3] = uart_rx_u8(port);
-	return *(uint32_t*)tmp;
-}
-
 char cmd[120];
 int32_t cnt = 0;
 
