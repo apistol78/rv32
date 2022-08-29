@@ -732,5 +732,179 @@
 				</item>
 			</dependencies>
 		</item>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>ScummRV</name>
+			<sourcePath>code/ScummRV</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/ScummRV</item>
+						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/backends/rv</item>
+					</includePaths>
+					<definitions>
+						<item>_DEBUG</item>
+						<item>NONSTANDARD_PORT</item>
+						<item>DISABLE_DEBUGGER</item>
+						<item>DISABLE_ADLIB</item>
+						<item>ENGINE_SCUMM5</item>
+						<item>ENGINE_SCUMM6</item>
+						<item>SINGLEGAME</item>
+						<item>GAME_MONKEY1</item>
+						<item>__RV__</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/ScummRV</item>
+						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/backends/rv</item>
+					</includePaths>
+					<definitions>
+						<item>NDEBUG</item>
+						<item>NONSTANDARD_PORT</item>
+						<item>DISABLE_DEBUGGER</item>
+						<item>DISABLE_ADLIB</item>
+						<item>ENGINE_SCUMM5</item>
+						<item>ENGINE_SCUMM6</item>
+						<item>SINGLEGAME</item>
+						<item>GAME_MONKEY1</item>
+						<item>__RV__</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="Filter">
+					<name>backends</name>
+					<items>
+						<item type="Filter">
+							<name>rv</name>
+							<items>
+								<item type="File">
+									<fileName>backends/rv/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>backends/rv/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="Filter">
+							<name>midi</name>
+							<items>
+								<item type="File">
+									<fileName>backends/midi/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>backends/midi/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="File">
+							<fileName>backends/*.cpp</fileName>
+							<items/>
+						</item>
+						<item type="File">
+							<fileName>backends/*.h</fileName>
+							<items/>
+						</item>
+						<item type="Filter">
+							<name>common</name>
+							<items>
+								<item type="Filter">
+									<name>gui</name>
+									<items>
+										<item type="File">
+											<fileName>common/gui/*.cpp</fileName>
+											<items/>
+										</item>
+										<item type="File">
+											<fileName>common/gui/*.h</fileName>
+											<items/>
+										</item>
+									</items>
+								</item>
+								<item type="Filter">
+									<name>sound</name>
+									<items>
+										<item type="File" version="2">
+											<fileName>common/sound/*.cpp</fileName>
+											<excludeFilter>*_xmidi.*</excludeFilter>
+											<items/>
+										</item>
+										<item type="File">
+											<fileName>common/sound/*.h</fileName>
+											<items/>
+										</item>
+									</items>
+								</item>
+								<item type="File">
+									<fileName>common/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>common/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="Filter">
+							<name>scumm</name>
+							<items>
+								<item type="File">
+									<fileName>scumm/*.cpp</fileName>
+									<items/>
+								</item>
+								<item type="File">
+									<fileName>scumm/*.h</fileName>
+									<items/>
+								</item>
+							</items>
+						</item>
+					</items>
+				</item>
+			</items>
+			<dependencies>
+				<item type="ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
 	</projects>
 </object>
