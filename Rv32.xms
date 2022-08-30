@@ -753,6 +753,7 @@
 					<definitions>
 						<item>_DEBUG</item>
 						<item>NONSTANDARD_PORT</item>
+						<item>SCUMM_NEED_ALIGNMENT</item>
 						<item>DISABLE_DEBUGGER</item>
 						<item>DISABLE_ADLIB</item>
 						<item>ENGINE_SCUMM5</item>
@@ -794,6 +795,7 @@
 					<definitions>
 						<item>NDEBUG</item>
 						<item>NONSTANDARD_PORT</item>
+						<item>SCUMM_NEED_ALIGNMENT</item>
 						<item>DISABLE_DEBUGGER</item>
 						<item>DISABLE_ADLIB</item>
 						<item>ENGINE_SCUMM5</item>
@@ -903,33 +905,6 @@
 				<item type="Filter">
 					<name>common</name>
 					<items>
-						<item type="Filter">
-							<name>gui</name>
-							<items>
-								<item type="File">
-									<fileName>common/gui/*.cpp</fileName>
-									<items/>
-								</item>
-								<item type="File">
-									<fileName>common/gui/*.h</fileName>
-									<items/>
-								</item>
-							</items>
-						</item>
-						<item type="Filter">
-							<name>sound</name>
-							<items>
-								<item type="File" version="2">
-									<fileName>common/sound/*.cpp</fileName>
-									<excludeFilter>*_xmidi.*</excludeFilter>
-									<items/>
-								</item>
-								<item type="File">
-									<fileName>common/sound/*.h</fileName>
-									<items/>
-								</item>
-							</items>
-						</item>
 						<item type="File">
 							<fileName>common/*.cpp</fileName>
 							<items/>

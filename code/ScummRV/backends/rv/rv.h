@@ -68,4 +68,15 @@ public:
 	virtual uint32 property(int param, Property *value) override final;
 
 	virtual void quit() override final;
+
+private:
+	const byte* m_mouseBits = nullptr;
+	int m_mouseW = 0;
+	int m_mouseH = 0;
+	int m_mouseHotX = 0;
+	int m_mouseHotY = 0;
+	int m_mouseX = 160;
+	int m_mouseY = 100;
+
+	void draw_mouse_cursor();
 };

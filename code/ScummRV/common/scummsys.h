@@ -44,7 +44,7 @@
 	#define scumm_strnicmp strncmp
 	
 	#define CHECK_HEAP
-	#define SCUMM_BIG_ENDIAN
+	#define SCUMM_LITTLE_ENDIAN
 
 	#define FORCEINLINE inline
 	#define NORETURN __attribute__((__noreturn__))
