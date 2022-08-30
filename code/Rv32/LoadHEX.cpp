@@ -53,7 +53,7 @@ bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus)
 			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
 			{
 				int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
-				busAccess.writeU8((upper | addr) + segment, (uint8_t)v);
+				busAccess.writeU8(0, (upper | addr) + segment, (uint8_t)v);
 				start = std::min(start, (upper | addr) + segment);
 				end = std::max(end, (upper | addr) + segment);
 				addr++;

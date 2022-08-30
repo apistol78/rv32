@@ -171,14 +171,14 @@ inline FormatR4 parseFormatR4(uint32_t word)
 #define FR(x) m_flt_registers[x]
 #define FR_u(x) (uint32_t&)m_flt_registers[x]
 
-#define MEM_RD(addr) m_busAccess->readU32(addr)
-#define MEM_WR(addr, value) m_busAccess->writeU32(addr, value)
+#define MEM_RD(addr) m_busAccess->readU32(m_pc, addr)
+#define MEM_WR(addr, value) m_busAccess->writeU32(m_pc, addr, value)
 
-#define MEM_RD_U16(addr) m_busAccess->readU16(addr)
-#define MEM_WR_U16(addr, value) m_busAccess->writeU16(addr, value)
+#define MEM_RD_U16(addr) m_busAccess->readU16(m_pc, addr)
+#define MEM_WR_U16(addr, value) m_busAccess->writeU16(m_pc, addr, value)
 
-#define MEM_RD_U8(addr) m_busAccess->readU8(addr);
-#define MEM_WR_U8(addr, value) m_busAccess->writeU8(addr, value)
+#define MEM_RD_U8(addr) m_busAccess->readU8(m_pc, addr);
+#define MEM_WR_U8(addr, value) m_busAccess->writeU8(m_pc, addr, value)
 
 #define TRACE(s) // if (m_trace) { *m_trace << s << Endl; }
 
