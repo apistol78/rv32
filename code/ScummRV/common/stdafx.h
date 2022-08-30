@@ -32,6 +32,7 @@
 #if defined(NONSTANDARD_PORT)
 
 #include <portdefs.h>
+#include <math.h>
 
 #elif defined(WIN32)
 

@@ -1,7 +1,9 @@
 
 `timescale 1ns/1ns
 
-module AUDIO_controller(
+module AUDIO_controller #(
+	parameter BUFFER_SIZE = 4096
+)(
 	input i_reset,
 	input i_clock,
 
@@ -22,9 +24,9 @@ module AUDIO_controller(
 	wire output_fifo_full;
 	bit output_fifo_wr = 0;
 	bit output_fifo_rd = 0;
-	wire [7:0] output_fifo_queued;
+	wire [$clog2(BUFFER_SIZE)-1:0] output_fifo_queued;
 	FIFO64 #(
-		.DEPTH(256),
+		.DEPTH(BUFFER_SIZE),
 		.WIDTH(16)
 	) output_fifo(
         .i_clock(i_clock),
@@ -46,7 +48,7 @@ module AUDIO_controller(
 		output_fifo_wr <= 0;
 		if (i_request && !o_ready) begin
 			if (!i_rw) begin
-				o_rdata <= { 24'b0, output_fifo_queued };
+				o_rdata <= output_fifo_queued;
 				o_ready <= 1;
 			end
 			else begin
@@ -65,9 +67,9 @@ module AUDIO_controller(
 		output_fifo_rd <= !i_output_busy && !output_fifo_empty;
 	end
 
-	bit [1:0] last_queued = 2'b0;
+	bit [1:0] last_queued = 2'b00;
 	always_ff @(posedge i_clock) begin
-		last_queued <= { last_queued[0], output_fifo_queued[7] };
+		last_queued <= { last_queued[0], output_fifo_queued > BUFFER_SIZE / 2 };
 	end
 
 	always_comb begin

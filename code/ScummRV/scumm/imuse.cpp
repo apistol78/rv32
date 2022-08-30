@@ -186,7 +186,6 @@ bool IMuseInternal::isGM(int sound) {
 
 MidiDriver *IMuseInternal::getBestMidiDriver(int sound) {
 	MidiDriver *driver = NULL;
-#if !defined(__RV__)
 	if (isGM(sound)) {
 		if (_midi_native) {
 			driver = _midi_native;
@@ -205,7 +204,6 @@ MidiDriver *IMuseInternal::getBestMidiDriver(int sound) {
 		}
 		driver = _midi_adlib;
 	}
-#endif
 	return driver;
 }
 

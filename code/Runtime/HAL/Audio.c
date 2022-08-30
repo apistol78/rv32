@@ -4,11 +4,6 @@
 
 static uint32_t s_channels = 0;
 
-static void audio_interrupt_handler()
-{
-	// Called when audio device's queue is half full of samples.
-}
-
 void audio_init()
 {
 	switch(sysreg_read(SR_REG_DEVICE_ID))
@@ -24,14 +19,12 @@ void audio_init()
 		s_channels = 2;
 		break;
 	}
-
-	interrupt_set_handler(IRQ_SOURCE_PLIC_1, audio_interrupt_handler);
 }
 
 uint32_t audio_get_queued()
 {
 	volatile uint32_t* audio = (volatile uint32_t*)AUDIO_BASE;
-	return *audio & 255;
+	return *audio;
 }
 
 void audio_play_mono(const int16_t* samples, uint32_t nsamples)
@@ -58,7 +51,11 @@ void audio_play_stereo(const int16_t* samples, uint32_t nsamples)
 	if (s_channels == 1)
 	{
 		for (uint32_t i = 0; i < nsamples; i += 2)
-			*audio = (samples[i + 0] + samples[i + 1]) >> 1;
+		{
+			const int32_t lh = samples[i + 0];
+			const int32_t rh = samples[i + 1];
+			*audio = (int16_t)((lh + rh) >> 1);
+		}
 	}
 	else if (s_channels == 2)
 	{

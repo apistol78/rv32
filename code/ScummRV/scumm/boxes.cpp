@@ -1217,7 +1217,7 @@ void ScummEngine::getGates(int trap1, int trap2, Common::Point gateA[2], Common:
 			}
 		}
 		dist[closest[j]] = 0xFFFF;
-		minDist[j] = 0; // anders.pistol (int)sqrt((double)minDist[j]);
+		minDist[j] = (int)sqrt((double)minDist[j]);
 		box[j] = (closest[j] > 3);	// Is the point on the first or on the second box?
 	}
 

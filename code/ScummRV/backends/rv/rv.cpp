@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
@@ -10,12 +11,34 @@
 namespace
 {
 
+const int MAX_MOUSE_W = 80;
+const int MAX_MOUSE_H = 80;
+const int MAX_SCALING = 3;
+
 int32_t clamp(int32_t v, int32_t mn, int32_t mx)
 {
 	return
 		v < mn ? mn :
 		v > mx ? mx :
 		v;
+}
+
+int32_t map_key(uint8_t kc)
+{
+	if (kc >= RT_KEY_F1 && kc <= RT_KEY_F12) {
+		return kc - RT_KEY_F1 + 315;
+	// } else if (key >= SDLK_KP0 && key <= SDLK_KP9) {
+	// 	return key - SDLK_KP0 + '0';
+	// } else if (key >= SDLK_UP && key <= SDLK_PAGEDOWN) {
+	// 	return key;
+	// } else if (unicode) {
+	// 	return unicode;
+	// } else if (key >= 'a' && key <= 'z' && mod & KMOD_SHIFT) {
+	// 	return key & ~0x20;
+	// } else if (key >= SDLK_NUMLOCK && key <= SDLK_EURO) {
+	// 	return 0;
+	}
+	return 0;
 }
 
 }
@@ -35,6 +58,8 @@ void OSystem_RebelV::init_size(uint w, uint h)
 			(r << 16) | (g << 8) | (b)
 		);
 	}
+
+	m_mouseBackup = (byte*)malloc(MAX_MOUSE_W * MAX_MOUSE_H * MAX_SCALING * 2);
 }
 
 void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
@@ -79,6 +104,8 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 	if (w <= 0 || h <= 0)
 		return;
 
+	undraw_mouse_cursor();
+
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 
 	byte *dst = framebuffer + y * 320 + x;
@@ -97,8 +124,8 @@ void OSystem_RebelV::move_screen(int dx, int dy, int height)
 
 void OSystem_RebelV::update_screen()
 {
-	//printf("update_screen\n");
 	runtime_update();
+	update_sound();
 	draw_mouse_cursor();
 	video_swap();
 }
@@ -110,14 +137,27 @@ void OSystem_RebelV::set_shake_pos(int shake_pos)
 
 bool OSystem_RebelV::show_mouse(bool visible)
 {
-	// printf("show_mouse\n");
-	return true;
+	const bool last = m_mouseVisible;
+
+	if ((m_mouseVisible = visible) == true)
+		draw_mouse_cursor();
+	else
+		undraw_mouse_cursor();
+
+	video_swap();
+	return last;
 }
 
 void OSystem_RebelV::warp_mouse(int x, int y)
 {
 	m_mouseX = x;
 	m_mouseY = y;
+
+	if (m_mouseVisible)
+	{
+		draw_mouse_cursor();
+		video_swap();
+	}
 }
 
 void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
@@ -127,6 +167,14 @@ void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotsp
 	m_mouseH = h;
 	m_mouseHotX = hotspot_x;
 	m_mouseHotY = hotspot_y;
+
+	undraw_mouse_cursor();
+
+	if (m_mouseVisible)
+	{
+		draw_mouse_cursor();
+		video_swap();
+	}
 }
 
 uint32 OSystem_RebelV::get_msecs()
@@ -136,21 +184,48 @@ uint32 OSystem_RebelV::get_msecs()
 
 void OSystem_RebelV::delay_msecs(uint msecs)
 {
-	timer_wait_ms(msecs);
+	uint32_t ms = timer_get_ms() + msecs;
+	do
+	{
+		update_sound();
+	}
+	while (timer_get_ms() < ms);
 }
 
 void OSystem_RebelV::set_timer(TimerProc callback, int timer)
 {
-	printf("set_timer\n");
+	// printf("set_timer, %d ms\n", timer);
+	m_timerCallback = callback;
+	m_timerInterval = timer;
+	m_timerUntil = timer;
 }
 
 bool OSystem_RebelV::poll_event(Event *event)
 {
-	//printf("poll_event\n");
+	// Update timers.
+	const uint32_t ms = timer_get_ms();
+	if (m_lastTime > 0)
+	{
+		int32_t dt = ms - m_lastTime;
+		if ((m_timerUntil -= dt) <= 0)
+		{
+			if (m_timerCallback)
+				m_timerCallback(m_timerInterval);
+			m_timerUntil = m_timerInterval;
+		}
+	}
+	m_lastTime = ms;
 
+	// Update audio.
+	update_sound();
+
+	// Get keyboard events.
 	uint8_t kc, m, p;
 	if (input_get_kb_event(&kc, &m, &p) > 0)
 	{
+		char ch = 0;
+		input_translate_key(kc, m, &ch);
+
 		if ((m & (RT_MODIFIER_SHIFT | RT_MODIFIER_R_SHIFT)) != 0)
 			event->kbd.flags |= KBD_SHIFT;
 		if ((m & (RT_MODIFIER_CTRL | RT_MODIFIER_R_CTRL)) != 0)
@@ -159,19 +234,52 @@ bool OSystem_RebelV::poll_event(Event *event)
 			event->kbd.flags |= KBD_ALT;
 
 		event->event_code = p ? EVENT_KEYDOWN : EVENT_KEYUP;
-		event->kbd.keycode = 0;
-		event->kbd.ascii = 0;
+		event->kbd.keycode = map_key(kc);
+		event->kbd.ascii = ch;
 		return true;
 	}
 
+	// Get mouse motion events.
 	int8_t x, y, wheel;
 	uint8_t buttons;
 	if (input_get_mouse_event(&x, &y, &wheel, &buttons) > 0)
 	{
-		m_mouseX += x;
-		m_mouseX = clamp(m_mouseX, 0, 319);
-		m_mouseY += y;
-		m_mouseY = clamp(m_mouseY, 0, 199);
+		if (x != 0 || y != 0)
+		{
+			m_mouseX += x;
+			m_mouseX = clamp(m_mouseX, 0, 319);
+			m_mouseY += y;
+			m_mouseY = clamp(m_mouseY, 0, 199);
+
+			event->event_code = EVENT_MOUSEMOVE;
+			event->mouse.x = m_mouseX;
+			event->mouse.y = m_mouseY;
+
+			draw_mouse_cursor();
+			video_swap();
+
+			return true;
+		}
+	}
+
+	// Get mouse button events.
+	int32_t mx, my;
+	input_get_mouse_state(&mx, &my, &buttons);
+	if (buttons != m_lastButtons)
+	{
+		if (buttons & 1)
+			event->event_code = EVENT_LBUTTONDOWN;
+		else if (m_lastButtons & 1)
+			event->event_code = EVENT_LBUTTONUP;
+		else if (buttons & 2)
+			event->event_code = EVENT_RBUTTONDOWN;
+		else if (m_lastButtons & 2)
+			event->event_code = EVENT_RBUTTONUP;
+
+		event->mouse.x = m_mouseX;
+		event->mouse.y = m_mouseY;
+
+		m_lastButtons = buttons;
 		return true;
 	}
 
@@ -180,18 +288,19 @@ bool OSystem_RebelV::poll_event(Event *event)
 
 bool OSystem_RebelV::set_sound_proc(SoundProc proc, void *param, SoundFormat format)
 {
-	printf("set_sound_proc\n");
+	m_soundProc = proc;
+	m_soundParam = param;
 	return true;
 }
 
 void OSystem_RebelV::clear_sound_proc()
 {
-	printf("clear_sound_proc\n");
+	m_soundProc = nullptr;
+	m_soundParam = nullptr;
 }
 
 bool OSystem_RebelV::poll_cdrom()
 {
-	printf("poll_cdrom\n");
 	return false;
 }
 
@@ -244,7 +353,6 @@ void OSystem_RebelV::hide_overlay()
 void OSystem_RebelV::clear_overlay()
 {
 	printf("clear_overlay\n");
-	video_clear(0);
 }
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
@@ -294,7 +402,7 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 uint32 OSystem_RebelV::property(int param, Property *value)
 {
 	if (param == PROP_GET_SAMPLE_RATE)
-		return 44100;
+		return 44100; //SAMPLES_PER_SEC;
 	else
 		return 0;
 }
@@ -307,6 +415,9 @@ void OSystem_RebelV::quit()
 
 void OSystem_RebelV::draw_mouse_cursor()
 {
+	if (m_mouseDrawn)
+		return;
+
 	const byte *src = m_mouseBits;
 	if (!src)
 		return;
@@ -335,24 +446,23 @@ void OSystem_RebelV::draw_mouse_cursor()
 	if (w <= 0 || h <= 0)
 		return;
 
-	// // Store the bounding box so that undraw mouse can restore the area the
-	// // mouse currently covers to its original content.
-	// _mouseOldState.x = x;
-	// _mouseOldState.y = y;
-	// _mouseOldState.w = w;
-	// _mouseOldState.h = h;
+	// Store the bounding box so that undraw mouse can restore the area the
+	// mouse currently covers to its original content.
+	m_mouseBackupX = x;
+	m_mouseBackupY = y;
+	m_mouseBackupW = w;
+	m_mouseBackupH = h;
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 
-	// byte *bak = _mouseBackup;		// Surface used to backup the area obscured by the mouse
-
+	byte* bak = m_mouseBackup;
 	byte* dst = (byte *)framebuffer + y * 320 + x;
 	while (h > 0)
 	{
 		int width = w;
 		while (width > 0)
 		{
-			// *bak++ = *dst;
+			*bak++ = *dst;
 			byte color = *src++;
 			if (color != 0xFF)
 				*dst = color;
@@ -360,9 +470,47 @@ void OSystem_RebelV::draw_mouse_cursor()
 			width--;
 		}
 		src += m_mouseW - w;
-		// bak += MAX_MOUSE_W - w;
+		bak += MAX_MOUSE_W - w;
 		dst += 320 - w;
 		h--;
+	}
+
+	m_mouseDrawn = true;
+}
+
+void OSystem_RebelV::undraw_mouse_cursor()
+{
+	if (!m_mouseDrawn)
+		return;
+
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+
+	byte *dst, *bak = m_mouseBackup;
+
+	// No need to do clipping here, since draw_mouse() did that already
+	dst = (byte *)framebuffer + m_mouseBackupY * 320 + m_mouseBackupX;
+	for (int y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320) {
+		for (int x = 0; x < m_mouseBackupW; ++x) {
+			dst[x] = bak[x];
+		}
+	}
+
+	//add_dirty_rect(m_mouseBackupX, m_mouseBackupY, m_mouseBackupW, m_mouseBackupH);
+	m_mouseDrawn = false;
+}
+
+void OSystem_RebelV::update_sound()
+{
+	if (m_soundProc)
+	{
+		int32_t free = 4096 - audio_get_queued();
+		if (free > 0)
+		{
+			// Read samples from Scumm.
+			int16_t buf[4096*2];
+			m_soundProc(m_soundParam, (byte*)buf, free * 2 * sizeof(int16_t));
+			audio_play_stereo(buf, free);
+		}
 	}
 }
 

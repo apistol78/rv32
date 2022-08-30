@@ -70,6 +70,15 @@ public:
 	virtual void quit() override final;
 
 private:
+	uint32_t m_lastTime = 0;
+
+	TimerProc m_timerCallback = nullptr;
+	int m_timerInterval = 0;
+	int m_timerUntil = 0;
+
+	SoundProc m_soundProc = nullptr;
+	void* m_soundParam = nullptr;
+
 	const byte* m_mouseBits = nullptr;
 	int m_mouseW = 0;
 	int m_mouseH = 0;
@@ -77,6 +86,19 @@ private:
 	int m_mouseHotY = 0;
 	int m_mouseX = 160;
 	int m_mouseY = 100;
+	bool m_mouseVisible = false;
+	byte* m_mouseBackup = nullptr;
+	int m_mouseBackupX = 0;
+	int m_mouseBackupY = 0;
+	int m_mouseBackupW = 0;
+	int m_mouseBackupH = 0;
+	bool m_mouseDrawn = false;
+
+	uint8_t m_lastButtons = 0;
 
 	void draw_mouse_cursor();
+
+	void undraw_mouse_cursor();
+
+	void update_sound();
 };
