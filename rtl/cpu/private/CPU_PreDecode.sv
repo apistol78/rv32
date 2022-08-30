@@ -39,28 +39,25 @@ module CPU_PreDecode(
 			data <= 0;
 		end
 		else begin
-			if (i_data.tag != data.tag) begin
-				data <= i_data;
+			data <= i_data;
 
-				// Decode register indices here since we
-				// need those for fetching registers while
-				// we are decoding rest of instruction.
-				data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 5'h0);
-				data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 5'h0);
-				data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
-				data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
-				
-				data.imm <=
-					is_B ? inst_B_imm :
-					is_I ? inst_I_imm :
-					is_J ? inst_J_imm :
-					is_S ? inst_S_imm :
-					is_U ? inst_U_imm :
-					is_R ? inst_R_imm :
-					is_CSR ? inst_CSR_imm :
-					32'h0;
-
-			end
+			// Decode register indices here since we
+			// need those for fetching registers while
+			// we are decoding rest of instruction.
+			data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 5'h0);
+			data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 5'h0);
+			data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
+			data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
+			
+			data.imm <=
+				is_B ? inst_B_imm :
+				is_I ? inst_I_imm :
+				is_J ? inst_J_imm :
+				is_S ? inst_S_imm :
+				is_U ? inst_U_imm :
+				is_R ? inst_R_imm :
+				is_CSR ? inst_CSR_imm :
+				32'h0;
 		end
 	end
 

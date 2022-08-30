@@ -58,82 +58,53 @@ module CPU_Decode(
 			o_fault <= 0;
 		end
 		else begin
-			if (i_data.tag != data.tag) begin
+			data.pc <= i_data.pc;
 
-`ifdef __VERILATOR__
-				// If decode has received new transaction
-				// but execute is still busy we fault.
-				if (i_execute_busy)
-					o_fault <= 1;
-`endif
-				data.pc <= i_data.pc;
+			data.have_rs <= {
+				i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
+				i_data.inst_rs2 != 0 ? 1'b1 : 1'b0,
+				i_data.inst_rs1 != 0 ? 1'b1 : 1'b0
+			};
 
-				data.have_rs <= {
-					i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
-					i_data.inst_rs2 != 0 ? 1'b1 : 1'b0,
-					i_data.inst_rs1 != 0 ? 1'b1 : 1'b0
-				};
-
-				data.inst_rs1 <= i_data.inst_rs1;
-				data.inst_rs2 <= i_data.inst_rs2;
-				data.inst_rs3 <= i_data.inst_rs3;
-				data.inst_rd <= i_data.inst_rd;
-				
-				// data.imm <=
-				// 	is_B ? inst_B_imm :
-				// 	is_I ? inst_I_imm :
-				// 	is_J ? inst_J_imm :
-				// 	is_S ? inst_S_imm :
-				// 	is_U ? inst_U_imm :
-				// 	is_R ? inst_R_imm :
-				// 	is_CSR ? inst_CSR_imm :
-				// 	32'h0;
-				data.imm <= i_data.imm;
+			data.inst_rs1 <= i_data.inst_rs1;
+			data.inst_rs2 <= i_data.inst_rs2;
+			data.inst_rs3 <= i_data.inst_rs3;
+			data.inst_rd <= i_data.inst_rd;
 			
-				data.arithmetic <= is_ARITHMETIC;
-				data.shift <= is_SHIFT;
-				data.compare <= is_COMPARE;
-				data.complx <= is_COMPLEX;
-				data.jump <= is_JUMP;
-				data.jump_conditional <= is_JUMP_CONDITIONAL;
+			// data.imm <=
+			// 	is_B ? inst_B_imm :
+			// 	is_I ? inst_I_imm :
+			// 	is_J ? inst_J_imm :
+			// 	is_S ? inst_S_imm :
+			// 	is_U ? inst_U_imm :
+			// 	is_R ? inst_R_imm :
+			// 	is_CSR ? inst_CSR_imm :
+			// 	32'h0;
+			data.imm <= i_data.imm;
+		
+			data.arithmetic <= is_ARITHMETIC;
+			data.shift <= is_SHIFT;
+			data.compare <= is_COMPARE;
+			data.complx <= is_COMPLEX;
+			data.jump <= is_JUMP;
+			data.jump_conditional <= is_JUMP_CONDITIONAL;
 
-				data.alu_operation <= alu_operation;
-				data.alu_operand1 <= alu_operand1;
-				data.alu_operand2 <= alu_operand2;
+			data.alu_operation <= alu_operation;
+			data.alu_operand1 <= alu_operand1;
+			data.alu_operand2 <= alu_operand2;
 
-				data.memory_read <= memory_read;
-				data.memory_write <= memory_write;
-				data.memory_width <= memory_width;
-				data.memory_signed <= memory_signed;
-				
-//				data.fpu <= is_FPU;
-//				data.fpu_operation <= fpu_operation;
+			data.memory_read <= memory_read;
+			data.memory_write <= memory_write;
+			data.memory_width <= memory_width;
+			data.memory_signed <= memory_signed;
+			
+			// data.fpu <= is_FPU;
+			// data.fpu_operation <= fpu_operation;
 
-				`define OP data.op
-				`include "private/generated/Instructions_decode_ops.sv"
+			`define OP data.op
+			`include "private/generated/Instructions_decode_ops.sv"
 
-`ifdef __VERILATOR__
-				if (
-					is_ARITHMETIC ||
-					is_SHIFT ||
-					is_COMPARE ||
-					is_COMPLEX ||
-					is_JUMP ||
-					is_JUMP_CONDITIONAL ||
-					is_MEMORY/* ||
-					is_FPU*/
-				) begin
-					data.tag <= i_data.tag;
-				end
-				else begin
-					// Invalid or unsupported instructions end here.
-					o_fault <= 1;
-				end
-`else
-				// Do not check invalid opcode on HW due to timing constraints.
-				data.tag <= i_data.tag;
-`endif
-			end
+			data.tag <= i_data.tag;
 		end
 	end
 

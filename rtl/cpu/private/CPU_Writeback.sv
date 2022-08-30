@@ -25,10 +25,11 @@ module CPU_Writeback(
 			retired <= 0;
 		end
 		else begin
+			data.tag <= i_data.tag;
+			data.inst_rd <= i_data.inst_rd;
+			data.rd <= i_data.rd;
+
 			if (i_data.tag != data.tag) begin
-				data.tag <= i_data.tag;
-				data.inst_rd <= i_data.inst_rd;
-				data.rd <= i_data.rd;
 				retired <= retired + 1;
 			end
 		end
