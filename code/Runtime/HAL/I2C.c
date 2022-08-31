@@ -1,6 +1,6 @@
 #include <stdio.h>
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/I2C.h"
-#include "Runtime/HAL/Interrupt.h"
 
 #define I2C_CTRL (volatile uint32_t*)(I2C_BASE)
 
@@ -164,19 +164,19 @@ static uint8_t NO_OPTIMIZE i2c_tx_data(uint8_t d)
 
 int32_t i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
 {
-	interrupt_disable();
+	kernel_enter_critical();
 	i2c_start();
 	i2c_tx_addr(deviceAddr, 7, 0);
 	i2c_tx_data(controlAddr);
 	i2c_tx_data(controlData);
 	i2c_stop();
-	interrupt_enable();
+	kernel_leave_critical();
 	return 0;
 }
 
 int32_t i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData)
 {
-	interrupt_disable();
+	kernel_enter_critical();
 	i2c_start();
 	i2c_tx_addr(deviceAddr, 7, 0);
 	i2c_tx_data(controlAddr);
@@ -184,6 +184,6 @@ int32_t i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlDat
 	i2c_tx_addr(deviceAddr, 7, 1);
 	*outControlData = i2c_rx(0);  // read
 	i2c_stop();
-	interrupt_enable();
+	kernel_leave_critical();
 	return 0;
 }

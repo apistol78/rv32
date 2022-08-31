@@ -5,6 +5,7 @@
 #include <diskio.h>
 
 #include "Runtime/File.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/SD.h"
 
 // FatFs hooks
@@ -57,15 +58,18 @@ uint32_t fpa = 0;
 
 static FIL* file_alloc()
 {
+	kernel_enter_critical();
 	for (int32_t i = 0; i < 32; ++i)
 	{
 		if ((fpa & (1 << i)) == 0)
 		{
 			fpa |= (1 << i);
 			memset(&fps[i], 0, sizeof(FIL));
+			kernel_leave_critical();
 			return &fps[i];
 		}
 	}
+	kernel_leave_critical();
 	return 0;
 }
 

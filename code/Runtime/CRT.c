@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "Runtime/File.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/UART.h"
 
 extern int _end;
@@ -13,9 +14,11 @@ static uint8_t* heap = (uint8_t*)&_end;
 
 void* _sbrk(int incr)
 {
+	kernel_enter_critical();
 	uint8_t* prev_heap = heap;
 	if (incr > 0)
 		heap += (incr & ~3) + 4;
+	kernel_leave_critical();
 	return prev_heap;
 }
 

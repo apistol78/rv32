@@ -62,13 +62,13 @@ module SoC(
 
 	//=====================================
 	// SDRAM
-	wire w_sdram_request;
-	wire w_sdram_rw;
-	wire [31:0] w_sdram_address;
-	wire [127:0] w_sdram_wdata;
-	wire [127:0] w_sdram_rdata;
-	wire w_sdram_ready;
-	wire w_sdram_valid;
+	// wire w_sdram_request;
+	// wire w_sdram_rw;
+	// wire [31:0] w_sdram_address;
+	// wire [127:0] w_sdram_wdata;
+	// wire [127:0] w_sdram_rdata;
+	// wire w_sdram_ready;
+	// wire w_sdram_valid;
 	
 	wire sdram_select;
 	wire [31:0] sdram_address;
@@ -76,24 +76,22 @@ module SoC(
 	wire sdram_ready;
 
 	BRAM_latency #(
-		.WIDTH(128),
-		.SIZE(32'h1000000 / 16),
-		.ADDR_LSH(4),
-		.LATENCY(16)
+		.WIDTH(32),
+		.SIZE(32'h2000000 / 4),
+		.ADDR_LSH(2)
+		// .SIZE(32'h1000000 / 16),
+		// .ADDR_LSH(4),
+		// .LATENCY(16)
 	) sdram(
 		.i_clock(clock),
 
-		.i_request(w_sdram_request),
-		.i_rw(w_sdram_rw),
-		.i_address(w_sdram_address),
-		.i_wdata(w_sdram_wdata),
-		.o_rdata(w_sdram_rdata),
-		.o_ready(w_sdram_ready),
-		.o_valid(w_sdram_valid)
-	);
-
-	LRU_cache sdram_lru(
-		.i_clock(clock),
+		// .i_request(w_sdram_request),
+		// .i_rw(w_sdram_rw),
+		// .i_address(w_sdram_address),
+		// .i_wdata(w_sdram_wdata),
+		// .o_rdata(w_sdram_rdata),
+		// .o_ready(w_sdram_ready),
+		// .o_valid(w_sdram_valid)
 
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
@@ -101,15 +99,27 @@ module SoC(
 		.i_wdata(bus_wdata),
 		.o_rdata(sdram_rdata),
 		.o_ready(sdram_ready),
-		.i_oddeven(bus_pa_busy),	// Instruction or data request
-
-		.o_sdram_request(w_sdram_request),
-		.o_sdram_rw(w_sdram_rw),
-		.o_sdram_address(w_sdram_address),
-		.o_sdram_wdata(w_sdram_wdata),
-		.i_sdram_rdata(w_sdram_rdata),
-		.i_sdram_ready(w_sdram_ready)
+		.o_valid()		
 	);
+
+	// LRU_cache sdram_lru(
+	// 	.i_clock(clock),
+
+	// 	.i_request(sdram_select && bus_request),
+	// 	.i_rw(bus_rw),
+	// 	.i_address(sdram_address),
+	// 	.i_wdata(bus_wdata),
+	// 	.o_rdata(sdram_rdata),
+	// 	.o_ready(sdram_ready),
+	// 	.i_oddeven(bus_pa_busy),	// Instruction or data request
+
+	// 	.o_sdram_request(w_sdram_request),
+	// 	.o_sdram_rw(w_sdram_rw),
+	// 	.o_sdram_address(w_sdram_address),
+	// 	.o_sdram_wdata(w_sdram_wdata),
+	// 	.i_sdram_rdata(w_sdram_rdata),
+	// 	.i_sdram_ready(w_sdram_ready)
+	// );
 	
 	//====================================================
 	// BUS
@@ -194,7 +204,7 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(1)
+		.DCACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -433,7 +443,7 @@ module SoC(
 		.i_clock(clock),
 
 		.i_interrupt_0(0),					// Video
-		.i_interrupt_1(0), //audio_interrupt),	// Audio
+		.i_interrupt_1(audio_interrupt),	// Audio
 		.i_interrupt_2(0), //uart_0_interrupt | uart_1_interrupt),	// UART
 		.i_interrupt_3(0),
 
@@ -455,7 +465,7 @@ module SoC(
 	SystemRegisters #(
 		.FREQUENCY(`FREQUENCY),
 		.DEVICEID(1),
-		.RAM_SIZE(32'h800000)
+		.RAM_SIZE(32'h2000000)
 	) sysreg(
 		.i_reset(reset),
 		.i_clock(clock),

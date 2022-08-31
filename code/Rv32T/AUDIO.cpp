@@ -20,12 +20,15 @@ void AUDIO::eval(VSoC* soc, uint64_t time)
 	const float f = 0.01f;
 	m_value = m_value * (1.0f - f) + (pwm ? 1.0f : -1.0f) * f;
 
-	const uint64_t ticks = 100000000ULL / 44100ULL;
+	const uint64_t ticks = 100000000ULL / 22050ULL; // 44100ULL;
 	if ((time % ticks) == 0)
 	{
-		int16_t sv = (int16_t)(m_value * 32767.0f);
-		m_stream->write(&sv, sizeof(sv));
-		m_stream->flush();
-		m_written++;
+		const int16_t sv = (int16_t)(m_value * 32767.0f);
+		if (m_written > 0 || abs(sv) > 256)
+		{
+			m_stream->write(&sv, sizeof(sv));
+			m_stream->flush();
+			m_written++;
+		}
 	}
 }

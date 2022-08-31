@@ -1,4 +1,4 @@
-#include "Runtime/HAL/Interrupt.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/Timer.h"
 
 #define TIMER_MS            (volatile uint32_t*)(TIMER_BASE)
@@ -24,7 +24,7 @@ uint64_t timer_get_cycles()
 	uint32_t mtimeh;
 	uint32_t mtimel;
 
-	interrupt_disable();
+	kernel_enter_critical();
 
 	do
 	{
@@ -33,7 +33,7 @@ uint64_t timer_get_cycles()
 	}
 	while (mtimeh != *TIMER_CYCLES_H);
 
-	interrupt_enable();
+	kernel_leave_critical();
 
 	return (uint64_t)(
 		(((uint64_t)mtimeh) << 32) | mtimel

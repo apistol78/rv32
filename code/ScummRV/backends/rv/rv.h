@@ -5,6 +5,8 @@
 
 class OSystem_RebelV : public OSystem {
 public:
+	OSystem_RebelV();
+	
 	virtual void init_size(uint w, uint h) override final;
 
 	virtual int16 get_height() override final { return 320; }
@@ -69,7 +71,7 @@ public:
 
 	virtual void quit() override final;
 
-private:
+// private:
 	uint32_t m_lastTime = 0;
 
 	TimerProc m_timerCallback = nullptr;

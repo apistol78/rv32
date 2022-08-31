@@ -3,6 +3,7 @@
 #include <math.h>
 #include "Runtime/Input.h"
 #include "Runtime/File.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Interrupt.h"
@@ -285,18 +286,13 @@ int main()
 
 	sysreg_write(SR_REG_LEDS, 0);
 
-	// interrupt_set_handler(
-	// 	IRQ_SOURCE_ECALL,
-	// 	[](uint32_t source) {
-	// 		fb_print("ECALL HANDLER\n");
-	// 	}
-	// );
-	// __asm__ volatile  (
-	// 	"ecall\n"
-	// 	"ecall\n"
-	// 	"ecall\n"
-	// 	"ecall\n"
-	// );
+	kernel_init();
+	kernel_create_thread([](){
+		for (;;) {
+			printf("Thread\n");
+			kernel_sleep(100);
+		}
+	});
 
 	int32_t counter = 0;
 	for(;;) {

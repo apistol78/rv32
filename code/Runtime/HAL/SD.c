@@ -1,6 +1,6 @@
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/CRC.h"
-#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 
@@ -494,11 +494,11 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
 
-	interrupt_disable();
+	kernel_enter_critical();
 
 	if (!sd_cmd17(addr)) // , SD_STATE_TRAN))
 	{
-		interrupt_enable();
+		kernel_leave_critical();
 		return 0;
 	}
 
@@ -527,7 +527,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 
 		if (try++ > 9000)
 		{
-			interrupt_enable();
+			kernel_leave_critical();
 			return 0;
 		}     
 	}
@@ -563,7 +563,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		buffer[i] = data8;
 	}
 
-	interrupt_enable();
+	kernel_leave_critical();
 	return bufferLen;
 }
 
@@ -574,11 +574,11 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 
 	uint16_t dataCrc16 = crc16(buffer, bufferLen);
 
-	interrupt_disable();
+	kernel_enter_critical();
 
 	if (!sd_cmd24(addr))
 	{
-		interrupt_enable();
+		kernel_leave_critical();
 		return 0;
 	}
 
@@ -666,13 +666,13 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 	}
 	if (!writeSuccess)
 	{
-		interrupt_enable();
+		kernel_leave_critical();
 		return 0;
 	}
 
 	sd_dummy_clock(100000);
 
-	interrupt_enable();
+	kernel_leave_critical();
 	return bufferLen;
 }
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Runtime/Input.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Timer.h"
@@ -43,11 +44,14 @@ int32_t map_key(uint8_t kc)
 
 }
 
+OSystem_RebelV::OSystem_RebelV()
+{
+	runtime_init();
+	kernel_init();
+}
+
 void OSystem_RebelV::init_size(uint w, uint h)
 {
-	if (runtime_init() != 0)
-		return;
-
 	for (int i = 0; i < 256; ++i)
 	{
 		const uint32_t r = rand();
@@ -125,7 +129,6 @@ void OSystem_RebelV::move_screen(int dx, int dy, int height)
 void OSystem_RebelV::update_screen()
 {
 	runtime_update();
-	update_sound();
 	draw_mouse_cursor();
 	video_swap();
 }
@@ -184,12 +187,8 @@ uint32 OSystem_RebelV::get_msecs()
 
 void OSystem_RebelV::delay_msecs(uint msecs)
 {
-	uint32_t ms = timer_get_ms() + msecs;
-	do
-	{
-		update_sound();
-	}
-	while (timer_get_ms() < ms);
+	timer_wait_ms(msecs);
+	//kernel_sleep(msecs);
 }
 
 void OSystem_RebelV::set_timer(TimerProc callback, int timer)
@@ -215,9 +214,6 @@ bool OSystem_RebelV::poll_event(Event *event)
 		}
 	}
 	m_lastTime = ms;
-
-	// Update audio.
-	update_sound();
 
 	// Get keyboard events.
 	uint8_t kc, m, p;
@@ -286,10 +282,29 @@ bool OSystem_RebelV::poll_event(Event *event)
 	return false;
 }
 
+namespace {
+
+	OSystem_RebelV* _this = nullptr;
+
+	void sound_thread() {
+		for (;;) {
+			_this->update_sound();
+			kernel_sleep(50);
+		}
+	}
+
+}
+
 bool OSystem_RebelV::set_sound_proc(SoundProc proc, void *param, SoundFormat format)
 {
+	printf("set_sound_proc\n");
+
 	m_soundProc = proc;
 	m_soundParam = param;
+
+	_this = this;
+
+	kernel_create_thread(sound_thread);
 	return true;
 }
 
@@ -402,7 +417,7 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 uint32 OSystem_RebelV::property(int param, Property *value)
 {
 	if (param == PROP_GET_SAMPLE_RATE)
-		return 44100; //SAMPLES_PER_SEC;
+		return 22050; //44100; //SAMPLES_PER_SEC;
 	else
 		return 0;
 }
@@ -501,16 +516,23 @@ void OSystem_RebelV::undraw_mouse_cursor()
 
 void OSystem_RebelV::update_sound()
 {
+	const int32_t chunkSize = 1024;
+	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
-		int32_t free = 4096 - audio_get_queued();
-		if (free > 0)
+		int32_t qn = 0;
+		for (;;)
 		{
-			// Read samples from Scumm.
-			int16_t buf[4096*2];
-			m_soundProc(m_soundParam, (byte*)buf, free * 2 * sizeof(int16_t));
-			audio_play_stereo(buf, free);
+			int32_t free = 4096 - audio_get_queued();
+			if (free < chunkSize)
+				break;
+
+			m_soundProc(m_soundParam, (byte*)buf, sizeof(buf));
+			audio_play_stereo(buf, chunkSize * 2);
+
+			qn += chunkSize;
 		}
+		printf(".. %d\n", qn);
 	}
 }
 

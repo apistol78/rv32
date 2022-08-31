@@ -59,7 +59,7 @@
 
 using namespace traktor;
 
-const uint32_t c_memoryAvail = 0x1000000;
+const uint32_t c_memoryAvail = 0x2000000;
 bool g_going = true;
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
@@ -272,8 +272,8 @@ int main(int argc, const char **argv)
 	// Randomize cache data.
 	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)
 		soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data[i] = -1;
-	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__cache__DOT__data); ++i)
-		soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__cache__DOT__data[i] = -1;
+	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__cache__DOT__data); ++i)
+		soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__cache__DOT__data[i] = -1;
 
 	if (cmdLine.hasOption(L"elf-kernal"))
 	{
@@ -504,9 +504,9 @@ int main(int argc, const char **argv)
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 
-				uint32_t ich = soc->SoC__DOT__sdram_lru__DOT__hit;
-				uint32_t icm = soc->SoC__DOT__sdram_lru__DOT__miss;
-				double icr = (ich * 100.0) / (ich + icm);
+				// uint32_t ich = soc->SoC__DOT__sdram_lru__DOT__hit;
+				// uint32_t icm = soc->SoC__DOT__sdram_lru__DOT__miss;
+				// double icr = (ich * 100.0) / (ich + icm);
 
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				
@@ -522,10 +522,10 @@ int main(int argc, const char **argv)
 
 				statusBar->setText(2, 
 					str(
-						L"%.2f%% / %.2f%% STALL X/M, %.2f%% LRU",
+						L"%.2f%% / %.2f%% STALL X/M", //, %.2f%% LRU",
 						((double)stallExecute.delta() * 100.0) / dc,
-						((double)stallMemory.delta() * 100.0) / dc,
-						icr
+						((double)stallMemory.delta() * 100.0) / dc//,
+						//icr
 					)
 				);
 
@@ -559,8 +559,8 @@ int main(int argc, const char **argv)
 				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
 				double icr = (ich * 100.0) / (ich + icm);
 
-				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__hit;
-				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk1__DOT__dcache__DOT__miss;
+				uint32_t dch = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__hit;
+				uint32_t dcm = soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__miss;
 				double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
