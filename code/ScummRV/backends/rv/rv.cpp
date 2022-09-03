@@ -42,12 +42,47 @@ int32_t map_key(uint8_t kc)
 	return 0;
 }
 
+OSystem_RebelV* _this = nullptr;
+
+// void updater_thread()
+// {
+// 	for (;;)
+// 	{
+// 		_this->update_timer();
+// 		_this->update_sound();
+// 		_this->update_frame();
+// 		kernel_sleep(4);
+// 	}
+// }
+
 }
 
 OSystem_RebelV::OSystem_RebelV()
 {
 	runtime_init();
 	kernel_init();
+
+	_this = this;
+	//kernel_create_thread(updater_thread);
+
+	kernel_create_thread([](){
+		for (;;) {
+			_this->update_timer();
+			kernel_sleep(10);
+		}
+	});
+	kernel_create_thread([](){
+		for (;;) {
+			_this->update_sound();
+			kernel_sleep(10);
+		}
+	});
+	kernel_create_thread([](){
+		for (;;) {
+			_this->update_frame();
+			kernel_sleep(20);
+		}
+	});	
 }
 
 void OSystem_RebelV::init_size(uint w, uint h)
@@ -108,7 +143,7 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 	if (w <= 0 || h <= 0)
 		return;
 
-	undraw_mouse_cursor();
+	// undraw_mouse_cursor();
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 
@@ -128,9 +163,9 @@ void OSystem_RebelV::move_screen(int dx, int dy, int height)
 
 void OSystem_RebelV::update_screen()
 {
-	runtime_update();
-	draw_mouse_cursor();
-	video_swap();
+	// runtime_update();
+	// draw_mouse_cursor();
+	// video_swap();
 }
 
 void OSystem_RebelV::set_shake_pos(int shake_pos)
@@ -147,7 +182,7 @@ bool OSystem_RebelV::show_mouse(bool visible)
 	else
 		undraw_mouse_cursor();
 
-	video_swap();
+	// video_swap();
 	return last;
 }
 
@@ -156,11 +191,11 @@ void OSystem_RebelV::warp_mouse(int x, int y)
 	m_mouseX = x;
 	m_mouseY = y;
 
-	if (m_mouseVisible)
-	{
-		draw_mouse_cursor();
-		video_swap();
-	}
+	// if (m_mouseVisible)
+	// {
+	// 	draw_mouse_cursor();
+	// 	// video_swap();
+	// }
 }
 
 void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
@@ -171,13 +206,13 @@ void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotsp
 	m_mouseHotX = hotspot_x;
 	m_mouseHotY = hotspot_y;
 
-	undraw_mouse_cursor();
+	// undraw_mouse_cursor();
 
-	if (m_mouseVisible)
-	{
-		draw_mouse_cursor();
-		video_swap();
-	}
+	// if (m_mouseVisible)
+	// {
+	// 	draw_mouse_cursor();
+	// 	// video_swap();
+	// }
 }
 
 uint32 OSystem_RebelV::get_msecs()
@@ -187,34 +222,18 @@ uint32 OSystem_RebelV::get_msecs()
 
 void OSystem_RebelV::delay_msecs(uint msecs)
 {
-	timer_wait_ms(msecs);
-	//kernel_sleep(msecs);
+	kernel_sleep(msecs);
 }
 
 void OSystem_RebelV::set_timer(TimerProc callback, int timer)
 {
-	// printf("set_timer, %d ms\n", timer);
-	m_timerCallback = callback;
 	m_timerInterval = timer;
-	m_timerUntil = timer;
+	m_timerExpire = timer_get_ms() + timer;
+	m_timerCallback = callback;
 }
 
 bool OSystem_RebelV::poll_event(Event *event)
 {
-	// Update timers.
-	const uint32_t ms = timer_get_ms();
-	if (m_lastTime > 0)
-	{
-		int32_t dt = ms - m_lastTime;
-		if ((m_timerUntil -= dt) <= 0)
-		{
-			if (m_timerCallback)
-				m_timerCallback(m_timerInterval);
-			m_timerUntil = m_timerInterval;
-		}
-	}
-	m_lastTime = ms;
-
 	// Get keyboard events.
 	uint8_t kc, m, p;
 	if (input_get_kb_event(&kc, &m, &p) > 0)
@@ -242,18 +261,12 @@ bool OSystem_RebelV::poll_event(Event *event)
 	{
 		if (x != 0 || y != 0)
 		{
-			m_mouseX += x;
-			m_mouseX = clamp(m_mouseX, 0, 319);
-			m_mouseY += y;
-			m_mouseY = clamp(m_mouseY, 0, 199);
+			int32_t mx, my;
+			input_get_mouse_state(&mx, &my, &buttons);			
 
 			event->event_code = EVENT_MOUSEMOVE;
-			event->mouse.x = m_mouseX;
-			event->mouse.y = m_mouseY;
-
-			draw_mouse_cursor();
-			video_swap();
-
+			event->mouse.x = mx;
+			event->mouse.y = my;
 			return true;
 		}
 	}
@@ -282,29 +295,10 @@ bool OSystem_RebelV::poll_event(Event *event)
 	return false;
 }
 
-namespace {
-
-	OSystem_RebelV* _this = nullptr;
-
-	void sound_thread() {
-		for (;;) {
-			_this->update_sound();
-			kernel_sleep(50);
-		}
-	}
-
-}
-
 bool OSystem_RebelV::set_sound_proc(SoundProc proc, void *param, SoundFormat format)
 {
-	printf("set_sound_proc\n");
-
-	m_soundProc = proc;
 	m_soundParam = param;
-
-	_this = this;
-
-	kernel_create_thread(sound_thread);
+	m_soundProc = proc;
 	return true;
 }
 
@@ -417,7 +411,7 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 uint32 OSystem_RebelV::property(int param, Property *value)
 {
 	if (param == PROP_GET_SAMPLE_RATE)
-		return 22050; //44100; //SAMPLES_PER_SEC;
+		return 11025; // 22050; //44100; //SAMPLES_PER_SEC;
 	else
 		return 0;
 }
@@ -516,14 +510,14 @@ void OSystem_RebelV::undraw_mouse_cursor()
 
 void OSystem_RebelV::update_sound()
 {
-	const int32_t chunkSize = 1024;
+	const int32_t chunkSize = 256;
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
 		int32_t qn = 0;
-		for (;;)
+		for (int32_t i = 0; i < 4; ++i)
 		{
-			int32_t free = 4096 - audio_get_queued();
+			int32_t free = 1024 - audio_get_queued();
 			if (free < chunkSize)
 				break;
 
@@ -532,8 +526,33 @@ void OSystem_RebelV::update_sound()
 
 			qn += chunkSize;
 		}
-		printf(".. %d\n", qn);
 	}
+}
+
+void OSystem_RebelV::update_timer()
+{
+	const uint32_t ms = timer_get_ms();
+	if (ms >= m_timerExpire || ms < m_lastTime)
+	{
+		if (m_timerCallback)
+			m_timerCallback(m_timerInterval);
+		m_timerExpire = ms + m_timerInterval;
+	}
+	m_lastTime = ms;
+}
+
+void OSystem_RebelV::update_frame()
+{
+	uint8_t buttons;
+
+	runtime_update();
+	input_get_mouse_state(&m_mouseX, &m_mouseY, &buttons);
+
+	undraw_mouse_cursor();
+	if (m_mouseVisible)
+		draw_mouse_cursor();
+
+	video_swap();
 }
 
 OSystem *OSystem_RebelV_create()

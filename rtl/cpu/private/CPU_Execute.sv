@@ -18,6 +18,7 @@ module CPU_Execute (
 	output bit o_jump,
 	output bit [31:0] o_jump_pc,
 	output bit o_ecall,
+	output bit o_mret,
 
 	// Input
 	output bit o_busy,
@@ -59,6 +60,9 @@ module CPU_Execute (
 
 	`define MEPC 				\
 		i_epc
+
+	`define MRET				\
+		o_mret
 
 	`define CYCLE				\
 		cycle
@@ -173,6 +177,7 @@ module CPU_Execute (
 		o_csr_wdata = 0;
 		o_jump = 1'b0;
 		o_jump_pc = 0;
+		o_mret = 1'b0;
 		o_ecall = 1'b0;
 		o_fault = 1'b0;
 	end
@@ -195,6 +200,7 @@ module CPU_Execute (
 			o_csr_wdata <= 0;
 			o_jump <= 1'b0;
 			o_jump_pc <= 0;
+			o_mret <= 1'b0;
 			o_ecall <= 1'b0;
 			o_fault <= 1'b0;			
 		end
@@ -202,6 +208,7 @@ module CPU_Execute (
 
 			o_csr_wdata_wr <= 1'b0;
 			o_jump <= 1'b0;
+			o_mret <= 1'b0;
 			o_ecall <= 1'b0;
 
 			if (

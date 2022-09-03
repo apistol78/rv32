@@ -30,6 +30,6 @@ EXTERN_C void kernel_enter_critical();
 
 EXTERN_C void kernel_leave_critical();
 
-EXTERN_C void kernel_cs_lock(volatile kernel_cs_t* cs);
+// EXTERN_C void kernel_cs_lock(volatile kernel_cs_t* cs);
 
-EXTERN_C void kernel_cs_unlock(volatile kernel_cs_t* cs);
+// EXTERN_C void kernel_cs_unlock(volatile kernel_cs_t* cs);

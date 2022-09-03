@@ -150,7 +150,7 @@ module SDRAM_controller #(
 		sdram_bs = 2'b00;
 		sdram_addr = 13'b0;
 		sdram_wdata = 0;
-		sdram_data_rw = 1'b0;
+		//sdram_data_rw = 1'b0;
 	end
 
 	// Combinatorial
@@ -169,6 +169,10 @@ module SDRAM_controller #(
     end	
 
 	//=============================================
+	
+	always_comb begin
+		sdram_data_rw = i_rw;
+	end
 	
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
@@ -299,7 +303,7 @@ module SDRAM_controller #(
 				STATE_IDLE: begin
 					command <= CMD_NOP;
 
-					sdram_data_rw <= 1'b0;
+					//sdram_data_rw <= 1'b0;
 					o_ready <= 1'b0;
 
 					if (should_refresh) begin
@@ -375,7 +379,7 @@ module SDRAM_controller #(
 						else if (BURST_COUNT == 8)
 							sdram_wdata <= wdata[Bi-1:Bh];
 
-						sdram_data_rw <= i_rw;
+						//sdram_data_rw <= i_rw;
 
 						state <= i_rw ? STATE_WRITE : STATE_READ;	
 					end

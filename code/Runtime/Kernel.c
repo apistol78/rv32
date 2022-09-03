@@ -12,8 +12,8 @@
 #define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x0c)
 #define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x10)
 
-#define KERNEL_MAIN_CLOCK 			10000000
-#define KERNEL_SCHEDULE_FREQUENCY	16
+#define KERNEL_MAIN_CLOCK 			100000000
+#define KERNEL_SCHEDULE_FREQUENCY	32
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 static kernel_thread_t g_threads[16];
@@ -78,12 +78,19 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	// Select new thread.
 	if (g_critical == 0)
 	{
-		for (;;)
+		int32_t i;
+		for (i = 0; i < g_count; ++i)
 		{
 			if (++g_current >= g_count)
 				g_current = 0;
 			if (g_threads[g_current].sleep == 0)
 				break;
+		}
+		if (i >= g_count)
+		{
+			// Unable to select new thread, we default to main thread
+			// even if it's sleeping.
+			g_current = 0;
 		}
 	}
 	
@@ -149,18 +156,15 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 static void* kernel_alloc_stack()
 {
-	const int32_t stackSize = 65536*32;
-	// uint8_t* stack = malloc(stackSize * 2);
-	// if (stack)
-	// {
-	// 	memset(stack, 0, stackSize);
-	// 	return stack + stackSize;
-	// }
-	// else
-	// 	return 0;
-
-	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
-	return (void*)(sp - stackSize - 0x10000);
+	const int32_t stackSize = 0x40000;
+	uint8_t* stack = malloc(stackSize);
+	if (stack)
+	{
+		memset(stack, 0, stackSize);
+		return stack + stackSize - 0x1000;
+	}
+	else
+		return 0;
 }
 
 void kernel_init()
@@ -183,14 +187,13 @@ void kernel_init()
 
 void kernel_create_thread(kernel_thread_fn_t fn)
 {
+	kernel_enter_critical();
 	kernel_thread_t* t = &g_threads[g_count];
 	t->sp = (uint32_t)kernel_alloc_stack();
 	t->epc = (uint32_t)fn;
 	t->sleep = 0;
-
-	printf("** thread created, EPC %08x, SP %08x\n", t->epc, t->sp);
-
 	++g_count;
+	kernel_leave_critical();
 }
 
 void kernel_yield()
@@ -200,10 +203,18 @@ void kernel_yield()
 
 void kernel_sleep(uint32_t ms)
 {
-	kernel_enter_critical();
-	g_threads[g_current].sleep = ms >> 4;	// Scheduler frequency.
-	kernel_leave_critical();
-	kernel_yield();
+	const uint32_t fin_ms = timer_get_ms() + ms;
+
+	g_threads[g_current].sleep = (ms * KERNEL_SCHEDULE_FREQUENCY) / 1000;
+	do
+	{
+		kernel_yield();
+	}
+	while (g_threads[g_current].sleep > 0);
+
+	const int32_t left_ms = fin_ms - timer_get_ms();
+	if (left_ms > 0)
+		timer_wait_ms(left_ms);
 }
 
 void kernel_enter_critical()
@@ -213,26 +224,26 @@ void kernel_enter_critical()
 
 void kernel_leave_critical()
 {
-	g_critical--;
+	--g_critical;
 }
 
-void kernel_cs_lock(volatile kernel_cs_t* cs)
-{
-	for (;;)
-	{
-		while (cs->counter != 0)
-			__asm__ volatile ("nop");
-		kernel_enter_critical();
-		if (cs->counter == 0)
-		{
-			cs->counter = 1;
-			kernel_leave_critical();
-			return;
-		}
-	}
-}
+// void kernel_cs_lock(volatile kernel_cs_t* cs)
+// {
+// 	for (;;)
+// 	{
+// 		while (cs->counter != 0)
+// 			__asm__ volatile ("nop");
+// 		kernel_enter_critical();
+// 		if (cs->counter == 0)
+// 		{
+// 			cs->counter = 1;
+// 			kernel_leave_critical();
+// 			return;
+// 		}
+// 	}
+// }
 
-void kernel_cs_unlock(volatile kernel_cs_t* cs)
-{
-	cs->counter = 0;
-}
+// void kernel_cs_unlock(volatile kernel_cs_t* cs)
+// {
+// 	cs->counter = 0;
+// }

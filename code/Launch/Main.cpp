@@ -70,7 +70,7 @@ bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t leng
 
 	write< uint8_t >(target, 0x01);
 	write< uint32_t >(target, base);
-	write< uint8_t >(target, (uint8_t)length);
+	write< uint16_t >(target, (uint16_t)length);
 	write< uint8_t >(target, line, length);
 	write< uint8_t >(target, cs);
 
@@ -195,9 +195,9 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
 				const uint32_t addr = shdr[i].sh_addr;
 
-				for (uint32_t j = 0; j < shdr[i].sh_size; j += 128)
+				for (uint32_t j = 0; j < shdr[i].sh_size; j += 256)
 				{
-					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 128);
+					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 256);
 					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
 					if (!sendLine(target, addr + j, pbits + j, cnt))
 						return false;
@@ -466,7 +466,7 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to, uint32_t step)
 		// Read back data.
 		write< uint8_t >(target, 0x02);
 		write< uint32_t >(target, addr);
-		write< uint8_t >(target, nb);
+		write< uint16_t >(target, nb);
 
 		uint8_t reply = read< uint8_t >(target);
 		if (reply != 0x80)

@@ -161,26 +161,26 @@ module VMODE_chunky #(
 
 			WAIT_MEMORY: begin
 				if (i_vram_pb_ready) begin
+					o_vram_pb_request <= 0;
 
 					line[count] <= i_vram_pb_rdata;
 					count <= count + 1;
 
 					if (count < PPITCH/4-1) begin
 						o_vram_pb_address <= o_vram_pb_address + 4;
-						o_vram_pb_request <= 1;
 						read_state <= WAIT_DELAY;					
 					end
 					else begin
-						o_vram_pb_request <= 0;
 						read_state <= WAIT_HBLANK;
 					end
 				end
 			end
 
 			WAIT_DELAY: begin
-				// We need to delay one cycle since we keep request high
-				// for entire lines.
-				read_state <= WAIT_MEMORY;
+				if (!i_vram_pb_ready) begin
+					o_vram_pb_request <= 1;
+					read_state <= WAIT_MEMORY;
+				end
 			end
 
 			default: begin

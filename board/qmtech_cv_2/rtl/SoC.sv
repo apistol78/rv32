@@ -64,6 +64,19 @@ module SoC(
 	output sram_we_n
 );
 
+	/*
+	
+	100 MHz
+		sdram 7000 ps
+		
+	120 MHz
+		sdram 5200 ps
+		
+	125 MHz
+		sdram -750 ps ... (have been working with 4800 ps)
+	
+	*/
+
 	wire clock;				// 100MHz
 	wire clock_sdram;		// 100MHz, phase shifted 7000 ps.
 	wire clock_video;		// 25MHz
@@ -120,7 +133,7 @@ module SoC(
 	wire sdram_data_rw;
 
     SDRAM_controller #(
-        .FREQUENCY(100000000),
+        .FREQUENCY(`FREQUENCY),
 		.SDRAM_DATA_WIDTH(32)
     ) sdram(
 	    .i_reset(reset),
@@ -318,7 +331,7 @@ module SoC(
 	wire uart_1_interrupt;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8)),
-		.RX_FIFO_DEPTH(256)
+		.RX_FIFO_DEPTH(128)
 	) uart_1(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -507,7 +520,7 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b0),	// 0 - read elf, 1 - wait on uart
+		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
 		.o_reset_switch(reset_switch),
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)

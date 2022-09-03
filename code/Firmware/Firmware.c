@@ -122,10 +122,10 @@ static void remote_control()
 		if (cmd == 0x01)
 		{
 			uint32_t addr = uart_rx_u32(0);
-			uint8_t nb = uart_rx_u8(0);
+			uint16_t nb = uart_rx_u16(0);
 			uint8_t cs = 0;
 
-			if (nb == 0)
+			if (nb == 0 || nb > 1024)
 			{
 				uart_tx_u8(0, 0x81);	// Invalid data.
 				continue;
@@ -139,8 +139,8 @@ static void remote_control()
 			cs ^= p[3];
 
 			// Receive 
-			uint8_t r[256];
-			for (uint8_t i = 0; i < nb; ++i)
+			uint8_t r[1024];
+			for (uint16_t i = 0; i < nb; ++i)
 			{
 				uint8_t d = uart_rx_u8(0);
 				r[i] = d;
@@ -150,7 +150,7 @@ static void remote_control()
 			if (cs == uart_rx_u8(0))
 			{
 				// Write data to memory.
-				for (uint8_t i = 0; i < nb; ++i)
+				for (uint16_t i = 0; i < nb; ++i)
 					*(uint8_t*)(addr + i) = r[i];
 
 				// Ensure DCACHE is flushed.
@@ -158,7 +158,7 @@ static void remote_control()
 
 				// Verify data written to memory.
 				uint32_t result = 0x80;
-				for (uint8_t i = 0; i < nb; ++i)
+				for (uint16_t i = 0; i < nb; ++i)
 				{
 					if (*(uint8_t*)(addr + i) != r[i])
 					{
@@ -177,7 +177,7 @@ static void remote_control()
 		else if (cmd == 0x02)
 		{
 			uint32_t addr = uart_rx_u32(0);
-			uint8_t nb = uart_rx_u8(0);
+			uint16_t nb = uart_rx_u16(0);
 
 			if (nb == 0)
 			{
@@ -190,7 +190,7 @@ static void remote_control()
 
 			uart_tx_u8(0, 0x80);	// Ok
 
-			for (uint8_t i = 0; i < nb; ++i)
+			for (uint16_t i = 0; i < nb; ++i)
 				uart_tx_u8(0, *(uint8_t*)addr++);
 		}
 

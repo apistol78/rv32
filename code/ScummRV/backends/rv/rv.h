@@ -76,7 +76,7 @@ public:
 
 	TimerProc m_timerCallback = nullptr;
 	int m_timerInterval = 0;
-	int m_timerUntil = 0;
+	int m_timerExpire = 0;
 
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
@@ -102,5 +102,9 @@ public:
 
 	void undraw_mouse_cursor();
 
+	void update_timer();
+
 	void update_sound();
+
+	void update_frame();	
 };

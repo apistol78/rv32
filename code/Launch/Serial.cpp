@@ -197,6 +197,11 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 		cfsetispeed(&tty, B115200);
 		cfsetospeed(&tty, B115200);
 	}
+	else if (configuration.baudRate == 921600)
+	{
+		cfsetispeed(&tty, B921600);
+		cfsetospeed(&tty, B921600);
+	}	
 	else
 	{
 		log::error << L"Unsupported baud rate." << Endl;

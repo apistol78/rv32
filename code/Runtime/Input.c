@@ -85,6 +85,14 @@ static mouse_event_t s_mouse_events[16];
 static int32_t s_mouse_events_in;
 static int32_t s_mouse_events_out;
 
+static int32_t clamp(int32_t v, int32_t mn, int32_t mx)
+{
+	return
+		v < mn ? mn :
+		v > mx ? mx :
+		v;
+}
+
 void input_init()
 {
 	for (int32_t i = 0; i < 256; ++i)
@@ -110,7 +118,7 @@ void input_update()
 	while (!uart_rx_empty(1))
 	{
 		// Receive and decode packet.
-		uint8_t id = uart_rx_u8(1);
+		const uint8_t id = uart_rx_u8(1);
 		switch (id)
 		{
 		case 'K':
@@ -140,10 +148,10 @@ void input_update()
 				const int8_t wheel = (int8_t)uart_rx_u8(1);
 				const uint8_t buttons = uart_rx_u8(1);
 
-				s_mouse_x += x;
-				s_mouse_y += y;
+				s_mouse_x = clamp(s_mouse_x + x, 0, 319);
+				s_mouse_y = clamp(s_mouse_y + y, 0, 199);
 				s_mouse_buttons = buttons;
-				
+
 				// Enqueue mouse event.
 				mouse_event_t* e = &s_mouse_events[s_mouse_events_in];
 				e->x = x;
@@ -156,10 +164,10 @@ void input_update()
 					s_mouse_events_out = (s_mouse_events_out + 1) & 15;
 			}
 			break;
-		}
 
-		// Wait until end of packet.
-		while (uart_rx_u8(1) != 'E');
+		case 'E':
+			break;
+		}
 	}
 }
 

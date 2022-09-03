@@ -69,6 +69,7 @@ module CPU #(
 		.i_timer_interrupt(i_timer_interrupt),
 		.i_external_interrupt(i_external_interrupt),
 		.i_ecall(execute_ecall),
+		.i_mret(execute_mret),
 
 		.i_index(csr_index),
 		.o_rdata(csr_rdata),
@@ -232,6 +233,7 @@ module CPU #(
 	wire execute_jump;
 	wire [31:0] execute_jump_pc;
 	wire execute_ecall;
+	wire execute_mret;
 	wire execute_busy;
 	execute_data_t execute_data;
 	
@@ -251,6 +253,7 @@ module CPU #(
 		.o_jump(execute_jump),
 		.o_jump_pc(execute_jump_pc),
 		.o_ecall(execute_ecall),
+		.o_mret(execute_mret),
 
 		// Input
 		.o_busy(execute_busy),

@@ -63,6 +63,7 @@ case (`EXECUTE_OP)
 	end
 	OP_MRET: begin
 		`GOTO(`MEPC);
+		`MRET <= 1'b1;
 		`EXECUTE_DONE;
 	end
 	OP_REM: begin

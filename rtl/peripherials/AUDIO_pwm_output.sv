@@ -6,9 +6,12 @@
 // 1814		44.1 kHz @ 80 MHz
 // 2268		44.1 kHz @ 100 MHz
 // 4536		22050 kHz @ 100 MHz
+// 5443		22050 kHz @ 120 MHz
+// 5670		22050 kHz @ 125 MHz
+// 9072		11025 kHz @ 100 Mhz
 //
 module AUDIO_pwm_output #(
-	parameter RELOAD = 4536
+	parameter RELOAD = 9072
 )(
 	input i_clock,
 

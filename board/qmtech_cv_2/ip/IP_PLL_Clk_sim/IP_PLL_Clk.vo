@@ -250,7 +250,7 @@ module  IP_PLL_Clk
 		ip_pll_clk_altera_pll_altera_pll_i_1557.output_clock_frequency8 = "0 MHz",
 		ip_pll_clk_altera_pll_altera_pll_i_1557.output_clock_frequency9 = "0 MHz",
 		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift0 = "0 ps",
-		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift1 = "7000 ps",
+		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift1 = "-3000 ps",
 		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift10 = "0 ps",
 		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift11 = "0 ps",
 		ip_pll_clk_altera_pll_altera_pll_i_1557.phase_shift12 = "0 ps",

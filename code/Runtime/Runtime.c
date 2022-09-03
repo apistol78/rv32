@@ -2,6 +2,7 @@
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Input.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/Audio.h"
 #include "Runtime/HAL/Interrupt.h"
@@ -76,7 +77,9 @@ int32_t runtime_init()
 
 void runtime_update()
 {
+	kernel_enter_critical();
 	input_update();
+	kernel_leave_critical();
 
 	// Check for reset signal on UART.
 	if (!uart_rx_empty(0))

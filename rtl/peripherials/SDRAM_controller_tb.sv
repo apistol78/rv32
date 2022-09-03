@@ -63,7 +63,7 @@ module SDRAM_controller_tb();
 	bit [31:0] address = 32'h0000_0000;
 	bit [31:0] wdata = 32'hffff_ffff;
 	wire [31:0] rdata_1;
-	wire [31:0] rdata_2;
+	wire [15:0] rdata_2;
 	wire ready_1;
 	wire ready_2;
 
@@ -100,7 +100,8 @@ module SDRAM_controller_tb();
 	wire sdram_data_rw;
 
     SDRAM_controller #(
-        .FREQUENCY(100000000)
+        .FREQUENCY(100000000),
+		.USER_DATA_WIDTH(16)
     ) sdram_controller_2(
 	    .i_reset(1'b0),
 	    .i_clock(clk),
@@ -108,7 +109,7 @@ module SDRAM_controller_tb();
 	    .i_request(request),
 	    .i_rw(rw),
 	    .i_address(address),
-	    .i_wdata(wdata),
+	    .i_wdata(wdata[15:0]),
 	    .o_rdata(rdata_2),
 	    .o_ready(ready_2),
 

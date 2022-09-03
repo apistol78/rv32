@@ -17,6 +17,7 @@ module CPU_CSR #(
 
 	// Software interrupt input.
 	input i_ecall,
+	input i_mret,
 
 	// Instruction I/O access.
 	input [11:0] i_index,
@@ -34,6 +35,7 @@ module CPU_CSR #(
 	input [31:0] i_irq_epc
 );
 
+	bit mstatus_mpie = 0;
 	bit mstatus_mie = 0;
 	bit mie_meie = 0; 
 	bit mie_mtie = 0;
@@ -45,7 +47,7 @@ module CPU_CSR #(
 	bit mip_mtip = 0;
 	bit mip_msip = 0;
 
-	wire [31:0] mstatus = { 28'b0, mstatus_mie, 3'b0 };
+	wire [31:0] mstatus = { 27'b0, mstatus_mpie, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
 	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
@@ -124,27 +126,45 @@ module CPU_CSR #(
 			end
 
 			// Issue interrupts.
-			if (!o_irq_pending) begin
+			if (!o_irq_pending && mstatus_mie) begin
 				if (mip_mtip) begin
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
+
+					mstatus_mpie <= mstatus_mie;
+					mstatus_mie <= 1'b0;
+
 					mcause <= 32'h80000000 | (1 << 7);
 					issued <= 3'd1;
 				end
 				else if (mip_meip) begin
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
+
+					mstatus_mpie <= mstatus_mie;
+					mstatus_mie <= 1'b0;
+
 					mcause <= 32'h80000000 | (1 << 11);					
 					issued <= 3'd2;
 				end
 				else if (mip_msip) begin
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
+
+					mstatus_mpie <= mstatus_mie;
+					mstatus_mie <= 1'b0;
+
 					mcause <= 32'h00000000 | (1 << 11);					
 					issued <= 3'd4;
 				end
 			end
+
+			// Restore interrupt enable from "stack".
+			if (i_mret) begin
+				mstatus_mie <= mstatus_mpie;
+			end
 			
+			// Clear interrupt pending flags.
 			if (i_irq_dispatched) begin
 				mepc <= i_irq_epc;
 
