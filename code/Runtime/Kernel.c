@@ -227,23 +227,28 @@ void kernel_leave_critical()
 	--g_critical;
 }
 
-// void kernel_cs_lock(volatile kernel_cs_t* cs)
-// {
-// 	for (;;)
-// 	{
-// 		while (cs->counter != 0)
-// 			__asm__ volatile ("nop");
-// 		kernel_enter_critical();
-// 		if (cs->counter == 0)
-// 		{
-// 			cs->counter = 1;
-// 			kernel_leave_critical();
-// 			return;
-// 		}
-// 	}
-// }
+void kernel_cs_init(volatile kernel_cs_t* cs)
+{
+	cs->counter = 0;
+}
 
-// void kernel_cs_unlock(volatile kernel_cs_t* cs)
-// {
-// 	cs->counter = 0;
-// }
+void kernel_cs_lock(volatile kernel_cs_t* cs)
+{
+	for (;;)
+	{
+		while (cs->counter != 0)
+			kernel_yield();
+		kernel_enter_critical();
+		if (cs->counter == 0)
+		{
+			cs->counter = 1;
+			kernel_leave_critical();
+			return;
+		}
+	}
+}
+
+void kernel_cs_unlock(volatile kernel_cs_t* cs)
+{
+	cs->counter = 0;
+}
