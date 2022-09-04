@@ -2,6 +2,7 @@
 
 #include <common/stdafx.h>
 #include <common/system.h>
+#include "Runtime/Kernel.h"
 
 class OSystem_RebelV : public OSystem {
 public:
@@ -81,13 +82,14 @@ public:
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 
+	kernel_cs_t m_mouseLock = { 0 };
 	const byte* m_mouseBits = nullptr;
 	int m_mouseW = 0;
 	int m_mouseH = 0;
 	int m_mouseHotX = 0;
 	int m_mouseHotY = 0;
-	int m_mouseX = 160;
-	int m_mouseY = 100;
+	int32_t m_mouseX = 160;
+	int32_t m_mouseY = 100;
 	bool m_mouseVisible = false;
 	byte* m_mouseBackup = nullptr;
 	int m_mouseBackupX = 0;
@@ -95,6 +97,9 @@ public:
 	int m_mouseBackupW = 0;
 	int m_mouseBackupH = 0;
 	bool m_mouseDrawn = false;
+
+	byte* m_overlayCopy = nullptr;
+	bool m_overlayVisible = false;
 
 	uint8_t m_lastButtons = 0;
 

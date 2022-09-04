@@ -44,17 +44,6 @@ int32_t map_key(uint8_t kc)
 
 OSystem_RebelV* _this = nullptr;
 
-// void updater_thread()
-// {
-// 	for (;;)
-// 	{
-// 		_this->update_timer();
-// 		_this->update_sound();
-// 		_this->update_frame();
-// 		kernel_sleep(4);
-// 	}
-// }
-
 }
 
 OSystem_RebelV::OSystem_RebelV()
@@ -63,7 +52,6 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_init();
 
 	_this = this;
-	//kernel_create_thread(updater_thread);
 
 	kernel_create_thread([](){
 		for (;;) {
@@ -99,6 +87,7 @@ void OSystem_RebelV::init_size(uint w, uint h)
 	}
 
 	m_mouseBackup = (byte*)malloc(MAX_MOUSE_W * MAX_MOUSE_H * MAX_SCALING * 2);
+	m_overlayCopy = (byte*)malloc(320 * 200);
 }
 
 void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
@@ -143,14 +132,13 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 	if (w <= 0 || h <= 0)
 		return;
 
-	// undraw_mouse_cursor();
+	undraw_mouse_cursor();
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-
 	byte *dst = framebuffer + y * 320 + x;
 	do {
 		for(int i = 0; i < w; ++i)
-			dst[i] = src[i]; // & 0xf;
+			dst[i] = src[i];
 		dst += 320;
 		src += pitch;
 	} while (--h);
@@ -182,37 +170,26 @@ bool OSystem_RebelV::show_mouse(bool visible)
 	else
 		undraw_mouse_cursor();
 
-	// video_swap();
 	return last;
 }
 
 void OSystem_RebelV::warp_mouse(int x, int y)
 {
+	undraw_mouse_cursor();
+
 	m_mouseX = x;
 	m_mouseY = y;
-
-	// if (m_mouseVisible)
-	// {
-	// 	draw_mouse_cursor();
-	// 	// video_swap();
-	// }
 }
 
 void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
 {
+	undraw_mouse_cursor();
+
 	m_mouseBits = buf;
 	m_mouseW = w;
 	m_mouseH = h;
 	m_mouseHotX = hotspot_x;
 	m_mouseHotY = hotspot_y;
-
-	// undraw_mouse_cursor();
-
-	// if (m_mouseVisible)
-	// {
-	// 	draw_mouse_cursor();
-	// 	// video_swap();
-	// }
 }
 
 uint32 OSystem_RebelV::get_msecs()
@@ -352,23 +329,38 @@ void OSystem_RebelV::delete_mutex(MutexRef mutex)
 void OSystem_RebelV::show_overlay()
 {
 	printf("show_overlay\n");
+
+	undraw_mouse_cursor();
+
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	memcpy(m_overlayCopy, framebuffer, 320 * 200);
+
+	m_overlayVisible = true;
 }
 
 void OSystem_RebelV::hide_overlay()
 {
 	printf("hide_overlay\n");
+
+	clear_overlay();
+	m_overlayVisible = false;
 }
 
 void OSystem_RebelV::clear_overlay()
 {
 	printf("clear_overlay\n");
+
+	if (!m_overlayVisible)
+		return;
+
+	undraw_mouse_cursor();
+
+	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	memcpy(framebuffer, m_overlayCopy, 320 * 200);
 }
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
 {
-	printf("grab_overlay\n");
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	memcpy(buf, framebuffer, 320 * 200);
 }
 
 void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x, int y, int w, int h)
@@ -405,7 +397,6 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 		dst += 320;
 		buf += pitch;
 	} while (--h);
-
 }
 
 uint32 OSystem_RebelV::property(int param, Property *value)
@@ -418,18 +409,25 @@ uint32 OSystem_RebelV::property(int param, Property *value)
 
 void OSystem_RebelV::quit()
 {
-	printf("quit\n");
 	runtime_cold_restart();
 }
 
 void OSystem_RebelV::draw_mouse_cursor()
 {
+	kernel_cs_lock(&m_mouseLock);
+
 	if (m_mouseDrawn)
+	{
+		kernel_cs_unlock(&m_mouseLock);
 		return;
+	}
 
 	const byte *src = m_mouseBits;
 	if (!src)
+	{
+		kernel_cs_unlock(&m_mouseLock);
 		return;
+	}
 
 	int x = m_mouseX - m_mouseHotX;
 	int y = m_mouseY - m_mouseHotY;
@@ -485,32 +483,34 @@ void OSystem_RebelV::draw_mouse_cursor()
 	}
 
 	m_mouseDrawn = true;
+	kernel_cs_unlock(&m_mouseLock);
 }
 
 void OSystem_RebelV::undraw_mouse_cursor()
 {
-	if (!m_mouseDrawn)
-		return;
+	kernel_cs_lock(&m_mouseLock);
+	if (m_mouseDrawn)
+	{
+		uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+		byte *dst, *bak = m_mouseBackup;
 
-	byte *dst, *bak = m_mouseBackup;
-
-	// No need to do clipping here, since draw_mouse() did that already
-	dst = (byte *)framebuffer + m_mouseBackupY * 320 + m_mouseBackupX;
-	for (int y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320) {
-		for (int x = 0; x < m_mouseBackupW; ++x) {
-			dst[x] = bak[x];
+		// No need to do clipping here, since draw_mouse() did that already
+		dst = (byte *)framebuffer + m_mouseBackupY * 320 + m_mouseBackupX;
+		for (int y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320) {
+			for (int x = 0; x < m_mouseBackupW; ++x) {
+				dst[x] = bak[x];
+			}
 		}
-	}
 
-	//add_dirty_rect(m_mouseBackupX, m_mouseBackupY, m_mouseBackupW, m_mouseBackupH);
-	m_mouseDrawn = false;
+		m_mouseDrawn = false;
+	}
+	kernel_cs_unlock(&m_mouseLock);
 }
 
 void OSystem_RebelV::update_sound()
 {
-	const int32_t chunkSize = 256;
+	const int32_t chunkSize = 128;
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
