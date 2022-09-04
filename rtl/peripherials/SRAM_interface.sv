@@ -13,14 +13,15 @@ module SRAM_interface(
 
 	output bit [17:0] SRAM_A,
 	inout [15:0] SRAM_D,
-	output bit SRAM_CE_n,
+	output SRAM_CE_n,
 	output bit SRAM_OE_n,
 	output bit SRAM_WE_n,
 	output SRAM_LB_n,
 	output SRAM_UB_n
 );
+
 	// Number of cycles for entire transaction.
-	localparam CYCLES = 8;
+	localparam CYCLES = 10;
 
 	bit [15:0] count;
 	bit [15:0] wdata;
@@ -28,11 +29,11 @@ module SRAM_interface(
 	initial begin
 		count = 0;
 		SRAM_A = 18'h0;
-		SRAM_CE_n = 1'b1;
 		SRAM_OE_n = 1'b1;
 		SRAM_WE_n = 1'b1;
 	end
 
+	assign SRAM_CE_n = 1'b0;
 	assign SRAM_LB_n = 1'b0;
 	assign SRAM_UB_n = 1'b0;
 	
@@ -46,8 +47,15 @@ module SRAM_interface(
 	assign o_ready = i_request && count >= (CYCLES - 1);
 	
 	always_comb begin
-		SRAM_CE_n = !i_request;
 		SRAM_OE_n = i_rw;
+		
+		SRAM_WE_n = 1'b1;
+		if (i_rw) begin
+			if (count == 2 || count == CYCLES / 2 + 2)
+				SRAM_WE_n = 1'b0;
+			else
+				SRAM_WE_n = 1'b1;
+		end
 	end
 
 	// Increment counter, store data read from SRAM.
@@ -57,45 +65,31 @@ module SRAM_interface(
 		end
 		else begin
 			if (i_request) begin
-				//SRAM_CE_n <= 1'b0;
-				//SRAM_OE_n <= i_rw;
-				SRAM_WE_n <= 1'b1;
-				
 				count <= count + 1;
+
+				if (count < CYCLES / 2) begin
+					SRAM_A <= { i_address[18:1], 1'b0 };
+				end
+				else begin
+					SRAM_A <= { i_address[18:1], 1'b1 };
+				end		
 
 				if (i_rw) begin
 					if (count < CYCLES / 2) begin
-						SRAM_A <= ((i_address >> 1) & 32'hfffffffe) - 1;
 						wdata <= i_wdata[15:0];
 					end
 					else begin
-						SRAM_A <= ((i_address >> 1) & 32'hfffffffe);
 						wdata <= i_wdata[31:16];
 					end				
-				
-					if (count == 0 || count == 1 || count == 2 || count == CYCLES / 2 || count == CYCLES / 2 + 1 || count == CYCLES / 2 + 2)
-						SRAM_WE_n <= 1'b0;
-					else
-						SRAM_WE_n <= 1'b1;
 				end
 				else begin
-					if (count < CYCLES / 2) begin
-						SRAM_A <= ((i_address >> 1) & 32'hfffffffe);
-					end
-					else begin
-						SRAM_A <= ((i_address >> 1) & 32'hfffffffe) + 1;
-					end				
-
-					if (count == 3)
+					if (count == 4)
 						o_rdata[31:16] <= sram_d;
-					else if (count == CYCLES / 2 + 3)
+					else if (count == CYCLES / 2 + 4)
 						o_rdata[15:0] <= sram_d;
 				end
 			end
 			else begin
-				//SRAM_CE_n <= 1'b1;
-				//SRAM_OE_n <= 1'b1;
-				SRAM_WE_n <= 1'b1;
 				count <= 0;
 			end
 		end
