@@ -20,7 +20,7 @@ module CPU_Memory #(
 	output [31:0] o_bus_wdata,
 
 	// Input
-	output o_busy,
+	output bit o_busy,
 	input execute_data_t i_data,
 
 	// Output
@@ -164,7 +164,6 @@ module CPU_Memory #(
 
 	end endgenerate
 
-	assign o_busy = busy;
 	assign o_data = data;
 	assign dcache_address = { i_data.mem_address[31:2], 2'b00 };
 
@@ -172,13 +171,16 @@ module CPU_Memory #(
 	wire [7:0] bus_rdata_byte = dcache_rdata >> (address_byte_index * 8);
 	wire [15:0] bus_rdata_half = dcache_rdata >> (address_byte_index * 8);
 	
-	bit busy;
 	memory_data_t data = 0;
 	state_t state = IDLE;
 	bit [31:0] rmw_rdata = 0;
 
 	always_comb begin
-		busy = (i_data.tag != data.tag) && (i_data.mem_read || i_data.mem_write || i_data.mem_flush);
+		o_busy =
+			(
+				(i_data.tag != data.tag) &&
+				(i_data.mem_read || i_data.mem_write || i_data.mem_flush)
+			);
 	end
 
 	always_ff @(posedge i_clock) begin

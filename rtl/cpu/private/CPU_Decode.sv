@@ -8,7 +8,6 @@ module CPU_Decode(
 	output bit o_fault,
 
 	// Input
-	input i_execute_busy,
 	input fetch_data_t i_data,
 	
 	// Output

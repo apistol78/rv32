@@ -27,7 +27,7 @@ module CPU_Fetch #(
 	input [31:0]		i_bus_rdata,
 
 	// Output
-	input				i_decode_busy,
+	input				i_busy,
 	output fetch_data_t	o_data
 );
 
@@ -106,7 +106,7 @@ module CPU_Fetch #(
 	assign o_data = data;
 
 	always_comb begin
-		icache_stall = i_decode_busy || !(state == 0);
+		icache_stall = i_busy || !(state == 0);
 	end
 
 	bit last_pending = 1'b0;

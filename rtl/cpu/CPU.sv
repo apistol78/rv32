@@ -105,12 +105,6 @@ module CPU #(
 	//====================================================
 	// FETCH
 
-`ifdef __VERILATOR__
-	wire fetch_pipeline_busy = i_pipeline_disable && fetch_data.tag != writeback_data.tag;
-`else
-	wire fetch_pipeline_busy = 1'b0;
-`endif
-
 	fetch_data_t fetch_data_0;
 	
 	CPU_Fetch #(
@@ -138,7 +132,7 @@ module CPU #(
 		.i_bus_rdata(i_ibus_rdata),
 
 		// Output
-		.i_decode_busy(execute_busy | fetch_pipeline_busy),
+		.i_busy(execute_busy | memory_busy),
 		.o_data(fetch_data_0)
 	);
 
@@ -150,11 +144,9 @@ module CPU #(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
+		.i_busy(execute_busy | memory_busy),
 		.i_data(fetch_data_0),
-		.o_busy(),
-
-		.o_data(fetch_data),
-		.i_busy(execute_busy)	
+		.o_data(fetch_data)
 	);
 
 	//====================================================
@@ -181,11 +173,9 @@ module CPU #(
 		.i_reset(i_reset),
 		.i_clock(i_clock),
 
+		.i_busy(execute_busy | memory_busy),
 		.i_data(predecode_data_0),
-		.o_busy(),
-
-		.o_data(predecode_data),
-		.i_busy(execute_busy)	
+		.o_data(predecode_data)
 	);
 
 	//====================================================
@@ -200,7 +190,6 @@ module CPU #(
 		.o_fault(decode_fault),
 
 		// Input
-		.i_execute_busy(execute_busy),
 		.i_data(predecode_data),
 
 		// Output

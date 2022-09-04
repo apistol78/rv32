@@ -184,7 +184,6 @@ module CPU_Execute (
 	
 	always_comb begin
 		o_busy =
-			i_memory_busy ||
 			(
 				(i_data.tag != data.tag) &&
 				//(i_data.complx || i_data.fpu)
