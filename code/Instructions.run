@@ -1201,8 +1201,7 @@ local instructions = {
 		format = "CSR",
 		type = insttype.COMPLEX,
 		cpp = [[
-			PC_NEXT = readCSR(CSR::MEPC);
-			log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
+			returnFromInterrupt();
 		]],
 		verilog_text = [[
 			`GOTO(`MEPC);

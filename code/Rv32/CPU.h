@@ -17,6 +17,7 @@ class ICache;
 
 enum CSR
 {
+	MSTATUS = 0x300,
 	MTVEC = 0x305,
 	MEPC = 0x341,
 	MCAUSE = 0x342
@@ -38,6 +39,8 @@ public:
 	void interrupt();
 
 	void reset();
+
+	void push(uint32_t value);
 
 	uint32_t pc() const { return m_pc; }
 
@@ -64,6 +67,8 @@ private:
 	uint32_t readCSR(uint16_t csr) const;
 
 	void writeCSR(uint16_t csr, uint32_t value);
+
+	void returnFromInterrupt();
 
 	void flushCaches();
 };

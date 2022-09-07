@@ -8,6 +8,15 @@ T_IMPLEMENT_RTTI_CLASS(L"TimerD", TimerD, Device)
 
 bool TimerD::writeU32(uint32_t address, uint32_t value)
 {
+	switch (address)
+	{
+	case 0x0c:
+		m_compare = (m_compare & 0xffffffff00000000) | value;
+		break;
+	case 0x10:
+		m_compare = (m_compare & 0x00000000ffffffff) | ((uint64_t)value << 32ULL);
+		break;
+	}
 	return true;
 }
 
@@ -33,7 +42,7 @@ bool TimerD::tick(CPU* cpu)
 {
 	if (++m_tick == m_compare)
 	{
-		log::info << L"Timer compare interrupt" << Endl;
+		// log::info << L"Timer compare interrupt" << Endl;
 		cpu->interrupt();
 	}
 	return true;

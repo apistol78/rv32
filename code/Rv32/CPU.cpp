@@ -202,6 +202,9 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 		m_registers[i] = 0x00000000;
 
 	m_registers[2] = 0x20110000;
+
+	for (uint32_t i = 0; i < sizeof_array(m_csr); ++i)
+		m_csr[i] = 0x00000000;
 }
 
 void CPU::jump(uint32_t address)
@@ -223,14 +226,23 @@ bool CPU::tick()
 
 	if (m_interrupt)
 	{
-		log::info << str(L"%08x", m_pc) << Endl;
-
 		writeCSR(CSR::MEPC, m_pc);
 		writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
+
+		// Push MIE and then disable interrupts.
+		uint32_t mstatus = readCSR(CSR::MSTATUS);
+		const bool mie = (bool)((mstatus & (1 << 3)) != 0);
+		mstatus &= ~(1 << 3);
+		if (mie)
+			mstatus |= 1 << 4;
+		else
+			mstatus &= ~(1 << 4);
+		writeCSR(CSR::MSTATUS, mstatus);
 
 		const uint32_t mtvec = readCSR(CSR::MTVEC);
 		m_pc = mtvec;
 
+		m_interrupt = false;
 		m_waitForInterrupt = false;
 	}
 
@@ -268,7 +280,10 @@ bool CPU::tick()
 
 void CPU::interrupt()
 {
-	m_interrupt = true;
+	const uint32_t mstatus = readCSR(CSR::MSTATUS);
+	const bool mie = (bool)((mstatus & (1 << 3)) != 0);
+	if (mie)
+		m_interrupt = true;
 }
 
 void CPU::reset()
@@ -279,6 +294,13 @@ void CPU::reset()
 	m_registers[2] = 0x20110000;	
 }
 
+void CPU::push(uint32_t value)
+{
+	const uint32_t sp = m_registers[2] - 4;
+	MEM_WR(sp, value);
+	m_registers[2] = sp;
+}
+
 bool CPU::decode(uint32_t word)
 {
 	#include "Instructions.inl"
@@ -286,14 +308,28 @@ bool CPU::decode(uint32_t word)
 
 uint32_t CPU::readCSR(uint16_t csr) const
 {
-	//log::info << L"read CSR " << str(L"%03x", csr) << Endl;
 	return m_csr[csr];
 }
 
 void CPU::writeCSR(uint16_t csr, uint32_t value)
 {
-	//log::info << L"write CSR " << str(L"%03x", csr) << L" <= " << str(L"%08x", value) << Endl;
 	m_csr[csr] = value;
+}
+
+void CPU::returnFromInterrupt()
+{
+	// Pop MIE.
+	uint32_t mstatus = readCSR(CSR::MSTATUS);
+	const bool mpie = (bool)((mstatus & (1 << 4)) != 0);
+	mstatus &= ~(1 << 4);
+	if (mpie)
+		mstatus |= 1 << 3;
+	else
+		mstatus &= ~(1 << 3);
+	writeCSR(CSR::MSTATUS, mstatus);
+
+	// Return from interrupt.
+	PC_NEXT = readCSR(CSR::MEPC);
 }
 
 void CPU::flushCaches()

@@ -4,14 +4,6 @@
 
 typedef struct
 {
-	uint32_t sp;
-	uint32_t epc;
-	uint32_t sleep;
-}
-kernel_thread_t;
-
-typedef struct
-{
 	uint32_t counter;
 }
 kernel_cs_t;

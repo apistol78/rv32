@@ -16,6 +16,14 @@
 #define KERNEL_SCHEDULE_FREQUENCY	32
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
+typedef struct
+{
+	uint32_t sp;
+	uint32_t epc;
+	uint32_t sleep;
+}
+kernel_thread_t;
+
 static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
@@ -141,9 +149,9 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	// cannot touch stack.
 	if (source == IRQ_SOURCE_TIMER)
 	{
-		uint32_t mtimeh = *TIMER_CYCLES_H;
-		uint32_t mtimel = *TIMER_CYCLES_L;
-		uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
 		*TIMER_COMPARE_H = 0xFFFFFFFF;
 		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
 		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);

@@ -53,7 +53,7 @@ using namespace traktor;
 namespace
 {
 
-const uint32_t c_memoryAvail = 0x1000000;
+const uint32_t c_memoryAvail = 0x2000000;
 
 // Modifiers
 #define RT_MODIFIER_CTRL    0x01
@@ -332,10 +332,14 @@ int main(int argc, const char** argv)
 	else
 	{
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
-		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x10000;
+		const uint32_t sp = 0x20000000 + c_memoryAvail;
 		cpu.setSP(sp);
 		log::info << L"Initial stack " << str(L"%08x", sp) << Endl;
 	}
+
+	// Push arguments.
+	cpu.push(0);
+	cpu.push(0);
 
 	CircularVector< std::pair< uint32_t, uint32_t >, 32 > dbg_pc;
 	uint32_t dbg_sp = cpu.sp();

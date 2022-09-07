@@ -310,8 +310,7 @@ else if ((word & 0xfe00707f) == 0x02003033)	// MULHU
 }
 else if ((word & 0xffffffff) == 0x30200073)	// MRET
 {
-	PC_NEXT = readCSR(CSR::MEPC);
-	log::info << L"MRET " << str(L"%08x", PC_NEXT) << Endl;
+	returnFromInterrupt();
 }
 else if ((word & 0xfe00707f) == 0x00006033)	// OR
 {

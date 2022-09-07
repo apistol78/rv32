@@ -14,27 +14,24 @@
 #include "Console.h"
 #include "ELF.h"
 
-char cmd[120];
-int32_t cnt = 0;
-
-void cmd_reboot()
+static void cmd_reboot(const char* args)
 {
 	runtime_cold_restart();
 }
 
-void cmd_list()
+static void cmd_list(const char* args)
 {
 	file_enumerate("", [](const char* filename, uint32_t size) {
 		fb_printf("%-10s : %d\n", filename, size);
 	});
 }
 
-void cmd_remove(const char* filename)
+static void cmd_remove(const char* filename)
 {
 	file_remove(filename);
 }
 
-void cmd_run(const char* filename)
+static void cmd_run(const char* filename)
 {
 	int32_t fd = file_open(filename, FILE_MODE_READ);
 	if (fd <= 0) {
@@ -132,7 +129,7 @@ void cmd_run(const char* filename)
 	}
 }
 
-void cmd_download(const char* filename)
+static void cmd_download(const char* filename)
 {
 	int32_t fd = file_open(filename, FILE_MODE_WRITE);
 	if (fd <= 0) {
@@ -177,7 +174,7 @@ void cmd_download(const char* filename)
 		fb_print("\rDownload failed!\n");
 }
 
-void cmd_sysinfo()
+static void cmd_sysinfo(const char* args)
 {
 	switch (sysreg_read(SR_REG_DEVICE_ID))
 	{
@@ -211,7 +208,7 @@ void cmd_sysinfo()
 volatile int g_leds = 0;
 volatile int g_queue = 0;
 
-void cmd_play(const char* filename)
+static void cmd_play(const char* filename)
 {
 	int32_t fp = file_open(filename, FILE_MODE_READ);
 	if (fp <= 0)
@@ -261,7 +258,7 @@ void cmd_play(const char* filename)
 	file_close(fp);
 }
 
-void cmd_help()
+static void cmd_help(const char* args)
 {
 	fb_print("REBOOT  - Cold reboot\n");
 	fb_print("LIST    - List files on SD\n");
@@ -273,14 +270,34 @@ void cmd_help()
 	fb_print("HELP    - Show help\n");
 }
 
-int main()
+const struct cmdMap_t
 {
+	const char* name;
+	void (*fn)(const char* args);
+}
+c_cmds[] =
+{
+	{ "reboot",		cmd_reboot		},
+	{ "list",		cmd_list		},
+	{ "remove",		cmd_remove		},
+	{ "run",		cmd_run			},
+	{ "dl",			cmd_download	},
+	{ "sysinfo",	cmd_sysinfo		},
+	{ "play",		cmd_play		},
+	{ "help",		cmd_help		}
+};
+
+int main(int argc, const char** argv)
+{
+	char cmd[128];
+	int32_t cnt = 0;
+
 	runtime_init();
 
 	fb_init();
 	fb_clear();
-	fb_print("   **** RePET 5  SHELL V1 ****   \n");
-	fb_print(" 16MiB RAM        SOME BYTES FREE\n");
+	fb_print("   **** MOJO 5 ** SHELL V1 ****   \n");
+	fb_printf(" %-2d MiB RAM, RISC-V CPU @ %-3d MHz\n", sysreg_read(SR_REG_RAM_SIZE) / (1024 * 1024), sysreg_read(SR_REG_FREQUENCY) / 1000000);
 	fb_print("\n");
 	fb_print("READY.\n");
 
@@ -294,49 +311,65 @@ int main()
 		}
 	});
 
-	int32_t counter = 0;
-	for(;;) {
+	for(;;)
+	{
 		runtime_update();
 		
 		uint8_t kc, m, p;
-		if (input_get_kb_event(&kc, &m, &p) > 0) {
-			if (p) {
-				char ch;
-				if (input_translate_key(kc, m, &ch)) {
-					fb_putc(ch);
-					if (ch != '\n') {
-						if (cnt > 0 || ch != ' ') {
-							cmd[cnt++] = ch;
-							
-						}
-					} else if (ch == '\b') {
-						if (cnt > 0) {
-							cmd[--cnt] = 0;
-						}
-					} else {
-						if (cnt > 0) {
-							cmd[cnt] = 0;
-							if (strncasecmp(cmd, "REBOOT", 6) == 0) {
-								cmd_reboot();
-							} else if (strncasecmp(cmd, "LIST", 4) == 0) {
-								cmd_list();
-							} else if (strncasecmp(cmd, "REMOVE", 6) == 0) {
-								cmd_remove(&cmd[7]);
-							} else if (strncasecmp(cmd, "RUN", 3) == 0) {
-								cmd_run(&cmd[4]);
-							} else if (strncasecmp(cmd, "DL", 2) == 0) {
-								cmd_download(&cmd[3]);
-							} else if (strncasecmp(cmd, "SYSINFO", 7) == 0) {
-								cmd_sysinfo();
-							} else if (strncasecmp(cmd, "PLAY", 4) == 0) {
-								cmd_play(&cmd[5]);
-							} else if (strncasecmp(cmd, "HELP", 4) == 0) {
-								cmd_help();
-							} else {
-								fb_print("SYNTAX ERROR.\n");
+		if (input_get_kb_event(&kc, &m, &p) <= 0)
+			continue;
+
+		if (p)
+		{
+			char ch;
+			if (input_translate_key(kc, m, &ch))
+			{
+				fb_putc(ch);
+				if (ch != '\n')
+				{
+					if (cnt > 0 || ch != ' ')
+						cmd[cnt++] = ch;
+				}
+				else if (ch == '\b')
+				{
+					if (cnt > 0)
+						cmd[--cnt] = 0;
+				}
+				else
+				{
+					if (cnt > 0)
+					{
+						cmd[cnt] = 0;
+
+						char* args = cmd;
+						while (*args != 0)
+						{
+							if (*args == ' ')
+							{
+								*args++ = 0;
+								break;
 							}
-							cnt = 0;
+							++args;
 						}
+						while (*args == ' ')
+							++args;
+
+						const cmdMap_t* cm = nullptr;
+						for (int i = 0; i < sizeof(c_cmds) / sizeof(c_cmds[0]); ++i)
+						{
+							if (strcasecmp(c_cmds[i].name, cmd) == 0)
+							{
+								cm = &c_cmds[i];
+								break;
+							}
+						}
+
+						if (cm)
+							cm->fn(args);
+						else
+							fb_print("SYNTAX ERROR.\n");
+
+						cnt = 0;
 					}
 				}
 			}
