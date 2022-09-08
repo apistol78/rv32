@@ -2,4 +2,4 @@
 
 #include "Runtime/HAL/Common.h"
 
-EXTERN_C int32_t crt_init();
+EXTERN_C void crt_init();

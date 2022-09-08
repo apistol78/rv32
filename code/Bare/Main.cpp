@@ -115,7 +115,7 @@ static void cmd_run(const char* filename)
 
 	if (jstart != 0)
 	{
-		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
+		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x8;
 		fb_printf("Launching (SP @ 0x%08x)...\n", sp);
 		typedef void (*call_fn_t)();
 		__asm__ volatile (

@@ -98,7 +98,7 @@ void runtime_warm_restart()
 	video_clear(0);
 	video_swap();
 
-	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
+	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:

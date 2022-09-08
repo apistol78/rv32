@@ -284,7 +284,7 @@ int main(int argc, const char** argv)
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
 	{
-		Ref< IStream > f = FileSystem::getInstance().open(L"Trace.log", File::FmWrite);
+		Ref< IStream > f = FileSystem::getInstance().open(L"Rv32.trace", File::FmWrite);
 		if (f)
 			os = new FileOutputStream(f, new Utf8Encoding());
 	}

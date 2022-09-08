@@ -95,7 +95,7 @@ static int32_t launch_elf(const char* filename)
 
 	if (jstart != 0)
 	{
-		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
+		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x8;
 		printf("launching application (stack @ 0x%08x)...\n", sp);
 		__asm__ volatile (
 			"fence					\n"
@@ -247,10 +247,10 @@ static void remote_control()
 	}
 }
 
-void main()
+void main(int argc, const char** argv)
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x10000;
+	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:
