@@ -298,7 +298,7 @@ int main(int argc, const char **argv)
 	else
 	{
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
-		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x10000;		
+		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x8;		
 		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
 		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
 	}
@@ -456,8 +456,8 @@ int main(int argc, const char **argv)
 
 			if (soc->SoC__DOT__cpu__DOT__execute_busy)
 				stallExecute++;
-			if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
-				stallMemory++;
+			// if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
+			// 	stallMemory++;
 			// if (soc->SoC__DOT__vmode_chunky__DOT__wbuffer__DOT__stall)
 			// 	stallVideo++;
 

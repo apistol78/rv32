@@ -32,6 +32,7 @@
 #elif defined(__LINUX__) || defined(__RPI__)
 #	include <Ui/X11/WidgetFactoryX11.h>
 #endif
+#include "Rv32/Audio.h"
 #include "Rv32/Bus.h"
 #include "Rv32/CPU.h"
 #include "Rv32/Helpers.h"
@@ -267,6 +268,7 @@ int main(int argc, const char** argv)
 	TimerD tmr;
 	Unknown plic(L"PLIC", true);
 	SystemRegisters sysreg(c_memoryAvail);
+	Audio audio;
 
 	Bus bus;
 	bus.map(0x00000000, 0x00100000, false, false, &rom);
@@ -276,6 +278,7 @@ int main(int argc, const char** argv)
 	bus.map(0x53000000, 0x53000100, false, false, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
 	bus.map(0x55000000, 0x55000100, false, true, &tmr);
+	bus.map(0x56000000, 0x56000100, false, true, &audio);
 	bus.map(0x57000000, 0x57000100, false, false, &dma);
 	bus.map(0x58000000, 0x58004000, false, false, &plic);
 	bus.map(0x59000000, 0x59000100, false, false, &sysreg);

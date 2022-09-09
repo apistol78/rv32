@@ -172,6 +172,10 @@ module CPU_Execute (
 	bit [3:0] cycle = 0;
 	execute_data_t data = 0;
 
+`ifdef __VERILATOR__
+	bit [31:0] trace_pc = 32'h0;
+`endif
+
 	initial begin
 		o_csr_wdata_wr = 1'b0;
 		o_csr_wdata = 0;
@@ -214,6 +218,10 @@ module CPU_Execute (
 				!i_memory_busy &&
 				i_data.tag != data.tag
 			) begin
+
+`ifdef __VERILATOR__
+				trace_pc <= i_data.pc;
+`endif
 
 				data.inst_rd <= register_t'(!i_data.memory_read ? i_data.inst_rd : 0);
 

@@ -967,8 +967,9 @@ local instructions = {
 		type = insttype.JUMP,
 		cpp = [[
 			auto f = parseFormatI(word);
-			R_u(f.rd) = PC_NEXT;
-			PC_NEXT = (R(f.rs1) + f.imm) & ~1U;
+			uint32_t tmp = PC_NEXT;
+			PC_NEXT = (R(f.rs1) + f.imm) & ~1;
+			R_u(f.rd) = tmp;
 		]],
 		verilog_alu = {
 			operation = operations.SIGNED_ADD,

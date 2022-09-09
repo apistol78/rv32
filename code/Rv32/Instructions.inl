@@ -256,8 +256,9 @@ else if ((word & 0x0000007f) == 0x0000006f)	// JAL
 else if ((word & 0x0000707f) == 0x00000067)	// JALR
 {
 	auto f = parseFormatI(word);
-	R_u(f.rd) = PC_NEXT;
-	PC_NEXT = (R(f.rs1) + f.imm) & ~1U;
+	uint32_t tmp = PC_NEXT;
+	PC_NEXT = (R(f.rs1) + f.imm) & ~1;
+	R_u(f.rd) = tmp;
 }
 else if ((word & 0x0000707f) == 0x00000003)	// LB
 {

@@ -29,8 +29,8 @@ local cnames = {
 
 function main()
 
-    local fl = FileSystem.getInstance():open(Path("Rv32T.wb0"), File.FmRead)
-    local fr = FileSystem.getInstance():open(Path("Rv32T.wb"), File.FmRead)
+    local fl = FileSystem.getInstance():open(Path("Rv32.trace"), File.FmRead)
+    local fr = FileSystem.getInstance():open(Path("Rv32T.trace"), File.FmRead)
 
     if fl == nil or fr == nil then return end
 
@@ -65,7 +65,8 @@ function main()
             local mm = false
 
             assert(#tl == #tr)
-            for i = 3, #tl do
+            --for i = 3, #tl do
+            for i = 1, 1 do
                 if tl[i] ~= tr[i] then
 
                     if mm == false then
