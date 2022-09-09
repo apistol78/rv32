@@ -306,6 +306,10 @@ bool CPU::decode(uint32_t word)
 	#include "Instructions.inl"
 }
 
+void CPU::ecall()
+{
+}
+
 uint32_t CPU::readCSR(uint16_t csr) const
 {
 	return m_csr[csr];

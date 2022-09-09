@@ -64,6 +64,8 @@ private:
 
 	bool decode(uint32_t word);
 
+	void ecall();
+
 	uint32_t readCSR(uint16_t csr) const;
 
 	void writeCSR(uint16_t csr, uint32_t value);

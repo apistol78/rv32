@@ -485,6 +485,7 @@ local instructions = {
 		name = "ECALL",
 		type = insttype.COMPLEX,
 		cpp = [[
+			ecall();
 		]],
 		verilog_text = [[
 			`ECALL <= 1'b1;

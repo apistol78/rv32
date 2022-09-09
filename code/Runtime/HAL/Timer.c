@@ -6,6 +6,7 @@
 #define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x08)
 #define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x0c)
 #define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x10)
+#define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0x14)
 
 uint32_t timer_get_ms()
 {
@@ -16,7 +17,15 @@ void timer_wait_ms(uint32_t ms)
 {
 	const uint32_t until = timer_get_ms() + ms;
 	while (timer_get_ms() < until)
-		;
+	{
+		__asm__ volatile (
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+		);
+	}
 }
 
 uint64_t timer_get_cycles()
@@ -48,4 +57,9 @@ void timer_set_compare(uint64_t offset)
 	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
 	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
 	kernel_leave_critical();
+}
+
+void timer_raise()
+{
+	*TIMER_RAISE = 1;
 }

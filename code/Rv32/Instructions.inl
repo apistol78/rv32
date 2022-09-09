@@ -121,6 +121,7 @@ else if ((word & 0xffffffff) == 0x00100073)	// EBREAK
 }
 else if ((word & 0xffffffff) == 0x00000073)	// ECALL
 {
+	ecall();
 }
 else if ((word & 0xfe00007f) == 0x00000053)	// FADD
 {

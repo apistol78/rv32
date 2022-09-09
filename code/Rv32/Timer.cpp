@@ -16,6 +16,9 @@ bool TimerD::writeU32(uint32_t address, uint32_t value)
 	case 0x10:
 		m_compare = (m_compare & 0x00000000ffffffff) | ((uint64_t)value << 32ULL);
 		break;
+	case 0x14:
+		m_raised = true;
+		break;
 	}
 	return true;
 }
@@ -40,10 +43,11 @@ uint32_t TimerD::readU32(uint32_t address) const
 
 bool TimerD::tick(CPU* cpu)
 {
-	if (++m_tick == m_compare)
-	{
-		// log::info << L"Timer compare interrupt" << Endl;
+	m_tick++;
+
+	if (m_raised || m_tick == m_compare)
 		cpu->interrupt();
-	}
+
+	m_raised = false;
 	return true;
 }

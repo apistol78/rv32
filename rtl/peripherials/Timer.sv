@@ -24,6 +24,7 @@ module Timer#(
 	bit [63:0] compare = { 64{1'b1} };
 	bit [31:0] ms = 0;
 	bit request = 0;
+	bit raised = 0;
 
 	initial begin
 		o_ready = 1'b0;
@@ -35,7 +36,7 @@ module Timer#(
 			cycles <= 64'h0;
 		else begin
 			cycles <= cycles + 64'h1;
-			o_interrupt <= (cycles == compare) ? 1'b1 : 1'b0;
+			o_interrupt <= raised || ((cycles == compare) ? 1'b1 : 1'b0);
 		end
 	end
 
@@ -54,6 +55,9 @@ module Timer#(
 	end
 
 	always_ff @(posedge i_clock) begin
+		request <= i_request;
+		raised <= 1'b0;
+
 		if (i_request && !request) begin
 			if (!i_rw) begin
 				case (i_address)
@@ -69,6 +73,7 @@ module Timer#(
 				case (i_address)
 					3'h3: compare[31:0] <= i_wdata;
 					3'h4: compare[63:32] <= i_wdata;
+					3'h5: raised <= 1'b1;
 					default:;
 				endcase
 			end
@@ -76,8 +81,6 @@ module Timer#(
 		end
 		else if (!i_request)
 			o_ready <= 0;
-			
-		request <= i_request;
 	end
 	
 endmodule

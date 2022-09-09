@@ -275,14 +275,6 @@ void main(int argc, const char** argv)
 		memset(dest, 0, len);
 	}
 
-	printf("===============================================================================\n");
-	printf("                                 Rebel-V SoC                                   \n");
-	printf("                           created by Anders Pistol                            \n");
-	printf("                                  2021-2022                                    \n");
-	printf("-------------------------------------------------------------------------------\n");
-	printf("                             firmware version 0.1                              \n");
-	printf("===============================================================================\n");
-
 	printf("initialize storage...\n");
 	sd_init();
 

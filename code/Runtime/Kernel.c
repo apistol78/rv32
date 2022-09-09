@@ -73,25 +73,16 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		);
 	}
 
-	// Update thread states.
-	if (source == IRQ_SOURCE_TIMER)
-	{
-		for (uint32_t i = 0; i < g_count; ++i)
-		{
-			if (g_threads[i].sleep > 0)
-				g_threads[i].sleep--;
-		}
-	}
-
 	// Select new thread.
 	if (g_critical == 0)
 	{
+		const uint32_t ms = *TIMER_MS;
 		int32_t i;
 		for (i = 0; i < g_count; ++i)
 		{
 			if (++g_current >= g_count)
 				g_current = 0;
-			if (g_threads[g_current].sleep == 0)
+			if (g_threads[g_current].sleep <= ms)
 				break;
 		}
 		if (i >= g_count)
@@ -147,7 +138,6 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 	// Setup next timer interrupt, do this inline since we
 	// cannot touch stack.
-	if (source == IRQ_SOURCE_TIMER)
 	{
 		const uint32_t mtimeh = *TIMER_CYCLES_H;
 		const uint32_t mtimel = *TIMER_CYCLES_L;
@@ -190,7 +180,6 @@ void kernel_init()
 	// Setup timer interrupt for kernel scheduler.
 	timer_set_compare(KERNEL_TIMER_RATE);
 	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
-	interrupt_set_handler(IRQ_SOURCE_ECALL, kernel_scheduler);
 }
 
 void kernel_create_thread(kernel_thread_fn_t fn)
@@ -206,23 +195,18 @@ void kernel_create_thread(kernel_thread_fn_t fn)
 
 void kernel_yield()
 {
-	__asm__ volatile ("ecall");
+	timer_raise();
 }
 
 void kernel_sleep(uint32_t ms)
 {
 	const uint32_t fin_ms = timer_get_ms() + ms;
-
-	g_threads[g_current].sleep = (ms * KERNEL_SCHEDULE_FREQUENCY) / 1000;
+	g_threads[g_current].sleep = fin_ms;
 	do
 	{
 		kernel_yield();
 	}
-	while (g_threads[g_current].sleep > 0);
-
-	const int32_t left_ms = fin_ms - timer_get_ms();
-	if (left_ms > 0)
-		timer_wait_ms(left_ms);
+	while (g_threads[g_current].sleep >= timer_get_ms());
 }
 
 void kernel_enter_critical()

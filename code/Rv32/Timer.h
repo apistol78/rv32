@@ -20,4 +20,5 @@ private:
     traktor::Timer m_timer;
 	uint64_t m_tick = 0;
 	uint64_t m_compare = 0;
+	bool m_raised = false;
 };
