@@ -2,8 +2,6 @@
 
 `timescale 1ns/1ns
 
-//`define ENABLE_WBUFFER
-
 module CPU_Memory #(
 	parameter DCACHE_SIZE,
 	parameter DCACHE_REGISTERED
@@ -37,34 +35,6 @@ module CPU_Memory #(
 		FLUSH
 	} state_t;
 
-`ifdef ENABLE_WBUFFER
-	wire wbuffer_rw;
-	wire wbuffer_request;
-	wire wbuffer_ready;
-	wire [31:0] wbuffer_address;
-	wire [31:0] wbuffer_rdata;
-	wire [31:0] wbuffer_wdata;
-
-	CPU_WriteBuffer wbuffer(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-	
-		.o_bus_rw(o_bus_rw),
-		.o_bus_request(o_bus_request),
-		.i_bus_ready(i_bus_ready),
-		.o_bus_address(o_bus_address),
-		.i_bus_rdata(i_bus_rdata),
-		.o_bus_wdata(o_bus_wdata),
-		
-		.i_rw(wbuffer_rw),
-		.i_request(wbuffer_request),
-		.o_ready(wbuffer_ready),
-		.i_address(wbuffer_address),
-		.o_rdata(wbuffer_rdata),
-		.i_wdata(wbuffer_wdata)		
-	);
-`endif
-
 	bit dcache_rw = 0;
 	bit dcache_request = 0;
 	bit dcache_flush = 0;
@@ -84,22 +54,14 @@ module CPU_Memory #(
 		) dcache(
 			.i_reset(i_reset),
 			.i_clock(i_clock),
-		
-`ifdef ENABLE_WBUFFER
-			.o_bus_rw(wbuffer_rw),
-			.o_bus_request(wbuffer_request),
-			.i_bus_ready(wbuffer_ready),
-			.o_bus_address(wbuffer_address),
-			.i_bus_rdata(wbuffer_rdata),
-			.o_bus_wdata(wbuffer_wdata),
-`else
+
 			.o_bus_rw(o_bus_rw),
 			.o_bus_request(o_bus_request),
 			.i_bus_ready(i_bus_ready),
 			.o_bus_address(o_bus_address),
 			.i_bus_rdata(i_bus_rdata),
 			.o_bus_wdata(o_bus_wdata),
-`endif
+
 			.i_rw(dcache_rw),
 			.i_request(dcache_request),
 			.i_flush(dcache_flush),
@@ -121,22 +83,14 @@ module CPU_Memory #(
 		) dcache(
 			.i_reset(i_reset),
 			.i_clock(i_clock),
-		
-`ifdef ENABLE_WBUFFER
-			.o_bus_rw(wbuffer_rw),
-			.o_bus_request(wbuffer_request),
-			.i_bus_ready(wbuffer_ready),
-			.o_bus_address(wbuffer_address),
-			.i_bus_rdata(wbuffer_rdata),
-			.o_bus_wdata(wbuffer_wdata),
-`else
+
 			.o_bus_rw(o_bus_rw),
 			.o_bus_request(o_bus_request),
 			.i_bus_ready(i_bus_ready),
 			.o_bus_address(o_bus_address),
 			.i_bus_rdata(i_bus_rdata),
 			.o_bus_wdata(o_bus_wdata),
-`endif
+
 			.i_rw(dcache_rw),
 			.i_request(dcache_request),
 			.i_flush(dcache_flush),
