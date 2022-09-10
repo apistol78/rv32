@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <string.h>
 #include "Runtime/Kernel.h"
 #include "Runtime/HAL/Common.h"
 #include "Runtime/HAL/CRC.h"
@@ -572,8 +574,6 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 	uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
 
-	uint16_t dataCrc16 = crc16(buffer, bufferLen);
-
 	kernel_enter_critical();
 
 	if (!sd_cmd24(addr))
@@ -619,16 +619,58 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 	// Send CRC.
 	if (s_dataBits == 4)
 	{
-		for (uint32_t i = 0; i < 4; i++)
+		uint8_t p[4][128];
+		memset(p, 0, sizeof(p));
+
+		uint32_t jj = 0;
+		for (uint32_t i = 0; i < bufferLen; i++)
 		{
-			SD_WR_CLK_LOW();
-			SD_WR_DAT((dataCrc16 >> 12) & 0x0f);
-			SD_WR_CLK_HIGH();
-			dataCrc16 <<= 4;         
+			uint8_t data8 = buffer[i];
+			for (uint32_t j = 0; j < 2; j++)
+			{
+				const uint8_t nibble = (data8 >> 4) & 0x0f;
+
+				uint8_t k = 7 - (jj & 7);
+				p[0][jj >> 3] |= ((nibble & 1) ? 1 : 0) << k;		// DAT0
+				p[1][jj >> 3] |= ((nibble & 2) ? 1 : 0) << k;		// DAT1
+				p[2][jj >> 3] |= ((nibble & 4) ? 1 : 0) << k;		// DAT2
+				p[3][jj >> 3] |= ((nibble & 8) ? 1 : 0) << k;		// DAT3
+				++jj;
+
+				data8 <<= 4;
+			}
 		}
+
+		uint16_t dataCrc16[] =
+		{
+			crc16(p[0], 128),
+			crc16(p[1], 128),
+			crc16(p[2], 128),
+			crc16(p[3], 128)
+		};
+
+		for (uint32_t i = 0; i < 16; i++)
+		{
+			uint8_t c = 0;
+			c |= (dataCrc16[0] & 0x8000) ? 1 : 0;
+			c |= (dataCrc16[1] & 0x8000) ? 2 : 0;
+			c |= (dataCrc16[2] & 0x8000) ? 4 : 0;
+			c |= (dataCrc16[3] & 0x8000) ? 8 : 0;
+
+			SD_WR_CLK_LOW();
+			SD_WR_DAT(c);
+			SD_WR_CLK_HIGH();
+
+			dataCrc16[0] <<= 1;         
+			dataCrc16[1] <<= 1;         
+			dataCrc16[2] <<= 1;         
+			dataCrc16[3] <<= 1;         
+		}
+
 	}
 	else if (s_dataBits == 1)
 	{
+		uint16_t dataCrc16 = crc16(buffer, bufferLen);
 		for (uint32_t i = 0; i < 16; i++)
 		{
 			SD_WR_CLK_LOW();
@@ -680,14 +722,14 @@ int32_t sd_init()
 {
 	*SD_CTRL = 0x0000ff00;
 
-	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
-	if (deviceId == SR_DEVICE_ID_RV32T || deviceId == SR_DEVICE_ID_RV32)
+	// const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
+	// if (deviceId == SR_DEVICE_ID_RV32T || deviceId == SR_DEVICE_ID_RV32)
 		s_dataBits = 4;
-	else
-	{
-		// \todo Cannot write in 4 bit mode atm, something wrong...
-		s_dataBits = 1;
-	}
+	// else
+	// {
+	// 	// \todo Cannot write in 4 bit mode atm, something wrong...
+	// 	s_dataBits = 1;
+	// }
 
 	SD_WR_CMD_DIR_OUT();
 	SD_WR_DAT_DIR_IN();
