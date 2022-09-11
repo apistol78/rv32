@@ -21,16 +21,13 @@ module SRAM_interface(
 );
 
 	// Number of cycles for entire transaction.
-	localparam CYCLES = 10;
+	localparam CYCLES = 10;	// Work with 10 but not 14?....
 
-	bit [15:0] count;
+	bit [5:0] count;
 	bit [15:0] wdata;
 	
 	initial begin
 		count = 0;
-		SRAM_A = 18'h0;
-		SRAM_OE_n = 1'b1;
-		SRAM_WE_n = 1'b1;
 	end
 
 	assign SRAM_CE_n = 1'b0;
@@ -56,6 +53,20 @@ module SRAM_interface(
 			else
 				SRAM_WE_n = 1'b1;
 		end
+		
+		if (count < CYCLES / 2) begin
+			SRAM_A = { i_address[18:1], 1'b0 };
+		end
+		else begin
+			SRAM_A = { i_address[18:1], 1'b1 };
+		end
+		
+		if (count < CYCLES / 2) begin
+			wdata = i_wdata[15:0];
+		end
+		else begin
+			wdata = i_wdata[31:16];
+		end
 	end
 
 	// Increment counter, store data read from SRAM.
@@ -66,27 +77,11 @@ module SRAM_interface(
 		else begin
 			if (i_request) begin
 				count <= count + 1;
-
-				if (count < CYCLES / 2) begin
-					SRAM_A <= { i_address[18:1], 1'b0 };
-				end
-				else begin
-					SRAM_A <= { i_address[18:1], 1'b1 };
-				end		
-
-				if (i_rw) begin
-					if (count < CYCLES / 2) begin
-						wdata <= i_wdata[15:0];
-					end
-					else begin
-						wdata <= i_wdata[31:16];
-					end				
-				end
-				else begin
-					if (count == 4)
-						o_rdata[31:16] <= sram_d;
-					else if (count == CYCLES / 2 + 4)
+				if (!i_rw) begin
+					if (count == 2)
 						o_rdata[15:0] <= sram_d;
+					else if (count == CYCLES / 2 + 2)
+						o_rdata[31:16] <= sram_d;
 				end
 			end
 			else begin

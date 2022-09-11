@@ -121,8 +121,8 @@ static void remote_control()
 		// poke
 		if (cmd == 0x01)
 		{
-			uint32_t addr = uart_rx_u32(0);
-			uint16_t nb = uart_rx_u16(0);
+			const uint32_t addr = uart_rx_u32(0);
+			const uint16_t nb = uart_rx_u16(0);
 			uint8_t cs = 0;
 
 			if (nb == 0 || nb > 1024)
@@ -152,10 +152,7 @@ static void remote_control()
 				// Write data to memory.
 				for (uint16_t i = 0; i < nb; ++i)
 					*(uint8_t*)(addr + i) = r[i];
-
-				// Ensure DCACHE is flushed.
-				__asm__ volatile ("fence");
-
+/*
 				// Verify data written to memory.
 				uint32_t result = 0x80;
 				for (uint16_t i = 0; i < nb; ++i)
@@ -166,8 +163,9 @@ static void remote_control()
 						break;
 					}
 				}
-
 				uart_tx_u8(0, result);
+*/
+				uart_tx_u8(0, 0x80);
 			}
 			else
 				uart_tx_u8(0, 0x82);	// Invalid checksum.
@@ -176,8 +174,8 @@ static void remote_control()
 		// peek
 		else if (cmd == 0x02)
 		{
-			uint32_t addr = uart_rx_u32(0);
-			uint16_t nb = uart_rx_u16(0);
+			const uint32_t addr = uart_rx_u32(0);
+			const uint16_t nb = uart_rx_u16(0);
 
 			if (nb == 0)
 			{
@@ -185,20 +183,17 @@ static void remote_control()
 				continue;
 			}
 
-			// Ensure DCACHE is flushed.
-			__asm__ volatile ("fence");
-
 			uart_tx_u8(0, 0x80);	// Ok
 
 			for (uint16_t i = 0; i < nb; ++i)
-				uart_tx_u8(0, *(uint8_t*)addr++);
+				uart_tx_u8(0, *(uint8_t*)(addr + i));
 		}
 
 		// jump to
 		else if (cmd == 0x03)
 		{
-			uint32_t addr = uart_rx_u32(0);
-			uint32_t sp = uart_rx_u32(0);
+			const uint32_t addr = uart_rx_u32(0);
+			const uint32_t sp = uart_rx_u32(0);
 			uint8_t cs = 0;
 
 			// Add address to checksum.

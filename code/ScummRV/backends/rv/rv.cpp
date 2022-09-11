@@ -26,20 +26,14 @@ int32_t clamp(int32_t v, int32_t mn, int32_t mx)
 
 int32_t map_key(uint8_t kc)
 {
-	if (kc >= RT_KEY_F1 && kc <= RT_KEY_F12) {
-		return kc - RT_KEY_F1 + 315;
-	// } else if (key >= SDLK_KP0 && key <= SDLK_KP9) {
-	// 	return key - SDLK_KP0 + '0';
-	// } else if (key >= SDLK_UP && key <= SDLK_PAGEDOWN) {
-	// 	return key;
-	// } else if (unicode) {
-	// 	return unicode;
-	// } else if (key >= 'a' && key <= 'z' && mod & KMOD_SHIFT) {
-	// 	return key & ~0x20;
-	// } else if (key >= SDLK_NUMLOCK && key <= SDLK_EURO) {
-	// 	return 0;
-	}
-	return 0;
+	if (kc == RT_KEY_ESCAPE)
+		return 27;
+	else if (kc == RT_KEY_F5)
+		return 319;		// F5
+	else if (kc == RT_KEY_SPACE)
+		return 32;		
+	else
+		return kc;
 }
 
 OSystem_RebelV* _this = nullptr;
@@ -56,19 +50,19 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
-			kernel_sleep(10);
+			kernel_sleep(16);
 		}
 	});
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
-			kernel_sleep(10);
+			kernel_sleep(20);
 		}
 	});
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
-			kernel_sleep(20);
+			kernel_sleep(16);
 		}
 	});	
 }
@@ -215,9 +209,7 @@ bool OSystem_RebelV::poll_event(Event *event)
 	uint8_t kc, m, p;
 	if (input_get_kb_event(&kc, &m, &p) > 0)
 	{
-		char ch = 0;
-		input_translate_key(kc, m, &ch);
-
+		event->kbd.flags = 0;
 		if ((m & (RT_MODIFIER_SHIFT | RT_MODIFIER_R_SHIFT)) != 0)
 			event->kbd.flags |= KBD_SHIFT;
 		if ((m & (RT_MODIFIER_CTRL | RT_MODIFIER_R_CTRL)) != 0)
@@ -227,7 +219,20 @@ bool OSystem_RebelV::poll_event(Event *event)
 
 		event->event_code = p ? EVENT_KEYDOWN : EVENT_KEYUP;
 		event->kbd.keycode = map_key(kc);
-		event->kbd.ascii = ch;
+
+		char ch = 0;
+		if (input_translate_key(kc, m, &ch))
+			event->kbd.ascii = ch;
+		else
+			event->kbd.ascii = kc;
+
+		printf("key event\n");
+		printf("kc %d => %d\n", kc, event->kbd.keycode);
+		printf("m  %d\n", m);
+		printf("p  %d\n", p);
+		printf("ch %d => (%c)\n", ch, event->kbd.ascii);
+		printf("event_code %d\n", event->event_code);
+
 		return true;
 	}
 
@@ -307,23 +312,27 @@ void OSystem_RebelV::update_cdrom()
 
 OSystem::MutexRef OSystem_RebelV::create_mutex()
 {
-	// printf("create_mutex\n");
-	return 0;
+	kernel_cs_t* cs = new kernel_cs_t();
+	kernel_cs_init(cs);
+	return (OSystem::MutexRef)cs;
 }
 
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
-	// printf("lock_mutex\n");
+	kernel_cs_t* cs = (kernel_cs_t*)mutex;
+	// kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
-	// printf("unlock_mutex\n");
+	kernel_cs_t* cs = (kernel_cs_t*)mutex;
+	// kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)
 {
-	// printf("delete_mutex\n");
+	kernel_cs_t* cs = (kernel_cs_t*)mutex;
+	delete cs;
 }
 
 void OSystem_RebelV::show_overlay()
@@ -402,7 +411,7 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 uint32 OSystem_RebelV::property(int param, Property *value)
 {
 	if (param == PROP_GET_SAMPLE_RATE)
-		return 11025; // 22050; //44100; //SAMPLES_PER_SEC;
+		return 11025;
 	else
 		return 0;
 }
@@ -510,14 +519,14 @@ void OSystem_RebelV::undraw_mouse_cursor()
 
 void OSystem_RebelV::update_sound()
 {
-	const int32_t chunkSize = 128;
+	const int32_t chunkSize = 256;
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
 		int32_t qn = 0;
-		for (int32_t i = 0; i < 4; ++i)
+		for (int32_t i = 0; i < 32; ++i)
 		{
-			int32_t free = 1024 - audio_get_queued();
+			const int32_t free = 4096 - audio_get_queued();
 			if (free < chunkSize)
 				break;
 

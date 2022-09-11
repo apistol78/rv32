@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 module AUDIO_controller #(
-	parameter BUFFER_SIZE = 1024
+	parameter BUFFER_SIZE = 32768
 )(
 	input i_reset,
 	input i_clock,
@@ -25,10 +25,11 @@ module AUDIO_controller #(
 	bit output_fifo_wr = 0;
 	bit output_fifo_rd = 0;
 	wire [$clog2(BUFFER_SIZE)-1:0] output_fifo_queued;
-	FIFO64 #(
+	FIFO_BRAM #(
 		.DEPTH(BUFFER_SIZE),
 		.WIDTH(16)
 	) output_fifo(
+		.i_reset(i_reset),
         .i_clock(i_clock),
         .o_empty(output_fifo_empty),
 		.o_full(output_fifo_full),

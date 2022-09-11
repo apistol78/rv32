@@ -131,9 +131,8 @@ module VMODE_chunky #(
 	typedef enum bit [1:0]
 	{
 		WAIT_HBLANK = 2'd0,
-		SETUP_READ_LINE = 2'd1,
-		WAIT_MEMORY = 2'd2,
-		WAIT_DELAY = 2'd3
+		WAIT_MEMORY = 2'd1,
+		WAIT_DELAY = 2'd2
 	}
 	state_t;
 
@@ -143,20 +142,21 @@ module VMODE_chunky #(
 	always_ff @(posedge i_clock) begin
 		hs <= { hs[0], i_video_hsync };
 	end
+	
+	bit [1:0] vs = 2'b00;
+	always_ff @(posedge i_clock) begin
+		vs <= { vs[0], i_video_vsync };
+	end
 
 	always_ff @(posedge i_clock) begin
 		case (read_state)
 			WAIT_HBLANK: begin
-				if (hs == 2'b01 && !i_video_vsync) begin
-					read_state <= SETUP_READ_LINE;
+				if (hs == 2'b01 && (vs == 2'b00 || vs == 2'b01)) begin
+					o_vram_pb_address <= /*vram_offset +*/ (i_video_pos_y * PPITCH);
+					o_vram_pb_request <= 1;
+					count <= 0;
+					read_state <= WAIT_MEMORY;					
 				end
-			end
-
-			SETUP_READ_LINE: begin
-				o_vram_pb_address <= vram_offset + (i_video_pos_y * PPITCH);
-				o_vram_pb_request <= 1;
-				count <= 0;
-				read_state <= WAIT_MEMORY;
 			end
 
 			WAIT_MEMORY: begin
@@ -166,8 +166,7 @@ module VMODE_chunky #(
 					line[count] <= i_vram_pb_rdata;
 					count <= count + 1;
 
-					if (count < PPITCH/4-1) begin
-						o_vram_pb_address <= o_vram_pb_address + 4;
+					if (count < PPITCH/4-2) begin
 						read_state <= WAIT_DELAY;					
 					end
 					else begin
@@ -178,6 +177,7 @@ module VMODE_chunky #(
 
 			WAIT_DELAY: begin
 				if (!i_vram_pb_ready) begin
+					o_vram_pb_address <= o_vram_pb_address + 4;
 					o_vram_pb_request <= 1;
 					read_state <= WAIT_MEMORY;
 				end
@@ -190,7 +190,7 @@ module VMODE_chunky #(
 	end
 
 	always_comb begin
-		o_video_rdata = palette_video_rdata;
+		o_video_rdata = i_video_request ? palette_video_rdata : 32'h0;
 		case (i_video_pos_x & 3)
 			0: palette_video_address = line[i_video_pos_x[9:2]][7:0];
 			1: palette_video_address = line[i_video_pos_x[9:2]][15:8];

@@ -122,7 +122,7 @@ int32_t file_open(const char* name, int32_t mode)
 	}
 	else if (mode == FILE_MODE_WRITE)
 	{
-		if ((r = f_open(fp, name, FA_CREATE_NEW | FA_WRITE)) == FR_OK)
+		if ((r = f_open(fp, name, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
 			return file_index(fp);
 	}
 

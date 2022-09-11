@@ -306,7 +306,7 @@ module SoC(
 	wire uart_0_ready;
 	wire uart_0_interrupt;
 	UART #(
-		.PRESCALE(`FREQUENCY / (115200 * 8)),
+		.PRESCALE(`FREQUENCY / (230400 * 8)),
 		.RX_FIFO_DEPTH(16)
 	) uart_0(
 		.i_reset(reset),
@@ -617,7 +617,6 @@ module SoC(
 	wire [31:0] vram_pb_wdata;
 	wire [31:0] vram_pb_rdata;
 	wire vram_pb_ready;
-	wire vram_pb_busy;
 
 	BusAccess #(
 		.REGISTERED(0)
@@ -645,7 +644,7 @@ module SoC(
 		.i_pb_address(vram_pb_address),
 		.o_pb_rdata(vram_pb_rdata),
 		.i_pb_wdata(vram_pb_wdata),
-		.o_pb_busy(vram_pb_busy),
+		.o_pb_busy(),
 
 		// Video CPU access.
 		.i_pc_rw(vram_pa_rw),
@@ -656,7 +655,7 @@ module SoC(
 		.i_pc_wdata(vram_pa_wdata),
 		.o_pc_busy()
 	);
-
+	
 	// Video mode; chunky 8-bit palette.
 	wire vram_select;
 	wire [31:0] vram_address;

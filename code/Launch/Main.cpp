@@ -197,7 +197,7 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 
 				for (uint32_t j = 0; j < shdr[i].sh_size; j += 256)
 				{
-					uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 256);
+					const uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 256);
 					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
 					if (!sendLine(target, addr + j, pbits + j, cnt))
 						return false;
@@ -519,7 +519,7 @@ int main(int argc, const char** argv)
 			port = commandLine.getOption('p', L"port").getInteger();
 
 		Serial::Configuration configuration;
-		configuration.baudRate = 115200;
+		configuration.baudRate = 230400;
 		configuration.stopBits = 1;
 		configuration.parity = Serial::Parity::No;
 		configuration.byteSize = 8;
