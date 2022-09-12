@@ -359,6 +359,7 @@ int main(int argc, const char** argv)
 		uiImage = new ui::Bitmap(320, 200);
 
 		ui::Point mousePosition(0, 0);
+		uint8_t mouseButton = 0;
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
@@ -367,11 +368,16 @@ int main(int argc, const char** argv)
 			auto d = event->getPosition() - mousePosition;
 			mousePosition = event->getPosition();
 
+			if (event->getButton() == ui::MbtLeft)
+				mouseButton |= 1;
+			else
+				mouseButton |= 2;
+
 			uart2.enqueue('M');
 			uart2.enqueue(d.cx);
 			uart2.enqueue(d.cy);
 			uart2.enqueue(0);
-			uart2.enqueue(1);
+			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');
 		});
 		image->addEventHandler< ui::MouseButtonUpEvent >([&](ui::MouseButtonUpEvent* event){
@@ -379,11 +385,16 @@ int main(int argc, const char** argv)
 			auto d = event->getPosition() - mousePosition;
 			mousePosition = event->getPosition();
 
+			if (event->getButton() == ui::MbtLeft)
+				mouseButton &= ~1;
+			else
+				mouseButton &= ~2;
+
 			uart2.enqueue('M');
 			uart2.enqueue(d.cx);
 			uart2.enqueue(d.cy);
 			uart2.enqueue(0);
-			uart2.enqueue(0);
+			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');
 		});
 		image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event){
@@ -395,7 +406,7 @@ int main(int argc, const char** argv)
 			uart2.enqueue(d.cx);
 			uart2.enqueue(d.cy);
 			uart2.enqueue(0);
-			uart2.enqueue(event->getButton() ? 1 : 0);
+			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');			
 		});
 
