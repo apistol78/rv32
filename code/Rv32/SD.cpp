@@ -1,6 +1,9 @@
 #include <cstring>
+#include <Core/Io/ChunkMemory.h>
+#include <Core/Io/ChunkMemoryStream.h>
 #include <Core/Io/FileSystem.h>
 #include <Core/Io/IStream.h>
+#include <Core/Io/StreamCopy.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 #include "Rv32/CRC.h"
@@ -12,7 +15,12 @@ T_IMPLEMENT_RTTI_CLASS(L"SD", SD, Device)
 
 SD::SD()
 {
-	m_stream = FileSystem::getInstance().open(L"FS.img", File::FmRead);
+	m_memory = new ChunkMemory();
+	m_stream = new ChunkMemoryStream(m_memory, true, true);
+
+	// Read entire image into memory so we can modify it without damaging file.
+	Ref< IStream > f = FileSystem::getInstance().open(L"FS.img", File::FmRead);
+	StreamCopy(m_stream, f).execute();
 }
 
 bool SD::writeU32(uint32_t address, uint32_t value)
@@ -99,6 +107,8 @@ bool SD::tick(CPU* cpu)
 
 						if (m_cmd[0] == (0x40 | 17))
 							m_mode = 2;
+						else if (m_cmd[0] == (0x40 | 24))
+							m_mode = 3;
 						else
 							m_mode = 0;
 
@@ -138,6 +148,52 @@ bool SD::tick(CPU* cpu)
 						m_mode = 0;
 					}
 				}
+			}
+
+			else if (m_mode == 3)
+			{
+				if (m_blockOutputCount < 0)
+				{
+					// // Data in should be zero
+					// if (dat != 0x00)
+					// 	log::warning << L"[SD] SD_DAT should be zero" << Endl;
+
+					// m_blockOutputCount = 0;
+
+					m_blockOutputCount++;
+				}
+				else if (m_blockOutputCount < 512 * 2)
+				{
+					const int32_t offset = m_blockOutputCount >> 1;
+
+					if (m_blockOutputCount & 1)
+						m_block[offset] |= (dat & 0x0f);
+					else
+						m_block[offset] |= (dat & 0x0f) << 4;
+
+					++m_blockOutputCount;
+				}
+				else if (m_blockOutputCount < 512 * 2 + 16)
+				{
+					//log::info << L"[SD] CRC " << str(L"%x", dat & 0x0f) << Endl;
+					m_blockOutputCount++;
+				}
+				else if (m_blockOutputCount < 512 * 2 + 16 + 1)
+				{
+					// Data in should be one
+					if (dat == 0x00)
+						log::warning << L"[SD] SD_DAT should be one" << Endl;
+
+					dat = 0xff;
+
+					m_blockOutputCount++;
+				}
+				else
+				{
+					log::info << L"[SD] Writing block..." << Endl;
+					m_stream->write(m_block, 512);
+					m_mode = 0;
+				}			
 			}
 		}
 	}
@@ -241,6 +297,26 @@ void SD::process()
 
 		m_blockOutputCount = -100;
 	}
+	else if (c == (0x40 | 24))
+	{
+		m_response[0] = 24;
+		m_response[5] = (crc7(0, m_response, 5) << 1) | 0x01;
+
+		uint32_t addr =
+			(m_cmd[1] << 24) |
+			(m_cmd[2] << 16) |
+			(m_cmd[3] << 8) |
+			(m_cmd[4]);
+
+		log::info << L"[SD] CMD24, addr " << addr << Endl;
+
+		addr *= 512;
+
+		std::memset(m_block, 0, sizeof(m_block));
+		m_stream->seek(IStream::SeekSet, addr);	
+
+		m_blockOutputCount = -9;	
+	}
 	else if (c == (0x40 | 6))    // acmd6
 	{
 		//log::info << L"acmd6" << Endl;
@@ -249,6 +325,6 @@ void SD::process()
 	{
 		//log::info << L"acmd42" << Endl;
 	}
-	else
-		log::info << L"[SD] Unknown command, " << str(L"%02x", c) << Endl;
+	// else
+	// 	log::info << L"[SD] Unknown command, " << str(L"%02x", c) << Endl;
 }

@@ -25,7 +25,10 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 	for (UINT i = 0; i < count; ++i)
 	{
 		if (sd_read_block512(sector, buff + 512 * i, 512) != 512)
+		{
+			printf("[FILE] Disk read error.\n");
 			return RES_ERROR;
+		}
 	}
 	return RES_OK;
 }
@@ -35,7 +38,10 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 	for (UINT i = 0; i < count; ++i)
 	{
 		if (sd_write_block512(sector, buff + 512 * i, 512) != 512)
+		{
+			printf("[FILE] Disk write error.\n");
 			return RES_ERROR;
+		}
 	}
 	return RES_OK;
 }

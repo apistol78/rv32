@@ -3,6 +3,7 @@
 #include <Core/Ref.h>
 #include <Core/Containers/AlignedVector.h>
 #include <Core/Io/IStream.h>
+#include <Core/Io/ChunkMemory.h>
 #include "Rv32/Device.h"
 
 class SD : public Device
@@ -39,6 +40,7 @@ private:
 	int32_t m_dly = 0;
 	uint8_t m_block[512];
 	traktor::Ref< traktor::IStream > m_stream;
+	traktor::Ref< traktor::ChunkMemory > m_memory;
 
 	void process();
 };

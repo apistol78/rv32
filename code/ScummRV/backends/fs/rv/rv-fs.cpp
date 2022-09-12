@@ -1,28 +1,11 @@
-/* ScummVM - Scumm Interpreter
- * Copyright (C) 2002 The ScummVM project
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * $Header: /cvsroot/scummvm/scummvm/backends/fs/palmos/palmos-fs.cpp,v 1.4 2004/01/20 14:35:37 chrilith Exp $
- */
-
 #if defined(__RV__)
 
 #include "stdafx.h"
 #include "../fs.h"
+
+#include <algorithm>
 #include <string>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "Runtime/File.h"
@@ -33,7 +16,13 @@ public:
 	RvFilesystemNode() = default;
 	RvFilesystemNode(const RvFilesystemNode *node);
 
-	virtual String displayName() const { return m_displayName.c_str(); }
+	virtual String displayName() const
+	{
+		std::string data = m_fileName;
+		std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });		
+		return data.c_str();
+	}
+
 	virtual bool isValid() const { return true; }
 	virtual bool isDirectory() const { return m_isDirectory; }
 	virtual String path() const { return m_path.c_str(); }
@@ -43,41 +32,52 @@ public:
 	virtual FilesystemNode *clone() const { return new RvFilesystemNode(this); }
 
 private:
-	std::string m_displayName = "Root";
-	std::string m_path = "\\";
+	std::string m_path = "";
+	std::string m_fileName = "";
 	bool m_isDirectory = true;
 };
 
 FilesystemNode *FilesystemNode::getRoot()
 {
-	printf("FilesystemNode::getRoot\n");
 	return new RvFilesystemNode();
 }
 
 RvFilesystemNode::RvFilesystemNode(const RvFilesystemNode* node)
-:	m_displayName(node->m_displayName)
-,	m_path(node->m_path)
+:	m_path(node->m_path)
+,	m_fileName(node->m_fileName)
 ,	m_isDirectory(node->m_isDirectory)
 {
 }
 
 FSList *RvFilesystemNode::listDir(ListMode mode) const
 {
-	printf("FilesystemNode::listDir %s\n", m_path.c_str());
 	FSList* list = new FSList();
 
-	file_enumerate(m_path.c_str(), list, [](void* user, const char* filename, uint32_t size, uint8_t directory)
+	struct User
 	{
-		if (strcmp(filename, ".") == 0 || strcmp(filename, ".."))
+		const RvFilesystemNode* parent;
+		FSList* list;
+	}
+	user = { this, list };
+
+	file_enumerate(m_path.c_str(), &user, [](void* user, const char* filename, uint32_t size, uint8_t directory)
+	{
+		User* up = (User*)user;
+
+		if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0)
 			return;
 
-		FSList* list = (FSList*)user;
-
 		RvFilesystemNode entry;
-		entry.m_displayName = filename;
-		entry.m_path = filename;
+		
+		entry.m_path = up->parent->m_path.empty() ? filename : up->parent->m_path + "\\" + std::string(filename);
+		entry.m_fileName = filename;
+
+		printf("... path %s\n", entry.m_path.c_str());
+		printf("... name %s\n", entry.m_fileName.c_str());
+
 		entry.m_isDirectory = (bool)(directory != 0);
-		list->push_back(entry);
+
+		up->list->push_back(entry);
 	});
 
 	return list;
@@ -85,13 +85,25 @@ FSList *RvFilesystemNode::listDir(ListMode mode) const
 
 FilesystemNode *RvFilesystemNode::parent() const
 {
-	printf("FilesystemNode::parent\n");
-	
 	RvFilesystemNode* p = new RvFilesystemNode();
 
-	p->m_displayName = m_displayName;
-	p->m_path = m_path;
-	p->m_isDirectory = true;
+	size_t s = m_path.find_last_of('\\');
+	if (s != m_path.npos)
+	{
+		p->m_path = m_path.substr(0, s);
+		p->m_fileName = m_path.substr(s + 1);
+		p->m_isDirectory = true;
+	}
+	else
+	{
+		p->m_path = "";
+		p->m_fileName = m_path;
+		p->m_isDirectory = true;
+	}
+
+	printf("parent\n");
+	printf("... path %s\n", p->m_path.c_str());
+	printf("... name %s\n", p->m_fileName.c_str());
 
 	return p;
 }
