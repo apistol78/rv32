@@ -22,38 +22,18 @@ int32_t video_init()
 	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 
 	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
-	if (deviceId == SR_DEVICE_ID_RV32T)
-	{
-		// secondary_target = (uint32_t*)VIDEO_DATA_BASE;
-
-		// control[0] = 0;					// GPU read offset
-		// control[1] = WIDTH * HEIGHT;	// CPU write offset		
-
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-			return 1;		
-
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset	
-	}
-	else if (deviceId == SR_DEVICE_ID_T_CV_GX)
+	if (deviceId == SR_DEVICE_ID_T_CV_GX)
 	{
 		if (adv7513_init())
 		{
 			// printf("Failed to initialize ADV7513; unable to initialize video.\n");
 			return 1;
 		}
-
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-			return 1;		
-
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset	
 	}
 	else if (
 		deviceId == SR_DEVICE_ID_Q_CV_2 ||
-		deviceId == SR_DEVICE_ID_Q_CV_5
+		deviceId == SR_DEVICE_ID_Q_CV_5 ||
+		deviceId == SR_DEVICE_ID_Q_T7
 	)
 	{
 		if (sil9024a_init())
@@ -61,48 +41,14 @@ int32_t video_init()
 			// printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
 		}		
-
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-			return 1;		
-
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset		
 	}
-	else if (deviceId == SR_DEVICE_ID_Q_T7)
-	{
-		if (sil9024a_init())
-		{
-			// printf("Failed to initialize SIL9024A; unable to initialize video.\n");
-			return 1;
-		}
 
-		// secondary_target = (uint32_t*)VIDEO_DATA_BASE;
+	primary_target = (uint32_t*)VIDEO_DATA_BASE;
+	if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
+		return 1;		
 
-		// control[0] = 0;					// GPU read offset
-		// control[1] = WIDTH * HEIGHT;	// CPU write offset
-
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-			return 1;		
-
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset			
-	}
-	else if (deviceId == SR_DEVICE_ID_RV32)
-	{	
-		primary_target = (uint32_t*)VIDEO_DATA_BASE;
-		if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-			return 1;
-
-		control[0] = 0;	// GPU read offset
-		control[1] = 0;	// CPU write offset		
-	}
-	else
-	{
-		// printf("Unknown device; unable to initialize video.\n");
-		return 2;
-	}
+	control[0] = 0;	// GPU read offset
+	control[1] = 0;	// CPU write offset	
 
 	video_clear(0);
 	video_swap();
@@ -140,23 +86,10 @@ void video_clear(uint8_t idx)
 
 void video_swap()
 {
-	if (primary_target != 0)
-	{
-		memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
-	}
-	else
-	{
-		volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
-		if (current == 0)
-		{
-			control[0] = WIDTH * HEIGHT;	// GPU read offset
-			control[1] = 0;					// CPU write offset
-		}
-		else
-		{
-			control[0] = 0;					// GPU read offset
-			control[1] = WIDTH * HEIGHT;	// CPU write offset
-		}
-		current = 1 - current;
-	}
+	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
+}
+
+void video_blit(const uint8_t* source)
+{
+	memcpy(primary_target, source, WIDTH * HEIGHT);
 }

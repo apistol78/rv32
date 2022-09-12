@@ -29,7 +29,7 @@ module WriteBuffer(
 	bit wq_read = 1'b0;
 	wire [63:0] wq_rdata;
 
-	FIFO64 #(
+	FIFO #(
 		.DEPTH(64),
 		.WIDTH(64)
 	) wq(

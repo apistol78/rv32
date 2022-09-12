@@ -22,41 +22,77 @@
 
 #include "stdafx.h"
 #include "../fs.h"
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include "Runtime/File.h"
 
-class RvFilesystemNode : public FilesystemNode {
+class RvFilesystemNode : public FilesystemNode
+{
 public:
-	RvFilesystemNode();
+	RvFilesystemNode() = default;
 	RvFilesystemNode(const RvFilesystemNode *node);
 
-	virtual String displayName() const { return ""; }
-	virtual bool isValid() const { return false; }
-	virtual bool isDirectory() const { return false; }
-	virtual String path() const { return ""; }
+	virtual String displayName() const { return m_displayName.c_str(); }
+	virtual bool isValid() const { return true; }
+	virtual bool isDirectory() const { return m_isDirectory; }
+	virtual String path() const { return m_path.c_str(); }
 
 	virtual FSList *listDir(ListMode) const;
 	virtual FilesystemNode *parent() const;
 	virtual FilesystemNode *clone() const { return new RvFilesystemNode(this); }
+
+private:
+	std::string m_displayName = "Root";
+	std::string m_path = "\\";
+	bool m_isDirectory = true;
 };
 
-FilesystemNode *FilesystemNode::getRoot() {
+FilesystemNode *FilesystemNode::getRoot()
+{
+	printf("FilesystemNode::getRoot\n");
 	return new RvFilesystemNode();
 }
 
-RvFilesystemNode::RvFilesystemNode() {
+RvFilesystemNode::RvFilesystemNode(const RvFilesystemNode* node)
+:	m_displayName(node->m_displayName)
+,	m_path(node->m_path)
+,	m_isDirectory(node->m_isDirectory)
+{
 }
 
-RvFilesystemNode::RvFilesystemNode(const RvFilesystemNode *node) {
+FSList *RvFilesystemNode::listDir(ListMode mode) const
+{
+	printf("FilesystemNode::listDir %s\n", m_path.c_str());
+	FSList* list = new FSList();
+
+	file_enumerate(m_path.c_str(), list, [](void* user, const char* filename, uint32_t size, uint8_t directory)
+	{
+		if (strcmp(filename, ".") == 0 || strcmp(filename, ".."))
+			return;
+
+		FSList* list = (FSList*)user;
+
+		RvFilesystemNode entry;
+		entry.m_displayName = filename;
+		entry.m_path = filename;
+		entry.m_isDirectory = (bool)(directory != 0);
+		list->push_back(entry);
+	});
+
+	return list;
 }
 
-FSList *RvFilesystemNode::listDir(ListMode mode) const {
-	FSList *myList = new FSList();
-	return myList;
-}
+FilesystemNode *RvFilesystemNode::parent() const
+{
+	printf("FilesystemNode::parent\n");
+	
+	RvFilesystemNode* p = new RvFilesystemNode();
 
-FilesystemNode *RvFilesystemNode::parent() const {
-	RvFilesystemNode *p = new RvFilesystemNode();
+	p->m_displayName = m_displayName;
+	p->m_path = m_path;
+	p->m_isDirectory = true;
+
 	return p;
 }
 

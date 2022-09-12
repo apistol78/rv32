@@ -61,7 +61,7 @@ module DMA(
 	bit queue_write = 0;
 	bit queue_read = 0;
 	dma_command_t queue_rdata;
-	FIFO64 #(
+	FIFO #(
 		.DEPTH(8),
 		.WIDTH($bits(dma_command_t))
 	) queue(

@@ -697,7 +697,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/PLIC.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/I2C.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/GPIO.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO64.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BusAccess.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRIDGE.sv

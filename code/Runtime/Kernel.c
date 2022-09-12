@@ -233,7 +233,7 @@ void kernel_cs_lock(volatile kernel_cs_t* cs)
 		kernel_enter_critical();
 		if (cs->counter == 0)
 		{
-			cs->counter = 1;
+			cs->counter++;
 			kernel_leave_critical();
 			return;
 		}
@@ -242,5 +242,6 @@ void kernel_cs_lock(volatile kernel_cs_t* cs)
 
 void kernel_cs_unlock(volatile kernel_cs_t* cs)
 {
-	cs->counter = 0;
+	if (cs->counter > 0)
+		cs->counter--;
 }

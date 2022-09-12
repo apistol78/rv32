@@ -25,7 +25,7 @@ module UART_TX #(
 	bit tx_fifo_write = 0;
 	bit tx_fifo_read = 0;
 	wire [7:0] tx_fifo_rdata;
-	FIFO64 #(
+	FIFO #(
 		.DEPTH(64),
 		.WIDTH(8)
 	) tx_fifo(

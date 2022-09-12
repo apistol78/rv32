@@ -105,7 +105,8 @@ int32_t file_init()
 	int32_t result;
 	if ((result = f_mount(&fs, "", 1)) != FR_OK)
 		return 1;
-	return 0;
+	else
+		return 0;
 }
 
 int32_t file_open(const char* name, int32_t mode)
@@ -209,7 +210,7 @@ int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 		return -1;
 }
 
-int32_t file_enumerate(const char* path, fn_enum_t fnen)
+int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
 {
 	FILINFO fno;
 	DIR dp;
@@ -218,7 +219,7 @@ int32_t file_enumerate(const char* path, fn_enum_t fnen)
 		return 1;
 
 	while (f_readdir(&dp, &fno) == FR_OK && fno.fname[0] != 0)
-		fnen(fno.fname, fno.fsize);
+		fnen(user, fno.fname, fno.fsize, (fno.fattrib & AM_DIR) != 0);
 
 	f_closedir(&dp);
 	return 0;

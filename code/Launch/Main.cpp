@@ -28,15 +28,28 @@
 using namespace traktor;
 
 template < typename T >
-void write(IStream* target, T value)
+bool write(IStream* target, T value)
 {
-	target->write(&value, sizeof(T));
+	return target->write(&value, sizeof(T)) == sizeof(T);
 }
 
 template < typename T >
-void write(IStream* target, const T* value, int32_t count)
+bool write(IStream* target, const T* value, int32_t count)
 {
-	target->write(value, count * sizeof(T));
+	const uint8_t* wp = (const uint8_t*)value;
+	while (count > 0)
+	{
+		const int32_t nw = std::min< int32_t >(count, 256);
+		int32_t result = target->write(wp, nw * sizeof(T));
+		if (result > 0)
+		{
+			wp += result;
+			count -= result;
+		}
+		else
+			return false;
+	}
+	return true;
 }
 
 template < typename T >
@@ -55,6 +68,7 @@ void read(IStream* target, T* value, int32_t count)
 
 bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
 {
+#define CW(s) { if (!(s)) return false; }
 	uint8_t cs = 0;
 
 	// Add address to checksum.
@@ -68,24 +82,26 @@ bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t leng
 	for (uint32_t i = 0; i < length; ++i)
 		cs ^= line[i];
 
-	write< uint8_t >(target, 0x01);
-	write< uint32_t >(target, base);
-	write< uint16_t >(target, (uint16_t)length);
-	write< uint8_t >(target, line, length);
-	write< uint8_t >(target, cs);
+	CW(write< uint8_t >(target, 0x01));
+	CW(write< uint32_t >(target, base));
+	CW(write< uint16_t >(target, (uint16_t)length));
+	CW(write< uint8_t >(target, line, length));
+	CW(write< uint8_t >(target, cs));
 
-	uint8_t reply = read< uint8_t >(target);
+	const uint8_t reply = read< uint8_t >(target);
 	if (reply != 0x80)
 	{
 		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
 		return false;
 	}
 
+#undef CW
 	return true;
 }
 
 bool sendJump(IStream* target, uint32_t start, uint32_t sp)
 {
+#define CW(s) { if (!(s)) return false; }
 	uint8_t cs = 0;
 
 	// Add address to checksum.
@@ -106,18 +122,19 @@ bool sendJump(IStream* target, uint32_t start, uint32_t sp)
 		cs ^= p[3];				
 	}
 
-	write< uint8_t >(target, 0x03);
-	write< uint32_t >(target, start);
-	write< uint32_t >(target, sp);
-	write< uint8_t >(target, cs);
+	CW(write< uint8_t >(target, 0x03));
+	CW(write< uint32_t >(target, start));
+	CW(write< uint32_t >(target, sp));
+	CW(write< uint8_t >(target, cs));
 
-	uint8_t reply = read< uint8_t >(target);
+	const uint8_t reply = read< uint8_t >(target);
 	if (reply != 0x80)
 	{
 		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
 		return false;
 	}
 
+#undef CW
 	return true;
 }
 
@@ -134,7 +151,7 @@ bool uploadImage(IStream* target, const std::wstring& fileName, uint32_t offset)
 	uint8_t data[16];
 	for (;;)
 	{
-		int64_t r = f->read(data, sizeof(data));
+		const int64_t r = f->read(data, sizeof(data));
 		if (r <= 0)
 			break;
 
@@ -222,15 +239,6 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 		}
 	}
 
-	// uint8_t empty[128];
-	// memset(empty, 0, sizeof(empty));
-	// for (uint32_t i = last; i < last + 0x8000; i += 128)
-	// {
-	// 	log::info << L"NULL " << str(L"%08x", i) << L"..." << Endl;
-	// 	if (!sendLine(target, i, empty, 128))
-	// 		return false;
-	// }
-
 	if (start != -1)
 	{
 		if (sp)
@@ -277,12 +285,12 @@ bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 			continue;
 		tmp = tmp.substr(1);
 
-		int32_t percent = ((f->tell() * 100) / fileSize);
+		const int32_t percent = ((f->tell() * 100) / fileSize);
 
 		// Parse header.
-		int32_t ln = parseString< int32_t >(L"0x" + tmp.substr(0, 2));
+		const int32_t ln = parseString< int32_t >(L"0x" + tmp.substr(0, 2));
+		const int32_t type = parseString< int32_t >(L"0x" + tmp.substr(6, 2));
 		int32_t addr = parseString< int32_t >(L"0x" + tmp.substr(2, 4));
-		int32_t type = parseString< int32_t >(L"0x" + tmp.substr(6, 2));
 
 		if (type == 0x00)
 		{
@@ -378,7 +386,7 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 		write< uint8_t >(target, (uint8_t)nr);
 		write< uint8_t >(target, buf, nr);
 
-		uint8_t reply = read< uint8_t >(target);
+		const uint8_t reply = read< uint8_t >(target);
 		if (reply != 0x80)
 		{
 			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
@@ -567,8 +575,8 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption(L"memcheck"))
 	{
-		uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
-		uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
+		const uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
+		const uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
 		
 		uint32_t step = 64;
 		if (commandLine.hasOption(L"memcheck-step"))
@@ -584,7 +592,7 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('e', L"elf"))
 	{
-		std::wstring elf = commandLine.getOption('e', L"elf").getString();
+		const std::wstring elf = commandLine.getOption('e', L"elf").getString();
 		if (!uploadELF(target, elf, sp))
 		{
 			log::error << L"Unable to load ELF." << Endl;
@@ -594,7 +602,7 @@ int main(int argc, const char** argv)
 
 	if (commandLine.hasOption('r', L"raw"))
 	{
-		std::wstring file = commandLine.getOption('r', L"raw").getString();
+		const std::wstring file = commandLine.getOption('r', L"raw").getString();
 		if (!uploadFile(target, file))
 		{
 			log::error << L"Unable to upload file." << Endl;
@@ -606,7 +614,7 @@ int main(int argc, const char** argv)
 	{
 		if (target->available() > 0)
 		{
-			uint8_t ch = read< uint8_t >(target);
+			const uint8_t ch = read< uint8_t >(target);
 			if (!iscntrl(ch))
 				log::info << wchar_t(ch);
 			else if (ch == '\n')

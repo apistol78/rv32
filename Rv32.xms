@@ -85,6 +85,10 @@
 									<fileName>FatFs/source/ffconf.h</fileName>
 									<items/>
 								</item>
+								<item type="File">
+									<fileName>FatFs/source/ffunicode.c</fileName>
+									<items/>
+								</item>
 							</items>
 						</item>
 					</items>

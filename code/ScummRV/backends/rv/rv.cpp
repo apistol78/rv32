@@ -24,7 +24,7 @@ int32_t clamp(int32_t v, int32_t mn, int32_t mx)
 		v;
 }
 
-int32_t map_key(uint8_t kc)
+int32_t map_key(uint8_t kc, uint8_t ch)
 {
 	if (kc == RT_KEY_ESCAPE)
 		return 27;
@@ -33,7 +33,7 @@ int32_t map_key(uint8_t kc)
 	else if (kc == RT_KEY_SPACE)
 		return 32;		
 	else
-		return kc;
+		return ch;
 }
 
 OSystem_RebelV* _this = nullptr;
@@ -71,9 +71,9 @@ void OSystem_RebelV::init_size(uint w, uint h)
 {
 	for (int i = 0; i < 256; ++i)
 	{
-		const uint32_t r = rand();
-		const uint32_t g = rand();
-		const uint32_t b = rand();
+		const uint8_t r = rand();
+		const uint8_t g = rand();
+		const uint8_t b = rand();
 		video_set_palette(
 			i,
 			(r << 16) | (g << 8) | (b)
@@ -88,13 +88,17 @@ void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
 {
 	for (uint i = 0; i < num; ++i)
 	{
-		const uint32_t rr = colors[0];
-		const uint32_t gg = colors[1];
-		const uint32_t bb = colors[2];
+		const uint8_t rr = colors[0];
+		const uint8_t gg = colors[1];
+		const uint8_t bb = colors[2];
+
+		m_palette[start + i] = { rr, gg, bb };
+
 		video_set_palette(
 			start + i,
 			(rr << 16) | (gg << 8) | (bb)
 		);
+
 		colors += 4;
 	}
 }
@@ -153,6 +157,42 @@ void OSystem_RebelV::update_screen()
 void OSystem_RebelV::set_shake_pos(int shake_pos)
 {
 	printf("set_shake_pos\n");
+}
+
+NewGuiColor OSystem_RebelV::RGBToColor(uint8 r, uint8 g, uint8 b)
+{
+	uint8_t nearest = 255;
+	uint8_t check;
+	uint8_t r2, g2, b2;
+
+	uint8_t color = 255;
+
+	for (int32_t i = 0; i < 256; i++)
+	{
+		r2 = m_palette[i].r;
+		g2 = m_palette[i].g;
+		b2 = m_palette[i].b;
+
+		check = (abs(r2 - r) + abs(g2 - g) + abs(b2 - b)) / 3;
+
+		if (check == 0)
+			return i;
+		else if (check < nearest)
+		{
+			color = i;
+			nearest = check;
+		}
+	}
+
+	return color;
+}
+
+void OSystem_RebelV::colorToRGB(NewGuiColor color, uint8 &r, uint8 &g, uint8 &b)
+{
+	const auto& c = m_palette[color];
+	r = c.r;
+	g = c.g;
+	b = c.b;
 }
 
 bool OSystem_RebelV::show_mouse(bool visible)
@@ -218,13 +258,18 @@ bool OSystem_RebelV::poll_event(Event *event)
 			event->kbd.flags |= KBD_ALT;
 
 		event->event_code = p ? EVENT_KEYDOWN : EVENT_KEYUP;
-		event->kbd.keycode = map_key(kc);
 
 		char ch = 0;
 		if (input_translate_key(kc, m, &ch))
+		{
+			event->kbd.keycode = map_key(kc, ch);
 			event->kbd.ascii = ch;
+		}
 		else
+		{
+			event->kbd.keycode = map_key(kc, kc);
 			event->kbd.ascii = kc;
+		}
 
 		printf("key event\n");
 		printf("kc %d => %d\n", kc, event->kbd.keycode);
@@ -337,7 +382,8 @@ void OSystem_RebelV::delete_mutex(MutexRef mutex)
 
 void OSystem_RebelV::show_overlay()
 {
-	printf("show_overlay\n");
+	if (m_overlayVisible)
+		return;
 
 	undraw_mouse_cursor();
 
@@ -349,7 +395,10 @@ void OSystem_RebelV::show_overlay()
 
 void OSystem_RebelV::hide_overlay()
 {
-	printf("hide_overlay\n");
+	if (!m_overlayVisible)
+		return;
+
+	undraw_mouse_cursor();
 
 	clear_overlay();
 	m_overlayVisible = false;
@@ -357,63 +406,79 @@ void OSystem_RebelV::hide_overlay()
 
 void OSystem_RebelV::clear_overlay()
 {
-	printf("clear_overlay\n");
-
 	if (!m_overlayVisible)
 		return;
 
 	undraw_mouse_cursor();
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	memcpy(framebuffer, m_overlayCopy, 320 * 200);
+	memcpy(m_overlayCopy, framebuffer, 320 * 200);
 }
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
 {
+	const uint8_t* src = m_overlayCopy;
+	int32_t h = 200;
+	do
+	{
+		memcpy(buf, src, 320);
+		src += 320;
+		buf += pitch;
+	}
+	while (--h);
 }
 
 void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x, int y, int w, int h)
 {
-	if (x < 0) {
+	if (x < 0)
+	{
 		w += x;
 		buf -= x;
 		x = 0;
 	}
 
-	if (y < 0) {
-		h += y; buf -= y * pitch;
+	if (y < 0)
+	{
+		h += y;
+		buf -= y * pitch;
 		y = 0;
 	}
 
-	if (w > 320 - x) {
+	if (w > 320 - x)
 		w = 320 - x;
-	}
 
-	if (h > 200 - y) {
+	if (h > 200 - y)
 		h = 200 - y;
-	}
 
 	if (w <= 0 || h <= 0)
 		return;
 
-	printf("copy_rect_overlay %d, %d, %d, %d, %d\n", pitch, x, y, w, h);
-
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-
-	uint8_t* dst = framebuffer + y * 320 + x;
-	do {
+	uint8_t* dst = m_overlayCopy + y * 320 + x;
+	do
+	{
 		memcpy(dst, buf, w);
 		dst += 320;
 		buf += pitch;
-	} while (--h);
+	}
+	while (--h);
 }
 
 uint32 OSystem_RebelV::property(int param, Property *value)
 {
-	if (param == PROP_GET_SAMPLE_RATE)
+	switch (param)
+	{
+	case PROP_SET_WINDOW_CAPTION:
+		return 1;
+	case PROP_OPEN_CD:
+		break;
+	case PROP_TOGGLE_ASPECT_RATIO:
+		break;
+	case PROP_GET_SAMPLE_RATE:
 		return 11025;
-	else
+	case PROP_HAS_SCALER:
 		return 0;
+	}
+	return 0;
 }
 
 void OSystem_RebelV::quit()
@@ -438,17 +503,19 @@ void OSystem_RebelV::draw_mouse_cursor()
 		return;
 	}
 
-	int x = m_mouseX - m_mouseHotX;
-	int y = m_mouseY - m_mouseHotY;
-	int w = m_mouseW;
-	int h = m_mouseH;
+	int32_t x = m_mouseX - m_mouseHotX;
+	int32_t y = m_mouseY - m_mouseHotY;
+	int32_t w = m_mouseW;
+	int32_t h = m_mouseH;
 
-	if (x < 0) {
+	if (x < 0)
+	{
 		w += x;
 		src -= x;
 		x = 0;
 	}
-	if (y < 0) {
+	if (y < 0)
+	{
 		h += y;
 		src -= y * m_mouseW;
 		y = 0;
@@ -469,10 +536,15 @@ void OSystem_RebelV::draw_mouse_cursor()
 	m_mouseBackupW = w;
 	m_mouseBackupH = h;
 
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+	byte* dst;
+	if (m_overlayVisible)
+		dst = m_overlayCopy;
+	else
+		dst = (uint8_t*)video_get_secondary_target();
+
+	dst += y * 320 + x;
 
 	byte* bak = m_mouseBackup;
-	byte* dst = (byte *)framebuffer + y * 320 + x;
 	while (h > 0)
 	{
 		int width = w;
@@ -500,16 +572,20 @@ void OSystem_RebelV::undraw_mouse_cursor()
 	kernel_cs_lock(&m_mouseLock);
 	if (m_mouseDrawn)
 	{
-		uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
+		uint8_t* dst;
+		if (m_overlayVisible)
+			dst = m_overlayCopy;
+		else
+			dst = (uint8_t*)video_get_secondary_target();
 
-		byte *dst, *bak = m_mouseBackup;
+		dst += m_mouseBackupY * 320 + m_mouseBackupX;
 
 		// No need to do clipping here, since draw_mouse() did that already
-		dst = (byte *)framebuffer + m_mouseBackupY * 320 + m_mouseBackupX;
-		for (int y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320) {
-			for (int x = 0; x < m_mouseBackupW; ++x) {
+		uint8_t* bak = m_mouseBackup;
+		for (int32_t y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320)
+		{
+			for (int32_t x = 0; x < m_mouseBackupW; ++x)
 				dst[x] = bak[x];
-			}
 		}
 
 		m_mouseDrawn = false;
@@ -561,7 +637,10 @@ void OSystem_RebelV::update_frame()
 	if (m_mouseVisible)
 		draw_mouse_cursor();
 
-	video_swap();
+	if (m_overlayVisible)
+		video_blit(m_overlayCopy);
+	else
+		video_swap();
 }
 
 OSystem *OSystem_RebelV_create()

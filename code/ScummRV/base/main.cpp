@@ -356,7 +356,7 @@ extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 	prop.caption = gScummVMFullVersion;
 	system->property(OSystem::PROP_SET_WINDOW_CAPTION, &prop);
 
-	detector._targetName = "monkey";
+	// detector._targetName = "monkey2";
 
 	// Unless a game was specified, show the launcher dialog
 	if (detector._targetName.isEmpty()) {

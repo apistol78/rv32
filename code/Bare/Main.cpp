@@ -21,8 +21,11 @@ static void cmd_reboot(const char* args)
 
 static void cmd_list(const char* args)
 {
-	file_enumerate("", [](const char* filename, uint32_t size) {
-		fb_printf("%-10s : %d\n", filename, size);
+	file_enumerate("", nullptr, [](void*, const char* filename, uint32_t size, uint8_t directory) {
+		if (!directory)
+			fb_printf("%-10s : %d\n", filename, size);
+		else
+			fb_printf("%-10s : <DIR>\n", filename);
 	});
 }
 

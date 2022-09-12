@@ -1,4 +1,5 @@
 #include "Runtime/Input.h"
+#include "Runtime/Runtime.h"
 #include "Runtime/HAL/UART.h"
 
 typedef struct
@@ -115,6 +116,8 @@ void input_init()
 
 void input_update()
 {
+	uint8_t reset = 0;
+
 	while (!uart_rx_empty(1))
 	{
 		// Receive and decode packet.
@@ -138,6 +141,10 @@ void input_update()
 				s_key_events_in = (s_key_events_in + 1) & 15;
 				if (s_key_events_in == s_key_events_out)
 					s_key_events_out = (s_key_events_out + 1) & 15;
+
+				// Check for reset (CTRL+ALT+DEL) combination.
+				if (keycode == RT_KEY_DELETE && (modifier & (RT_MODIFIER_CTRL | RT_MODIFIER_ALT)) == (RT_MODIFIER_CTRL | RT_MODIFIER_ALT))
+					reset = 1;
 			}
 			break;
 
@@ -169,6 +176,9 @@ void input_update()
 			break;
 		}
 	}
+
+	if (reset)
+		runtime_cold_restart();
 }
 
 int32_t input_get_kb_state(uint8_t keycode)

@@ -388,7 +388,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/BRAM_dual.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/ClockDivider.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/DMA.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO64.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/I2C.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/PLIC.sv

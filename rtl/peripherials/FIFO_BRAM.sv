@@ -2,8 +2,8 @@
 `timescale 1ns/1ns
 
 module FIFO_BRAM #(
-	parameter DEPTH = 64,
-	parameter WIDTH = 32
+	parameter DEPTH,
+	parameter WIDTH
 )(
 	input i_reset,
 	input i_clock,

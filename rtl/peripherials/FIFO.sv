@@ -1,9 +1,9 @@
 
 `timescale 1ns/1ns
 
-module FIFO64 #(
-	parameter DEPTH = 64,
-	parameter WIDTH = 64
+module FIFO #(
+	parameter DEPTH,
+	parameter WIDTH
 )(
 	input i_clock,
 	output o_empty,

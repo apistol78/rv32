@@ -18,13 +18,13 @@
 #define I2C_WR_SCL_HIGH() \
 	{ *I2C_CTRL = 0x0022; }
 
-void i2c_dly()
+static void i2c_dly()
 {
 	for (uint32_t i = 0; i < 80; ++i)
 		__asm__ volatile ("nop");
 }
 
-void i2c_start()
+static void i2c_start()
 {
 	I2C_WR_SDA_HIGH();	// i2c start bit sequence
 	i2c_dly();
@@ -36,7 +36,7 @@ void i2c_start()
 	i2c_dly();
 }
 
-void i2c_stop()
+static void i2c_stop()
 {
 	I2C_WR_SDA_LOW();	// i2c stop bit sequence
 	i2c_dly();
@@ -120,7 +120,7 @@ static uint8_t NO_OPTIMIZE i2c_tx_addr(uint8_t d, uint8_t bits, uint8_t read)
 	i2c_dly();
 	I2C_WR_SCL_HIGH();
 	i2c_dly();
-	uint8_t b = I2C_RD_SDA();
+	const uint8_t b = I2C_RD_SDA();
 	I2C_WR_SCL_LOW();
 	i2c_dly();
 
@@ -155,7 +155,7 @@ static uint8_t NO_OPTIMIZE i2c_tx_data(uint8_t d)
 	i2c_dly();
 	I2C_WR_SCL_HIGH();
 	i2c_dly();
-	uint8_t b = I2C_RD_SDA();
+	const uint8_t b = I2C_RD_SDA();
 	I2C_WR_SCL_LOW();
 	i2c_dly();
 

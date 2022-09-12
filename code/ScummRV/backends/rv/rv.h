@@ -10,9 +10,9 @@ public:
 	
 	virtual void init_size(uint w, uint h) override final;
 
-	virtual int16 get_height() override final { return 320; }
-	
-	virtual int16 get_width() override final { return 200; }
+	virtual int16 get_width() override final { return 320; }
+
+	virtual int16 get_height() override final { return 200; }
 
 	virtual void set_palette(const byte *colors, uint start, uint num) override final;
 
@@ -23,6 +23,10 @@ public:
 	virtual void update_screen() override final;
 
 	virtual void set_shake_pos(int shake_pos) override final;
+
+	virtual NewGuiColor RGBToColor(uint8 r, uint8 g, uint8 b) override final;
+
+	virtual void colorToRGB(NewGuiColor color, uint8 &r, uint8 &g, uint8 &b) override final;
 
 	virtual bool show_mouse(bool visible) override final;
 
@@ -73,33 +77,42 @@ public:
 	virtual void quit() override final;
 
 // private:
+	struct Color
+	{
+		uint8_t r;
+		uint8_t g;
+		uint8_t b;
+	};
+
 	uint32_t m_lastTime = 0;
 
 	TimerProc m_timerCallback = nullptr;
-	int m_timerInterval = 0;
-	int m_timerExpire = 0;
+	int32_t m_timerInterval = 0;
+	int32_t m_timerExpire = 0;
 
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 
 	kernel_cs_t m_mouseLock = { 0 };
-	const byte* m_mouseBits = nullptr;
-	int m_mouseW = 0;
-	int m_mouseH = 0;
-	int m_mouseHotX = 0;
-	int m_mouseHotY = 0;
+	const uint8_t* m_mouseBits = nullptr;
+	int32_t m_mouseW = 0;
+	int32_t m_mouseH = 0;
+	int32_t m_mouseHotX = 0;
+	int32_t m_mouseHotY = 0;
 	int32_t m_mouseX = 160;
 	int32_t m_mouseY = 100;
 	bool m_mouseVisible = false;
-	byte* m_mouseBackup = nullptr;
-	int m_mouseBackupX = 0;
-	int m_mouseBackupY = 0;
-	int m_mouseBackupW = 0;
-	int m_mouseBackupH = 0;
+	uint8_t* m_mouseBackup = nullptr;
+	int32_t m_mouseBackupX = 0;
+	int32_t m_mouseBackupY = 0;
+	int32_t m_mouseBackupW = 0;
+	int32_t m_mouseBackupH = 0;
 	bool m_mouseDrawn = false;
 
-	byte* m_overlayCopy = nullptr;
+	uint8_t* m_overlayCopy = nullptr;
 	bool m_overlayVisible = false;
+
+	Color m_palette[256];
 
 	uint8_t m_lastButtons = 0;
 

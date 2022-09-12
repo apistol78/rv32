@@ -67,7 +67,6 @@
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Writeback.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/DMA.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/FIFO.sv"
-#    "/home/apistol/private/rv32/rtl/peripherials/FIFO64.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/LED.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/PLIC.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/Timer.sv"
@@ -138,8 +137,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Writeback.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/DMA.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/FIFO.sv"]"\
- "[file normalize "$origin_dir/../../rtl/peripherials/FIFO64.sv"]"\
- "[file normalize "$origin_dir/../../rtl/peripherials/LED.sv"]"\
+  "[file normalize "$origin_dir/../../rtl/peripherials/LED.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/PLIC.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/Timer.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/UART.sv"]"\
@@ -321,8 +319,7 @@ set files [list \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Writeback.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/DMA.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/FIFO.sv"] \
- [file normalize "${origin_dir}/../../rtl/peripherials/FIFO64.sv"] \
- [file normalize "${origin_dir}/../../rtl/peripherials/LED.sv"] \
+  [file normalize "${origin_dir}/../../rtl/peripherials/LED.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/PLIC.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/Timer.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/UART.sv"] \
@@ -539,11 +536,6 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
 set file "$origin_dir/../../rtl/peripherials/FIFO.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
-set file "$origin_dir/../../rtl/peripherials/FIFO64.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
