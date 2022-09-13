@@ -2,7 +2,7 @@
 
 `timescale 1ns/1ns
 
-module CPU_DCache #(
+module CPU_DCache_Comb #(
 	parameter SIZE = 14
 )(
 	input i_reset,

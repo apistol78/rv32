@@ -721,7 +721,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Registe
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_PreDecode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Multiply.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Memory.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ICache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ICache_Comb.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Forward.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Fetch.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Execute.sv
@@ -730,7 +730,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Defines
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_DCache_Reg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_DCache_None.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_DCache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_DCache_Comb.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_CSR.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ALU.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/CPU.sv

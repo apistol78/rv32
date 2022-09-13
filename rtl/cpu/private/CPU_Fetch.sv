@@ -75,7 +75,7 @@ module CPU_Fetch #(
 
 	generate if (ICACHE_REGISTERED == 0) begin
 
-		CPU_ICache #(
+		CPU_ICache_Comb #(
 			.SIZE(ICACHE_SIZE)
 		) icache(
 			.i_reset(i_reset),

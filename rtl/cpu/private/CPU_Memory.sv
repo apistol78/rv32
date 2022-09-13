@@ -78,7 +78,7 @@ module CPU_Memory #(
 
 	generate if (DCACHE_SIZE > 0 && DCACHE_REGISTERED == 0) begin
 
-		CPU_DCache #(
+		CPU_DCache_Comb #(
 			.SIZE(DCACHE_SIZE)
 		) dcache(
 			.i_reset(i_reset),

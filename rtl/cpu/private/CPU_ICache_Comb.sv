@@ -4,7 +4,7 @@
 
 `define ENABLE_ICACHE
 
-module CPU_ICache#(
+module CPU_ICache_Comb#(
 	parameter SIZE = 13
 )(
 	input i_reset,

@@ -2,8 +2,6 @@
 
 `timescale 1ns/1ns
 
-`define ENABLE_ICACHE
-
 module CPU_ICache_Reg #(
 	parameter SIZE = 13
 )(

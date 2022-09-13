@@ -45,7 +45,7 @@
 #    "/home/apistol/private/rv32/rtl/cpu/CPU.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_ALU.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_CSR.sv"
-#    "/home/apistol/private/rv32/rtl/cpu/private/CPU_DCache.sv"
+#    "/home/apistol/private/rv32/rtl/cpu/private/CPU_DCache_Comb.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Decode.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Divide.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Execute.sv"
@@ -59,7 +59,7 @@
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_FPU_MulAdd.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Fetch.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Forward.sv"
-#    "/home/apistol/private/rv32/rtl/cpu/private/CPU_ICache.sv"
+#    "/home/apistol/private/rv32/rtl/cpu/private/CPU_ICache_Comb.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Memory.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Multiply.sv"
 #    "/home/apistol/private/rv32/rtl/cpu/private/CPU_Registers.sv"
@@ -115,7 +115,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/../../rtl/cpu/CPU.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_ALU.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_CSR.sv"]"\
- "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_DCache.sv"]"\
+ "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_DCache_Comb.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Decode.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Divide.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Execute.sv"]"\
@@ -129,7 +129,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_FPU_MulAdd.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Fetch.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Forward.sv"]"\
- "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_ICache.sv"]"\
+ "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_ICache_Comb.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Memory.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Multiply.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_Registers.sv"]"\
@@ -297,7 +297,7 @@ set files [list \
  [file normalize "${origin_dir}/../../rtl/cpu/CPU.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_ALU.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_CSR.sv"] \
- [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_DCache.sv"] \
+ [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_DCache_Comb.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Decode.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Divide.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Execute.sv"] \
@@ -311,7 +311,7 @@ set files [list \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_FPU_MulAdd.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Fetch.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Forward.sv"] \
- [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_ICache.sv"] \
+ [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_ICache_Comb.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Memory.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Multiply.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_Registers.sv"] \
@@ -430,7 +430,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
-set file "$origin_dir/../../rtl/cpu/private/CPU_DCache.sv"
+set file "$origin_dir/../../rtl/cpu/private/CPU_DCache_Comb.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
@@ -500,7 +500,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
-set file "$origin_dir/../../rtl/cpu/private/CPU_ICache.sv"
+set file "$origin_dir/../../rtl/cpu/private/CPU_ICache_Comb.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
