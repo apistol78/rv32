@@ -15,9 +15,8 @@ module VIDEO_controller #(
 	output bit o_cpu_ready,
 
 	// Video
-	input i_video_hsync,
-	input i_video_vsync,
-	input i_video_request,
+	input i_video_hblank,
+	input i_video_vblank,
 	input [9:0] i_video_pos_x,
 	input [9:0] i_video_pos_y,
 	output bit [31:0] o_video_rdata,
@@ -68,9 +67,6 @@ module VIDEO_controller #(
 		.o_pb_ready()
 	);
 
-	bit [31:0] cpu_offset = 0;
-	bit [31:0] vram_offset = 0;
-
 	initial begin
 		o_cpu_ready = 1'b0;
 		o_video_rdata = 1'b0;
@@ -97,7 +93,7 @@ module VIDEO_controller #(
 		if (i_cpu_request) begin
 			if (i_cpu_address < 32'h00800000) begin
 				// Access video memory.
-				o_vram_pa_address <= cpu_offset + i_cpu_address;
+				o_vram_pa_address <= i_cpu_address;
 				o_vram_pa_request <= 1;
 				o_vram_pa_rw <= i_cpu_rw;
 				o_vram_pa_wdata <= i_cpu_wdata;
@@ -113,10 +109,6 @@ module VIDEO_controller #(
 			end
 			else begin
 				// Access control registers.
-				if (i_cpu_address[3:0] == 0)
-					vram_offset <= i_cpu_wdata;
-				else if (i_cpu_address[3:0] == 4)
-					cpu_offset <= i_cpu_wdata;
 				o_cpu_ready <= 1;
 			end
 		end
@@ -126,36 +118,56 @@ module VIDEO_controller #(
 	// Video
 
 	bit [31:0] line [0:PPITCH/4];
-	bit [10:0] count;
+	bit [10:0] column_offset;
+	bit [31:0] row_offset;
+
+	bit skip = 0;
 
 	typedef enum bit [1:0]
 	{
-		WAIT_HBLANK = 2'd0,
+		WAIT_BLANK = 2'd0,
 		WAIT_MEMORY = 2'd1,
 		WAIT_DELAY = 2'd2
 	}
 	state_t;
 
-	state_t read_state = WAIT_HBLANK;
+	state_t read_state = WAIT_BLANK;
 
 	bit [1:0] hs = 2'b00;
 	always_ff @(posedge i_clock) begin
-		hs <= { hs[0], i_video_hsync };
+		hs <= { hs[0], i_video_hblank };
 	end
 	
 	bit [1:0] vs = 2'b00;
 	always_ff @(posedge i_clock) begin
-		vs <= { vs[0], i_video_vsync };
+		vs <= { vs[0], i_video_vblank };
 	end
 
 	always_ff @(posedge i_clock) begin
 		case (read_state)
-			WAIT_HBLANK: begin
-				if (hs == 2'b01 && (vs == 2'b00 || vs == 2'b01)) begin
-					o_vram_pb_address <= /*vram_offset +*/ (i_video_pos_y * PPITCH);
+			WAIT_BLANK: begin
+				o_vram_pb_request <= 0;
+				if ({ vs[0], i_video_vblank } == 2'b10) begin	// Enter vblank, read first line.
+					o_vram_pb_address <= 0;
 					o_vram_pb_request <= 1;
-					count <= 0;
-					read_state <= WAIT_MEMORY;					
+					column_offset <= 0;
+					row_offset <= 0;
+					read_state <= WAIT_MEMORY;
+				end
+				else if ({ hs[0], i_video_hblank } == 2'b01 && i_video_vblank) begin			// Enter hblank, read next line.
+					
+					// Skip every other row since we want 320*200 but
+					// signal is 640*400.
+
+					if (skip) begin
+						o_vram_pb_address <= row_offset + PPITCH;
+						o_vram_pb_request <= 1;
+						column_offset <= 0;
+						row_offset <= row_offset + PPITCH;
+						read_state <= WAIT_MEMORY;
+					end
+
+					skip <= !skip;
 				end
 			end
 
@@ -163,14 +175,14 @@ module VIDEO_controller #(
 				if (i_vram_pb_ready) begin
 					o_vram_pb_request <= 0;
 
-					line[count] <= i_vram_pb_rdata;
-					count <= count + 1;
+					line[column_offset] <= i_vram_pb_rdata;
+					column_offset <= column_offset + 1;
 
-					if (count < PPITCH/4-2) begin
+					if (column_offset < PPITCH / 4) begin
 						read_state <= WAIT_DELAY;					
 					end
 					else begin
-						read_state <= WAIT_HBLANK;
+						read_state <= WAIT_BLANK;
 					end
 				end
 			end
@@ -184,13 +196,13 @@ module VIDEO_controller #(
 			end
 
 			default: begin
-				read_state <= WAIT_HBLANK;
+				read_state <= WAIT_BLANK;
 			end
 		endcase
 	end
 
 	always_comb begin
-		o_video_rdata = i_video_request ? palette_video_rdata : 32'h0;
+		o_video_rdata = (i_video_hblank && i_video_vblank) ? palette_video_rdata : 32'h0;
 		case (i_video_pos_x & 3)
 			0: palette_video_address = line[i_video_pos_x[9:2]][7:0];
 			1: palette_video_address = line[i_video_pos_x[9:2]][15:8];
