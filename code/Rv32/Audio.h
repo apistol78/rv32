@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Ref.h>
+#include <Core/Io/IStream.h>
 #include "Rv32/Device.h"
 
 class Audio : public Device
@@ -7,6 +9,8 @@ class Audio : public Device
 	T_RTTI_CLASS;
 
 public:
+	Audio();
+
 	virtual bool writeU32(uint32_t address, uint32_t value) override final;
 
 	virtual uint32_t readU32(uint32_t address) const override final;
@@ -14,6 +18,8 @@ public:
 	virtual bool tick(CPU* cpu) override final;
 
 private:
+	traktor::Ref< traktor::IStream > m_stream;
     uint32_t m_queued = 0;
     uint32_t m_counter = 0;
+	uint32_t m_written = 0;
 };
