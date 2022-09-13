@@ -458,7 +458,7 @@ int main(int argc, const char **argv)
 				stallExecute++;
 			// if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
 			// 	stallMemory++;
-			// if (soc->SoC__DOT__vmode_chunky__DOT__wbuffer__DOT__stall)
+			// if (soc->SoC__DOT__video_controller__DOT__wbuffer__DOT__stall)
 			// 	stallVideo++;
 
 			key1 = false;

@@ -74,7 +74,7 @@
 #    "/home/apistol/private/rv32/rtl/peripherials/UART_RX.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/UART_TX.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/VIDEO_LCD_AT070TN92.sv"
-#    "/home/apistol/private/rv32/rtl/peripherials/VMODE_chunky.sv"
+#    "/home/apistol/private/rv32/rtl/peripherials/VIDEO_controller.sv"
 #    "/home/apistol/private/rv32/board/qmtech_k7/rtl/SoC.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/AUDIO_controller.sv"
 #    "/home/apistol/private/rv32/rtl/peripherials/AUDIO_pwm_output.sv"
@@ -144,7 +144,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/../../rtl/peripherials/UART_RX.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/UART_TX.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/VIDEO_LCD_AT070TN92.sv"]"\
- "[file normalize "$origin_dir/../../rtl/peripherials/VMODE_chunky.sv"]"\
+ "[file normalize "$origin_dir/../../rtl/peripherials/VIDEO_controller.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/AUDIO_controller.sv"]"\
  "[file normalize "$origin_dir/../../rtl/peripherials/AUDIO_pwm_output.sv"]"\
  "[file normalize "$origin_dir/../../rtl/cpu/private/CPU_WriteBuffer.sv"]"\
@@ -326,7 +326,7 @@ set files [list \
  [file normalize "${origin_dir}/../../rtl/peripherials/UART_RX.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/UART_TX.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/VIDEO_LCD_AT070TN92.sv"] \
- [file normalize "${origin_dir}/../../rtl/peripherials/VMODE_chunky.sv"] \
+ [file normalize "${origin_dir}/../../rtl/peripherials/VIDEO_controller.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/AUDIO_controller.sv"] \
  [file normalize "${origin_dir}/../../rtl/peripherials/AUDIO_pwm_output.sv"] \
  [file normalize "${origin_dir}/../../rtl/cpu/private/CPU_WriteBuffer.sv"] \
@@ -575,7 +575,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
-set file "$origin_dir/../../rtl/peripherials/VMODE_chunky.sv"
+set file "$origin_dir/../../rtl/peripherials/VIDEO_controller.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj

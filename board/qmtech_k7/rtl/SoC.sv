@@ -616,9 +616,9 @@ module SoC(
 	wire vram_ready;	
 	wire [31:0] vmode_video_rdata;
 
-	VMODE_chunky #(
+	VIDEO_controller #(
 		.PPITCH(320)
-	) vmode_chunky(
+	) video_controller(
 		.i_clock(clock),
 		
 		// CPU interface.

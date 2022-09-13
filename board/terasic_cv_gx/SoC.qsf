@@ -684,7 +684,7 @@ set_global_assignment -name SDC_FILE SoC.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SDRAM_interface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/SoC.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/WriteBuffer.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VMODE_chunky.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VIDEO_controller.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/VIDEO_VGA.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_TX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/UART_RX.sv

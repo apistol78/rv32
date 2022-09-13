@@ -1,7 +1,7 @@
 
 `timescale 1ns/1ns
 
-module VMODE_chunky #(
+module VIDEO_controller #(
 	parameter PPITCH = 320
 )(
 	input i_clock,
