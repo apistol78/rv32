@@ -1,9 +1,15 @@
 
 `timescale 1ns/1ns
 
-module WriteBuffer(
+module WriteBuffer #(
+	parameter DEPTH,
+	parameter STALL_READ	//!< If set then any read request will stall until fifo is empty.
+)(
 	input i_reset,
 	input i_clock,
+
+	// Control
+	output bit o_empty,
 
 	// Bus
 	output bit o_bus_rw,
@@ -29,10 +35,11 @@ module WriteBuffer(
 	bit wq_read = 1'b0;
 	wire [63:0] wq_rdata;
 
-	FIFO #(
-		.DEPTH(64),
+	FIFO_BRAM #(
+		.DEPTH(DEPTH),
 		.WIDTH(64)
 	) wq(
+		.i_reset(i_reset),
 		.i_clock(i_clock),
 		.o_empty(wq_empty),
 		.o_full(wq_full),
@@ -55,18 +62,19 @@ module WriteBuffer(
 	bit [1:0] state = 0;
 	bit [1:0] next_state = 0;
 
-	bit [31:0] stall = 0;
-	bit [31:0] next_stall = 0;
+	wire stall_read = STALL_READ && !wq_empty;
+
+	always_comb begin
+		o_empty = wq_empty;
+	end
 
 	always_ff @(posedge i_clock) begin
 		state <= next_state;
-		stall <= next_stall;
 	end
 
 	always_comb begin
 		
 		next_state = state;
-		next_stall = stall;
 
 		wq_wdata = 32'h0;
 		wq_write = 1'b0;
@@ -84,23 +92,24 @@ module WriteBuffer(
 		case (state)
 			0: begin
 				if (i_request) begin
+					// Write to fifo; only when not full.
 					if (i_rw && !wq_full) begin
 						wq_wdata = { i_address, i_wdata };
 						wq_write = 1'b1;
 						o_ready = 1'b1;
 						next_state = 1;
 					end
-					else if (!i_rw && wq_empty) begin
+					// Read from bus; only when not stalled.
+					else if (!i_rw && !stall_read) begin
 						o_bus_request = 1'b1;
 						o_bus_rw = 1'b0;
 						o_bus_address = i_address;
 						next_state = 2;
 					end
-					else if (!i_rw && !wq_empty) begin
-						next_stall = stall + 1;
-					end
 				end
 
+				// No request or not able to process request atm; we
+				// attempt to write out to bus from fifo.
 				if (!wq_empty) begin
 					wq_read = 1'b1;
 					next_state = 3;
@@ -129,8 +138,7 @@ module WriteBuffer(
 				o_bus_rw = 1'b1;
 				o_bus_address = wq_rdata[63:32];
 				o_bus_wdata = wq_rdata[31:0];
-				o_ready = i_bus_ready;
-				if (!i_request)
+				if (i_bus_ready)
 					next_state = 0;
 			end
 

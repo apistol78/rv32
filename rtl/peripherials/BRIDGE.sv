@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 module BRIDGE #(
-	parameter REGISTERED = 0
+	parameter REGISTERED
 ) (
 	input i_clock,
 	input i_reset,
@@ -43,17 +43,9 @@ module BRIDGE #(
 			request = i_request;
 			rw = i_rw;
 			address = i_address;
-			wdata = i_wdata;		
-		end
-
-		always_ff @(posedge i_clock) begin
-			if (i_reset) begin
-				o_ready <= 0;
-			end
-			else begin
-				o_rdata <= i_far_rdata;
-				o_ready <= i_request && i_far_ready;
-			end
+			wdata = i_wdata;
+			o_rdata = i_far_rdata;
+			o_ready = i_request && i_far_ready;
 		end
 	end endgenerate
 
@@ -68,7 +60,6 @@ module BRIDGE #(
 				rw <= i_rw;
 				address <= i_address;
 				wdata <= i_wdata;
-
 				o_rdata <= i_far_rdata;
 				o_ready <= i_request && i_far_ready;
 			end

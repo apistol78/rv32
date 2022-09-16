@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 module BusAccess #(
-	parameter [0:0] REGISTERED = 1'b1
+	parameter REGISTERED
 )(
 	input i_reset,
 	input i_clock,
