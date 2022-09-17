@@ -22,6 +22,11 @@ int32_t runtime_init()
 {
 	crt_init();
 
+	// Ensure we boot from SD card by default, even
+	// after reset (through UART command).
+	sysreg_modify(SR_REG_FLAGS, 1, 0);
+
+	// Log device name.
 	switch (sysreg_read(SR_REG_DEVICE_ID))
 	{
 		case SR_DEVICE_ID_RV32T:
@@ -86,7 +91,10 @@ void runtime_update()
 	{
 		uint8_t cmd = uart_rx_u8(0);
 		if (cmd == 0xff)
+		{
+			sysreg_modify(SR_REG_FLAGS, 1, 1);	// Set boot mode into UART mode to prepare FM to download ELF.
 			runtime_cold_restart();
+		}
 	}
 }
 

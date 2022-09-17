@@ -63,7 +63,9 @@ module SoC(
 	wire [31:0] bus_pb_rdata;
 	wire [31:0] bus_pb_wdata;
 
-	BusAccess bus(
+	BusAccess #(
+		.REGISTERED(1)
+	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
 

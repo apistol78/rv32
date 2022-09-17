@@ -262,9 +262,6 @@ int main(int argc, const char **argv)
 	if (cmdLine.hasOption(L"disable-pipeline"))
 		soc->SoC__DOT__cpu_pipeline_disable = 1;
 
-	if (cmdLine.hasOption(L"bootmode"))
-		soc->BOOTMODE = cmdLine.getOption(L"bootmode").getInteger();
-
 	soc->eval();
 
 	// VL_PRINTF_MT("*");

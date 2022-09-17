@@ -50,7 +50,7 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
-			kernel_sleep(16);
+			kernel_sleep(20);
 		}
 	});
 	kernel_create_thread([](){
@@ -62,7 +62,7 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
-			kernel_sleep(16);
+			kernel_sleep(20);
 		}
 	});	
 }

@@ -527,7 +527,12 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 				break;
 		}
 
-		if (try++ > 9000)
+		// Not ready; yield this thread.
+		kernel_leave_critical();
+		kernel_yield();
+		kernel_enter_critical();
+
+		if (try++ > 4000)
 		{
 			kernel_leave_critical();
 			return 0;
@@ -535,11 +540,11 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	}
 
     // Read data (512byte = 1 block)
-	for(uint32_t i = 0; i < bufferLen; i++)
+	if (s_dataBits == 4)
 	{
-		uint8_t data8 = 0;
-		if (s_dataBits == 4)
+		for(uint32_t i = 0; i < bufferLen; i++)
 		{
+			uint8_t data8 = 0;
 			for(int32_t j = 0; j < 2; j++)
 			{
 				SD_WR_CLK_LOW();
@@ -549,9 +554,14 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 				data8 <<= 4; 
 				data8 |= (SD_RD_DAT() & 0x0f);
 			}
+			buffer[i] = data8;
 		}
-		else if (s_dataBits == 1)
+	}
+	else if (s_dataBits == 1)
+	{
+		for(uint32_t i = 0; i < bufferLen; i++)
 		{
+			uint8_t data8 = 0;
 			for(int32_t j = 0; j < 8; j++)
 			{
 				SD_WR_CLK_LOW();
@@ -561,8 +571,8 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 				data8 <<= 1; 
 				data8 |= (SD_RD_DAT() & 0x01);
 			}
+			buffer[i] = data8;
 		}
-		buffer[i] = data8;
 	}
 
 	kernel_leave_critical();

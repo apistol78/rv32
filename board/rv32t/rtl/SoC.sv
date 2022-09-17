@@ -10,8 +10,6 @@ module SoC(
 
 	input 				CPU_RESET_n,
 
-	input				BOOTMODE,
-
 	output             	HDMI_TX_CLK,
 	output      [23:0] 	HDMI_TX_D,
 	output             	HDMI_TX_DE,
@@ -479,7 +477,6 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(BOOTMODE),
 		.o_reset_switch(),
 		.o_leds(LEDR),
 		.o_sil9024_reset()
@@ -519,6 +516,8 @@ module SoC(
 		.VBACK(33),		// back porch
 		.VFRONT(10),	// front porch
 		.VPULSE(2)		// sync pulse
+		.VSPOL(0),
+		.HSPOL(0)
 		*/
 		// 640 * 400 * 70hz
 		.HLINE(800),	// whole line
@@ -528,10 +527,13 @@ module SoC(
 		.VLINE(449),	// whole frame
 		.VBACK(35),		// back porch
 		.VFRONT(12),	// front porch
-		.VPULSE(2)		// sync pulse		
+		.VPULSE(2),		// sync pulse
+		.VSPOL(1),
+		.HSPOL(0)
 	) vga(
 		.i_clock(vga_clock),
 		.i_clock_out(clock),
+		.o_clock(),
 		.o_hsync(vga_hsync),
 		.o_vsync(vga_vsync),
 		.o_hblank(vga_hblank),

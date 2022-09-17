@@ -243,7 +243,7 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(1)
+		.DCACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -306,8 +306,8 @@ module SoC(
 	wire uart_0_ready;
 	wire uart_0_interrupt;
 	UART #(
-		.PRESCALE(`FREQUENCY / (230400 * 8)),
-		.RX_FIFO_DEPTH(16)
+		.PRESCALE(`FREQUENCY / (115200 * 8)),
+		.RX_FIFO_DEPTH(512)
 	) uart_0(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -520,7 +520,6 @@ module SoC(
 		.o_ready(sysreg_ready),
 
 		// Signals
-		.i_boot_mode_switch(1'b1),	// 0 - read elf, 1 - wait on uart
 		.o_reset_switch(reset_switch),
 		.o_leds(sysreg_leds),
 		.o_sil9024_reset(sysreg_sil9024_reset)
@@ -532,32 +531,36 @@ module SoC(
 
 	// VIDEO
 	assign hdmi_hsync = ~vga_hsync;
-	assign hdmi_vsync = vga_vsync;
-	assign hdmi_de = vga_enable;
-	assign hdmi_idck = clock_video;
+	assign hdmi_vsync = ~vga_vsync;
+	assign hdmi_de = vga_hblank && vga_vblank;
+	assign hdmi_idck = vga_clock;
 	assign hdmi_r = vmode_video_rdata[7:0];
 	assign hdmi_g = vmode_video_rdata[15:8];
 	assign hdmi_b = vmode_video_rdata[23:16];
 
 	// Video signal generator.
+	wire vga_clock;
 	wire vga_hsync;
 	wire vga_vsync;
-	wire vga_enable;
+	wire vga_hblank;
+	wire vga_vblank;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
 	VIDEO_VGA #(
 		
-		// 640 * 480 * 60hz
+		// 640 * 480 * 60hz (vs: neg, hs: neg)
 		// .HLINE(800),	// whole line
 		// .HBACK(48),		// back porch
 		// .HFRONT(16),	// front porch
 		// .HPULSE(96),	// sync pulse
-		// .VLINE(525),	// whole frame
-		// .VBACK(33),		// back porch
-		// .VFRONT(10),	// front porch
-		// .VPULSE(2)		// sync pulse
+		// .VLINE(524),	// whole frame
+		// .VBACK(31),		// back porch
+		// .VFRONT(11),	// front porch
+		// .VPULSE(2),		// sync pulse
+		// .VSPOL(0),
+		// .HSPOL(0)
 
-		// 640 * 400 * 70hz
+		// 640 * 400 * 70hz (vs: pos, hs: neg)
 		.HLINE(800),	// whole line
 		.HBACK(48),		// back porch
 		.HFRONT(16),	// front porch
@@ -565,14 +568,18 @@ module SoC(
 		.VLINE(449),	// whole frame
 		.VBACK(35),		// back porch
 		.VFRONT(12),	// front porch
-		.VPULSE(2)		// sync pulse
-
+		.VPULSE(2),		// sync pulse
+		.VSPOL(1),
+		.HSPOL(0)
+		
 	) vga(
 		.i_clock(clock_video),
 		.i_clock_out(clock),
+		.o_clock(vga_clock),
 		.o_hsync(vga_hsync),
 		.o_vsync(vga_vsync),
-		.o_data_enable(vga_enable),
+		.o_hblank(vga_hblank),
+		.o_vblank(vga_vblank),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y)
 	);
@@ -677,9 +684,8 @@ module SoC(
 		.o_cpu_ready(vram_ready),
 		
 		// Video signal interface.
-		.i_video_hsync(vga_hsync),
-		.i_video_vsync(vga_vsync),
-		.i_video_request(vga_enable),
+		.i_video_hblank(vga_hblank),
+		.i_video_vblank(vga_vblank),
 		.i_video_pos_x(vga_pos_x[9:1]),
 		.i_video_pos_y(vga_pos_y[9:1]),
 		.o_video_rdata(vmode_video_rdata),

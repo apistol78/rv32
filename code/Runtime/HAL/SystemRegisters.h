@@ -2,7 +2,7 @@
 
 #include "Runtime/HAL/Common.h"
 
-#define SR_REG_BM0           0x00
+#define SR_REG_FLAGS         0x00
 #define SR_REG_LEDS          0x01
 #define SR_REG_FREQUENCY     0x02
 #define SR_REG_DEVICE_ID     0x03

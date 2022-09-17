@@ -45,9 +45,9 @@ static int sil9024a_reset()
 	// Reset SIL9022 device.
 	for (;;)
 	{
-		sysreg_modify(SR_REG_BM0, 0x02, 0x02);
+		sysreg_modify(SR_REG_FLAGS, 0x02, 0x02);
 		timer_wait_ms(250);
-		sysreg_modify(SR_REG_BM0, 0x02, 0x00);
+		sysreg_modify(SR_REG_FLAGS, 0x02, 0x00);
 		timer_wait_ms(150);
 
 		// Set terminations.

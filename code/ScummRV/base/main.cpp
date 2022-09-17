@@ -312,7 +312,7 @@ extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 
 #endif //defined(WIN32) && defined(USE_CONSOLE)
 
-
+#if !defined(__RV__)
 	// Quick preparse of command-line, looking for alt configfile path
 	for (int i = argc - 1; i >= 1; i--) {
 		s = argv[i];
@@ -333,6 +333,7 @@ extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 	}
 	if (cfgFilename != NULL)
 		ConfMan.switchFile(cfgFilename);
+#endif
 
 	// Update the config file
 	ConfMan.set("versioninfo", gScummVMVersion, Common::ConfigManager::kApplicationDomain);

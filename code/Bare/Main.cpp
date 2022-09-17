@@ -23,9 +23,9 @@ static void cmd_list(const char* args)
 {
 	file_enumerate("", nullptr, [](void*, const char* filename, uint32_t size, uint8_t directory) {
 		if (!directory)
-			fb_printf("%-10s : %d\n", filename, size);
+			fb_printf("%-12s : %d\n", filename, size);
 		else
-			fb_printf("%-10s : <DIR>\n", filename);
+			fb_printf("%-12s : <DIR>\n", filename);
 	});
 }
 
@@ -36,19 +36,19 @@ static void cmd_remove(const char* filename)
 
 static void cmd_run(const char* filename)
 {
-	int32_t fd = file_open(filename, FILE_MODE_READ);
-	if (fd <= 0) {
+	FILE* fp = fopen(filename, "rb");
+	if (!fp) {
 		fb_print("UNABLE TO LOAD PROGRAM.\n");
 		return;
 	}
 
-	char tmp[1024] = {};
+	static char tmp[1025] = {};
 	uint32_t jstart = 0;
 
 	fb_print("Reading header...\n");
 
-	ELF32_Header hdr = {};
-	file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
+	static ELF32_Header hdr = {};
+	fread((uint8_t*)&hdr, sizeof(hdr), 1, fp);
 	if (hdr.e_machine != 0xf3)
 	{
 		fb_printf("Incorrect machine type %02x.\n", hdr.e_machine);
@@ -58,9 +58,9 @@ static void cmd_run(const char* filename)
 	fb_printf("Reading %d sections...\n", hdr.e_shnum);
 	for (uint32_t i = 0; i < hdr.e_shnum; ++i)
 	{
-		ELF32_SectionHeader shdr = {};
-		file_seek(fd, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), 0);
-		file_read(fd, (uint8_t*)&shdr, sizeof(shdr));
+		static ELF32_SectionHeader shdr = {};
+		fseek(fp, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), SEEK_SET);
+		fread((uint8_t*)&shdr, sizeof(shdr), 1, fp);
 
 		if (
 			shdr.sh_type == 0x01 ||	// SHT_PROGBITS
@@ -71,15 +71,17 @@ static void cmd_run(const char* filename)
 			if ((shdr.sh_flags & 0x02) == 0x02)	// SHF_ALLOC
 			{
 				fb_printf("0x%08x (%d bytes)...\n", shdr.sh_addr, shdr.sh_size);
-				file_seek(fd, shdr.sh_offset, 0);
-				for (uint32_t i = 0; i < shdr.sh_size; i += 16)
+				fseek(fp, shdr.sh_offset, SEEK_SET);
+				for (uint32_t i = 0; i < shdr.sh_size; i += 256)
 				{
 					uint32_t nb = shdr.sh_size - i;
-					if (nb > 16)
-						nb = 16;
-					if (file_read(fd, (uint8_t*)(shdr.sh_addr + i), nb) != nb)
+					if (nb > 256)
+						nb = 256;
+
+					int32_t r = (int32_t)fread((uint8_t*)(shdr.sh_addr + i), nb, 1, fp);
+					if (r != 1)
 					{
-						fb_printf("READ ERROR.\n");
+						fb_printf("READ ERROR (%d).\n", r);
 						return;
 					}
 				}
@@ -87,81 +89,126 @@ static void cmd_run(const char* filename)
 		}
 		else if (shdr.sh_type == 0x02)	// SHT_SYMTAB
 		{
-			ELF32_SectionHeader shdr_link;
-			file_seek(fd, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), 0);
-			file_read(fd, (uint8_t*)&shdr_link, sizeof(shdr_link));
+			if (jstart != 0)
+				continue;
+
+			static ELF32_SectionHeader shdr_link;
+			fseek(fp, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), SEEK_SET);
+			fread((uint8_t*)&shdr_link, sizeof(shdr_link), 1, fp);
 
 			for (int32_t j = 0; j < shdr.sh_size; j += sizeof(ELF32_Sym))
 			{
 				ELF32_Sym sym = {};
-				file_seek(fd, shdr.sh_offset + j, 0);
-				file_read(fd, (uint8_t*)&sym, sizeof(sym));
+				fseek(fp, shdr.sh_offset + j, SEEK_SET);
+				fread((uint8_t*)&sym, sizeof(sym), 1, fp);
 
-				if (sym.st_size >= sizeof(tmp))
+				if (sym.st_size >= sizeof(tmp) - 1)
 					continue;
 
-				file_seek(fd, shdr_link.sh_offset + sym.st_name, 0);
-				file_read(fd, (uint8_t*)tmp, sym.st_size);
+				fseek(fp, shdr_link.sh_offset + sym.st_name, SEEK_SET);
+				fread((uint8_t*)tmp, sym.st_size, 1, fp);
 
 				tmp[sym.st_size] = 0;
 
 				if (strcmp(tmp, "_start") == 0)
 				{
 					jstart = sym.st_value;
+					fb_printf("Start vector 0x%08x\n", jstart);
 					break;
 				}
 			}
 		}
 	}
 
-	file_close(fd);
+	fclose(fp);
 
 	if (jstart != 0)
 	{
-		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x8;
-		fb_printf("Launching (SP @ 0x%08x)...\n", sp);
-		typedef void (*call_fn_t)();
 		__asm__ volatile (
 			"fence					\n"
-			"mv		sp, %0			\n"
-			:
-			: "r" (sp)
 		);
 
-		((call_fn_t)jstart)();
+		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE); // - 0x8;
+		fb_printf("Launching (SP @ 0x%08x)...\n", sp);
+
+		__asm__ volatile (
+			"mv		sp, %0			\n"
+			"jr		%1				\n"
+			:
+			: "r" (sp), "r" (jstart)
+		);
 	}
 }
 
 static void cmd_download(const char* filename)
 {
+	// Ensure UART is initially empty.
+	while (!uart_rx_empty(0))
+		uart_rx_u8(0);
+
+	// Create file.
 	int32_t fd = file_open(filename, FILE_MODE_WRITE);
 	if (fd <= 0) {
 		fb_print("UNABLE TO CREATE FILE.\n");
 		return;
 	}
 
-	fb_print("Waiting for data...\n");
+	// Wait until first byte is received.
+	fb_print("Waiting...\n");
+	for (;;)
+	{
+		runtime_update();
+		if (!uart_rx_empty(0))
+			break;
+		timer_wait_ms(10);
+	}
+
+	fb_print("Downloading...\n");
 
 	uint8_t r[128];
 	int32_t total = 0;
 
 	for (;;)
 	{
-		uint8_t nb = uart_rx_u8(0);
-		if (nb == 0 || nb > 128)
+		const int32_t nb = (int32_t)uart_rx_u8(0);
+		if (nb == 0)
 			break;
 
-		for (uint8_t i = 0; i < nb; ++i)
+		if (nb > 128)
 		{
-			uint8_t d = uart_rx_u8(0);
-			r[i] = d;
+			// Invalid packet size.
+			fb_printf("ERROR: Invalid pkt size %d\n", nb);
+			uart_tx_u8(0, 0x82);
+			total = -1;
+			break;
 		}
 
+		// Receive packet data.
+		uint8_t cs = 0;
+		for (int32_t i = 0; i < nb; ++i)
+		{
+			const uint8_t d = uart_rx_u8(0);
+			r[i] = d;
+			cs ^= d;
+		}
+
+		// Verify checksum.
+		const uint8_t rxcs = uart_rx_u8(0);
+		if (rxcs != cs)
+		{
+			// Checksum mismatch.
+			fb_printf("WARN: Checksum error %02x != %02x\n", cs, rxcs);
+			uart_tx_u8(0, 0x81);
+			continue;
+		}
+
+		// Write data to file.
 		if (file_write(fd, r, nb) == nb)
 			uart_tx_u8(0, 0x80);
 		else
 		{
-			uart_tx_u8(0, 0x81);
+			// Failed to write data to file.
+			uart_tx_u8(0, 0x83);
 			total = -1;
 			break;
 		}
@@ -174,7 +221,10 @@ static void cmd_download(const char* filename)
 	if (total >= 0)
 		fb_printf("\rDownloaded %d bytes\n", total);
 	else
+	{
+		file_remove(filename);
 		fb_print("\rDownload failed!\n");
+	}
 }
 
 static void cmd_sysinfo(const char* args)
@@ -305,14 +355,6 @@ int main(int argc, const char** argv)
 	fb_print("READY.\n");
 
 	sysreg_write(SR_REG_LEDS, 0);
-
-	kernel_init();
-	kernel_create_thread([](){
-		for (;;) {
-			printf("Thread\n");
-			kernel_sleep(100);
-		}
-	});
 
 	for(;;)
 	{

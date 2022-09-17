@@ -1,6 +1,8 @@
 
 `timescale 1ns/1ns
 
+`define ENABLE_WBUFFER 0
+
 module VIDEO_controller #(
 	parameter PPITCH = 320
 )(
@@ -83,22 +85,65 @@ module VIDEO_controller #(
 	end
 
 	//===============================
+	// Write buffer
+
+`ifdef ENABLE_WBUFFER
+	bit wbuffer_request = 0;
+	wire wbuffer_ready;
+	wire [31:0] wbuffer_rdata;
+
+	WriteBuffer #(
+		.DEPTH(1024),
+		.STALL_READ(0)
+	) wbuffer(
+		.i_reset(0),
+		.i_clock(i_clock),
+
+		.o_empty(),
+
+		.o_bus_rw(o_vram_pa_rw),
+		.o_bus_request(o_vram_pa_request),
+		.i_bus_ready(i_vram_pa_ready),
+		.o_bus_address(o_vram_pa_address),
+		.i_bus_rdata(i_vram_pa_rdata),
+		.o_bus_wdata(o_vram_pa_wdata),
+
+		.i_rw(i_cpu_rw),
+		.i_request(wbuffer_request),
+		.o_ready(wbuffer_ready),
+		.i_address(i_cpu_address),
+		.o_rdata(wbuffer_rdata),
+		.i_wdata(i_cpu_wdata)
+	);
+`endif
+
+	//===============================
 	// CPU
 
 	always_ff @(posedge i_clock) begin
 		palette_cpu_request <= 0;
-		o_vram_pa_request <= 0;
 		o_cpu_ready <= 0;
+
+`ifdef ENABLE_WBUFFER
+		wbuffer_request <= 0;
+`else
+		o_vram_pa_request <= 0;
+`endif
 
 		if (i_cpu_request) begin
 			if (i_cpu_address < 32'h00800000) begin
 				// Access video memory.
+`ifdef ENABLE_WBUFFER
+				wbuffer_request <= 1;
+				o_cpu_ready <= wbuffer_ready;
+`else
 				o_vram_pa_address <= i_cpu_address;
 				o_vram_pa_request <= 1;
 				o_vram_pa_rw <= i_cpu_rw;
 				o_vram_pa_wdata <= i_cpu_wdata;
 				o_cpu_rdata <= i_vram_pa_rdata;
 				o_cpu_ready <= i_vram_pa_ready;
+`endif
 			end
 			else if (i_cpu_address < 32'h00810000) begin
 				// Access palette.
@@ -132,29 +177,37 @@ module VIDEO_controller #(
 	state_t;
 
 	state_t read_state = WAIT_BLANK;
-
 	bit [1:0] hs = 2'b00;
-	always_ff @(posedge i_clock) begin
-		hs <= { hs[0], i_video_hblank };
-	end
-	
 	bit [1:0] vs = 2'b00;
-	always_ff @(posedge i_clock) begin
-		vs <= { vs[0], i_video_vblank };
-	end
+	bit hblank = 1'b0;
+	bit vblank = 1'b0;
 
 	always_ff @(posedge i_clock) begin
+
+		hs <= { hs[0], i_video_hblank };
+		vs <= { vs[0], i_video_vblank };
+		
+		if (hs == 2'b10) begin
+			hblank <= 1'b1;
+		end
+		if (vs == 2'b10) begin
+			vblank <= 1'b1;
+		end
+
 		case (read_state)
 			WAIT_BLANK: begin
 				o_vram_pb_request <= 0;
-				if ({ vs[0], i_video_vblank } == 2'b10) begin	// Enter vblank, read first line.
+				if (vblank) begin	// Enter vblank, read first line.
 					o_vram_pb_address <= 0;
 					o_vram_pb_request <= 1;
 					column_offset <= 0;
 					row_offset <= 0;
 					read_state <= WAIT_MEMORY;
+					vblank <= 1'b0;
+					hblank <= 1'b0;
+					skip <= 1'b1;
 				end
-				else if ({ hs[0], i_video_hblank } == 2'b01 && i_video_vblank) begin			// Enter hblank, read next line.
+				else if (hblank && i_video_vblank) begin			// Enter hblank (within visible region), read next line.
 					
 					// Skip every other row since we want 320*200 but
 					// signal is 640*400.
@@ -168,6 +221,7 @@ module VIDEO_controller #(
 					end
 
 					skip <= !skip;
+					hblank <= 1'b0;
 				end
 			end
 
@@ -202,7 +256,7 @@ module VIDEO_controller #(
 	end
 
 	always_comb begin
-		o_video_rdata = (i_video_hblank && i_video_vblank) ? palette_video_rdata : 32'h0;
+		o_video_rdata = /*(i_video_hblank && i_video_vblank) ?*/ palette_video_rdata; // : 32'h0;
 		case (i_video_pos_x & 3)
 			0: palette_video_address = line[i_video_pos_x[9:2]][7:0];
 			1: palette_video_address = line[i_video_pos_x[9:2]][15:8];

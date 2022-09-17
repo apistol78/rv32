@@ -359,6 +359,12 @@ bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 
 bool uploadFile(IStream* target, const std::wstring& fileName)
 {
+	while (target->available() > 0)
+	{
+		uint8_t dummy;
+		target->read(&dummy, 1);
+	}
+
 	Ref< traktor::IStream > ff = FileSystem::getInstance().open(fileName, File::FmRead);
 	if (!ff)
 	{
@@ -370,7 +376,7 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 
 	const int32_t avail = f->available();
 
-	uint8_t buf[128];
+	uint8_t buf[256];
 	int32_t total = 0;
 
 	for (;;)
@@ -379,15 +385,37 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 		if (nr <= 0)
 			break;
 
-		f->read(buf, nr);
+		if (f->read(buf, nr) != nr)
+			break;
 
-		log::info << total << Endl;
+		log::info << str(L"%08x -> %08x", total, (total + nr) - 1) << Endl;
+
+		// Calculate checksum.
+		uint8_t cs = 0;
+		for (int32_t i = 0; i < nr; ++i)
+			cs ^= buf[i];		
 
 		write< uint8_t >(target, (uint8_t)nr);
 		write< uint8_t >(target, buf, nr);
+		write< uint8_t >(target, cs);
 
 		const uint8_t reply = read< uint8_t >(target);
-		if (reply != 0x80)
+		if (reply == 0x81)
+		{
+			log::warning << L"Detected corrupt transmission; resending..." << Endl;
+
+			write< uint8_t >(target, (uint8_t)nr);
+			write< uint8_t >(target, buf, nr);
+			write< uint8_t >(target, cs);
+
+			const uint8_t replyAgain = read< uint8_t >(target);
+			if (replyAgain != 0x80)
+			{
+				log::error << L"Resend failed; aborting." << Endl;
+				return false;
+			}
+		}
+		else if (reply != 0x80)
 		{
 			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
 			write< uint8_t >(target, (uint8_t)0x00);
@@ -527,7 +555,7 @@ int main(int argc, const char** argv)
 			port = commandLine.getOption('p', L"port").getInteger();
 
 		Serial::Configuration configuration;
-		configuration.baudRate = 230400;
+		configuration.baudRate = 115200;
 		configuration.stopBits = 1;
 		configuration.parity = Serial::Parity::No;
 		configuration.byteSize = 8;

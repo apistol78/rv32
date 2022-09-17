@@ -276,7 +276,7 @@ void main(int argc, const char** argv)
 	printf("initialize file system...\n");
 	file_init();
 
-	if ((sysreg_read(SR_REG_BM0) & 0x01) == 0x00)
+	if ((sysreg_read(SR_REG_FLAGS) & 0x01) == 0x00)
 		launch_elf("BOOT");
 	else
 		remote_control();
