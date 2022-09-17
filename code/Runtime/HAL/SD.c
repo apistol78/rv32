@@ -493,14 +493,17 @@ static int32_t sd_acmd42(int32_t bus4)
 
 int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 {
-	uint32_t addr = block;	// SDHC take block number.
+	const uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
+
+	sysreg_modify(SR_REG_LEDS, 1, 1);
 
 	kernel_enter_critical();
 
 	if (!sd_cmd17(addr)) // , SD_STATE_TRAN))
 	{
 		kernel_leave_critical();
+		sysreg_modify(SR_REG_LEDS, 1, 0);
 		return 0;
 	}
 
@@ -535,6 +538,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		if (try++ > 4000)
 		{
 			kernel_leave_critical();
+			sysreg_modify(SR_REG_LEDS, 1, 0);
 			return 0;
 		}     
 	}
@@ -545,13 +549,18 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 		for(uint32_t i = 0; i < bufferLen; i++)
 		{
 			uint8_t data8 = 0;
-			for(int32_t j = 0; j < 2; j++)
 			{
 				SD_WR_CLK_LOW();
 				SD_SHORT_DELAY();
 				SD_WR_CLK_HIGH();
 				SD_SHORT_DELAY();
-				data8 <<= 4; 
+				data8 = (SD_RD_DAT() & 0x0f) << 4;
+			}
+			{
+				SD_WR_CLK_LOW();
+				SD_SHORT_DELAY();
+				SD_WR_CLK_HIGH();
+				SD_SHORT_DELAY();
 				data8 |= (SD_RD_DAT() & 0x0f);
 			}
 			buffer[i] = data8;
@@ -576,6 +585,7 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	}
 
 	kernel_leave_critical();
+	sysreg_modify(SR_REG_LEDS, 1, 0);
 	return bufferLen;
 }
 
