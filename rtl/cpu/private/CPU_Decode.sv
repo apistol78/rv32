@@ -35,6 +35,11 @@ module CPU_Decode(
 //	`include "private/generated/Instructions_fpu.sv"
 	`include "private/generated/Instructions_memory.sv"
 
+	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR | is_R4;
+	wire have_RS2 = is_B | is_R | is_S | is_R4;
+	wire have_RS3 = is_R4;
+	wire have_RD  = is_I | is_J | is_R | is_U | is_CSR | is_R4;
+
 	wire [31:0] inst_B_imm = { { 20{ `INSTRUCTION[31] } }, `INSTRUCTION[7], `INSTRUCTION[30:25], `INSTRUCTION[11:8], 1'b0 };
 	wire [31:0] inst_I_imm = { { 21{ `INSTRUCTION[31] } }, `INSTRUCTION[30:20] };
 	wire [31:0] inst_J_imm = { { 12{ `INSTRUCTION[31] } }, `INSTRUCTION[19:12], `INSTRUCTION[20], `INSTRUCTION[30:21], 1'b0 };
@@ -70,16 +75,16 @@ module CPU_Decode(
 			data.inst_rs3 <= i_data.inst_rs3;
 			data.inst_rd <= i_data.inst_rd;
 			
-			// data.imm <=
-			// 	is_B ? inst_B_imm :
-			// 	is_I ? inst_I_imm :
-			// 	is_J ? inst_J_imm :
-			// 	is_S ? inst_S_imm :
-			// 	is_U ? inst_U_imm :
-			// 	is_R ? inst_R_imm :
-			// 	is_CSR ? inst_CSR_imm :
-			// 	32'h0;
-			data.imm <= i_data.imm;
+			data.imm <=
+				is_B ? inst_B_imm :
+				is_I ? inst_I_imm :
+				is_J ? inst_J_imm :
+				is_S ? inst_S_imm :
+				is_U ? inst_U_imm :
+				is_R ? inst_R_imm :
+				is_CSR ? inst_CSR_imm :
+				32'h0;
+			//data.imm <= i_data.imm;
 		
 			data.arithmetic <= is_ARITHMETIC;
 			data.shift <= is_SHIFT;
