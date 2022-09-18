@@ -522,8 +522,8 @@
 		</item>
 		<item type="Project" version="1">
 			<enable>true</enable>
-			<name>Bare</name>
-			<sourcePath>code/Bare</sourcePath>
+			<name>Boot</name>
+			<sourcePath>code/Boot</sourcePath>
 			<configurations>
 				<item type="Configuration" version="5">
 					<name>DebugStatic</name>
@@ -540,7 +540,7 @@
 					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(GAME_HOME)/code/Bare/Link.ld</additionalLinkerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Boot/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>
@@ -563,7 +563,7 @@
 					</libraries>
 					<warningLevel>WlCompilerDefault</warningLevel>
 					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(GAME_HOME)/code/Bare/Link.ld</additionalLinkerOptions>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Boot/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
 					<debugEnvironment/>

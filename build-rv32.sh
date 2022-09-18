@@ -59,8 +59,8 @@ popd
 mkdir -p dumps
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Firmware > dumps/Firmware.dump
 riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Firmware > dumps/Firmware.map
-riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Bare > dumps/Bare.dump
-riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Bare > dumps/Bare.map
+riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Boot > dumps/Boot.dump
+riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Boot > dumps/Boot.map
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > dumps/Doom.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > dumps/Quake.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/ScummRV > dumps/ScummRV.dump
