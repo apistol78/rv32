@@ -331,7 +331,7 @@ module SoC(
 	wire uart_1_interrupt;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8)),
-		.RX_FIFO_DEPTH(128)
+		.RX_FIFO_DEPTH(512)
 	) uart_1(
 		.i_reset(reset),
 		.i_clock(clock),

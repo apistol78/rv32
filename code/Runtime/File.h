@@ -5,6 +5,10 @@
 #define FILE_MODE_READ  0
 #define FILE_MODE_WRITE 1
 
+#define FILE_SEEK_SET   0
+#define FILE_SEEK_CUR   1
+#define FILE_SEEK_END   2
+
 typedef void (*fn_enum_t)(void* user, const char* filename, uint32_t size, uint8_t directory);
 
 EXTERN_C int32_t file_init();

@@ -194,9 +194,9 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 		return -1;
 	}
 
-	if (from == 0)
+	if (from == FILE_SEEK_SET)
 		result = f_lseek(fp, offset);
-	else if (from == 1)
+	else if (from == FILE_SEEK_CUR)
 	{
 		int32_t pos = f_tell(fp) + offset;
 		if (pos < 0)
@@ -205,7 +205,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 			pos = f_size(fp) - 1;
 		result = f_lseek(fp, pos);
 	}
-	else if (from == 2)
+	else if (from == FILE_SEEK_END)
 	{
 		int32_t pos = f_size(fp) + offset;
 		if (pos < 0)

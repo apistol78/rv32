@@ -36,8 +36,9 @@ static void cmd_remove(const char* filename)
 
 static void cmd_run(const char* filename)
 {
-	FILE* fp = fopen(filename, "rb");
-	if (!fp) {
+	int32_t fp = file_open(filename, FILE_MODE_READ);
+	if (fp <= 0)
+	{
 		fb_print("UNABLE TO LOAD PROGRAM.\n");
 		return;
 	}
@@ -48,7 +49,7 @@ static void cmd_run(const char* filename)
 	fb_print("Reading header...\n");
 
 	static ELF32_Header hdr = {};
-	fread((uint8_t*)&hdr, sizeof(hdr), 1, fp);
+	file_read(fp, (uint8_t*)&hdr, sizeof(hdr));
 	if (hdr.e_machine != 0xf3)
 	{
 		fb_printf("Incorrect machine type %02x.\n", hdr.e_machine);
@@ -59,8 +60,8 @@ static void cmd_run(const char* filename)
 	for (uint32_t i = 0; i < hdr.e_shnum; ++i)
 	{
 		static ELF32_SectionHeader shdr = {};
-		fseek(fp, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), SEEK_SET);
-		fread((uint8_t*)&shdr, sizeof(shdr), 1, fp);
+		file_seek(fp, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), FILE_SEEK_SET);
+		file_read(fp, (uint8_t*)&shdr, sizeof(shdr));
 
 		if (
 			shdr.sh_type == 0x01 ||	// SHT_PROGBITS
@@ -71,17 +72,18 @@ static void cmd_run(const char* filename)
 			if ((shdr.sh_flags & 0x02) == 0x02)	// SHF_ALLOC
 			{
 				fb_printf("0x%08x (%d bytes)...\n", shdr.sh_addr, shdr.sh_size);
-				fseek(fp, shdr.sh_offset, SEEK_SET);
+				file_seek(fp, shdr.sh_offset, FILE_SEEK_SET);
 				for (uint32_t i = 0; i < shdr.sh_size; i += 256)
 				{
 					uint32_t nb = shdr.sh_size - i;
 					if (nb > 256)
 						nb = 256;
 
-					int32_t r = (int32_t)fread((uint8_t*)(shdr.sh_addr + i), nb, 1, fp);
-					if (r != 1)
+					int32_t r = (int32_t)file_read(fp, (uint8_t*)(shdr.sh_addr + i), nb);
+					if (r != nb)
 					{
 						fb_printf("READ ERROR (%d).\n", r);
+						file_close(fp);
 						return;
 					}
 				}
@@ -93,20 +95,20 @@ static void cmd_run(const char* filename)
 				continue;
 
 			static ELF32_SectionHeader shdr_link;
-			fseek(fp, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), SEEK_SET);
-			fread((uint8_t*)&shdr_link, sizeof(shdr_link), 1, fp);
+			file_seek(fp, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), FILE_SEEK_SET);
+			file_read(fp, (uint8_t*)&shdr_link, sizeof(shdr_link));
 
 			for (int32_t j = 0; j < shdr.sh_size; j += sizeof(ELF32_Sym))
 			{
 				ELF32_Sym sym = {};
-				fseek(fp, shdr.sh_offset + j, SEEK_SET);
-				fread((uint8_t*)&sym, sizeof(sym), 1, fp);
+				file_seek(fp, shdr.sh_offset + j, FILE_SEEK_SET);
+				file_read(fp, (uint8_t*)&sym, sizeof(sym));
 
 				if (sym.st_size >= sizeof(tmp) - 1)
 					continue;
 
-				fseek(fp, shdr_link.sh_offset + sym.st_name, SEEK_SET);
-				fread((uint8_t*)tmp, sym.st_size, 1, fp);
+				file_seek(fp, shdr_link.sh_offset + sym.st_name, FILE_SEEK_SET);
+				file_read(fp, (uint8_t*)tmp, sym.st_size);
 
 				tmp[sym.st_size] = 0;
 
@@ -120,7 +122,7 @@ static void cmd_run(const char* filename)
 		}
 	}
 
-	fclose(fp);
+	file_close(fp);
 
 	if (jstart != 0)
 	{
