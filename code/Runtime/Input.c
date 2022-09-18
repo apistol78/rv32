@@ -1,4 +1,5 @@
 #include "Runtime/Input.h"
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/HAL/UART.h"
 
@@ -72,6 +73,8 @@ const char keyboard_se[][5] =
 	{ 0, 0, 0, 0, 0 }
 };
 
+static kernel_cs_t s_lock = { 0 };
+
 static int32_t s_keystate[256];
 
 static key_event_t s_key_events[16];
@@ -138,9 +141,11 @@ void input_update()
 				e->keycode = keycode;
 				e->modifier = modifier;
 
+				kernel_cs_lock(&s_lock);
 				s_key_events_in = (s_key_events_in + 1) & 15;
 				if (s_key_events_in == s_key_events_out)
 					s_key_events_out = (s_key_events_out + 1) & 15;
+				kernel_cs_unlock(&s_lock);
 
 				// Check for reset (CTRL+ALT+DEL) combination.
 				if (keycode == RT_KEY_DELETE && (modifier & (RT_MODIFIER_CTRL | RT_MODIFIER_ALT)) == (RT_MODIFIER_CTRL | RT_MODIFIER_ALT))
@@ -166,9 +171,11 @@ void input_update()
 				e->wheel = wheel;
 				e->buttons = buttons;
 
+				kernel_cs_lock(&s_lock);
 				s_mouse_events_in = (s_mouse_events_in + 1) & 15;
 				if (s_mouse_events_in == s_mouse_events_out)
 					s_mouse_events_out = (s_mouse_events_out + 1) & 15;
+				kernel_cs_unlock(&s_lock);
 			}
 			break;
 
@@ -192,11 +199,15 @@ int32_t input_get_kb_event(uint8_t* keycode, uint8_t* modifier, uint8_t* pressed
 		return 0;
 
 	// Read event from queue.
-	*keycode = s_key_events[s_key_events_out].keycode;
-	*modifier = s_key_events[s_key_events_out].modifier;
-	*pressed = (s_key_events[s_key_events_out].state == 'K') ? 1 : 0;
-
+	kernel_cs_lock(&s_lock);
+	
+	const key_event_t* e = &s_key_events[s_key_events_out];
+	*keycode = e->keycode;
+	*modifier = e->modifier;
+	*pressed = (e->state == 'K') ? 1 : 0;
 	s_key_events_out = (s_key_events_out + 1) & 15;
+
+	kernel_cs_unlock(&s_lock);
 	return 1;
 }
 
@@ -232,12 +243,15 @@ int32_t input_get_mouse_event(int8_t* x, int8_t* y, int8_t* wheel, uint8_t* butt
 		return 0;
 
 	// Read event from queue.
+	kernel_cs_lock(&s_lock);
+
 	const mouse_event_t* e = &s_mouse_events[s_mouse_events_out];
 	*x = e->x;
 	*y = e->y;
 	*wheel = e->wheel;
 	*buttons = e->buttons;
-
 	s_mouse_events_out = (s_mouse_events_out + 1) & 15;
+	
+	kernel_cs_unlock(&s_lock);
 	return 1;
 }

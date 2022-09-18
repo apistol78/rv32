@@ -150,35 +150,6 @@ module CPU #(
 	);
 
 	//====================================================
-	// PRE DECODE
-
-	// fetch_data_t predecode_data_0;
-
-	// CPU_PreDecode predecode(
-	// 	.i_reset(i_reset),
-	// 	.i_clock(i_clock),
-		
-	// 	// Input
-	// 	.i_data(fetch_data),
-
-	// 	// Output
-	// 	.o_data(predecode_data_0)
-	// );
-
-	// fetch_data_t predecode_data;
-
-	// CPU_SkidBuffer #(
-	// 	.DW($bits(fetch_data_t))
-	// ) predecode_skid(
-	// 	.i_reset(i_reset),
-	// 	.i_clock(i_clock),
-
-	// 	.i_busy(execute_busy | memory_busy),
-	// 	.i_data(predecode_data_0),
-	// 	.o_data(predecode_data)
-	// );
-
-	//====================================================
 	// DECODE
 
 	wire decode_fault;

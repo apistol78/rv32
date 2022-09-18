@@ -1,6 +1,8 @@
 #include <stdarg.h>
 #include <string.h>
+#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 #include "Console.h"
 
@@ -13,6 +15,7 @@
 char fb[40 * 20];
 int s_x = 0;
 int s_y = 0;
+int s_cursor = 1;
 
 static void draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
@@ -32,9 +35,7 @@ static void draw_console()
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 	for (int y = 23; y < 200 - 23; ++y) {
-		for (int x = 23; x < 320 - 23; ++x) {
-			framebuffer[x + y * 320] = 1;
-		}
+		memset(&framebuffer[23 + y * 320], 1, 320 - 23 -23);
 	}
 
 	for (int y = 0; y < 20; ++y) {
@@ -46,9 +47,12 @@ static void draw_console()
 		}
 	}
 
-	for (int y = 0; y < 8; ++y) {
-		for (int x = 1; x < 7; ++x) {
-			framebuffer[(s_x + 3) * 8 + x + ((s_y + 3) * 8 + y) * FW] = 0;
+	if (s_cursor)
+	{
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 1; x < 7; ++x) {
+				framebuffer[(s_x + 3) * 8 + x + ((s_y + 3) * 8 + y) * FW] = 0;
+			}
 		}
 	}
 
@@ -90,18 +94,40 @@ static void putchar(char c)
 	}
 }
 
+// public
+
 void fb_init()
 {
   	video_set_palette(0, 0x887ecb);
 	video_set_palette(1, 0x50459b);
-	video_set_palette(255, 0x887ecb);  
+	video_set_palette(255, 0x887ecb); 
+
+	kernel_create_thread([]()
+	{
+		for (;;)
+		{
+			const uint32_t t0 = timer_get_ms();
+			kernel_sleep(200);
+			const uint32_t t1 = timer_get_ms();
+			printf("%d\n", t1 - t0);
+
+			s_cursor = 1 - s_cursor;
+			draw_console();
+		}
+	});
 }
 
-void fb_clear() {
+void fb_clear()
+{
 	memset(fb, 0, 40*20);
 	s_x = 0;
 	s_y = 0;
 	draw_console();
+}
+
+void fb_render()
+{
+	// draw_console();
 }
 
 void fb_putc(char c)
@@ -112,9 +138,8 @@ void fb_putc(char c)
 
 void fb_print(const char* str)
 {
-	for (const char* c = str; *c != 0; ++c) {
+	for (const char* c = str; *c != 0; ++c)
         putchar(*c);
-	}
 	draw_console();
 }
 

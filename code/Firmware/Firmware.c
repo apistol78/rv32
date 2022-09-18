@@ -271,7 +271,7 @@ void main(int argc, const char** argv)
 	}
 
 	printf("initialize storage...\n");
-	sd_init();
+	sd_init(SD_MODE_SW);
 
 	printf("initialize file system...\n");
 	file_init();

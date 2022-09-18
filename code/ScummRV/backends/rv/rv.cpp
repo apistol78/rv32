@@ -50,7 +50,7 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
-			kernel_sleep(20);
+			kernel_sleep(30);
 		}
 	});
 	kernel_create_thread([](){
@@ -268,15 +268,15 @@ bool OSystem_RebelV::poll_event(Event *event)
 		else
 		{
 			event->kbd.keycode = map_key(kc, kc);
-			event->kbd.ascii = kc;
+			event->kbd.ascii = event->kbd.keycode;
 		}
 
-		printf("key event\n");
-		printf("kc %d => %d\n", kc, event->kbd.keycode);
-		printf("m  %d\n", m);
-		printf("p  %d\n", p);
-		printf("ch %d => (%c)\n", ch, event->kbd.ascii);
-		printf("event_code %d\n", event->event_code);
+		// printf("key event\n");
+		// printf("kc %d => %d\n", kc, event->kbd.keycode);
+		// printf("m  %d\n", m);
+		// printf("p  %d\n", p);
+		// printf("ch %d => (%c)\n", ch, event->kbd.ascii);
+		// printf("event_code %d\n", event->event_code);
 
 		return true;
 	}

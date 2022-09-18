@@ -212,9 +212,9 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
 				const uint32_t addr = shdr[i].sh_addr;
 
-				for (uint32_t j = 0; j < shdr[i].sh_size; j += 256)
+				for (uint32_t j = 0; j < shdr[i].sh_size; j += 1024)
 				{
-					const uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 256);
+					const uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 1024);
 					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
 					if (!sendLine(target, addr + j, pbits + j, cnt))
 						return false;
@@ -376,12 +376,12 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 
 	const int32_t avail = f->available();
 
-	uint8_t buf[256];
+	uint8_t buf[1024];
 	int32_t total = 0;
 
 	for (;;)
 	{
-		int32_t nr = std::min(avail - total, 128);
+		int32_t nr = std::min(avail - total, 1024);
 		if (nr <= 0)
 			break;
 
@@ -395,7 +395,7 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 		for (int32_t i = 0; i < nr; ++i)
 			cs ^= buf[i];		
 
-		write< uint8_t >(target, (uint8_t)nr);
+		write< uint32_t >(target, (uint32_t)nr);
 		write< uint8_t >(target, buf, nr);
 		write< uint8_t >(target, cs);
 
@@ -404,7 +404,7 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 		{
 			log::warning << L"Detected corrupt transmission; resending..." << Endl;
 
-			write< uint8_t >(target, (uint8_t)nr);
+			write< uint32_t >(target, (uint32_t)nr);
 			write< uint8_t >(target, buf, nr);
 			write< uint8_t >(target, cs);
 
@@ -425,7 +425,7 @@ bool uploadFile(IStream* target, const std::wstring& fileName)
 		total += nr;
 	}
 
-	write< uint8_t >(target, (uint8_t)0x00);
+	write< uint32_t >(target, 0);
 
 	log::info << L"File uploaded." << Endl;
 	return true;

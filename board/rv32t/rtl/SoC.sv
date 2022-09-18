@@ -325,6 +325,7 @@ module SoC(
 
 	// SD
 	wire sd_select;
+	wire [1:0] sd_address;
 	wire [31:0] sd_rdata;
 	wire sd_ready;
 	SD sd(
@@ -332,6 +333,7 @@ module SoC(
 		.i_clock(clock),
 		.i_request(sd_select && bridge_far_request),
 		.i_rw(bridge_far_rw),
+		.i_address(sd_address),
 		.i_wdata(bridge_far_wdata),
 		.o_rdata(sd_rdata),
 		.o_ready(sd_ready),
@@ -669,6 +671,7 @@ module SoC(
 	assign i2c_select = bridge_far_address[27:24] == 4'h3;
 
 	assign sd_select = bridge_far_address[27:24] == 4'h4;
+	assign sd_address = bridge_far_address[3:2];
 
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
 	assign timer_address = bridge_far_address[4:2];

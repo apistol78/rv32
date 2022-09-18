@@ -57,25 +57,21 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 
 // HAL
 
+kernel_cs_t lock = { 0 };
 FATFS fs;
-
 FIL fps[32];
 uint32_t fpa = 0;
 
 static FIL* file_alloc()
 {
-	kernel_enter_critical();
 	for (int32_t i = 0; i < 32; ++i)
 	{
 		if ((fpa & (1 << i)) == 0)
 		{
 			fpa |= (1 << i);
-			memset(&fps[i], 0, sizeof(FIL));
-			kernel_leave_critical();
 			return &fps[i];
 		}
 	}
-	kernel_leave_critical();
 	return 0;
 }
 
@@ -106,63 +102,97 @@ static FIL* file_from_index(int32_t index)
 		return 0;
 }
 
+// public
+
 int32_t file_init()
 {
 	int32_t result;
+
+	memset(fps, 0, sizeof(fps));
+	fpa = 0;
+
 	if ((result = f_mount(&fs, "", 1)) != FR_OK)
 		return 1;
-	else
-		return 0;
+
+	return 0;
 }
 
 int32_t file_open(const char* name, int32_t mode)
 {
+	kernel_cs_lock(&lock);
+
 	FIL* fp = file_alloc();
 	if (!fp)
+	{
+		kernel_cs_unlock(&lock);
 		return 0;
+	}
 
 	FRESULT r = FR_INVALID_PARAMETER;
 	if (mode == FILE_MODE_READ)
 	{
 		if ((r = f_open(fp, name, FA_READ)) == FR_OK)
-			return file_index(fp);
+		{
+			const int32_t index = file_index(fp);
+			kernel_cs_unlock(&lock);
+			return index;
+		}
 	}
 	else if (mode == FILE_MODE_WRITE)
 	{
 		if ((r = f_open(fp, name, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
-			return file_index(fp);
+		{
+			const int32_t index = file_index(fp);
+			kernel_cs_unlock(&lock);
+			return index;
+		}
 	}
 
 	file_free(fp);
+
+	kernel_cs_unlock(&lock);
 	return 0;
 }
 
 void file_close(int32_t fd)
 {
+	kernel_cs_lock(&lock);
+
 	FIL* fp = file_from_index(fd);
 	if (fp)
 	{
 		f_close(fp);
 		file_free(fp);
 	}
+
+	kernel_cs_unlock(&lock);
 }
 
 int32_t file_size(int32_t fd)
 {
+	int32_t fs = -1;
+
+	kernel_cs_lock(&lock);
 	FIL* fp = file_from_index(fd);
 	if (fp)
-		return f_size(fp);
-	else
-		return -1;
+		fs = f_size(fp);
+	kernel_cs_unlock(&lock);
+
+	return fs;
 }
 
 int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 {
 	FRESULT result = FR_INVALID_PARAMETER;
-	
+
+	kernel_cs_lock(&lock);
+
 	FIL* fp = file_from_index(fd);
 	if (!fp)
+	{
+		kernel_cs_unlock(&lock);
 		return -1;
+	}
 
 	if (from == 0)
 		result = f_lseek(fp, offset);
@@ -185,35 +215,63 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 		result = f_lseek(fp, pos);
 	}
 
-	if (result != FR_OK)
-		return -1;
+	int32_t ft = -1;
 
-	return f_tell(fp);
+	if (result == FR_OK)
+		ft = f_tell(fp);
+
+	kernel_cs_unlock(&lock);
+	return ft;
 }
 
 int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 {
-	FIL* fp = file_from_index(fd);
 	FRESULT result;
 	UINT bw = 0;
+
+	kernel_cs_lock(&lock);
+
+	FIL* fp = file_from_index(fd);
+	if (!fp)
+	{
+		kernel_cs_unlock(&lock);
+		return -1;
+	}
+
 	if ((result = f_write(fp, ptr, len, &bw)) == FR_OK)
+	{
+		kernel_cs_unlock(&lock);
 		return (int32_t)bw;
-	else {
+	}
+	else
+	{
+		kernel_cs_unlock(&lock);
 		return -1;
 	}
 }
 
 int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
+	kernel_cs_lock(&lock);
+
 	FIL* fp = file_from_index(fd);
 	if (!fp)
+	{
+		kernel_cs_unlock(&lock);
 		return -1;
+	}
 
 	UINT br = 0;
 	if (f_read(fp, ptr, len, &br) == FR_OK)
+	{
+		kernel_cs_unlock(&lock);
 		return (int32_t)br;
+	}
 	else
+	{
+		kernel_cs_unlock(&lock);
 		return -1;
+	}
 }
 
 int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
@@ -221,13 +279,20 @@ int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
 	FILINFO fno;
 	DIR dp;
 
+	kernel_cs_lock(&lock);
+
 	if (f_opendir(&dp, path) != FR_OK)
+	{
+		kernel_cs_unlock(&lock);
 		return 1;
+	}
 
 	while (f_readdir(&dp, &fno) == FR_OK && fno.fname[0] != 0)
 		fnen(user, fno.fname, fno.fsize, (fno.fattrib & AM_DIR) != 0);
 
 	f_closedir(&dp);
+
+	kernel_cs_unlock(&lock);
 	return 0;
 }
 

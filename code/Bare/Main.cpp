@@ -153,28 +153,18 @@ static void cmd_download(const char* filename)
 		return;
 	}
 
-	// Wait until first byte is received.
-	fb_print("Waiting...\n");
-	for (;;)
-	{
-		runtime_update();
-		if (!uart_rx_empty(0))
-			break;
-		timer_wait_ms(10);
-	}
-
 	fb_print("Downloading...\n");
 
-	uint8_t r[128];
+	uint8_t r[1024];
 	int32_t total = 0;
 
 	for (;;)
 	{
-		const int32_t nb = (int32_t)uart_rx_u8(0);
+		const int32_t nb = (int32_t)uart_rx_u32(0);
 		if (nb == 0)
 			break;
 
-		if (nb > 128)
+		if (nb > sizeof(r))
 		{
 			// Invalid packet size.
 			fb_printf("ERROR: Invalid pkt size %d\n", nb);
@@ -311,6 +301,100 @@ static void cmd_play(const char* filename)
 	file_close(fp);
 }
 
+static void cmd_iotest(const char* args)
+{
+	const int32_t blks[] = { 16, 32, 64, 128, 256, 512, 1024 };
+	uint8_t buf[1024];
+	{
+		fb_printf("Running HAL I/O...\n");
+		for (int32_t i = 0; i < sizeof(blks) / sizeof(blks[0]); ++i)
+		{
+			const int32_t fp = file_open("doom1.wad", FILE_MODE_READ);
+			if (fp > 0)
+			{
+				const uint32_t ms0 = timer_get_ms();
+				uint32_t nbytes = 0;
+				while (nbytes < 16 * 1024)
+				{
+					int32_t r = file_read(fp, buf, blks[i]);
+					if (r <= 0)
+						break;
+
+					nbytes += (uint32_t)r;
+				}
+				const uint32_t ms1 = timer_get_ms();
+				file_close(fp);
+				fb_printf("%4d: %d bytes/s\n", blks[i], (nbytes * 1000) / (ms1 - ms0));
+			}
+			else
+			{
+				fb_printf("File error; unable to open\n");
+				return;
+			}
+		}
+	}
+	{
+		fb_printf("Running CRT I/O...\n");
+		for (int32_t i = 0; i < sizeof(blks) / sizeof(blks[0]); ++i)
+		{
+			FILE* fp = fopen("doom1.wad", "rb");
+			if (fp)
+			{
+				const uint32_t ms0 = timer_get_ms();
+				uint32_t nbytes = 0;
+				while (nbytes < 16 * 1024)
+				{
+					int32_t r = fread(buf, 1, blks[i], fp);
+					if (r <= 0)
+						break;
+
+					nbytes += (uint32_t)r;
+				}
+				const uint32_t ms1 = timer_get_ms();
+				fclose(fp);
+				fb_printf("%4d: %d bytes/s\n", blks[i], (nbytes * 1000) / (ms1 - ms0));
+			}
+			else
+			{
+				fb_printf("File error; unable to open\n");
+				return;
+			}
+		}
+	}
+	{
+		fb_printf("Running CRT file...\n");
+
+		int32_t fp = file_open("dummy.txt", FILE_MODE_WRITE);
+		if (fp)
+		{
+			const char buf[] = { "Hello world!\n" };
+			int32_t r = file_write(fp, (const uint8_t*)buf, sizeof(buf));
+			file_close(fp);
+			fb_printf("File written, result %d\n", r);
+		}
+		else
+		{
+			fb_printf("File error; unable to create\n");
+			return;
+		}
+
+		fp = file_open("dummy.txt", FILE_MODE_READ);
+		if (fp)
+		{
+			char buf[64];
+			int32_t r = file_read(fp, (uint8_t*)buf, sizeof(buf));
+			file_close(fp);
+			fb_printf("File read, result %d\n", r);
+			fb_printf("%s\n", buf);
+		}
+		else
+		{
+			fb_printf("File error; unable to open\n");
+			return;
+		}		
+	}
+}
+
 static void cmd_help(const char* args)
 {
 	fb_print("REBOOT  - Cold reboot\n");
@@ -320,6 +404,7 @@ static void cmd_help(const char* args)
 	fb_print("DL      - Download file\n");
 	fb_print("SYSINFO - System info\n");
 	fb_print("PLAY    - Play sound file\n");
+	fb_print("IOTEST  - I/O test\n");
 	fb_print("HELP    - Show help\n");
 }
 
@@ -337,6 +422,7 @@ c_cmds[] =
 	{ "dl",			cmd_download	},
 	{ "sysinfo",	cmd_sysinfo		},
 	{ "play",		cmd_play		},
+	{ "iotest",		cmd_iotest		},
 	{ "help",		cmd_help		}
 };
 
@@ -346,6 +432,7 @@ int main(int argc, const char** argv)
 	int32_t cnt = 0;
 
 	runtime_init();
+	kernel_init();
 
 	fb_init();
 	fb_clear();
@@ -366,55 +453,69 @@ int main(int argc, const char** argv)
 
 		if (p)
 		{
-			char ch;
-			if (input_translate_key(kc, m, &ch))
+			if (kc == RT_KEY_ESCAPE)
 			{
-				fb_putc(ch);
-				if (ch != '\n')
+				while (cnt > 0)
 				{
-					if (cnt > 0 || ch != ' ')
-						cmd[cnt++] = ch;
+					fb_putc('\b');
+					cnt--;
 				}
-				else if (ch == '\b')
+				cmd[0] = 0;
+			}
+			else
+			{
+				char ch;
+				if (input_translate_key(kc, m, &ch))
 				{
-					if (cnt > 0)
-						cmd[--cnt] = 0;
-				}
-				else
-				{
-					if (cnt > 0)
+					fb_putc(ch);
+					if (ch == '\b')
 					{
-						cmd[cnt] = 0;
-
-						char* args = cmd;
-						while (*args != 0)
+						if (cnt > 0)
+							cmd[--cnt] = 0;
+					}
+					else if (ch != '\n')
+					{
+						if (cnt > 0 || ch != ' ')
+							cmd[cnt++] = ch;
+					}
+					else
+					{
+						if (cnt > 0)
 						{
-							if (*args == ' ')
+							cmd[cnt] = 0;
+
+							printf("\"%s\" %d\n", cmd, cnt);
+
+							char* args = cmd;
+							while (*args != 0)
 							{
-								*args++ = 0;
-								break;
+								if (*args == ' ')
+								{
+									*args++ = 0;
+									break;
+								}
+								++args;
 							}
-							++args;
-						}
-						while (*args == ' ')
-							++args;
+							while (*args == ' ')
+								++args;
 
-						const cmdMap_t* cm = nullptr;
-						for (int i = 0; i < sizeof(c_cmds) / sizeof(c_cmds[0]); ++i)
-						{
-							if (strcasecmp(c_cmds[i].name, cmd) == 0)
+							const cmdMap_t* cm = nullptr;
+							for (int i = 0; i < sizeof(c_cmds) / sizeof(c_cmds[0]); ++i)
 							{
-								cm = &c_cmds[i];
-								break;
+								if (strcasecmp(c_cmds[i].name, cmd) == 0)
+								{
+									cm = &c_cmds[i];
+									break;
+								}
 							}
+
+							if (cm)
+								cm->fn(args);
+							else
+								fb_print("SYNTAX ERROR.\n");
+
+							cnt = 0;
 						}
-
-						if (cm)
-							cm->fn(args);
-						else
-							fb_print("SYNTAX ERROR.\n");
-
-						cnt = 0;
 					}
 				}
 			}

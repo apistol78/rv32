@@ -72,8 +72,8 @@ FSList *RvFilesystemNode::listDir(ListMode mode) const
 		entry.m_path = up->parent->m_path.empty() ? filename : up->parent->m_path + "\\" + std::string(filename);
 		entry.m_fileName = filename;
 
-		printf("... path %s\n", entry.m_path.c_str());
-		printf("... name %s\n", entry.m_fileName.c_str());
+		// printf("... path %s\n", entry.m_path.c_str());
+		// printf("... name %s\n", entry.m_fileName.c_str());
 
 		entry.m_isDirectory = (bool)(directory != 0);
 
@@ -101,9 +101,9 @@ FilesystemNode *RvFilesystemNode::parent() const
 		p->m_isDirectory = true;
 	}
 
-	printf("parent\n");
-	printf("... path %s\n", p->m_path.c_str());
-	printf("... name %s\n", p->m_fileName.c_str());
+	// printf("parent\n");
+	// printf("... path %s\n", p->m_path.c_str());
+	// printf("... name %s\n", p->m_fileName.c_str());
 
 	return p;
 }

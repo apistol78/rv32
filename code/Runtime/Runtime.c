@@ -66,7 +66,7 @@ int32_t runtime_init()
 	audio_init();
 
 	printf("** Initialize SD card **\n");
-	if (sd_init() != 0)
+	if (sd_init(SD_MODE_HW) != 0)
 		printf("SD init failed!\n");
 
 	printf("** Initialize FS **\n");
@@ -82,9 +82,7 @@ int32_t runtime_init()
 
 void runtime_update()
 {
-	kernel_enter_critical();
 	input_update();
-	kernel_leave_critical();
 
 	// Check for reset signal on UART.
 	if (!uart_rx_empty(0))
