@@ -16,6 +16,7 @@ local insttype = {
 	MEMORY = "MEMORY",
 	COMPLEX = "COMPLEX",
 	FPU = "FPU",
+	FPU_MEMORY = "FPU_MEMORY",
 }
 
 local operations = {
@@ -658,7 +659,7 @@ local instructions = {
 		data = 0x00002007,
 		name = "FLW",
 		format = "I",
-		type = insttype.MEMORY,
+		type = insttype.FPU_MEMORY,
 		cpp = [[
 			auto f = parseFormatI(word);
 			FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
@@ -919,7 +920,7 @@ local instructions = {
 		data = 0x00002027,
 		name = "FSW",
 		format = "S",
-		type = insttype.MEMORY,
+		type = insttype.FPU_MEMORY,
 		cpp = [[
 			auto f = parseFormatS(word);
 			MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
@@ -1746,7 +1747,8 @@ function main(argv)
 		-- Get all verilog instructions.
 		local vi = {}
 		for _, inst in ipairs(instructions) do
-			if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil or inst.verilog_fpu ~= nil then
+			-- if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil or inst.verilog_fpu ~= nil then
+			if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
 				table.insert(vi, inst)
 			end
 		end
@@ -1794,7 +1796,8 @@ function main(argv)
 			insttype.JUMP_CONDITIONAL,
 			insttype.MEMORY,
 --			insttype.FPU,
---			insttype.FPU_CVT
+--			insttype.FPU_CVT,
+--			insttype.FPU_MEMORY,
 		}) do
 			stdout:print("wire is_" .. it .. " =")
 			local count = 0
@@ -1889,7 +1892,7 @@ function main(argv)
 		-- Get list of all instructions with a MEMORY specification.
 		local alu = {}
 		for i, inst in ipairs(instructions) do
-			if inst.verilog_memory ~= nil then
+			if inst.verilog_memory ~= nil and inst.type == insttype.MEMORY then
 				table.insert(alu, inst)
 			end
 		end
