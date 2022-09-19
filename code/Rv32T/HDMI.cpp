@@ -19,39 +19,28 @@ HDMI::HDMI()
 
 void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 {
-	auto& clk = soc->HDMI_TX_CLK;
-	auto& de = soc->HDMI_TX_DE;
-	auto& hs = soc->HDMI_TX_HS;
-	auto& txi = soc->HDMI_TX_INT;
-	auto& vs = soc->HDMI_TX_VS;
-	auto& d = soc->HDMI_TX_D;
+	const bool clk = (soc->HDMI_TX_CLK != 0);
+	const bool de = (soc->HDMI_TX_DE != 0);
+	const bool hs = (soc->HDMI_TX_HS == 0);
+	const bool vs = (soc->HDMI_TX_VS != 0);
+	const auto& d = soc->HDMI_TX_D;
 
-	if (vs == 0 && m_vsync == false)
+	if (vs && !m_vsync)
 	{
-		m_dirty = true;
-		m_vsync = true;
 		m_vpos = 0;
-	}
-	else if (vs != 0 && m_vsync == true)
-	{
-		m_vsync = false;
+		m_dirty = true;
 	}
 
-	if (hs == 0 && m_hsync == false)
+	if (hs && !m_hsync)
 	{
-		m_hsync = true;
 		m_hpos = 0;
 		m_vpos++;
 	}
-	else if (hs != 0 && m_hsync == true)
-	{
-		m_hsync = false;
-	}
 
-	if (!m_clk && clk)
+	if (clk && !m_clk)
 	{
-		const int32_t x = m_hpos - 48; // - (96 + 48);
-		const int32_t y = m_vpos - 35;
+		const int32_t x = m_hpos - (48 + 96);	// back + pulse
+		const int32_t y = m_vpos - (35 + 2);
 		if (x >= 0 && x < m_image->getWidth() && y >= 0 && y < m_image->getHeight())
 		{
 			uint32_t* id = (uint32_t*)m_image->getData();
@@ -59,7 +48,10 @@ void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 		}
 		m_hpos++;
 	}
+
 	m_clk = (bool)clk;
+	m_vsync = vs;
+	m_hsync = hs;
 }
 
 bool HDMI::shouldDraw()
