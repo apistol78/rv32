@@ -128,11 +128,12 @@ module CPU_Memory #(
 	memory_data_t data = 0;
 	state_t state = IDLE;
 	bit [31:0] rmw_rdata = 0;
+	bit last_strobe = 0;
 
 	always_comb begin
 		o_busy =
 			(
-				(i_data.tag != data.tag) &&
+				(i_data.strobe != last_strobe) &&
 				(i_data.mem_read || i_data.mem_write || i_data.mem_flush)
 			);
 	end
@@ -145,7 +146,7 @@ module CPU_Memory #(
 				dcache_wdata <= 0;
 				dcache_flush <= 0;
 
-				if (i_data.tag != data.tag) begin
+				if (i_data.strobe != last_strobe) begin
 					if (i_data.mem_read) begin
 						dcache_request <= 1;
 						state <= READ;
@@ -168,9 +169,10 @@ module CPU_Memory #(
 						state <= FLUSH;
 					end
 					else begin
-						data.tag <= i_data.tag;
 						data.rd <= i_data.rd;
 						data.inst_rd <= i_data.inst_rd;
+						data.strobe <= ~data.strobe;
+						last_strobe <= i_data.strobe;
 					end
 				end
 			end
@@ -179,9 +181,10 @@ module CPU_Memory #(
 				if (dcache_ready) begin
 					dcache_request <= 0;
 					dcache_flush <= 0;
-					data.tag <= i_data.tag;
 					data.rd <= i_data.rd;
 					data.inst_rd <= i_data.inst_rd;				
+					data.strobe <= ~data.strobe;
+					last_strobe <= i_data.strobe;
 					state <= IDLE;
 				end
 			end
@@ -189,7 +192,6 @@ module CPU_Memory #(
 			READ: begin
 				if (dcache_ready) begin
 					dcache_request <= 0;
-					data.tag <= i_data.tag;
 					case (i_data.mem_width)
 						`MEMW_4: data.rd <= dcache_rdata;
 						`MEMW_2: data.rd <= { { 16{ i_data.mem_signed & bus_rdata_half[15] } }, bus_rdata_half[15:0] };
@@ -197,6 +199,8 @@ module CPU_Memory #(
 						default: data.rd <= 0;
 					endcase
 					data.inst_rd <= i_data.mem_inst_rd;
+					data.strobe <= ~data.strobe;
+					last_strobe <= i_data.strobe;
 					state <= IDLE;
 				end
 			end
@@ -205,9 +209,10 @@ module CPU_Memory #(
 				if (dcache_ready) begin
 					dcache_request <= 0;
 					dcache_rw <= 0;
-					data.tag <= i_data.tag;
 					data.rd <= i_data.rd;
 					data.inst_rd <= i_data.inst_rd;	
+					data.strobe <= ~data.strobe;
+					last_strobe <= i_data.strobe;
 					state <= IDLE;
 				end
 			end
@@ -241,9 +246,10 @@ module CPU_Memory #(
 				if (dcache_ready) begin
 					dcache_request <= 0;
 					dcache_rw <= 0;
-					data.tag <= i_data.tag;
 					data.rd <= i_data.rd;
 					data.inst_rd <= i_data.inst_rd;	
+					data.strobe <= ~data.strobe;
+					last_strobe <= i_data.strobe;
 					state <= IDLE;
 				end					
 			end

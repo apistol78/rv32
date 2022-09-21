@@ -451,8 +451,8 @@ int main(int argc, const char **argv)
 			// if (soc->SoC__DOT__sdram_request)
 			//  	busSDRAM++;
 
-			if (soc->SoC__DOT__cpu__DOT__execute_busy)
-				stallExecute++;
+			// if (soc->SoC__DOT__cpu__DOT__execute_busy)
+			// 	stallExecute++;
 			// if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
 			// 	stallMemory++;
 			// if (soc->SoC__DOT__video_controller__DOT__wbuffer__DOT__stall)

@@ -40,51 +40,54 @@ typedef enum bit [`REG_ID_SIZE]
 }
 register_t;
 
+/**! Output data from FETCH stage. */
 typedef struct packed
 {
-	bit [`TAG_SIZE] tag;
+	bit strobe;				//!< Toggled each time data is updated.
 	bit [31:0] instruction;
 	bit [31:0] pc;
 	register_t inst_rs1;
 	register_t inst_rs2;
-	register_t inst_rs3;
+	//register_t inst_rs3;
 	register_t inst_rd;
-	bit [31:0] imm;					//!< Immediate number.
+	bit [31:0] imm;			//!< Immediate number.
 }
 fetch_data_t;
 
+/**! Output data from DECODE stage. */
 typedef struct packed
 {
-	bit [`TAG_SIZE] tag;
-	bit [31:0] pc;					//!< Program counter.
+	bit strobe;					//!< Toggled each time data is updated.
+	bit [31:0] pc;				//!< Program counter.
 	bit [2:0] have_rs;
-	register_t inst_rs1;			//!< Index source register 1.
-	register_t inst_rs2;			//!< Index source register 2.
-	register_t inst_rs3;			//!< Index source register 3 (FP only).
-	register_t inst_rd;				//!< Index destination register.
-	bit [31:0] imm;					//!< Immediate number.
-	bit arithmetic;					//!< Arithmetic instruction.
-	bit shift;						//!< Shift instruction.
-	bit compare;					//!< Compare instruction.
-	bit complx;						//!< Complex instruction.
-	bit jump;						//!< Jump instruction.
-	bit jump_conditional;			//!< Conditional jump instruction.
-	bit [3:0] alu_operation;		//!< ALU operation code.
-	bit [4:0] alu_operand1;			//!< ALU operand 1, one hot.
-	bit [4:0] alu_operand2;			//!< ALU operand 2, one hot.
-	bit memory_read;				//!< Memory read instruction.
-	bit memory_write;				//!< Memory write instruction.
-	bit [1:0] memory_width;			//!< Memory access width (00 = 1, 01 = 2, 10 = 4, 11 = invalid) in bytes.
-	bit memory_signed;				//!< Signed extended memory access.
-	bit [4:0] op;					//!< Complex instruction operation code.
-	// bit fpu;						//!< FPU instruction.
-	// bit [4:0] fpu_operation;		//!< FPU operation code.
+	register_t inst_rs1;		//!< Index source register 1.
+	register_t inst_rs2;		//!< Index source register 2.
+	//register_t inst_rs3;		//!< Index source register 3 (FP only).
+	register_t inst_rd;			//!< Index destination register.
+	bit [31:0] imm;				//!< Immediate number.
+	bit arithmetic;				//!< Arithmetic instruction.
+	bit shift;					//!< Shift instruction.
+	bit compare;				//!< Compare instruction.
+	bit complx;					//!< Complex instruction.
+	bit jump;					//!< Jump instruction.
+	bit jump_conditional;		//!< Conditional jump instruction.
+	bit [3:0] alu_operation;	//!< ALU operation code.
+	bit [4:0] alu_operand1;		//!< ALU operand 1, one hot.
+	bit [4:0] alu_operand2;		//!< ALU operand 2, one hot.
+	bit memory_read;			//!< Memory read instruction.
+	bit memory_write;			//!< Memory write instruction.
+	bit [1:0] memory_width;		//!< Memory access width (00 = 1, 01 = 2, 10 = 4, 11 = invalid) in bytes.
+	bit memory_signed;			//!< Signed extended memory access.
+	bit [4:0] op;				//!< Complex instruction operation code.
+	// bit fpu;					//!< FPU instruction.
+	// bit [4:0] fpu_operation;	//!< FPU operation code.
 }
 decode_data_t;
 
+/**! Output data from EXECUTE stage. */
 typedef struct packed
 {
-	bit [`TAG_SIZE] tag;
+	bit strobe;					//!< Toggled each time data is updated.
 	register_t inst_rd;
 	bit [31:0] rd;
 	bit mem_read;
@@ -93,21 +96,22 @@ typedef struct packed
 	bit [1:0] mem_width;
 	bit mem_signed;
 	bit [31:0] mem_address;
-	register_t mem_inst_rd;			//!< Memory load into register, separate from inst_rd since we cannot forward from execute on load.
+	register_t mem_inst_rd;		//!< Memory load into register, separate from inst_rd since we cannot forward from execute on load.
 }
 execute_data_t;
 
+/**! Output data from MEMORY stage. */
 typedef struct packed
 {
-	bit [`TAG_SIZE] tag;
+	bit strobe;					//!< Toggled each time data is updated.
 	register_t inst_rd;
 	bit [31:0] rd;
 }
 memory_data_t;
 
+/**! Output data from WRITEBACK stage. */
 typedef struct packed
 {
-	bit [`TAG_SIZE] tag;
 	register_t inst_rd;
 	bit [31:0] rd;
 }

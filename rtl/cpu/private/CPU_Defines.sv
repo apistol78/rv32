@@ -1,10 +1,6 @@
 `ifndef _CPU_DEFINES_SV
 `define _CPU_DEFINES_SV
 
-// Tag size, wider is useful for debugging but no more than a
-// single bit should be necessary.
-`define TAG_SIZE                    1:0
-
 // Size of register index.
 `define REG_ID_SIZE					4:0
 

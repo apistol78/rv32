@@ -130,7 +130,7 @@ module CPU_Fetch #(
 			case (state)
 				WAIT_ICACHE: begin
 					if (icache_ready) begin
-						data.tag <= data.tag + 1;
+						data.strobe <= ~data.strobe;
 						data.instruction <= icache_rdata;
 						data.pc <= pc;
 
@@ -139,7 +139,7 @@ module CPU_Fetch #(
 						// we are decoding rest of instruction.
 						data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 5'h0);
 						data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 5'h0);
-						data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
+						//data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
 						data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
 
 						// Move PC to next instruction, will

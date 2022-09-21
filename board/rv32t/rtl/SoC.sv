@@ -196,13 +196,12 @@ module SoC(
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
 	wire cpu_pipeline_disable;
-	wire [`TAG_SIZE] cpu_execute_debug_tag;
-	wire [`TAG_SIZE] cpu_writeback_debug_tag;
 	wire cpu_fault;
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0)
+		.DCACHE_REGISTERED(0),
+		.ICACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -227,8 +226,6 @@ module SoC(
 
 		// Debug
 		.i_pipeline_disable(cpu_pipeline_disable),
-		.o_execute_debug_tag(cpu_execute_debug_tag),
-		.o_writeback_debug_tag(cpu_writeback_debug_tag),
 		.o_fault(cpu_fault)
 	);
 
@@ -737,9 +734,6 @@ module SoC(
 	bit [31:0] debug_bus_fault_address = 0;
 	bit [1:0] debug_bus_fault_type = 0;
 
-	bit [`TAG_SIZE] execute_debug_tag = 0;
-	bit [`TAG_SIZE] writeback_debug_tag = 0;
-
 	bit debug_request = 0;
 	bit [13:0] debug_select = 0;
 
@@ -751,9 +745,6 @@ module SoC(
 			cpu_dbus_request ? 2'd2 :
 			dma_bus_request ? 2'd3 :
 			2'd0;
-
-		execute_debug_tag = cpu_execute_debug_tag;
-		writeback_debug_tag = cpu_writeback_debug_tag;
 
 		debug_request = bus_request;
 		debug_select =

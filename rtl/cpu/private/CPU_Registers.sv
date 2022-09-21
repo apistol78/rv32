@@ -17,7 +17,7 @@ module CPU_Registers #(
 	assign o_rs1 = rs1;
 	assign o_rs2 = rs2;
 
-	bit [`TAG_SIZE] write_tag = 0;
+	bit last_write_strobe = 1'b0;
 
 	bit [31:0] r[31:0];
 	bit [31:0] rs1 = 0;
@@ -67,7 +67,7 @@ module CPU_Registers #(
 			rs1 <= 0;
 			rs2 <= 0;
 
-			write_tag <= 0;
+			last_write_strobe <= 1'b0;
 
 			// Integer registers.
 			r[ 0] <= 32'h0000_0000;
@@ -112,10 +112,10 @@ module CPU_Registers #(
 			rs2 <= (i_fetch_data.inst_rs2 != 0) ? r[i_fetch_data.inst_rs2] : 32'h0;
 
 			// Write later.
-			if (i_memory_data.tag != write_tag) begin
+			if (i_memory_data.strobe != last_write_strobe) begin
 				if (|i_memory_data.inst_rd) 
 					r[i_memory_data.inst_rd] <= i_memory_data.rd;
-				write_tag <= i_memory_data.tag;
+				last_write_strobe <= i_memory_data.strobe;
 			end
 		end
 	end

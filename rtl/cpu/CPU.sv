@@ -39,8 +39,6 @@ module CPU #(
 	
 	// Debug
 	input i_pipeline_disable,
-	output [`TAG_SIZE] o_execute_debug_tag,
-	output [`TAG_SIZE] o_writeback_debug_tag,
 	output o_fault
 );
 
@@ -275,7 +273,5 @@ module CPU #(
 	//====================================================
 	
 	assign o_fault = decode_fault || execute_fault;
-	assign o_execute_debug_tag = decode_data.tag;
-	assign o_writeback_debug_tag = memory_data.tag;
 
 endmodule

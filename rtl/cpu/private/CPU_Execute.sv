@@ -70,8 +70,9 @@ module CPU_Execute (
 	`define EXECUTE_OP			\
 		i_data.op
 
-	`define EXECUTE_DONE		\
-		data.tag <= i_data.tag;	\
+	`define EXECUTE_DONE				\
+		last_strobe <= i_data.strobe;	\
+		data.strobe <= ~data.strobe;	\
 		cycle <= 0;
 
 	// ====================
@@ -169,6 +170,7 @@ module CPU_Execute (
 	assign o_csr_index = i_data.imm[11:0];
 	assign o_data = data;
 
+	bit last_strobe = 0;
 	bit [3:0] cycle = 0;
 	execute_data_t data = 0;
 
@@ -189,7 +191,7 @@ module CPU_Execute (
 	always_comb begin
 		o_busy =
 			(
-				(i_data.tag != data.tag) &&
+				(i_data.strobe != last_strobe) &&
 				//(i_data.complx || i_data.fpu)
 				i_data.complx
 			);
@@ -197,6 +199,7 @@ module CPU_Execute (
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
+			last_strobe <= 1'b0;
 			cycle <= 0;
 			data <= 0;
 			o_csr_wdata_wr <= 1'b0;
@@ -216,7 +219,7 @@ module CPU_Execute (
 
 			if (
 				!i_memory_busy &&
-				i_data.tag != data.tag
+				i_data.strobe != last_strobe
 			) begin
 
 `ifdef __VERILATOR__

@@ -65,14 +65,14 @@ module CPU_Decode(
 			data.pc <= i_data.pc;
 
 			data.have_rs <= {
-				i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
+				1'b0, // i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
 				i_data.inst_rs2 != 0 ? 1'b1 : 1'b0,
 				i_data.inst_rs1 != 0 ? 1'b1 : 1'b0
 			};
 
 			data.inst_rs1 <= i_data.inst_rs1;
 			data.inst_rs2 <= i_data.inst_rs2;
-			data.inst_rs3 <= i_data.inst_rs3;
+			//data.inst_rs3 <= i_data.inst_rs3;
 			data.inst_rd <= i_data.inst_rd;
 			
 			data.imm <=
@@ -108,7 +108,7 @@ module CPU_Decode(
 			`define OP data.op
 			`include "private/generated/Instructions_decode_ops.sv"
 
-			data.tag <= i_data.tag;
+			data.strobe <= i_data.strobe;
 		end
 	end
 
