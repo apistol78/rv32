@@ -135,6 +135,7 @@ module VIDEO_controller #(
 				// Access video memory.
 `ifdef ENABLE_WBUFFER
 				wbuffer_request <= 1;
+				o_cpu_rdata <= wbuffer_rdata;
 				o_cpu_ready <= wbuffer_ready;
 `else
 				o_vram_pa_address <= i_cpu_address;
