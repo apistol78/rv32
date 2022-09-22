@@ -106,11 +106,7 @@ void fb_init()
 	{
 		for (;;)
 		{
-			const uint32_t t0 = timer_get_ms();
 			kernel_sleep(200);
-			const uint32_t t1 = timer_get_ms();
-			printf("%d\n", t1 - t0);
-
 			s_cursor = 1 - s_cursor;
 			draw_console();
 		}
