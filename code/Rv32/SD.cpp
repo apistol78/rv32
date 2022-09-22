@@ -44,15 +44,26 @@ bool SD::writeU32(uint32_t address, uint32_t value)
 
 uint32_t SD::readU32(uint32_t address) const
 {
-	uint8_t v = 0;
+	uint32_t v = 0;
 
-	v |= (m_r_clk ? 0x01 : 0x00);
-	v |= (m_r_cdir ? 0x02 : 0x00);
-	v |= (m_r_ddir ? 0x04 : 0x00);
-	v |= (m_r_cmd ? 0x08 : 0x00);
-	v |= m_r_dat << 4;
+	if (address == 0x00)
+	{
+		v |= (m_r_clk ? 0x01 : 0x00);
+		v |= (m_r_cdir ? 0x02 : 0x00);
+		v |= (m_r_ddir ? 0x04 : 0x00);
+		v |= (m_r_cmd ? 0x08 : 0x00);
+		v |= m_r_dat << 4;
+	}
+	else if (address == 0x08)
+	{
+		// Read data byte.
+	}
+	else if (address == 0x0c)
+	{
+		// Read data dword.
+	}
 
-	return (uint32_t)v;
+	return v;
 }
 
 bool SD::tick(CPU* cpu)

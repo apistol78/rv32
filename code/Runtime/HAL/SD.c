@@ -835,15 +835,17 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 
 int32_t sd_init(int32_t mode)
 {
+	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
+
+	// Use SW mode for initialization.
 	s_mode = SD_MODE_SW;
 
 	*SD_CTRL = 0x0000ff00;
 
-	// const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
 	// if (deviceId == SR_DEVICE_ID_RV32T || deviceId == SR_DEVICE_ID_RV32)
 		s_dataBits = 4;
 	// else
-	//   	s_dataBits = 1;
+	//   s_dataBits = 1;
 
 	SD_WR_CMD_DIR_OUT();
 	SD_WR_DAT_DIR_IN();
@@ -907,7 +909,10 @@ int32_t sd_init(int32_t mode)
 		sd_acmd42(1);
 	}
 
-	// Finally set desired acceleration mode.
-	s_mode = mode;
+	// Finally set desired acceleration mode;
+	// not applicable for emulator.
+	if (deviceId != SR_DEVICE_ID_RV32)
+		s_mode = mode;
+
 	return 0;
 }
