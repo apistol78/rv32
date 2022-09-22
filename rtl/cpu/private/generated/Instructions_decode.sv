@@ -56,14 +56,14 @@ wire is_WFI       = ((`INSTRUCTION[31:0] & 32'hffffffff) == 32'h10500073);
 wire is_XOR       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h00004033);
 wire is_XORI      = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h4013    );
 
-wire is_B = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
-wire is_I = is_ADDI | is_ANDI | is_FENCE | is_FLW | is_JALR | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
-wire is_J = is_JAL;
-wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_MUL | is_MULH | is_MULHU | is_OR | is_REM | is_REMU | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
-wire is_R4 = 1'b0;
-wire is_S = is_FSW | is_SB | is_SH | is_SW;
-wire is_U = is_AUIPC | is_LUI;
-wire is_CSR = is_CSRRC | is_CSRRS | is_CSRRW | is_MRET;
+wire is_B   = (`INSTRUCTION[6:0] == 7'h63);
+wire is_I   = (`INSTRUCTION[6:0] == 7'h03) || (`INSTRUCTION[6:0] == 7'h13) || (`INSTRUCTION[6:0] == 7'h0f) || (`INSTRUCTION[6:0] == 7'h67);
+wire is_J   = (`INSTRUCTION[6:0] == 7'h6f);
+wire is_R   = (`INSTRUCTION[6:0] == 7'h33);
+wire is_R4  = (`INSTRUCTION[6:0] == 7'h43) || (`INSTRUCTION[6:0] == 7'h4f) || (`INSTRUCTION[6:0] == 7'h47) || (`INSTRUCTION[6:0] == 7'h4b);
+wire is_S   = (`INSTRUCTION[6:0] == 7'h23);
+wire is_U   = (`INSTRUCTION[6:0] == 7'h17) || (`INSTRUCTION[6:0] == 7'h37);
+wire is_CSR = (`INSTRUCTION[6:0] == 7'h73);
 
 wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SUB | is_XOR | is_XORI;
 wire is_SHIFT = is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI;

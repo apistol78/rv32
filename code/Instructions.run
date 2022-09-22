@@ -1766,6 +1766,7 @@ function main(argv)
 		stdout:printLn("")
 
 		-- Format signals.
+--[[
 		for _, prefix in ipairs(P) do
 			local t = {}
 			for i, inst in ipairs(vi) do
@@ -1784,6 +1785,18 @@ function main(argv)
 				stdout:printLn("wire is_" .. prefix .. " = 1'b0;")
 			end
 		end
+		stdout:printLn("")
+]]
+		stdout:printLn(
+			"wire is_B   = (`INSTRUCTION[6:0] == 7'h63);\n" ..
+			"wire is_I   = (`INSTRUCTION[6:0] == 7'h03) || (`INSTRUCTION[6:0] == 7'h13) || (`INSTRUCTION[6:0] == 7'h0f) || (`INSTRUCTION[6:0] == 7'h67);\n" ..
+			"wire is_J   = (`INSTRUCTION[6:0] == 7'h6f);\n" ..
+			"wire is_R   = (`INSTRUCTION[6:0] == 7'h33);\n" ..
+			"wire is_R4  = (`INSTRUCTION[6:0] == 7'h43) || (`INSTRUCTION[6:0] == 7'h4f) || (`INSTRUCTION[6:0] == 7'h47) || (`INSTRUCTION[6:0] == 7'h4b);\n" ..
+			"wire is_S   = (`INSTRUCTION[6:0] == 7'h23);\n" ..
+			"wire is_U   = (`INSTRUCTION[6:0] == 7'h17) || (`INSTRUCTION[6:0] == 7'h37);\n" ..
+			"wire is_CSR = (`INSTRUCTION[6:0] == 7'h73);"
+		)
 		stdout:printLn("")
 
 		-- Instruction type signals.
