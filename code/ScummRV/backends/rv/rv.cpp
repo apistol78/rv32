@@ -417,15 +417,18 @@ void OSystem_RebelV::clear_overlay()
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
 {
+	undraw_mouse_cursor();
+
 	const uint8_t* src = m_overlayCopy;
-	int32_t h = 200;
-	do
+	for (int32_t i = 0; i < 200; ++i)
 	{
 		memcpy(buf, src, 320);
 		src += 320;
 		buf += pitch;
 	}
-	while (--h);
+	
+	if (m_mouseVisible)
+		draw_mouse_cursor();	
 }
 
 void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x, int y, int w, int h)
@@ -453,6 +456,8 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 	if (w <= 0 || h <= 0)
 		return;
 
+	undraw_mouse_cursor();
+
 	uint8_t* dst = m_overlayCopy + y * 320 + x;
 	do
 	{
@@ -461,6 +466,9 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 		buf += pitch;
 	}
 	while (--h);
+
+	if (m_mouseVisible)
+		draw_mouse_cursor();	
 }
 
 uint32 OSystem_RebelV::property(int param, Property *value)
