@@ -194,6 +194,9 @@ const struct {
 
 	{ ui::VkPeriod, RT_KEY_DOT },
 	{ ui::VkComma, RT_KEY_COMMA },
+
+	{ ui::VkF1, RT_KEY_F1 },
+	{ ui::VkF5, RT_KEY_F5 },
 };
 
 uint8_t virtualToKey(ui::VirtualKey vkey)
