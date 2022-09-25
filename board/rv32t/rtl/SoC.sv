@@ -209,6 +209,7 @@ module SoC(
 		// Control
 		.i_timer_interrupt(timer_interrupt),
 		.i_external_interrupt(plic_interrupt),
+		.o_external_interrupt_enable(plic_interrupt_enable),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -432,8 +433,9 @@ module SoC(
 	// PLIC
 	bit [1:0] vb = 2'b00;
 	always_ff @(posedge clock)
-		vb <= { vb[0], vga_vblank };
+		vb <= { vb[0], ~vga_vblank };
 
+	wire plic_interrupt_enable;
 	wire plic_interrupt;
 	wire plic_select;
 	wire [23:0] plic_address;
@@ -448,6 +450,7 @@ module SoC(
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),
 
+		.i_interrupt_enable(plic_interrupt_enable),
 		.o_interrupt(plic_interrupt),
 
 		.i_request(plic_select && bridge_far_request),

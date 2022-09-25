@@ -76,6 +76,9 @@ int32_t runtime_init()
 	printf("** Initialize Input **\n");
 	input_init();
 
+	printf("** Initialize Kernel **\n");
+	kernel_init();
+
 	printf("** Ready **\n");
     return 0;
 }

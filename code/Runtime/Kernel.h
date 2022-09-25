@@ -8,6 +8,12 @@ typedef struct
 }
 kernel_cs_t;
 
+typedef struct
+{
+	uint32_t counter;
+}
+kernel_sig_t;
+
 typedef void (*kernel_thread_fn_t)();
 
 EXTERN_C void kernel_init();
@@ -27,3 +33,7 @@ EXTERN_C void kernel_cs_init(volatile kernel_cs_t* cs);
 EXTERN_C void kernel_cs_lock(volatile kernel_cs_t* cs);
 
 EXTERN_C void kernel_cs_unlock(volatile kernel_cs_t* cs);
+
+EXTERN_C void kernel_sig_raise(volatile kernel_sig_t* sig);
+
+EXTERN_C void kernel_sig_wait(volatile kernel_sig_t* sig);

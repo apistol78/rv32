@@ -21,10 +21,12 @@ typedef struct
 	uint32_t sp;
 	uint32_t epc;
 	uint32_t sleep;
+	kernel_sig_t* waiting;
 }
 kernel_thread_t;
 
-static kernel_thread_t g_threads[16];
+static kernel_thread_t g_threadsMem[1 + 16];
+static kernel_thread_t* g_threads = &g_threadsMem[1];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 static int32_t g_critical = 0;
@@ -78,19 +80,41 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	{
 		const uint32_t ms = *TIMER_MS;
 		int32_t i;
+
+		// Attempt to leave idle.
+		if (g_current < 0)
+			g_current = 0;
+
+		// Select any thread which has been signaled.
 		for (i = 0; i < g_count; ++i)
 		{
-			if (++g_current >= g_count)
-				g_current = 0;
-			if (g_threads[g_current].sleep <= ms)
-				break;
+			if (g_threads[i].waiting)
+			{
+				if (g_threads[i].waiting->counter > 0)
+				{
+					g_threads[i].waiting->counter--;
+					g_threads[i].waiting = 0;
+					g_current = i;
+					break;
+				}
+			}
 		}
+
+		// If none waiting we select next non-sleeping.
 		if (i >= g_count)
 		{
-			// Unable to select new thread, we default to main thread
-			// even if it's sleeping.
-			g_current = 0;
+			for (i = 0; i < g_count; ++i)
+			{
+				if (++g_current >= g_count)
+					g_current = 0;
+				if (g_threads[i].waiting == 0 && g_threads[g_current].sleep <= ms)
+					break;
+			}
 		}
+
+		// Enter idle thread if all are waiting or sleeping.
+		if (i >= g_count)
+			g_current = -1;
 	}
 	
 	// Restore new thread.
@@ -152,6 +176,20 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	);
 }
 
+static void kernel_idle_thread()
+{
+	for (;;)
+	{
+		__asm__ volatile (
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+			"nop	\n"
+		);
+	}
+}
+
 static void* kernel_alloc_stack()
 {
 	const int32_t stackSize = 0x40000;
@@ -167,12 +205,23 @@ static void* kernel_alloc_stack()
 
 void kernel_init()
 {
+	volatile kernel_thread_t* t;
+
+	// Initialize idle thread.
+	t = &g_threads[-1];
+	t->sp = (uint32_t)kernel_alloc_stack();
+	t->epc = (uint32_t)kernel_idle_thread;
+	t->sleep = 0;
+	t->waiting = 0;
+
 	// Initialize main thread.
-	kernel_thread_t* t = &g_threads[0];
+	t = &g_threads[0];
 	t->sp = 0;
 	t->epc = 0;
 	t->sleep = 0;
+	t->waiting = 0;
 
+	// Initialize counters.
 	g_current = 0;
 	g_count = 1;
 	g_critical = 0;
@@ -185,10 +234,11 @@ void kernel_init()
 void kernel_create_thread(kernel_thread_fn_t fn)
 {
 	kernel_enter_critical();
-	kernel_thread_t* t = &g_threads[g_count];
+	volatile kernel_thread_t* t = &g_threads[g_count];
 	t->sp = (uint32_t)kernel_alloc_stack();
 	t->epc = (uint32_t)fn;
 	t->sleep = 0;
+	t->waiting = 0;
 	++g_count;
 	kernel_leave_critical();
 }
@@ -244,4 +294,25 @@ void kernel_cs_unlock(volatile kernel_cs_t* cs)
 {
 	if (cs->counter > 0)
 		cs->counter--;
+}
+
+void kernel_sig_raise(volatile kernel_sig_t* sig)
+{
+	sig->counter = 1;
+}
+
+void kernel_sig_wait(volatile kernel_sig_t* sig)
+{
+	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_enter_critical();
+	t->waiting = sig;
+	for (;;)
+	{
+		if (!t->waiting)
+			break;
+		kernel_leave_critical();
+		kernel_yield();
+		kernel_enter_critical();
+	}
+	kernel_leave_critical();
 }

@@ -1,7 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/ADV7513.h"
 #include "Runtime/HAL/DMA.h"
+#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SIL9024A.h"
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Video.h"
@@ -16,6 +19,14 @@
 static void* primary_target = 0;
 static void* secondary_target = 0;
 static int32_t current = 0;
+static kernel_sig_t vblank_signal = { 0 };
+static int vblank = 0;
+
+static void video_interrupt_handler()
+{
+	kernel_sig_raise(&vblank_signal);
+	vblank++;
+}
 
 int32_t video_init()
 {
@@ -25,10 +36,7 @@ int32_t video_init()
 	if (deviceId == SR_DEVICE_ID_T_CV_GX)
 	{
 		if (adv7513_init())
-		{
-			// printf("Failed to initialize ADV7513; unable to initialize video.\n");
 			return 1;
-		}
 	}
 	else if (
 		deviceId == SR_DEVICE_ID_Q_CV_2 ||
@@ -37,10 +45,7 @@ int32_t video_init()
 	)
 	{
 		if (sil9024a_init())
-		{
-			// printf("Failed to initialize SIL9024A; unable to initialize video.\n");
 			return 1;
-		}		
 	}
 
 	primary_target = (uint32_t*)VIDEO_DATA_BASE;
@@ -51,8 +56,9 @@ int32_t video_init()
 	control[1] = 0;	// CPU write offset	
 
 	video_clear(0);
-	video_swap();
+	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 
+	interrupt_set_handler(IRQ_SOURCE_PLIC_0, video_interrupt_handler);
 	return 0;
 }
 
@@ -80,16 +86,17 @@ void* video_get_secondary_target()
 void video_clear(uint8_t idx)
 {
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	for (uint32_t i = 0; i < WIDTH * HEIGHT; ++i)
-		framebuffer[i] = idx;	
+	memset(framebuffer, idx, WIDTH * HEIGHT);
 }
 
 void video_swap()
 {
+	kernel_sig_wait(&vblank_signal);
 	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 }
 
 void video_blit(const uint8_t* source)
 {
+	kernel_sig_wait(&vblank_signal);
 	memcpy(primary_target, source, WIDTH * HEIGHT);
 }

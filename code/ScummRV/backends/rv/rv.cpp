@@ -43,7 +43,6 @@ OSystem_RebelV* _this = nullptr;
 OSystem_RebelV::OSystem_RebelV()
 {
 	runtime_init();
-	kernel_init();
 
 	_this = this;
 
@@ -62,7 +61,6 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
-			kernel_sleep(20);
 		}
 	});	
 }
@@ -74,6 +72,7 @@ void OSystem_RebelV::init_size(uint w, uint h)
 		const uint8_t r = rand();
 		const uint8_t g = rand();
 		const uint8_t b = rand();
+		m_palette[i] = { r, g, b };
 		video_set_palette(
 			i,
 			(r << 16) | (g << 8) | (b)
@@ -88,17 +87,14 @@ void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
 {
 	for (uint i = 0; i < num; ++i)
 	{
-		const uint8_t rr = colors[0];
-		const uint8_t gg = colors[1];
-		const uint8_t bb = colors[2];
-
-		m_palette[start + i] = { rr, gg, bb };
-
+		const uint8_t r = colors[0];
+		const uint8_t g = colors[1];
+		const uint8_t b = colors[2];
+		m_palette[start + i] = { r, g, b };
 		video_set_palette(
 			start + i,
-			(rr << 16) | (gg << 8) | (bb)
+			(r << 16) | (g << 8) | (b)
 		);
-
 		colors += 4;
 	}
 }
@@ -135,8 +131,7 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
 	byte *dst = framebuffer + y * 320 + x;
 	do {
-		for(int i = 0; i < w; ++i)
-			dst[i] = src[i];
+		memcpy(dst, src, w);
 		dst += 320;
 		src += pitch;
 	} while (--h);
@@ -270,14 +265,6 @@ bool OSystem_RebelV::poll_event(Event *event)
 			event->kbd.keycode = map_key(kc, kc);
 			event->kbd.ascii = event->kbd.keycode;
 		}
-
-		// printf("key event\n");
-		// printf("kc %d => %d\n", kc, event->kbd.keycode);
-		// printf("m  %d\n", m);
-		// printf("p  %d\n", p);
-		// printf("ch %d => (%c)\n", ch, event->kbd.ascii);
-		// printf("event_code %d\n", event->event_code);
-
 		return true;
 	}
 
@@ -591,10 +578,7 @@ void OSystem_RebelV::undraw_mouse_cursor()
 		// No need to do clipping here, since draw_mouse() did that already
 		uint8_t* bak = m_mouseBackup;
 		for (int32_t y = 0; y < m_mouseBackupH; ++y, bak += MAX_MOUSE_W, dst += 320)
-		{
-			for (int32_t x = 0; x < m_mouseBackupW; ++x)
-				dst[x] = bak[x];
-		}
+			memcpy(dst, bak, m_mouseBackupW);
 
 		m_mouseDrawn = false;
 	}

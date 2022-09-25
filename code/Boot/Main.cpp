@@ -400,8 +400,8 @@ static void cmd_iotest(const char* args)
 static void cmd_help(const char* args)
 {
 	fb_print("REBOOT  - Cold reboot\n");
-	fb_print("LIST    - List files on SD\n");
-	fb_print("REMOVE  - Remove file from SD\n");
+	fb_print("LS      - List files on SD\n");
+	fb_print("RM      - Remove file from SD\n");
 	fb_print("RUN     - Run program\n");
 	fb_print("DL      - Download file\n");
 	fb_print("SYSINFO - System info\n");
@@ -418,8 +418,8 @@ const struct cmdMap_t
 c_cmds[] =
 {
 	{ "reboot",		cmd_reboot		},
-	{ "list",		cmd_list		},
-	{ "remove",		cmd_remove		},
+	{ "ls",			cmd_list		},
+	{ "rm",			cmd_remove		},
 	{ "run",		cmd_run			},
 	{ "dl",			cmd_download	},
 	{ "sysinfo",	cmd_sysinfo		},
@@ -434,7 +434,6 @@ int main(int argc, const char** argv)
 	int32_t cnt = 0;
 
 	runtime_init();
-	kernel_init();
 
 	fb_init();
 	fb_clear();

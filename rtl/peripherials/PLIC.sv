@@ -12,7 +12,8 @@ module PLIC(
 	input i_interrupt_3,
 
 	// Output
-	output o_interrupt,
+	input i_interrupt_enable,
+	output bit o_interrupt,
 
 	// CPU interface
 	input i_request,
@@ -25,41 +26,41 @@ module PLIC(
 
 	bit [3:0] enable = 0;
 	bit [3:0] pending = 0;
-	bit interrupt_issue = 0;
-	bit interrupt_issued = 0;
-
-	assign o_interrupt = interrupt_issue;
+	bit issued = 1'b0;
 
 	initial begin
-		 o_rdata = 0;
-		 o_ready = 0;
+		o_interrupt = 1'b0;
+		o_rdata = 1'b0;
+		o_ready = 1'b0;
 	end
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			enable <= 0;
 			pending <= 0;
-			interrupt_issue <= 0;
-			interrupt_issued <= 0;
+			issued <= 1'b0;
 		end
 		else begin
-			if (enable[0] && i_interrupt_0) begin
-				pending[0] <= 1;
-			end
-			if (enable[1] && i_interrupt_1) begin
-				pending[1] <= 1;
-			end
-			if (enable[2] && i_interrupt_2) begin
-				pending[2] <= 1;
-			end
-			if (enable[3] && i_interrupt_3) begin
-				pending[3] <= 1;
+			if (i_interrupt_enable) begin
+				if (enable[0] && i_interrupt_0) begin
+					pending[0] <= 1;
+				end
+				if (enable[1] && i_interrupt_1) begin
+					pending[1] <= 1;
+				end
+				if (enable[2] && i_interrupt_2) begin
+					pending[2] <= 1;
+				end
+				if (enable[3] && i_interrupt_3) begin
+					pending[3] <= 1;
+				end
 			end
 
-			interrupt_issue <= 1'b0;
-			if (|pending && !interrupt_issued) begin
-				interrupt_issue <= 1'b1;
-				interrupt_issued <= 1'b1;
+			o_interrupt <= 1'b0;
+
+			if (i_interrupt_enable && |pending && !issued) begin
+				o_interrupt <= 1'b1;
+				issued <= 1'b1;
 			end
 
 			o_rdata <= 0;
@@ -91,7 +92,7 @@ module PLIC(
 					enable <= i_wdata[4:1];
 				end
 				else if (i_address == 24'h200004) begin	// complete context 0
-					interrupt_issued <= 1'b0;
+					issued <= 0;
 				end
 			end
 

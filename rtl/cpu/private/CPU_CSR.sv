@@ -14,6 +14,7 @@ module CPU_CSR #(
 	// External interrupt input.
 	input i_timer_interrupt,
 	input i_external_interrupt,
+	output o_external_interrupt_enable,
 
 	// Software interrupt input.
 	input i_ecall,
@@ -51,6 +52,7 @@ module CPU_CSR #(
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
 	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
+	assign o_external_interrupt_enable = mstatus_mie && mie_meie;
 	assign o_epc = mepc;
 
 	// Read CSR value by index.

@@ -125,6 +125,7 @@ module SoC(
 		// Control
 		.i_timer_interrupt(1'b0),
 		.i_external_interrupt(1'b0),
+		.o_external_interrupt_enable(),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
