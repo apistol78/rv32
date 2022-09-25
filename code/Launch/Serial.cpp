@@ -202,6 +202,11 @@ bool Serial::open(int32_t port, const Configuration& configuration)
 		cfsetispeed(&tty, B230400);
 		cfsetospeed(&tty, B230400);
 	}
+	else if (configuration.baudRate == 460800)
+	{
+		cfsetispeed(&tty, B460800);
+		cfsetospeed(&tty, B460800);
+	}
 	else if (configuration.baudRate == 921600)
 	{
 		cfsetispeed(&tty, B921600);

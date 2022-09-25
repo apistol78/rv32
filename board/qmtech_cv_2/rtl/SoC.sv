@@ -243,7 +243,9 @@ module SoC(
 
 	CPU #(
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0)
+		.ICACHE_SIZE(13),
+		.DCACHE_REGISTERED(0),
+		.DCACHE_SIZE(14)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
@@ -306,7 +308,7 @@ module SoC(
 	wire uart_0_ready;
 	wire uart_0_interrupt;
 	UART #(
-		.PRESCALE(`FREQUENCY / (115200 * 8)),
+		.PRESCALE(`FREQUENCY / (460800 * 8)),
 		.RX_FIFO_DEPTH(512)
 	) uart_0(
 		.i_reset(reset),
@@ -331,7 +333,7 @@ module SoC(
 	wire uart_1_interrupt;
 	UART #(
 		.PRESCALE(`FREQUENCY / (115200 * 8)),
-		.RX_FIFO_DEPTH(512)
+		.RX_FIFO_DEPTH(128)
 	) uart_1(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -474,6 +476,10 @@ module SoC(
 	);
 
 	// PLIC
+	bit [1:0] vb = 2'b00;
+	always_ff @(posedge clock)
+		vb <= { vb[0], vga_vblank };
+
 	wire plic_interrupt;
 	wire plic_select;
 	wire [23:0] plic_address;
@@ -483,9 +489,9 @@ module SoC(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0),					// Video
+		.i_interrupt_0(vb == 2'b01),		// Video vertical blank.
 		.i_interrupt_1(audio_interrupt),	// Audio
-		.i_interrupt_2(0), // uart_0_interrupt | uart_1_interrupt),	// UART
+		.i_interrupt_2(0),
 		.i_interrupt_3(0),
 
 		.o_interrupt(plic_interrupt),

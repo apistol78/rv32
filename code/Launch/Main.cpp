@@ -555,7 +555,7 @@ int main(int argc, const char** argv)
 			port = commandLine.getOption('p', L"port").getInteger();
 
 		Serial::Configuration configuration;
-		configuration.baudRate = 115200;
+		configuration.baudRate = 460800;
 		configuration.stopBits = 1;
 		configuration.parity = Serial::Parity::No;
 		configuration.byteSize = 8;
