@@ -65,8 +65,8 @@ module SDRAM_controller #(
 
 	// Timing parameters.
 	localparam STARTUP_COUNT	= 20000; // ( 100 * FREQUENCY) /     1_000_000;	// 100 us
-	localparam tRP_COUNT		= 4; //2; // (  20 * FREQUENCY) / 1_000_000_000;	// 20 ns
-	localparam tRFC_COUNT		= 8; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
+	localparam tRP_COUNT		= 2; //2; // (  20 * FREQUENCY) / 1_000_000_000;	// 20 ns
+	localparam tRFC_COUNT		= 7; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
 	localparam tMRD_COUNT		= 2000; // (2000 * FREQUENCY) /   100_000_000;	// 2000 cyc @ 100 MHz
 	localparam tRCD_COUNT		= 3 + BURST_COUNT; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
 	
@@ -94,15 +94,14 @@ module SDRAM_controller #(
 		STATE_STARTUP_WAIT_SET_MODE,
 		STATE_IDLE,
 		STATE_REFRESH,
-		STATE_REFRESH_2,		// 10
 		STATE_WAIT_REFRESH,
-		STATE_ACTIVATE,			// 12
+		STATE_ACTIVATE,			// 11
 		STATE_WAIT_ACTIVATE,
-		STATE_READ,				// 14
+		STATE_READ,				// 13
 		STATE_WAIT_READ,
-		STATE_WRITE,			// 16
+		STATE_WRITE,			// 15
 		STATE_WAIT_WRITE,
-		STATE_PRECHARGE,		// 18
+		STATE_PRECHARGE,		// 17
 		STATE_WAIT_PRECHARGE
 	} state_t;
 
@@ -322,14 +321,6 @@ module SDRAM_controller #(
 				Issue refresh command.
 				*/
 				STATE_REFRESH: begin
-					command <= CMD_REFRESH;
-					state <= STATE_REFRESH_2;
-				end
-
-				/*
-				Issue refresh command again.
-				*/
-				STATE_REFRESH_2: begin
 					command <= CMD_REFRESH;
 					count <= tRFC_COUNT;
 					state <= STATE_WAIT_REFRESH;
