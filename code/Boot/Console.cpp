@@ -56,7 +56,7 @@ static void draw_console()
 		}
 	}
 
-	video_swap();
+	video_swap(1);
 }
 
 static void putchar(char c)

@@ -14,7 +14,6 @@
 
 #define VIDEO_DATA_BASE     VIDEO_BASE
 #define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
-#define VIDEO_CONTROL_BASE  (VIDEO_BASE + 0x00810000)
 
 static void* primary_target = 0;
 static void* secondary_target = 0;
@@ -30,8 +29,6 @@ static void video_interrupt_handler()
 
 int32_t video_init()
 {
-	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
-
 	const uint32_t deviceId = sysreg_read(SR_REG_DEVICE_ID);
 	if (deviceId == SR_DEVICE_ID_T_CV_GX)
 	{
@@ -51,9 +48,6 @@ int32_t video_init()
 	primary_target = (uint32_t*)VIDEO_DATA_BASE;
 	if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
 		return 1;		
-
-	control[0] = 0;	// GPU read offset
-	control[1] = 0;	// CPU write offset	
 
 	video_clear(0);
 	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
@@ -89,17 +83,22 @@ void video_clear(uint8_t idx)
 	memset(framebuffer, idx, WIDTH * HEIGHT);
 }
 
-void video_swap()
+void video_swap(int32_t waitVblank)
 {
-	if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
-		printf("vblank wait failed\n");
+	if (waitVblank)
+	{
+		if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
+			printf("WARN: vblank wait failed\n");
+	}
 	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 }
 
-void video_blit(const uint8_t* source)
+void video_blit(int32_t waitVblank, const uint8_t* source)
 {
-	if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
-		printf("vblank wait failed\n");
+	if (waitVblank)
+	{
+		if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
+			printf("WARN: vblank wait failed\n");
+	}
 	memcpy(primary_target, source, WIDTH * HEIGHT);
-	printf("%d\n", vblank);
 }

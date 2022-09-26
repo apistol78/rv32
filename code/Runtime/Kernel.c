@@ -15,6 +15,7 @@
 #define KERNEL_MAIN_CLOCK 			100000000
 #define KERNEL_SCHEDULE_FREQUENCY	32
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
+#define KERNEL_RATE_MULTIPLIER		2
 
 typedef struct
 {
@@ -25,14 +26,28 @@ typedef struct
 }
 kernel_thread_t;
 
-static kernel_thread_t g_threadsMem[1 + 16];
-static kernel_thread_t* g_threads = &g_threadsMem[1];
+static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 static int32_t g_critical = 0;
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
+	// If we're in a critical region we only setup next timer interrupt, do this inline since we
+	// cannot touch stack.
+	if (g_critical)
+	{
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+		__asm__ volatile (
+			"ret"
+		);
+	}
+
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
 		"sw		x4, 16(sp)			\n"
@@ -67,7 +82,7 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 	// Save current interrupt return address and stack pointer.
 	{
-		kernel_thread_t* t = &g_threads[g_current];
+		volatile kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrr	%0, mepc\n"
 			"mv 	%1, sp\n"
@@ -76,61 +91,27 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	}
 
 	// Select new thread.
-	if (g_critical == 0)
 	{
 		const uint32_t ms = *TIMER_MS;
-		int32_t i;
-
-		// Attempt to leave idle.
-		if (g_current < 0)
-			g_current = 0;
-
-		// Select any thread which has been signaled.
-		for (i = 0; i < g_count; ++i)
+		for (int32_t i = 0; i < g_count + 1; ++i)
 		{
-			if (g_threads[i].waiting)
-			{
-				if (g_threads[i].waiting->counter > 0)
-				{
-					g_threads[i].waiting->counter--;
-					g_threads[i].waiting = 0;
-					g_current = i;
-					break;
-				}
-			}
-		}
+			if (++g_current >= g_count)
+				g_current = 0;
 
-		// If none waiting we select next non-sleeping.
-		if (i >= g_count)
-		{
-			for (i = 0; i < g_count; ++i)
+			volatile kernel_thread_t* t = &g_threads[g_current];
+			if (t->waiting != 0 && t->waiting->counter > 0)
 			{
-				if (++g_current >= g_count)
-					g_current = 0;
-				if (g_threads[i].waiting == 0 && g_threads[g_current].sleep <= ms)
-					break;
+				t->waiting = 0;
+				break;
 			}
+			else if (t->waiting == 0 && t->sleep <= ms)
+				break;
 		}
-
-		// Enter idle thread if all are waiting or sleeping.
-		if (i >= g_count)
-			g_current = -1;
 	}
-
-	// Setup next timer interrupt, do this inline since we
-	// cannot touch stack.
-	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	}	
 
 	// Restore new thread.
 	{
-		kernel_thread_t* t = &g_threads[g_current];
+		volatile kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrw	mepc, %0\n"
 			"mv		sp, %1\n"
@@ -170,6 +151,17 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"lw		x31, 124(sp)		\n"
 		"addi	sp, sp, 128			\n"
 	);
+
+	// Setup next timer interrupt, do this inline since we
+	// cannot touch stack.
+	{
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	}	
 
 	__asm__ volatile (
 		"ret"
@@ -250,13 +242,19 @@ void kernel_yield()
 
 void kernel_sleep(uint32_t ms)
 {
+	volatile kernel_thread_t* t = &g_threads[g_current];
+
 	const uint32_t fin_ms = timer_get_ms() + ms;
-	g_threads[g_current].sleep = fin_ms;
-	do
+	t->sleep = fin_ms;
+
+	kernel_enter_critical();
+	while (t->sleep >= timer_get_ms());
 	{
+		kernel_leave_critical();
 		kernel_yield();
+		kernel_enter_critical();
 	}
-	while (g_threads[g_current].sleep >= timer_get_ms());
+	kernel_leave_critical();
 }
 
 void kernel_enter_critical()
@@ -299,6 +297,7 @@ void kernel_cs_unlock(volatile kernel_cs_t* cs)
 void kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
+	kernel_yield();
 }
 
 void kernel_sig_wait(volatile kernel_sig_t* sig)
@@ -333,7 +332,11 @@ int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 		kernel_enter_critical();
 	}
 	while (fin_ms >= timer_get_ms());
+
+	const int32_t result = (t->waiting == 0) ? 1 : 0;
+	t->waiting = 0;
+
 	kernel_leave_critical();
 
-	return (!t->waiting) ? 1 : 0;
+	return result;
 }

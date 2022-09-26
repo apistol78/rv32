@@ -131,7 +131,7 @@ void	VID_Update (vrect_t *rects){
   /* } */
 
 	static int count = 0;
-	//if (++count >= 60)
+	if (++count >= 60)
 	{
 		static uint32_t last_ms = 0;
 		uint32_t ms = timer_get_ms();
@@ -140,7 +140,7 @@ void	VID_Update (vrect_t *rects){
 		count = 0;
 	}
 
-  video_swap();
+  video_swap(0);
 
   runtime_update();
 }

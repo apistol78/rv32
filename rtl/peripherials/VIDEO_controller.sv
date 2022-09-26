@@ -153,10 +153,6 @@ module VIDEO_controller #(
 				palette_cpu_wdata <= i_cpu_wdata[23:0];
 				o_cpu_ready <= 1;
 			end
-			else begin
-				// Access control registers.
-				o_cpu_ready <= 1;
-			end
 		end
 	end	
 

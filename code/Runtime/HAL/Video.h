@@ -14,6 +14,6 @@ EXTERN_C void* video_get_secondary_target();
 
 EXTERN_C void video_clear(uint8_t idx);
 
-EXTERN_C void video_swap();
+EXTERN_C void video_swap(int32_t waitVblank);
 
-EXTERN_C void video_blit(const uint8_t* source);
+EXTERN_C void video_blit(int32_t waitVblank, const uint8_t* source);

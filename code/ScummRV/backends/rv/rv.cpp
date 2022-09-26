@@ -630,9 +630,9 @@ void OSystem_RebelV::update_frame()
 		draw_mouse_cursor();
 
 	if (m_overlayVisible)
-		video_blit(m_overlayCopy);
+		video_blit(1, m_overlayCopy);
 	else
-		video_swap();
+		video_swap(1);
 }
 
 OSystem *OSystem_RebelV_create()
