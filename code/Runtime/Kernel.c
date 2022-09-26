@@ -21,7 +21,7 @@ typedef struct
 	uint32_t sp;
 	uint32_t epc;
 	uint32_t sleep;
-	kernel_sig_t* waiting;
+	volatile kernel_sig_t* waiting;
 }
 kernel_thread_t;
 
@@ -116,7 +116,18 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		if (i >= g_count)
 			g_current = -1;
 	}
-	
+
+	// Setup next timer interrupt, do this inline since we
+	// cannot touch stack.
+	{
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	}	
+
 	// Restore new thread.
 	{
 		kernel_thread_t* t = &g_threads[g_current];
@@ -159,17 +170,6 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"lw		x31, 124(sp)		\n"
 		"addi	sp, sp, 128			\n"
 	);
-
-	// Setup next timer interrupt, do this inline since we
-	// cannot touch stack.
-	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	}
 
 	__asm__ volatile (
 		"ret"
@@ -304,9 +304,27 @@ void kernel_sig_raise(volatile kernel_sig_t* sig)
 void kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	volatile kernel_thread_t* t = &g_threads[g_current];
-	kernel_enter_critical();
 	t->waiting = sig;
-	for (;;)
+	
+	kernel_enter_critical();
+	while (t->waiting)
+	{
+		kernel_leave_critical();
+		kernel_yield();
+		kernel_enter_critical();
+	}
+	kernel_leave_critical();
+}
+
+int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
+{
+	volatile kernel_thread_t* t = &g_threads[g_current];
+	t->waiting = sig;
+
+	const uint32_t fin_ms = timer_get_ms() + timeout;
+
+	kernel_enter_critical();
+	do
 	{
 		if (!t->waiting)
 			break;
@@ -314,5 +332,8 @@ void kernel_sig_wait(volatile kernel_sig_t* sig)
 		kernel_yield();
 		kernel_enter_critical();
 	}
+	while (fin_ms >= timer_get_ms());
 	kernel_leave_critical();
+
+	return (!t->waiting) ? 1 : 0;
 }

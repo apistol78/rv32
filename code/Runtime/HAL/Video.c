@@ -91,12 +91,15 @@ void video_clear(uint8_t idx)
 
 void video_swap()
 {
-	kernel_sig_wait(&vblank_signal);
+	if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
+		printf("vblank wait failed\n");
 	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 }
 
 void video_blit(const uint8_t* source)
 {
-	kernel_sig_wait(&vblank_signal);
+	if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
+		printf("vblank wait failed\n");
 	memcpy(primary_target, source, WIDTH * HEIGHT);
+	printf("%d\n", vblank);
 }
