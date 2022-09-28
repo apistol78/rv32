@@ -16,9 +16,8 @@
 #define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0xf * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	600
+#define KERNEL_SCHEDULE_FREQUENCY	1000
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
-#define KERNEL_RATE_MULTIPLIER		2
 
 typedef struct
 {
@@ -36,21 +35,6 @@ static volatile int32_t g_critical = 0;
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
-	// If we're in a critical region we only setup next timer interrupt, do this inline since we
-	// cannot touch stack.
-	if (g_critical)
-	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-		__asm__ volatile (
-			"ret"
-		);
-	}
-
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
 		"sw		x4, 16(sp)			\n"
@@ -235,18 +219,26 @@ void kernel_sleep(uint32_t ms)
 	const uint32_t fin_ms = timer_get_ms() + ms;
 	t->sleep = fin_ms;
 
-	while (t->sleep >= timer_get_ms())
+	do
+	{
 		kernel_yield();
+	}
+	while (t->sleep >= timer_get_ms());
 }
 
 void kernel_enter_critical()
 {
-	g_critical++;
+	if (g_critical++ == 0)
+		csr_clr_bits_mie(MIE_MTI_BIT_MASK);
 }
 
 void kernel_leave_critical()
 {
-	--g_critical;
+	if (--g_critical == 0)
+	{
+		csr_set_bits_mie(MIE_MTI_BIT_MASK);
+		csr_read_set_bits_mip(MIP_MTI_BIT_MASK);
+	}
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)

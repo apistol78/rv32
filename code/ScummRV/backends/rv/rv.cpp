@@ -51,7 +51,7 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
-			kernel_sleep(20);
+			kernel_sleep(2);
 		}
 	});
 
@@ -65,6 +65,7 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
+			kernel_sleep(2);
 		}
 	});	
 }
