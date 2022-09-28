@@ -26,6 +26,7 @@ module SystemRegisters #(
 	bit sil9024_reset = 1'b0;
 	bit [7:0] leds = 8'h0;
 	bit boot_mode = 1'b0;		//!< 0 - normal (load boot.elf from SD), 1 - remote load through UART.
+	bit [31:0] user = 0;
 
 	assign o_sil9024_reset = sil9024_reset;
 	assign o_leds = leds;
@@ -39,6 +40,7 @@ module SystemRegisters #(
 		o_ready <= 0;
 		if (i_reset) begin
 			leds <= 8'h0;
+			user <= 0;
 			o_reset_switch <= 1'b0;
 		end
 		else if (i_request) begin
@@ -68,6 +70,8 @@ module SystemRegisters #(
 					leds <= i_wdata[7:0];
 				3'd5:
 					o_reset_switch <= 1'b1;
+				3'd6:
+					user <= i_wdata;
 				default:
 					;
 				endcase

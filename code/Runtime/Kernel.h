@@ -20,6 +20,8 @@ EXTERN_C void kernel_init();
 
 EXTERN_C void kernel_create_thread(kernel_thread_fn_t fn);
 
+EXTERN_C uint32_t kernel_current_thread();
+
 EXTERN_C void kernel_yield();
 
 EXTERN_C void kernel_sleep(uint32_t ms);

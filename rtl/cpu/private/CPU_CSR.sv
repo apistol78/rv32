@@ -47,6 +47,7 @@ module CPU_CSR #(
 	bit mip_meip = 0;
 	bit mip_mtip = 0;
 	bit mip_msip = 0;
+	bit [31:0] mscratch = 0;
 
 	wire [31:0] mstatus = { 27'b0, mstatus_mpie, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
@@ -64,6 +65,8 @@ module CPU_CSR #(
 			o_rdata = mie;
 		else if (i_index == `CSR_MTVEC)
 			o_rdata = mtvec;
+		else if (i_index == `CSR_MSCRATCH)
+			o_rdata = mscratch;
 		else if (i_index == `CSR_MEPC)
 			o_rdata = mepc;
 		else if (i_index == `CSR_MCAUSE)
@@ -94,6 +97,7 @@ module CPU_CSR #(
 			mip_meip <= 0;
 			mip_mtip <= 0;
 			mip_msip <= 0;
+			mscratch <= 0;
 			issued <= 0;
 			o_irq_pending <= 1'b0;
 		end
@@ -110,8 +114,15 @@ module CPU_CSR #(
 				end
 				else if (i_index == `CSR_MTVEC)
 					mtvec <= i_wdata;
+				else if (i_index == `CSR_MSCRATCH)
+					mscratch <= i_wdata;
 				else if (i_index == `CSR_MEPC)
 					mepc <= i_wdata;
+				else if (i_index == `CSR_MIP) begin
+					mip_meip <= i_wdata[11];
+					mip_mtip <= i_wdata[7];
+					mip_msip <= i_wdata[3];
+				end
 			end
 
 			// Latch interrupts pending.

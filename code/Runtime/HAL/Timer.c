@@ -2,11 +2,22 @@
 #include "Runtime/HAL/Timer.h"
 
 #define TIMER_MS            (volatile uint32_t*)(TIMER_BASE)
-#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x04)
-#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x08)
-#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x0c)
-#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x10)
-#define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0x14)
+#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
+#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
+#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x9 * 0x04)
+#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0xa * 0x04)
+#define TIMER_ENABLED		(volatile uint32_t*)(TIMER_BASE + 0xe * 0x04)
+#define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0xf * 0x04)
+
+void timer_enable(int32_t channel)
+{
+	*TIMER_ENABLED |= 1 << channel;
+}
+
+void timer_disable(int32_t channel)
+{
+	*TIMER_ENABLED &= ~(1 << channel);
+}
 
 uint32_t timer_get_ms()
 {
@@ -28,22 +39,16 @@ void timer_wait_ms(uint32_t ms)
 	}
 }
 
-uint64_t timer_get_cycles()
+uint64_t timer_get_cycles(int32_t channel)
 {
 	uint32_t mtimeh;
 	uint32_t mtimel;
-
-	kernel_enter_critical();
-
 	do
 	{
-		mtimeh = *TIMER_CYCLES_H;
-		mtimel = *TIMER_CYCLES_L;
+		mtimeh = (TIMER_CYCLES_H)[channel * 2];
+		mtimel = (TIMER_CYCLES_L)[channel * 2];
 	}
-	while (mtimeh != *TIMER_CYCLES_H);
-
-	kernel_leave_critical();
-
+	while (mtimeh != (TIMER_CYCLES_H)[channel * 2]);
 	return (uint64_t)(
 		(((uint64_t)mtimeh) << 32) | mtimel
 	);
@@ -51,12 +56,10 @@ uint64_t timer_get_cycles()
 
 void timer_set_compare(uint64_t offset)
 {
-	kernel_enter_critical();
-	const uint64_t tc = timer_get_cycles() + offset;
+	const uint64_t tc = timer_get_cycles(0) + offset;
 	*TIMER_COMPARE_H = 0xFFFFFFFF;
 	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
 	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	kernel_leave_critical();
 }
 
 void timer_raise()

@@ -2,18 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Runtime/Kernel.h"
+#include "Runtime/HAL/CSR.h"
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 
 #define TIMER_MS            (volatile uint32_t*)(TIMER_BASE)
-#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x04)
-#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x08)
-#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x0c)
-#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x10)
+#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
+#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
+#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x9 * 0x04)
+#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0xa * 0x04)
+#define TIMER_ENABLED		(volatile uint32_t*)(TIMER_BASE + 0xe * 0x04)
+#define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0xf * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	32
+#define KERNEL_SCHEDULE_FREQUENCY	600
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 #define KERNEL_RATE_MULTIPLIER		2
 
@@ -29,7 +32,7 @@ kernel_thread_t;
 static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
-static int32_t g_critical = 0;
+static volatile int32_t g_critical = 0;
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
@@ -168,20 +171,6 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 	);
 }
 
-static void kernel_idle_thread()
-{
-	for (;;)
-	{
-		__asm__ volatile (
-			"nop	\n"
-			"nop	\n"
-			"nop	\n"
-			"nop	\n"
-			"nop	\n"
-		);
-	}
-}
-
 static void* kernel_alloc_stack()
 {
 	const int32_t stackSize = 0x40000;
@@ -199,13 +188,6 @@ void kernel_init()
 {
 	volatile kernel_thread_t* t;
 
-	// Initialize idle thread.
-	t = &g_threads[-1];
-	t->sp = (uint32_t)kernel_alloc_stack();
-	t->epc = (uint32_t)kernel_idle_thread;
-	t->sleep = 0;
-	t->waiting = 0;
-
 	// Initialize main thread.
 	t = &g_threads[0];
 	t->sp = 0;
@@ -221,6 +203,7 @@ void kernel_init()
 	// Setup timer interrupt for kernel scheduler.
 	timer_set_compare(KERNEL_TIMER_RATE);
 	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
+	timer_enable(0);
 }
 
 void kernel_create_thread(kernel_thread_fn_t fn)
@@ -235,9 +218,14 @@ void kernel_create_thread(kernel_thread_fn_t fn)
 	kernel_leave_critical();
 }
 
+uint32_t kernel_current_thread()
+{
+	return g_current;
+}
+
 void kernel_yield()
 {
-	timer_raise();
+	csr_read_set_bits_mip(MIP_MTI_BIT_MASK);
 }
 
 void kernel_sleep(uint32_t ms)
@@ -247,14 +235,8 @@ void kernel_sleep(uint32_t ms)
 	const uint32_t fin_ms = timer_get_ms() + ms;
 	t->sleep = fin_ms;
 
-	kernel_enter_critical();
-	while (t->sleep >= timer_get_ms());
-	{
-		kernel_leave_critical();
+	while (t->sleep >= timer_get_ms())
 		kernel_yield();
-		kernel_enter_critical();
-	}
-	kernel_leave_critical();
 }
 
 void kernel_enter_critical()
@@ -302,41 +284,33 @@ void kernel_sig_raise(volatile kernel_sig_t* sig)
 
 void kernel_sig_wait(volatile kernel_sig_t* sig)
 {
+	sig->counter = 0;
+
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	
-	kernel_enter_critical();
 	while (t->waiting)
-	{
-		kernel_leave_critical();
 		kernel_yield();
-		kernel_enter_critical();
-	}
-	kernel_leave_critical();
 }
 
 int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
+	sig->counter = 0;
+
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 
 	const uint32_t fin_ms = timer_get_ms() + timeout;
-
-	kernel_enter_critical();
 	do
 	{
 		if (!t->waiting)
 			break;
-		kernel_leave_critical();
 		kernel_yield();
-		kernel_enter_critical();
 	}
 	while (fin_ms >= timer_get_ms());
 
 	const int32_t result = (t->waiting == 0) ? 1 : 0;
 	t->waiting = 0;
-
-	kernel_leave_critical();
 
 	return result;
 }

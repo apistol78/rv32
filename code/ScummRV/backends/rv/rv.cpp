@@ -48,16 +48,18 @@ OSystem_RebelV::OSystem_RebelV()
 
 	kernel_create_thread([](){
 		for (;;) {
-			_this->update_timer();
-			kernel_sleep(30);
-		}
-	});
-	kernel_create_thread([](){
-		for (;;) {
 			_this->update_sound();
 			kernel_sleep(20);
 		}
 	});
+
+	kernel_create_thread([](){
+		for (;;) {
+			_this->update_timer();
+			kernel_sleep(30);
+		}
+	});
+
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
@@ -594,7 +596,11 @@ void OSystem_RebelV::update_sound()
 		int32_t qn = 0;
 		for (int32_t i = 0; i < 32; ++i)
 		{
-			const int32_t free = 4096 - audio_get_queued();
+			const int32_t queued = audio_get_queued();
+			if (queued <= 0)
+				printf("WARN: audio underrun\n");
+
+			const int32_t free = 4096 - queued;
 			if (free < chunkSize)
 				break;
 

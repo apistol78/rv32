@@ -17,8 +17,10 @@ public:
 	virtual bool tick(CPU* cpu) override final;
 
 private:
-    traktor::Timer m_timer;
-	uint64_t m_tick = 0;
+    // traktor::Timer m_timer;
+	double m_time = 0.0;
+	uint64_t m_cycles[4] = { 0, 0, 0, 0 };
 	uint64_t m_compare = 0;
+	uint8_t m_enabled = 0x00;
 	bool m_raised = false;
 };

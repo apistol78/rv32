@@ -388,7 +388,7 @@ module SoC(
 
 	// TIMER
 	wire timer_select;
-	wire [2:0] timer_address;
+	wire [3:0] timer_address;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	wire timer_interrupt;
@@ -765,7 +765,7 @@ module SoC(
 	assign sd_address = bridge_far_address[3:2];
 
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
-	assign timer_address = bridge_far_address[4:2];
+	assign timer_address = bridge_far_address[5:2];
 
 	assign audio_select = bridge_far_address[27:24] == 4'h6;
 
