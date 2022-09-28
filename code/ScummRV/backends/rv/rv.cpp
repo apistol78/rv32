@@ -58,14 +58,14 @@ OSystem_RebelV::OSystem_RebelV()
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
-			kernel_sleep(30);
+			kernel_sleep(10);
 		}
 	});
 
 	kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
-			kernel_sleep(2);
+			kernel_sleep(4);
 		}
 	});	
 }
@@ -592,11 +592,10 @@ void OSystem_RebelV::undraw_mouse_cursor()
 
 void OSystem_RebelV::update_sound()
 {
-	const int32_t chunkSize = 256;
+	const int32_t chunkSize = 512;
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
-		int32_t qn = 0;
 		for (int32_t i = 0; i < 32; ++i)
 		{
 			const int32_t queued = audio_get_queued();
@@ -609,8 +608,6 @@ void OSystem_RebelV::update_sound()
 
 			m_soundProc(m_soundParam, (byte*)buf, sizeof(buf));
 			audio_play_stereo(buf, chunkSize * 2);
-
-			qn += chunkSize;
 		}
 	}
 }
@@ -625,6 +622,7 @@ void OSystem_RebelV::update_timer()
 		m_timerExpire = ms + m_timerInterval;
 	}
 	m_lastTime = ms;
+	kernel_sleep(m_timerExpire - timer_get_ms());
 }
 
 void OSystem_RebelV::update_frame()
@@ -641,7 +639,7 @@ void OSystem_RebelV::update_frame()
 	if (m_overlayVisible)
 		video_blit(1, m_overlayCopy);
 	else
-		video_swap(1);
+		video_swap(2);
 }
 
 OSystem *OSystem_RebelV_create()

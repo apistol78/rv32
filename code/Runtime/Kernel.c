@@ -235,10 +235,7 @@ void kernel_enter_critical()
 void kernel_leave_critical()
 {
 	if (--g_critical == 0)
-	{
 		csr_set_bits_mie(MIE_MTI_BIT_MASK);
-		csr_read_set_bits_mip(MIP_MTI_BIT_MASK);
-	}
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)
