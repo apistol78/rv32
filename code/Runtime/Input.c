@@ -73,7 +73,7 @@ const char keyboard_se[][5] =
 	{ 0, 0, 0, 0, 0 }
 };
 
-static kernel_cs_t s_lock = { 0 };
+static kernel_cs_t s_lock;
 
 static int32_t s_keystate[256];
 
@@ -99,6 +99,8 @@ static int32_t clamp(int32_t v, int32_t mn, int32_t mx)
 
 void input_init()
 {
+	kernel_cs_init(&s_lock);
+
 	for (int32_t i = 0; i < 256; ++i)
 		s_keystate[i] = 0;
 

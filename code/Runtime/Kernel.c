@@ -276,6 +276,11 @@ void kernel_cs_unlock(volatile kernel_cs_t* cs)
 		cs->counter--;
 }
 
+void kernel_sig_init(volatile kernel_sig_t* sig)
+{
+	sig->counter = 0;
+}
+
 void kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
