@@ -7,6 +7,7 @@
 #include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SIL9024A.h"
 #include "Runtime/HAL/SystemRegisters.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/Video.h"
 
 #define WIDTH 320
@@ -18,8 +19,8 @@
 static void* primary_target = 0;
 static void* secondary_target = 0;
 static int32_t current = 0;
-static kernel_sig_t vblank_signal = { 0 };
-static int vblank = 0;
+static volatile kernel_sig_t vblank_signal;
+static volatile int vblank = 0;
 
 static void video_interrupt_handler()
 {
@@ -52,6 +53,7 @@ int32_t video_init()
 	video_clear(0);
 	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 
+	kernel_sig_init(&vblank_signal);
 	interrupt_set_handler(IRQ_SOURCE_PLIC_0, video_interrupt_handler);
 	return 0;
 }
@@ -85,19 +87,14 @@ void video_clear(uint8_t idx)
 
 void video_swap(int32_t waitVblank)
 {
-	if (waitVblank)
-	{
-		if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
-			printf("WARN: vblank wait failed\n");
-	}
-	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
+	video_blit(waitVblank, secondary_target);
 }
 
 void video_blit(int32_t waitVblank, const uint8_t* source)
 {
 	if (waitVblank)
 	{
-		if (kernel_sig_try_wait(&vblank_signal, 100) == 0)
+		if (kernel_sig_try_wait(&vblank_signal, 400) == 0)
 			printf("WARN: vblank wait failed\n");
 	}
 	memcpy(primary_target, source, WIDTH * HEIGHT);
