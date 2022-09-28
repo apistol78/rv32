@@ -19,12 +19,13 @@ int s_cursor = 1;
 
 static void draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
-	for (int32_t x = 0; x < 8; ++x) {
-		for (int32_t y = 0; y < 8; ++y) {
+	for (int32_t x = 0; x < 8; ++x)
+	{
+		for (int32_t y = 0; y < 8; ++y)
+		{
 			const bool set = font[(ch - ' ') * 8 + y] & (1 << x);
-			if (set) {
+			if (set)
 				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 0;
-			}
 		}
 	}
 }
@@ -34,25 +35,25 @@ static void draw_console()
 	video_clear(0);
 
 	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	for (int y = 23; y < 200 - 23; ++y) {
+	for (int y = 23; y < 200 - 23; ++y)
 		memset(&framebuffer[23 + y * 320], 1, 320 - 23 -23);
-	}
 
-	for (int y = 0; y < 20; ++y) {
-		for (int x = 0; x < 40; ++x) {
-			char ch = fb[x + y * 40];
-			if (ch >= ' ') {
+	for (int y = 0; y < 20; ++y)
+	{
+		for (int x = 0; x < 40; ++x)
+		{
+			const char ch = fb[x + y * 40];
+			if (ch >= ' ')
 				draw_character(font8x8_c64, ch, x + 3, y + 3, framebuffer);
-			}
 		}
 	}
 
 	if (s_cursor)
 	{
-		for (int y = 0; y < 8; ++y) {
-			for (int x = 1; x < 7; ++x) {
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 1; x < 7; ++x)
 				framebuffer[(s_x + 3) * 8 + x + ((s_y + 3) * 8 + y) * FW] = 0;
-			}
 		}
 	}
 
@@ -119,11 +120,6 @@ void fb_clear()
 	s_x = 0;
 	s_y = 0;
 	draw_console();
-}
-
-void fb_render()
-{
-	// draw_console();
 }
 
 void fb_putc(char c)

@@ -93,7 +93,7 @@ public:
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 
-	kernel_cs_t m_mouseLock = { 0 };
+	kernel_cs_t m_mouseLock;
 	const uint8_t* m_mouseBits = nullptr;
 	int32_t m_mouseW = 0;
 	int32_t m_mouseH = 0;

@@ -4,8 +4,6 @@ void fb_init();
 
 void fb_clear();
 
-void fb_render();
-
 void fb_putc(char c);
 
 void fb_print(const char* str);

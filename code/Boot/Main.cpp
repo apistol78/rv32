@@ -476,7 +476,7 @@ int main(int argc, const char** argv)
 					}
 					else if (ch != '\n')
 					{
-						if (cnt > 0 || ch != ' ')
+						if (cnt < sizeof(cmd) - 1 && (cnt > 0 || ch != ' '))
 							cmd[cnt++] = ch;
 					}
 					else
@@ -484,8 +484,6 @@ int main(int argc, const char** argv)
 						if (cnt > 0)
 						{
 							cmd[cnt] = 0;
-
-							printf("\"%s\" %d\n", cmd, cnt);
 
 							char* args = cmd;
 							while (*args != 0)

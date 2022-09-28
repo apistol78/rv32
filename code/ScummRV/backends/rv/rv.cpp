@@ -44,6 +44,8 @@ OSystem_RebelV::OSystem_RebelV()
 {
 	runtime_init();
 
+	kernel_cs_init(&m_mouseLock);
+
 	_this = this;
 
 	kernel_create_thread([](){

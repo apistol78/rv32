@@ -23,8 +23,7 @@ void audio_init()
 
 uint32_t audio_get_queued()
 {
-	volatile uint32_t* audio = (volatile uint32_t*)AUDIO_BASE;
-	return *audio;
+	return *(volatile uint32_t*)AUDIO_BASE;
 }
 
 void audio_play_mono(const int16_t* samples, uint32_t nsamples)
@@ -32,7 +31,15 @@ void audio_play_mono(const int16_t* samples, uint32_t nsamples)
 	volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
 	if (s_channels == 1)
 	{
-		for (uint32_t i = 0; i < nsamples; ++i)
+		uint32_t i = 0;
+		for (; nsamples >= 4 && i < nsamples - 4; i += 4)
+		{
+			*audio = samples[i];
+			*audio = samples[i + 1];
+			*audio = samples[i + 2];
+			*audio = samples[i + 3];
+		}
+		for (; i < nsamples; ++i)
 			*audio = samples[i];
 	}
 	else if (s_channels == 2)
@@ -50,7 +57,31 @@ void audio_play_stereo(const int16_t* samples, uint32_t nsamples)
 	volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
 	if (s_channels == 1)
 	{
-		for (uint32_t i = 0; i < nsamples; i += 2)
+		uint32_t i = 0;
+		for (; nsamples >= 2 * 4 && i < nsamples - 2 * 4; i += 2 * 4)
+		{
+			{
+				const int32_t lh = samples[i + 0];
+				const int32_t rh = samples[i + 1];
+				*audio = (int16_t)((lh + rh) >> 1);
+			}
+			{
+				const int32_t lh = samples[i + 2];
+				const int32_t rh = samples[i + 3];
+				*audio = (int16_t)((lh + rh) >> 1);
+			}
+			{
+				const int32_t lh = samples[i + 4];
+				const int32_t rh = samples[i + 5];
+				*audio = (int16_t)((lh + rh) >> 1);
+			}
+			{
+				const int32_t lh = samples[i + 6];
+				const int32_t rh = samples[i + 7];
+				*audio = (int16_t)((lh + rh) >> 1);
+			}
+		}
+		for (; i < nsamples; i += 2)
 		{
 			const int32_t lh = samples[i + 0];
 			const int32_t rh = samples[i + 1];
