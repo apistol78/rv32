@@ -51,8 +51,8 @@ enum
 #define PLIC_CLAIM_0	(volatile uint32_t*)(PLIC_BASE + 0x00200004)
 #define PLIC_COMPLETE_0	(volatile uint32_t*)(PLIC_BASE + 0x00200004)
 
-irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0, 0 };
-uint32_t g_interrupt_enable = 0;
+static irq_handler_t g_handlers[] = { 0, 0, 0, 0, 0, 0 };
+static uint32_t g_interrupt_enable = 0;
 
 #pragma GCC push_options
 #pragma GCC optimize ("align-functions=4")
@@ -117,6 +117,11 @@ void interrupt_init()
 void interrupt_set_handler(uint32_t source, irq_handler_t handler)
 {
 	g_handlers[source] = handler;
+}
+
+irq_handler_t* interrupt_get_handler(uint32_t source)
+{
+	return &g_handlers[source];
 }
 
 void interrupt_enable()

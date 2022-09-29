@@ -32,9 +32,30 @@ static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 static volatile int32_t g_critical = 0;
+static irq_handler_t* g_handler = 0;
+
+static __attribute__((naked)) void kernel_timer_only(uint32_t source)
+{
+	*TIMER_ENABLED |= 2;
+	
+	const uint32_t mtimeh = *TIMER_CYCLES_H;
+	const uint32_t mtimel = *TIMER_CYCLES_L;
+	const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+	*TIMER_COMPARE_H = 0xFFFFFFFF;
+	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	
+	*TIMER_ENABLED &= ~2;
+
+	__asm__ volatile (
+		"ret"
+	);	
+}
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
+	*TIMER_ENABLED |= 4;
+
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
 		"sw		x4, 16(sp)			\n"
@@ -148,7 +169,9 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		*TIMER_COMPARE_H = 0xFFFFFFFF;
 		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
 		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	}	
+	}
+
+	*TIMER_ENABLED &= ~4;
 
 	__asm__ volatile (
 		"ret"
@@ -183,10 +206,11 @@ void kernel_init()
 	g_current = 0;
 	g_count = 1;
 	g_critical = 0;
+	g_handler = interrupt_get_handler(IRQ_SOURCE_TIMER);
 
 	// Setup timer interrupt for kernel scheduler.
+	*g_handler = kernel_scheduler;
 	timer_set_compare(KERNEL_TIMER_RATE);
-	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
 	timer_enable(0);
 }
 
@@ -229,13 +253,13 @@ void kernel_sleep(uint32_t ms)
 void kernel_enter_critical()
 {
 	if (g_critical++ == 0)
-		csr_clr_bits_mie(MIE_MTI_BIT_MASK);
+		*g_handler = kernel_timer_only;
 }
 
 void kernel_leave_critical()
 {
 	if (--g_critical == 0)
-		csr_set_bits_mie(MIE_MTI_BIT_MASK);
+		*g_handler = kernel_scheduler;
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)

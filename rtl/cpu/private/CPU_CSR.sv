@@ -127,7 +127,7 @@ module CPU_CSR #(
 
 			// Latch interrupts pending.
 			if (mstatus_mie) begin
-				if (i_timer_interrupt) begin
+				if (i_timer_interrupt && mie_mtie) begin
 					mip_mtip <= 1'b1;
 				end
 				if (i_external_interrupt && mie_meie) begin
@@ -140,7 +140,7 @@ module CPU_CSR #(
 
 			// Issue interrupts.
 			if (!o_irq_pending && mstatus_mie) begin
-				if (mip_mtip && mie_mtie) begin
+				if (mip_mtip) begin
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 
