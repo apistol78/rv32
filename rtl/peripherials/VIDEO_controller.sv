@@ -253,7 +253,7 @@ module VIDEO_controller #(
 	end
 
 	always_comb begin
-		o_video_rdata = /*(i_video_hblank && i_video_vblank) ?*/ palette_video_rdata; // : 32'h0;
+		o_video_rdata = palette_video_rdata;
 		case (i_video_pos_x & 3)
 			0: palette_video_address = line[i_video_pos_x[9:2]][7:0];
 			1: palette_video_address = line[i_video_pos_x[9:2]][15:8];

@@ -5,8 +5,6 @@
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/HAL/Audio.h"
-#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
@@ -126,6 +124,8 @@ static void cmd_run(const char* filename)
 
 	if (jstart != 0)
 	{
+		kernel_enter_critical();
+
 		__asm__ volatile (
 			"fence					\n"
 		);
@@ -250,59 +250,6 @@ static void cmd_sysinfo(const char* args)
 	fb_printf("MEMORY   : %d KiB\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
 }
 
-volatile int g_leds = 0;
-volatile int g_queue = 0;
-
-static void cmd_play(const char* filename)
-{
-	int32_t fp = file_open(filename, FILE_MODE_READ);
-	if (fp <= 0)
-		return;
-
-	const int32_t size = file_size(fp);
-	const int32_t n = size / 2;
-
-	fb_printf("Playing %d samples...\n", n);
-
-	// Interrupt are issued when audio hw buffer gets below 50%.
-	interrupt_set_handler(
-		IRQ_SOURCE_PLIC_1,
-		[](uint32_t source) {
-			g_leds++;
-			sysreg_write(SR_REG_LEDS, g_leds >> 4);
-			g_queue = 1;
-		}
-	);
-
-	int16_t buf[256];
-	for (;;)
-	{
-		if (file_read(fp, (uint8_t*)buf, 256 * 2) < 256 * 2)
-			break;
-
-		g_queue = 0;
-		audio_play_mono(buf, 256);
-
-		while (g_queue == 0);
-
-		runtime_update();
-
-		uint8_t kc, m, p;
-		if (input_get_kb_event(&kc, &m, &p) > 0)
-		{
-			if (p != 0 && kc == RT_KEY_ESCAPE)
-				break;
-		}
-	}
-
-	interrupt_set_handler(
-		IRQ_SOURCE_PLIC_1,
-		0
-	);
-
-	file_close(fp);
-}
-
 static void cmd_iotest(const char* args)
 {
 	const int32_t blks[] = { 16, 32, 64, 128, 256, 512, 1024 };
@@ -423,7 +370,6 @@ c_cmds[] =
 	{ "run",		cmd_run			},
 	{ "dl",			cmd_download	},
 	{ "sysinfo",	cmd_sysinfo		},
-	{ "play",		cmd_play		},
 	{ "iotest",		cmd_iotest		},
 	{ "help",		cmd_help		}
 };

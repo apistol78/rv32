@@ -130,45 +130,47 @@ module CPU_Fetch #(
 			case (state)
 				WAIT_ICACHE: begin
 					if (icache_ready) begin
-						data.strobe <= ~data.strobe;
-						data.instruction <= icache_rdata;
-						data.pc <= pc;
 
-						// Decode register indices here since we
-						// need those for fetching registers while
-						// we are decoding rest of instruction.
-						data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 5'h0);
-						data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 5'h0);
-						//data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
-						data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
-
-						// Move PC to next instruction, will
-						// enable to icache to start loading
-						// next instruction.
-						pc <= pc + 4;
-
-						// @todo Bad timing; is there any way we
-						// can skip decoding these...
-						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
-							// Branch instruction, need to wait
-							// for an explicit "goto" signal before
-							// we can continue feeding the pipeline.
-							state <= WAIT_JUMP;
-						end
-						else if (is_ECALL || is_WFI) begin
-							// Software interrupt, need to wait
-							// for IRQ signal before continue.
-							state <= WAIT_IRQ;
+						// Issue interrupt if pending.
+						last_pending <= i_irq_pending;
+						if ({ last_pending, i_irq_pending } == 2'b01) begin
+							o_irq_dispatched <= 1'b1;
+							o_irq_epc <= pc;
+							pc <= i_irq_pc;
 						end
 						else begin
-							// Safe to issue interrupt since we know
-							// last instructions isn't a branch.
-							last_pending <= i_irq_pending;
-							if ({ last_pending, i_irq_pending } == 2'b01) begin
-								o_irq_dispatched <= 1'b1;
-								o_irq_epc <= pc + 4;
-								pc <= i_irq_pc;
+
+							data.strobe <= ~data.strobe;
+							data.instruction <= icache_rdata;
+							data.pc <= pc;
+
+							// Decode register indices here since we
+							// need those for fetching registers while
+							// we are decoding rest of instruction.
+							data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 5'h0);
+							data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 5'h0);
+							//data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 5'h0);
+							data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 5'h0);
+							
+							// Move PC to next instruction, will
+							// enable to icache to start loading
+							// next instruction.
+							pc <= pc + 4;
+
+							// @todo Bad timing; is there any way we
+							// can skip decoding these...
+							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
+								// Branch instruction, need to wait
+								// for an explicit "goto" signal before
+								// we can continue feeding the pipeline.
+								state <= WAIT_JUMP;
 							end
+							else if (is_ECALL || is_WFI) begin
+								// Software interrupt, need to wait
+								// for IRQ signal before continue.
+								state <= WAIT_IRQ;
+							end
+
 						end
 					end
 `ifdef __VERILATOR__					
@@ -182,7 +184,7 @@ module CPU_Fetch #(
 					if (i_jump) begin
 						pc <= i_jump_pc;
 						state <= WAIT_ICACHE;
-					end				
+					end
 				end
 
 				WAIT_IRQ: begin

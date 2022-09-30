@@ -42,32 +42,34 @@ OSystem_RebelV* _this = nullptr;
 
 OSystem_RebelV::OSystem_RebelV()
 {
+	uint32_t tid;
+
 	runtime_init();
 
 	kernel_cs_init(&m_mouseLock);
 
 	_this = this;
 
-	kernel_create_thread([](){
-		for (;;) {
-			_this->update_sound();
-			kernel_sleep(2);
-		}
-	});
-
-	kernel_create_thread([](){
+	tid = kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
-			kernel_sleep(10);
 		}
 	});
+	printf("timer thread %d\n", tid);
 
-	kernel_create_thread([](){
+	tid = kernel_create_thread([](){
+		for (;;) {
+			_this->update_sound();
+		}
+	});
+	printf("sound thread %d\n", tid);
+
+	tid = kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
-			kernel_sleep(4);
 		}
 	});	
+	printf("update thread %d\n", tid);
 }
 
 void OSystem_RebelV::init_size(uint w, uint h)
@@ -357,13 +359,13 @@ OSystem::MutexRef OSystem_RebelV::create_mutex()
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// kernel_cs_lock(cs);
+	kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// kernel_cs_unlock(cs);
+	kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)
@@ -490,18 +492,13 @@ void OSystem_RebelV::draw_mouse_cursor()
 {
 	kernel_cs_lock(&m_mouseLock);
 
-	if (m_mouseDrawn)
+	if (m_mouseDrawn || !m_mouseBits)
 	{
 		kernel_cs_unlock(&m_mouseLock);
 		return;
 	}
 
 	const byte *src = m_mouseBits;
-	if (!src)
-	{
-		kernel_cs_unlock(&m_mouseLock);
-		return;
-	}
 
 	int32_t x = m_mouseX - m_mouseHotX;
 	int32_t y = m_mouseY - m_mouseHotY;
@@ -596,7 +593,7 @@ void OSystem_RebelV::update_sound()
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
-		for (int32_t i = 0; i < 32; ++i)
+		for (int32_t i = 0; i < 16; ++i)
 		{
 			const int32_t queued = audio_get_queued();
 			if (queued <= 0)
@@ -610,6 +607,7 @@ void OSystem_RebelV::update_sound()
 			audio_play_stereo(buf, chunkSize * 2);
 		}
 	}
+	kernel_sleep(10);
 }
 
 void OSystem_RebelV::update_timer()
@@ -622,7 +620,7 @@ void OSystem_RebelV::update_timer()
 		m_timerExpire = ms + m_timerInterval;
 	}
 	m_lastTime = ms;
-	kernel_sleep(m_timerExpire - timer_get_ms());
+	kernel_sleep(10);
 }
 
 void OSystem_RebelV::update_frame()
@@ -637,9 +635,11 @@ void OSystem_RebelV::update_frame()
 		draw_mouse_cursor();
 
 	if (m_overlayVisible)
-		video_blit(1, m_overlayCopy);
+		video_blit(0, m_overlayCopy);
 	else
-		video_swap(2);
+		video_swap(0);
+
+	kernel_sleep(20);
 }
 
 OSystem *OSystem_RebelV_create()

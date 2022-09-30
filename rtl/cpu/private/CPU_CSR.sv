@@ -126,16 +126,14 @@ module CPU_CSR #(
 			end
 
 			// Latch interrupts pending.
-			if (mstatus_mie) begin
-				if (i_timer_interrupt && mie_mtie) begin
-					mip_mtip <= 1'b1;
-				end
-				if (i_external_interrupt && mie_meie) begin
-					mip_meip <= 1'b1;
-				end
-				if (i_ecall && mie_msie) begin
-					mip_msip <= 1'b1;
-				end
+			if (i_timer_interrupt && mie_mtie) begin
+				mip_mtip <= 1'b1;
+			end
+			if (i_external_interrupt && mie_meie) begin
+				mip_meip <= 1'b1;
+			end
+			if (i_ecall && mie_msie) begin
+				mip_msip <= 1'b1;
 			end
 
 			// Issue interrupts.

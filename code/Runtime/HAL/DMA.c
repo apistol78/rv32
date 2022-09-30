@@ -1,3 +1,4 @@
+#include "Runtime/Kernel.h"
 #include "Runtime/HAL/DMA.h"
 
 #define DMA_FROM    (volatile uint32_t*)(DMA_BASE)
@@ -26,10 +27,5 @@ uint32_t dma_copy(void* dst, const void* src, uint32_t count)
 void dma_wait()
 {
 	while (*DMA_RUN != 0)
-	{
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-		__asm__ volatile ( "nop" );
-	}
+		kernel_yield();
 }

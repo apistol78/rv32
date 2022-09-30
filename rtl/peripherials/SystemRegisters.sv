@@ -56,6 +56,8 @@ module SystemRegisters #(
 					o_rdata <= DEVICEID;
 				3'd4:
 					o_rdata <= RAM_SIZE;
+				3'd6:
+					o_rdata <= user;
 				default:
 					o_rdata <= 0;
 				endcase

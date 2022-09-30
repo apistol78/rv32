@@ -538,7 +538,6 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 	// \todo support non SDHC
 
 	sysreg_modify(SR_REG_LEDS, 1, 1);
-
 	kernel_enter_critical();
 
 	int32_t result = 0;
@@ -549,7 +548,9 @@ int32_t sd_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
 			result = 1;
 			break;
 		}
-		timer_wait_ms(100);
+		kernel_leave_critical();
+		kernel_sleep(100);
+		kernel_enter_critical();
 	}
 	if (!result)
 	{
@@ -677,6 +678,7 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 	const uint32_t addr = block;	// SDHC take block number.
 	// \todo support non SDHC
 
+	sysreg_modify(SR_REG_LEDS, 1, 1);
 	kernel_enter_critical();
 
 	int32_t result = 0;
@@ -687,12 +689,15 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 			result = 1;
 			break;
 		}
-		timer_wait_ms(100);
+		kernel_leave_critical();
+		kernel_sleep(100);
+		kernel_enter_critical();
 	}
 	if (!result)
 	{
-		SD_TRACE_ERROR("[SD] Unable to issue CMD24\n");
 		kernel_leave_critical();
+		sysreg_modify(SR_REG_LEDS, 1, 0);
+		SD_TRACE_ERROR("[SD] Unable to issue CMD24\n");
 		return 0;
 	}
 
@@ -822,14 +827,16 @@ int32_t sd_write_block512(uint32_t block, const uint8_t* buffer, uint32_t buffer
 	}
 	if (!writeSuccess)
 	{
-		printf("[SD] No end bit detected\n");
 		kernel_leave_critical();
+		sysreg_modify(SR_REG_LEDS, 1, 0);
+		printf("[SD] No end bit detected\n");
 		return 0;
 	}
 
 	sd_dummy_clock(100000);
 
 	kernel_leave_critical();
+	sysreg_modify(SR_REG_LEDS, 1, 0);
 	return bufferLen;
 }
 

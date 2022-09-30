@@ -31,31 +31,9 @@ kernel_thread_t;
 static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
-static volatile int32_t g_critical = 0;
-static irq_handler_t* g_handler = 0;
-
-static __attribute__((naked)) void kernel_timer_only(uint32_t source)
-{
-	*TIMER_ENABLED |= 2;
-	
-	const uint32_t mtimeh = *TIMER_CYCLES_H;
-	const uint32_t mtimel = *TIMER_CYCLES_L;
-	const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-	*TIMER_COMPARE_H = 0xFFFFFFFF;
-	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	
-	*TIMER_ENABLED &= ~2;
-
-	__asm__ volatile (
-		"ret"
-	);	
-}
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
-	*TIMER_ENABLED |= 4;
-
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
 		"sw		x4, 16(sp)			\n"
@@ -117,6 +95,19 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		}
 	}
 
+	((volatile uint32_t*)(SYSREG_BASE))[SR_REG_USER] = g_current;
+
+	// Setup next timer interrupt, do this inline since we
+	// cannot touch stack.
+	{
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	}
+
 	// Restore new thread.
 	{
 		volatile kernel_thread_t* t = &g_threads[g_current];
@@ -160,19 +151,6 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"addi	sp, sp, 128			\n"
 	);
 
-	// Setup next timer interrupt, do this inline since we
-	// cannot touch stack.
-	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
-	}
-
-	*TIMER_ENABLED &= ~4;
-
 	__asm__ volatile (
 		"ret"
 	);
@@ -180,12 +158,12 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 static void* kernel_alloc_stack()
 {
-	const int32_t stackSize = 0x40000;
+	const int32_t stackSize = 0x60000;
 	uint8_t* stack = malloc(stackSize);
 	if (stack)
 	{
 		memset(stack, 0, stackSize);
-		return stack + stackSize - 0x1000;
+		return stack + stackSize - 0x2000;
 	}
 	else
 		return 0;
@@ -205,16 +183,17 @@ void kernel_init()
 	// Initialize counters.
 	g_current = 0;
 	g_count = 1;
-	g_critical = 0;
-	g_handler = interrupt_get_handler(IRQ_SOURCE_TIMER);
 
 	// Setup timer interrupt for kernel scheduler.
-	*g_handler = kernel_scheduler;
+	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
 	timer_set_compare(KERNEL_TIMER_RATE);
 	timer_enable(0);
+
+	// Ensure interrupts are enabled.
+	kernel_leave_critical();
 }
 
-void kernel_create_thread(kernel_thread_fn_t fn)
+uint32_t kernel_create_thread(kernel_thread_fn_t fn)
 {
 	kernel_enter_critical();
 	volatile kernel_thread_t* t = &g_threads[g_count];
@@ -222,8 +201,9 @@ void kernel_create_thread(kernel_thread_fn_t fn)
 	t->epc = (uint32_t)fn;
 	t->sleep = 0;
 	t->waiting = 0;
-	++g_count;
+	const uint32_t tid = g_count++;
 	kernel_leave_critical();
+	return tid;
 }
 
 uint32_t kernel_current_thread()
@@ -233,16 +213,15 @@ uint32_t kernel_current_thread()
 
 void kernel_yield()
 {
-	csr_read_set_bits_mip(MIP_MTI_BIT_MASK);
+	csr_set_bits_mip(MIP_MTI_BIT_MASK);
 }
 
 void kernel_sleep(uint32_t ms)
 {
-	volatile kernel_thread_t* t = &g_threads[g_current];
-
 	const uint32_t fin_ms = timer_get_ms() + ms;
-	t->sleep = fin_ms;
 
+	volatile kernel_thread_t* t = &g_threads[g_current];
+	t->sleep = fin_ms;
 	do
 	{
 		kernel_yield();
@@ -252,14 +231,12 @@ void kernel_sleep(uint32_t ms)
 
 void kernel_enter_critical()
 {
-	if (g_critical++ == 0)
-		*g_handler = kernel_timer_only;
+	csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_leave_critical()
 {
-	if (--g_critical == 0)
-		*g_handler = kernel_scheduler;
+	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)
@@ -280,13 +257,16 @@ void kernel_cs_lock(volatile kernel_cs_t* cs)
 			kernel_leave_critical();
 			return;
 		}
+		kernel_leave_critical();
 	}
 }
 
 void kernel_cs_unlock(volatile kernel_cs_t* cs)
 {
+	kernel_enter_critical();
 	if (cs->counter > 0)
 		cs->counter--;
+	kernel_leave_critical();
 }
 
 void kernel_sig_init(volatile kernel_sig_t* sig)
@@ -297,7 +277,6 @@ void kernel_sig_init(volatile kernel_sig_t* sig)
 void kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
-	kernel_yield();
 }
 
 void kernel_sig_wait(volatile kernel_sig_t* sig)
