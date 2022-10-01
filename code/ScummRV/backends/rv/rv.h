@@ -93,7 +93,6 @@ public:
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 
-	kernel_cs_t m_mouseLock;
 	const uint8_t* m_mouseBits = nullptr;
 	int32_t m_mouseW = 0;
 	int32_t m_mouseH = 0;
@@ -102,12 +101,6 @@ public:
 	int32_t m_mouseX = 160;
 	int32_t m_mouseY = 100;
 	bool m_mouseVisible = false;
-	uint8_t* m_mouseBackup = nullptr;
-	int32_t m_mouseBackupX = 0;
-	int32_t m_mouseBackupY = 0;
-	int32_t m_mouseBackupW = 0;
-	int32_t m_mouseBackupH = 0;
-	bool m_mouseDrawn = false;
 
 	uint8_t* m_overlayCopy = nullptr;
 	bool m_overlayVisible = false;
@@ -117,8 +110,6 @@ public:
 	uint8_t m_lastButtons = 0;
 
 	void draw_mouse_cursor();
-
-	void undraw_mouse_cursor();
 
 	void update_timer();
 

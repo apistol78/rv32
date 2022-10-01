@@ -74,6 +74,11 @@ void video_set_palette(uint8_t index, uint32_t color)
 	palette[index] = color;
 }
 
+void* video_get_primary_target()
+{
+	return primary_target;
+}
+
 void* video_get_secondary_target()
 {
 	return secondary_target;
