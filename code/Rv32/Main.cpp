@@ -39,6 +39,7 @@
 #include "Rv32/LoadELF.h"
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
+#include "Rv32/PLIC.h"
 #include "Rv32/SD.h"
 #include "Rv32/SystemRegisters.h"
 #include "Rv32/Timer.h"
@@ -269,7 +270,7 @@ int main(int argc, const char** argv)
 	SD sd;
 	Unknown dma(L"DMA", true);
 	TimerD tmr;
-	Unknown plic(L"PLIC", true);
+	PLIC plic;
 	SystemRegisters sysreg(c_memoryAvail);
 	Audio audio;
 
