@@ -7,13 +7,10 @@
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 
-#define TIMER_MS            (volatile uint32_t*)(TIMER_BASE)
-#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
-#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
-#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x9 * 0x04)
-#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0xa * 0x04)
-#define TIMER_ENABLED		(volatile uint32_t*)(TIMER_BASE + 0xe * 0x04)
-#define TIMER_RAISE			(volatile uint32_t*)(TIMER_BASE + 0xf * 0x04)
+#define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x0 * 0x04)
+#define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
+#define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
+#define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x3 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
 #define KERNEL_SCHEDULE_FREQUENCY	1000
@@ -78,7 +75,11 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 	// Select new thread.
 	{
-		const uint32_t ms = *TIMER_MS;
+		uint32_t ms;
+		__asm__ volatile (
+			"rdtime %0"
+			: "=r" (ms)
+		);
 		for (int32_t i = 0; i < g_count + 1; ++i)
 		{
 			if (++g_current >= g_count)
@@ -186,8 +187,15 @@ void kernel_init()
 
 	// Setup timer interrupt for kernel scheduler.
 	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
-	timer_set_compare(KERNEL_TIMER_RATE);
-	timer_enable(0);
+
+	{
+		const uint32_t mtimeh = *TIMER_CYCLES_H;
+		const uint32_t mtimel = *TIMER_CYCLES_L;
+		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+		*TIMER_COMPARE_H = 0xFFFFFFFF;
+		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	}
 
 	// Ensure interrupts are enabled.
 	kernel_leave_critical();
@@ -219,7 +227,6 @@ void kernel_yield()
 void kernel_sleep(uint32_t ms)
 {
 	const uint32_t fin_ms = timer_get_ms() + ms;
-
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->sleep = fin_ms;
 	do

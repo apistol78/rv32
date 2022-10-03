@@ -5,6 +5,9 @@ module SoC(
       input CLOCK_125_p,
       input CPU_RESET_n
 );
+
+`define FREQUENCY 100000000
+
 	wire clock = CLOCK_125_p;
 	wire reset = !CPU_RESET_n;
 
@@ -117,6 +120,7 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
+		.FREQUENCY(`FREQUENCY),
 		.DCACHE_SIZE(0)
 	) cpu(
         .i_reset(reset),

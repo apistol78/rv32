@@ -7,6 +7,7 @@
 module CPU #(
 	parameter RESET_VECTOR = 32'h00000000,
 	parameter STACK_POINTER = 32'h10000400,
+	parameter FREQUENCY,
 	parameter VENDORID = 32'h0,
 	parameter ARCHID = 32'h0,
 	parameter IMPID = 32'h0,
@@ -57,6 +58,7 @@ module CPU #(
 	wire [31:0] csr_irq_epc;
 
 	CPU_CSR #(
+		.FREQUENCY(FREQUENCY),
 		.VENDORID(VENDORID),
 		.ARCHID(ARCHID),
 		.IMPID(IMPID),

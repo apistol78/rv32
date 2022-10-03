@@ -199,6 +199,7 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
+		.FREQUENCY(`FREQUENCY),
 		.STACK_POINTER(32'h20110000),
 		.DCACHE_REGISTERED(0),
 		.ICACHE_REGISTERED(0)
@@ -349,9 +350,7 @@ module SoC(
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	wire timer_interrupt;
-	Timer #(
-		.FREQUENCY(`FREQUENCY)
-	) timer(
+	Timer timer(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(timer_select && bridge_far_request),

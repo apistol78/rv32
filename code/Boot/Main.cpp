@@ -379,7 +379,17 @@ int main(int argc, const char** argv)
 	char cmd[128];
 	int32_t cnt = 0;
 
+	// Until here every single cycle should be deterministic.
+	const uint64_t expected = 53055;
+	const uint64_t cc = timer_get_cycles();
+
 	runtime_init();
+
+	printf("%llu cycles\n", cc);
+	if (cc > expected)
+		printf("WARN: cycles exceeded\n");
+	else if (cc < expected)
+		printf("INFO: cycles reduced\n");
 
 	fb_init();
 	fb_clear();

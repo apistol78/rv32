@@ -60,7 +60,10 @@
 `define CSR_MEPC		12'h341
 `define CSR_MCAUSE		12'h342
 `define CSR_MIP			12'h344
-
+`define CSR_CYCLE		12'hc00
+`define CSR_CYCLEH		12'hc80
+`define CSR_TIME		12'hc01
+`define CSR_TIMEH		12'hc81
 `define CSR_MVENDORID	12'hf11
 `define CSR_MARCHID		12'hf12
 `define CSR_MIMPID		12'hf13

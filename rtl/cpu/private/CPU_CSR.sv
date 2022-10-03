@@ -3,6 +3,7 @@
 `timescale 1ns/1ns
 
 module CPU_CSR #(
+	parameter FREQUENCY,
 	parameter VENDORID,
 	parameter ARCHID,
 	parameter IMPID,
@@ -35,6 +36,8 @@ module CPU_CSR #(
 	input i_irq_dispatched,
 	input [31:0] i_irq_epc
 );
+	localparam PRESCALE = FREQUENCY / 1000;
+	localparam PRESCALE_WIDTH = $clog2(PRESCALE);
 
 	bit mstatus_mpie = 0;
 	bit mstatus_mie = 0;
@@ -52,6 +55,11 @@ module CPU_CSR #(
 	wire [31:0] mstatus = { 27'b0, mstatus_mpie, mstatus_mie, 3'b0 };
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
 	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
+
+	bit [63:0] cycle = 0;
+	bit [63:0] wtime = 0;
+	bit [PRESCALE_WIDTH - 1:0] prescale = 0;
+	bit [2:0] issued = 0;
 
 	assign o_external_interrupt_enable = !o_irq_pending && mstatus_mie && mie_meie;
 	assign o_epc = mepc;
@@ -73,6 +81,14 @@ module CPU_CSR #(
 			o_rdata = mcause;
 		else if (i_index == `CSR_MIP)
 			o_rdata = mip;
+		else if (i_index == `CSR_CYCLE)
+			o_rdata = cycle[31:0];
+		else if (i_index == `CSR_CYCLEH)
+			o_rdata = cycle[63:32];
+		else if (i_index == `CSR_TIME)
+			o_rdata = wtime[31:0];
+		else if (i_index == `CSR_TIMEH)
+			o_rdata = wtime[63:32];
 		else if (i_index == `CSR_MVENDORID)
 			o_rdata = VENDORID;
 		else if (i_index == `CSR_MARCHID)
@@ -82,8 +98,6 @@ module CPU_CSR #(
 		else if (i_index == `CSR_MHARTID)
 			o_rdata = HARTID;
 	end
-
-	bit [2:0] issued = 0;
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
@@ -188,6 +202,31 @@ module CPU_CSR #(
 
 				o_irq_pending <= 1'b0;
 				issued <= 0;
+			end
+		end
+	end
+
+	// Cycle counter.
+	always_ff @(posedge i_clock) begin
+		if (i_reset) begin
+			cycle <= 0;
+		end
+		else begin
+			cycle <= cycle + 1;
+		end
+	end
+
+	// Wall time counter.
+	always_ff @(posedge i_clock) begin
+		if (i_reset) begin
+			wtime <= 0;
+			prescale <= 0;
+		end
+		else begin
+			prescale <= prescale + 1;
+			if (prescale >= PRESCALE) begin
+				wtime <= wtime + 1;
+				prescale <= 0;
 			end
 		end
 	end
