@@ -2,8 +2,6 @@
 
 `timescale 1ns/1ns
 
-`define ENABLE_ICACHE
-
 module CPU_ICache_Comb#(
 	parameter SIZE = 13
 )(
@@ -26,10 +24,9 @@ module CPU_ICache_Comb#(
 
 	typedef enum bit [1:0]
 	{
-		IDLE		= 2'd0,
-		READ_SETUP	= 2'd1,
-		READ_BUS	= 2'd2,
-		INITIALIZE	= 2'd3
+		READ		= 2'd0,
+		READ_BUS	= 2'd1,
+		INITIALIZE	= 2'd2
 	} state_t;
 
 	state_t next = INITIALIZE;
@@ -37,6 +34,8 @@ module CPU_ICache_Comb#(
 
 	bit [SIZE:0] clear_address = 0;
 	bit [SIZE:0] next_clear_address = 0;
+
+	bit [31:0] last_input_pc = 32'hffff_ffff;
 
 	// Debug, only for verilated.
 `ifdef __VERILATOR__
@@ -79,6 +78,7 @@ module CPU_ICache_Comb#(
 	always_ff @(posedge i_clock) begin
 		state <= next;
 		clear_address <= next_clear_address;
+		last_input_pc <= i_input_pc;
 
 `ifdef __VERILATOR__
 		hit <= next_hit;
@@ -104,20 +104,9 @@ module CPU_ICache_Comb#(
 `endif
 
 		case (state)
-			IDLE: begin
+			READ: begin
 				if (!i_stall) begin
-`ifdef ENABLE_ICACHE				
-					next = READ_SETUP;
-`else
-					o_bus_request = 1;
-					next = READ_BUS;
-`endif
-				end
-			end
-			
-			READ_SETUP: begin
-				if (!i_stall) begin
-					if (cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
+					if (last_input_pc == i_input_pc && cache_rdata[31:0] == { i_input_pc[31:2], 2'b01 }) begin
 						o_ready = 1;
 						o_rdata = cache_rdata[63:32];
 						cache_pc = i_input_pc + 4;
@@ -125,16 +114,13 @@ module CPU_ICache_Comb#(
 						next_hit = hit + 1;
 `endif
 					end
-					else begin
+					else if (last_input_pc == i_input_pc && cache_rdata[31:0] != { i_input_pc[31:2], 2'b01 }) begin
 						o_bus_request = 1;
 						next = READ_BUS;
 `ifdef __VERILATOR__
 						next_miss = miss + 1;
 `endif
 					end
-				end
-				else begin
-					next = IDLE;		// We need to go back to IDLE, seems to become unstable if we stay.
 				end
 			end
 
@@ -145,7 +131,7 @@ module CPU_ICache_Comb#(
 					cache_wdata = { i_bus_rdata, { i_input_pc[31:2], 2'b01 } };
 					o_ready = 1;
 					o_rdata = i_bus_rdata;
-					next = IDLE;
+					next = READ;
 				end
 			end
 
@@ -158,9 +144,12 @@ module CPU_ICache_Comb#(
 				end
 				else begin
 					next_clear_address = 0;
-					next = IDLE;
+					next = READ;
 				end				
 			end
+
+			default:
+				next = READ;
 		endcase
 
 		// Re-initialize cache at reset.
