@@ -3,10 +3,7 @@
 # Source environment configuration.
 . "config.sh"
 
-# Generate solution.
-./build-projects-make-rv32.sh
-
-# Generate instructions (Verilog).
+# Generate instructions (verilog).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_alu > rtl/cpu/private/generated/Instructions_alu.sv
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_memory > rtl/cpu/private/generated/Instructions_memory.sv
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_ops > rtl/cpu/private/generated/Instructions_ops.sv
@@ -15,23 +12,18 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run veri
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_execute_ops I J R U B S CSR > rtl/cpu/private/generated/Instructions_execute_ops.sv
 #$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_fpu > rtl/cpu/private/generated/Instructions_fpu.sv
 
-# Generate instructions (Emulator).
+# Generate instructions (emulator).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp > code/Rv32/Instructions.inl
 
-# Build target projects.
+# Build target.
+./build-projects-make-rv32.sh
 pushd build/rv32
-make -j4 -f Rv32.mak ReleaseStatic
+make -j8 -f Rv32.mak ReleaseStatic
 popd
 
-# Generate solution only containing Hex2Verilog.
-./build-projects-make-linux.sh
-pushd build/linux
-make -j4 -f Rv32.mak ReleaseStatic
-popd
-
-# Generate firmware verilog memory file, \note using last built converter.
+# Generate firmware verilog memory file.
 riscv32-unknown-elf-objcopy -O ihex build/rv32/ReleaseStatic/Firmware Firmware.hex
-build/linux/ReleaseStatic/Hex2Verilog -word=32 Firmware.hex -vmem=Firmware.vmem -vmem-range=Firmware.vmem-range
+bin/Hex2Verilog -word=32 Firmware.hex -vmem=Firmware.vmem -vmem-range=Firmware.vmem-range
 rm Firmware.hex
 
 # Generate verilated code.
@@ -47,12 +39,10 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-# Generate solution, this time containing all projects.
+# Build host.
 ./build-projects-make-linux.sh
-
-# Build host projects.
 pushd build/linux
-make -j4 -f Rv32.mak ReleaseStatic
+make -j8 -f Rv32.mak ReleaseStatic
 popd
 
 # Generate useful dumps.
@@ -64,3 +54,7 @@ riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Boot > dumps/Boot.map
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > dumps/Doom.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > dumps/Quake.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/ScummRV > dumps/ScummRV.dump
+
+# Cleanup
+rm Firmware.vmem
+rm Firmware.vmem-range
