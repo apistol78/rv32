@@ -1,14 +1,29 @@
 # MOJO Risc-V CPU and System-on-a-Chip
+The MOJO SOC is an educational and fun system for FPGA and "Bare metal" programming experimentations.\
+It's a RISC-V CPU running at 100 MHz, 32 MiB RAM, audio and 320*200 video resolution.
+To make user input easy I've moved USB host functionality to an external PCB using Raspberry Pico as a FPGA <-> HID bridge.
 
-## Prerequisites
+# Prerequisites
 This project require an install of Traktor to generate required resources.
+You will also need a RISC-V GCC toolchain compiled and installed at __/opt/riscv32/bin__ on your machine.
 
-## Build
-Run __build.sh__ to build host (i.e. Linux) and target (i.e. RV32) products.
+
+# How to build
+Run __build.sh__ to build host (i.e. Linux) and target products:
+```
+./build.sh
+```
+After everything has been built you should be able to run the emulators:
+```
+./build/linux/ReleaseStatic/Rv32T -elf=./build/rv32/ReleaseStatic/Boot
+```
+or
+```
+./build/linux/ReleaseStatic/Rv32 -elf=./build/rv32/ReleaseStatic/Boot
+```
 
 # CPU
-Conventional 5-stage (F,D,X,M,W) pipelined RV32imc CPU with internal data- and instruction caches.
-Configurable for either performance or space.
+MOJO CPU is a conventional 5-stage (F,D,X,M,W) pipelined RISC-V CPU. It also contain configurable data- and instruction caches.
 
 Written using SystemVerilog and are split up into logical pieces where each stage of the pipeline is in a separate module:
 
@@ -76,7 +91,7 @@ The SoC support following perifherials:
 Two different emulators, one C++ highlevel emulator and one based on Verilator. The highlevel is useful for application development and the other is used for verification of gate level logic.
 
 ## Runtime
-C/C++ runtime library with a preemptive multithreaded kernel. Support CRT for easy portability.
+C/C++ runtime library, including a preemptive multithreaded kernel, expose all hardware features to user programs. Support CRT for easy portability.
 
 ## Schematics
 KiCad schematics for all perifherial boards are available and been built using JLCPCB.
