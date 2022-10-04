@@ -222,6 +222,7 @@ uint32_t kernel_current_thread()
 void kernel_yield()
 {
 	csr_set_bits_mip(MIP_MTI_BIT_MASK);
+	__asm__ volatile ("wfi");
 }
 
 void kernel_sleep(uint32_t ms)

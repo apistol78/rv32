@@ -380,7 +380,7 @@ int main(int argc, const char** argv)
 	int32_t cnt = 0;
 
 	// Until here every single cycle should be deterministic.
-	const uint64_t expected = 53055;
+	const uint64_t expected = 52955;
 	const uint64_t cc = timer_get_cycles();
 
 	runtime_init();
