@@ -54,7 +54,3 @@ riscv32-unknown-elf-objdump -x build/rv32/ReleaseStatic/Boot > dumps/Boot.map
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Doom > dumps/Doom.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/Quake > dumps/Quake.dump
 riscv32-unknown-elf-objdump -D build/rv32/ReleaseStatic/ScummRV > dumps/ScummRV.dump
-
-# Cleanup
-rm Firmware.vmem
-rm Firmware.vmem-range

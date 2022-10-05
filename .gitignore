@@ -1,10 +1,12 @@
 /build
 /dumps
 /.vs
+
 /board/terasic_cv_gx/db
 /board/terasic_cv_gx/output_files
 /board/terasic_cv_gx/incremental*
 /board/terasic_cv_gx/greybox_tmp
+/board/terasic_cv_gx/simulation
 
 /board/qmtech_cv/db
 /board/qmtech_cv/output_files
@@ -12,12 +14,22 @@
 /board/qmtech_cv/greybox_tmp
 /board/qmtech_cv/*.txt
 
+/board/qmtech_cv_2/db
+/board/qmtech_cv_2/output_files
+/board/qmtech_cv_2/incremental*
+/board/qmtech_cv_2/greybox_tmp
+/board/qmtech_cv_2/*.txt
+
 /board/qmtech_k7___
 /board/qmtech_k7_git_tst
 /board/qmtech_k7/qmtech_k7
-*.jou
 
-/board/terasic_cv_gx/simulation
+/board/SDRAM/db
+/board/SDRAM/output_files
+/board/SDRAM/incremental*
+/board/SDRAM/*.txt
+
+*.jou
 *.qws
 
 /code/Rv32T/SoC

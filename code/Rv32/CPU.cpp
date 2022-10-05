@@ -192,6 +192,7 @@ CPU::CPU(Bus* bus, OutputStream* trace)
 ,   m_pc(0x00000000)
 ,	m_interrupt(false)
 ,	m_waitForInterrupt(false)
+,	m_cycles(0)
 {
 	m_dcache = new DCache(bus);
 	m_icache = new ICache(bus);
@@ -275,6 +276,7 @@ bool CPU::tick()
 	if (!m_bus->tick(this))
 		return false;
 
+	m_cycles++;
 	return true;
 }
 
@@ -312,7 +314,20 @@ void CPU::ecall()
 
 uint32_t CPU::readCSR(uint16_t csr) const
 {
-	return m_csr[csr];
+	if (csr == 0xc00)
+		return (uint32_t)m_cycles;
+	else if (csr == 0xc80)
+		return (uint32_t)(m_cycles >> 32);
+	else if (csr == 0xc01 || csr == 0xc81)
+	{
+		uint64_t time = (uint64_t)(m_timer.getElapsedTime() * 1000);
+		if (csr == 0xc01)
+			return (uint32_t)time;
+		else
+			return (uint32_t)(time >> 32);
+	}
+	else
+		return m_csr[csr];
 }
 
 void CPU::writeCSR(uint16_t csr, uint32_t value)

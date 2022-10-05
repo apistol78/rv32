@@ -1,8 +1,5 @@
 #pragma once
 
-#include <Core/Ref.h>
-#include <Core/Containers/AlignedVector.h>
-#include <Core/Timer/Timer.h>
 #include "Rv32/Device.h"
 
 class TimerD : public Device
@@ -17,10 +14,6 @@ public:
 	virtual bool tick(CPU* cpu) override final;
 
 private:
-    // traktor::Timer m_timer;
-	double m_time = 0.0;
-	uint64_t m_cycles[4] = { 0, 0, 0, 0 };
+	uint64_t m_cycles = 0;
 	uint64_t m_compare = 0;
-	uint8_t m_enabled = 0x00;
-	bool m_raised = false;
 };

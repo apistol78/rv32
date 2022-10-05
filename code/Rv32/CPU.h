@@ -2,6 +2,7 @@
 
 #include <Core/Object.h>
 #include <Core/Ref.h>
+#include <Core/Timer/Timer.h>
 
 namespace traktor
 {
@@ -61,6 +62,9 @@ private:
 	uint32_t m_csr[4096];
 	bool m_interrupt;
 	bool m_waitForInterrupt;
+
+	uint64_t m_cycles;
+	traktor::Timer m_timer;
 
 	bool decode(uint32_t word);
 
