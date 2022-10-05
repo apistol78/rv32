@@ -52,6 +52,7 @@ module CPU #(
 	wire csr_wdata_wr;
 	wire [31:0] csr_wdata;
 	wire [31:0] csr_epc;
+	wire [63:0] csr_retired;
 	wire csr_irq_pending;
 	wire [31:0] csr_irq_pc;
 	wire csr_irq_dispatched;
@@ -79,6 +80,8 @@ module CPU #(
 		.i_wdata_wr(csr_wdata_wr),
 		.i_wdata(csr_wdata),
 		.o_epc(csr_epc),
+
+		.i_retired(csr_retired),
 
 		.o_irq_pending(csr_irq_pending),
 		.o_irq_pc(csr_irq_pc),
@@ -284,7 +287,7 @@ module CPU #(
 
 		// Output
 		.o_data(writeback_data),
-		.o_retired()
+		.o_retired(csr_retired)
 	);
 
 	//====================================================

@@ -34,7 +34,10 @@ module CPU_CSR #(
 	output bit o_irq_pending,
 	output bit [31:0] o_irq_pc,
 	input i_irq_dispatched,
-	input [31:0] i_irq_epc
+	input [31:0] i_irq_epc,
+
+	// Retired instructions.
+	input [63:0] i_retired
 );
 	localparam PRESCALE = FREQUENCY / 1000;
 	localparam PRESCALE_WIDTH = $clog2(PRESCALE);
@@ -89,6 +92,10 @@ module CPU_CSR #(
 			o_rdata = wtime[31:0];
 		else if (i_index == `CSR_TIMEH)
 			o_rdata = wtime[63:32];
+		else if (i_index == `CSR_INSTRET)
+			o_rdata = i_retired[31:0];
+		else if (i_index == `CSR_INSTRETH)
+			o_rdata = i_retired[63:32];
 		else if (i_index == `CSR_MVENDORID)
 			o_rdata = VENDORID;
 		else if (i_index == `CSR_MARCHID)

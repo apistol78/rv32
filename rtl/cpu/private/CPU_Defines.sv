@@ -64,6 +64,8 @@
 `define CSR_CYCLEH		12'hc80
 `define CSR_TIME		12'hc01
 `define CSR_TIMEH		12'hc81
+`define CSR_INSTRET		12'hc02
+`define CSR_INSTRETH	12'hc82
 `define CSR_MVENDORID	12'hf11
 `define CSR_MARCHID		12'hf12
 `define CSR_MIMPID		12'hf13

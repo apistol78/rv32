@@ -11,13 +11,13 @@ module CPU_Writeback(
 
 	// Output
 	output writeback_data_t o_data,
-	output [31:0] o_retired
+	output [63:0] o_retired
 );
 	assign o_data = data;
 	assign o_retired = retired;
 
 	writeback_data_t data = 0;
-	bit [31:0] retired = 0;
+	bit [63:0] retired = 0;
 	bit last_strobe = 0;
 
 	always_ff @(posedge i_clock) begin
