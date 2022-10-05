@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source environment configuration.
-. "config.sh"
+. "./scripts/config.sh"
 
 # Generator configuration.
 export MAKE_OS=linux

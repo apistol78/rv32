@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source environment configuration.
-. "config.sh"
+. "scripts/config.sh"
 
 # Generate instructions (verilog).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_alu > rtl/cpu/private/generated/Instructions_alu.sv
@@ -16,7 +16,7 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run veri
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp > code/Rv32/Instructions.inl
 
 # Build target.
-./build-projects-make-rv32.sh
+./scripts/build-projects-make-rv32.sh
 pushd build/rv32
 make -j8 -f Rv32.mak ReleaseStatic
 popd
@@ -40,7 +40,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Build host.
-./build-projects-make-linux.sh
+./scripts/build-projects-make-linux.sh
 pushd build/linux
 make -j8 -f Rv32.mak ReleaseStatic
 popd

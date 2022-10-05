@@ -2,7 +2,7 @@
 
 # Get normalized path to game home, excluding file name.
 GAME_HOME="`dirname \"$BASH_SOURCE\"`"
-GAME_HOME="`(cd \"$GAME_HOME\" && pwd)`"
+GAME_HOME="`(cd \"$GAME_HOME/..\" && pwd)`"
 export GAME_HOME
 
 # Setup traktor home.
