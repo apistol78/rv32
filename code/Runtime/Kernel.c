@@ -13,7 +13,7 @@
 #define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x3 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	1000
+#define KERNEL_SCHEDULE_FREQUENCY	600
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 typedef struct
@@ -25,9 +25,11 @@ typedef struct
 }
 kernel_thread_t;
 
-static kernel_thread_t g_threads[16];
-static int32_t g_current = 0;
-static int32_t g_count = 0;
+static volatile kernel_thread_t g_threads[16];
+static volatile int32_t g_current = 0;
+static volatile int32_t g_count = 0;
+static volatile int32_t g_critical = 0;
+static volatile int32_t g_schedule = 0;
 
 static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 {
@@ -80,7 +82,8 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 			"rdtime %0"
 			: "=r" (ms)
 		);
-		for (int32_t i = 0; i < g_count + 1; ++i)
+
+		for (int32_t i = 0; i < g_count; ++i)
 		{
 			if (++g_current >= g_count)
 				g_current = 0;
@@ -94,9 +97,15 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 			else if (t->waiting == 0 && t->sleep <= ms)
 				break;
 		}
-	}
 
-	((volatile uint32_t*)(SYSREG_BASE))[SR_REG_USER] = g_current;
+		// Write new current thread to scratch so we can debug scheduling.
+		++g_schedule;
+		__asm__ volatile (
+			"csrw	mscratch, %0\n"
+			:
+			: "r" ((g_schedule << 16) | g_current)
+		);
+	}
 
 	// Setup next timer interrupt, do this inline since we
 	// cannot touch stack.
@@ -184,6 +193,8 @@ void kernel_init()
 	// Initialize counters.
 	g_current = 0;
 	g_count = 1;
+	g_critical = 0;
+	g_schedule = 0;
 
 	// Setup timer interrupt for kernel scheduler.
 	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
@@ -198,7 +209,7 @@ void kernel_init()
 	}
 
 	// Ensure interrupts are enabled.
-	kernel_leave_critical();
+	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 uint32_t kernel_create_thread(kernel_thread_fn_t fn)
@@ -222,7 +233,6 @@ uint32_t kernel_current_thread()
 void kernel_yield()
 {
 	csr_set_bits_mip(MIP_MTI_BIT_MASK);
-	__asm__ volatile ("wfi");
 }
 
 void kernel_sleep(uint32_t ms)
@@ -239,12 +249,14 @@ void kernel_sleep(uint32_t ms)
 
 void kernel_enter_critical()
 {
-	csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+	if (g_critical++ == 0)
+		csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_leave_critical()
 {
-	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+	if (--g_critical == 0)
+		csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)

@@ -14,9 +14,9 @@ module Timer (
 	output bit o_interrupt
 );
 
-	bit [63:0] cycles = 0;
+	bit [63:0] cycles = 64'd0;
 	bit [63:0] compare = { 64{1'b1} };
-	bit request = 0;
+	bit request = 1'b0;
 
 	initial begin
 		o_ready = 1'b0;
@@ -25,10 +25,10 @@ module Timer (
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			cycles <= 0;
+			cycles <= 64'd0;
 		end
 		else begin
-			cycles <= cycles + 64'h1;
+			cycles <= cycles + 64'd1;
 			o_interrupt <= ((cycles == compare) ? 1'b1 : 1'b0);
 		end
 	end
@@ -52,10 +52,10 @@ module Timer (
 					default:;
 				endcase
 			end
-			o_ready <= 1;
+			o_ready <= 1'b1;
 		end
 		else if (!i_request)
-			o_ready <= 0;
+			o_ready <= 1'b0;
 	end
 	
 endmodule

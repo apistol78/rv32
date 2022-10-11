@@ -2,9 +2,9 @@
 
 #include "Runtime/HAL/Common.h"
 
-inline uint32_t timer_get_ms()
+inline volatile uint32_t timer_get_ms()
 {
- 	uint32_t ms;
+ 	volatile uint32_t ms;
 	__asm__ volatile (
 		"rdtime %0"
 		: "=r" (ms)
@@ -12,18 +12,21 @@ inline uint32_t timer_get_ms()
 	return ms;   
 }
 
-inline uint64_t timer_get_cycles()
+inline volatile uint64_t timer_get_cycles()
 {
-	uint32_t mtimeh;
-	uint32_t mtimel;
-	__asm__ volatile (
-"again:\n"		
-		"rdcycleh	x6\n"
-		"rdcycle	%1\n"
-		"rdcycleh	%0\n"
-		"bne		x6, %0, again\n"
-		: "=r" (mtimeh), "=r" (mtimel)
-	);
+	volatile uint32_t mtimeh;
+	volatile uint32_t mtimel;
+	volatile uint32_t tmp;
+
+	for (;;)
+	{
+		__asm__ volatile ( "rdcycleh %0" : "=r" (tmp) );
+		__asm__ volatile ( "rdcycle  %0" : "=r" (mtimel) );
+		__asm__ volatile ( "rdcycleh %0" : "=r" (mtimeh) );
+		if (mtimeh == tmp)
+			break;
+	}
+
 	return (uint64_t)(
 		(((uint64_t)mtimeh) << 32) | mtimel
 	);

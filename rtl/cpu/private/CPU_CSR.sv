@@ -59,8 +59,8 @@ module CPU_CSR #(
 	wire [31:0] mie = { 20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0 };	
 	wire [31:0] mip = { 20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0 };
 
-	bit [63:0] cycle = 0;
-	bit [63:0] wtime = 0;
+	bit [63:0] cycle = 64'd0;
+	bit [63:0] wtime = 64'd0;
 	bit [PRESCALE_WIDTH - 1:0] prescale = 0;
 	bit [2:0] issued = 0;
 
@@ -140,9 +140,9 @@ module CPU_CSR #(
 				else if (i_index == `CSR_MEPC)
 					mepc <= i_wdata;
 				else if (i_index == `CSR_MIP) begin
-					mip_meip <= i_wdata[11];
+					//mip_meip <= i_wdata[11];
 					mip_mtip <= i_wdata[7];
-					mip_msip <= i_wdata[3];
+					//mip_msip <= i_wdata[3];
 				end
 			end
 
@@ -159,41 +159,36 @@ module CPU_CSR #(
 
 			// Issue interrupts.
 			if (!o_irq_pending && mstatus_mie) begin
-				if (mip_mtip) begin
-					o_irq_pending <= 1'b1;
-					o_irq_pc <= mtvec;
 
-					mstatus_mpie <= mstatus_mie;
-					mstatus_mie <= 1'b0;
-
-					mcause <= 32'h80000000 | (1 << 7);
-					issued <= 3'd1;
-				end
-				else if (mip_meip) begin
-					o_irq_pending <= 1'b1;
-					o_irq_pc <= mtvec;
-
-					mstatus_mpie <= mstatus_mie;
-					mstatus_mie <= 1'b0;
-
+				// Handle in priority order; external interrupts have higest prio.
+				if (mip_meip) begin
 					mcause <= 32'h80000000 | (1 << 11);					
-					issued <= 3'd2;
+					issued <= 3'b010;
+				end
+				else if (mip_mtip) begin
+					mcause <= 32'h80000000 | (1 << 7);
+					issued <= 3'b001;
 				end
 				else if (mip_msip) begin
+					mcause <= 32'h00000000 | (1 << 11);					
+					issued <= 3'b100;
+				end
+
+				if (mip_mtip || mip_meip || mip_msip) begin
 					o_irq_pending <= 1'b1;
 					o_irq_pc <= mtvec;
 
 					mstatus_mpie <= mstatus_mie;
 					mstatus_mie <= 1'b0;
-
-					mcause <= 32'h00000000 | (1 << 11);					
-					issued <= 3'd4;
 				end
 			end
 
 			// Restore interrupt enable from "stack".
 			if (i_mret) begin
+				if (mstatus_mie)
+					$display("recursive interrupt detected, not validated");
 				mstatus_mie <= mstatus_mpie;
+				mstatus_mpie <= 1'b0;
 			end
 			
 			// Clear interrupt pending flags.
@@ -213,28 +208,20 @@ module CPU_CSR #(
 		end
 	end
 
-	// Cycle counter.
+	// Cycle and wall time counter.
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
-			cycle <= 0;
-		end
-		else begin
-			cycle <= cycle + 1;
-		end
-	end
-
-	// Wall time counter.
-	always_ff @(posedge i_clock) begin
-		if (i_reset) begin
-			wtime <= 0;
+			wtime <= 64'd0;
 			prescale <= 0;
+			cycle <= 0;
 		end
 		else begin
 			prescale <= prescale + 1;
 			if (prescale >= PRESCALE) begin
-				wtime <= wtime + 1;
+				wtime <= wtime + 64'd1;
 				prescale <= 0;
 			end
+			cycle <= cycle + 64'd1;
 		end
 	end
 

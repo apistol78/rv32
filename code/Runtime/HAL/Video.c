@@ -100,7 +100,7 @@ void video_blit(int32_t waitVblank, const uint8_t* source)
 	while (waitVblank > 0)
 	{
 		if (kernel_sig_try_wait(&vblank_signal, 400) == 0)
-			printf("WARN: vblank wait failed\n");
+			printf("WARN: vblank wait failed (%d)\n", vblank);
 		--waitVblank;
 	}
 	memcpy(primary_target, source, WIDTH * HEIGHT);

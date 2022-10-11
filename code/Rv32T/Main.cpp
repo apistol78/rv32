@@ -546,7 +546,7 @@ int main(int argc, const char **argv)
 		}
 		else if (!mute)
 		{
-			if ((Tc % 600) == 0)
+			if ((Tc % 60) == 0)
 			{
 				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
 				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
@@ -567,12 +567,21 @@ int main(int argc, const char **argv)
 					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL V", ((double)stallVideo.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
+					str(L"%d MPIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mpie ? 1 : 0) << L", " <<
 					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
+					str(L"%d MEIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_meie ? 1 : 0) << L", " <<
 					str(L"%d MTIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_mtie ? 1 : 0) << L", " <<
+					str(L"%d MTIP", soc->SoC__DOT__cpu__DOT__csr__DOT__mip_mtip ? 1 : 0) << L", " <<
 					str(L"%08x MSCRATCH", soc->SoC__DOT__cpu__DOT__csr__DOT__mscratch) << L", " <<
+					str(L"%d TIME", soc->SoC__DOT__cpu__DOT__csr__DOT__wtime) << L", " <<
 					str(L"%.2f%% I$ HIT", icr) << L", " <<
 					str(L"%.2f%% D$ HIT", dcr) << L", " <<
-					str(L"%d SAMPLES", audio.written()) <<
+					// str(L"%d SAMPLES", audio.written()) <<
+					Endl;
+
+				log::info << L"*** " <<
+					str(L"%d CYCLES", soc->SoC__DOT__timer__DOT__cycles) << L", " <<
+					str(L"%d COMPARE", soc->SoC__DOT__timer__DOT__compare) << L", " <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
