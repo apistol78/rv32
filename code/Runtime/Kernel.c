@@ -11,6 +11,7 @@
 #define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
 #define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
 #define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x3 * 0x04)
+#define TIMER_COUNTDOWN		(volatile uint32_t*)(TIMER_BASE + 0x4 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
 #define KERNEL_SCHEDULE_FREQUENCY	600
@@ -109,13 +110,16 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 
 	// Setup next timer interrupt, do this inline since we
 	// cannot touch stack.
+	// {
+	// 	const uint32_t mtimeh = *TIMER_CYCLES_H;
+	// 	const uint32_t mtimel = *TIMER_CYCLES_L;
+	// 	const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+	// 	*TIMER_COMPARE_H = 0xFFFFFFFF;
+	// 	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+	// 	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	// }
 	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+		*TIMER_COUNTDOWN = KERNEL_TIMER_RATE;
 	}
 
 	// Restore new thread.
@@ -199,13 +203,16 @@ void kernel_init()
 	// Setup timer interrupt for kernel scheduler.
 	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
 
+	// {
+	// 	const uint32_t mtimeh = *TIMER_CYCLES_H;
+	// 	const uint32_t mtimel = *TIMER_CYCLES_L;
+	// 	const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
+	// 	*TIMER_COMPARE_H = 0xFFFFFFFF;
+	// 	*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
+	// 	*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+	// }
 	{
-		const uint32_t mtimeh = *TIMER_CYCLES_H;
-		const uint32_t mtimel = *TIMER_CYCLES_L;
-		const uint64_t tc = ( (((uint64_t)mtimeh) << 32) | mtimel ) + KERNEL_TIMER_RATE;
-		*TIMER_COMPARE_H = 0xFFFFFFFF;
-		*TIMER_COMPARE_L = (uint32_t)(tc & 0x0FFFFFFFFUL);
-		*TIMER_COMPARE_H = (uint32_t)(tc >> 32);
+		*TIMER_COUNTDOWN = KERNEL_TIMER_RATE;
 	}
 
 	// Ensure interrupts are enabled.
