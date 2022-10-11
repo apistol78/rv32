@@ -15,7 +15,6 @@ module CPU_CSR #(
 	// External interrupt input.
 	input i_timer_interrupt,
 	input i_external_interrupt,
-	output o_external_interrupt_enable,
 
 	// Software interrupt input.
 	input i_ecall,
@@ -64,7 +63,6 @@ module CPU_CSR #(
 	bit [PRESCALE_WIDTH - 1:0] prescale = 0;
 	bit [2:0] issued = 0;
 
-	assign o_external_interrupt_enable = !o_irq_pending && mstatus_mie && mie_meie;
 	assign o_epc = mepc;
 
 	// Read CSR value by index.
@@ -142,7 +140,7 @@ module CPU_CSR #(
 				else if (i_index == `CSR_MIP) begin
 					//mip_meip <= i_wdata[11];
 					mip_mtip <= i_wdata[7];
-					//mip_msip <= i_wdata[3];
+					mip_msip <= i_wdata[3];
 				end
 			end
 
