@@ -125,9 +125,6 @@ module CPU_Fetch #(
 		end
 		else begin
 
-			if (state != WAIT_ICACHE && icache_ready)
-				$display("unexpected icache ready");
-
 			o_irq_dispatched <= 1'b0;
 
 			case (state)
