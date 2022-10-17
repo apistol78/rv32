@@ -157,7 +157,7 @@ module CPU #(
 	// DECODE
 
 	wire decode_fault;
-	decode_data_t decode_data_0;
+	decode_data_t decode_data;
 
 	CPU_Decode decode(
 		.i_reset(i_reset),
@@ -168,19 +168,6 @@ module CPU #(
 		.i_data(fetch_data),
 
 		// Output
-		.o_data(decode_data_0)
-	);
-
-	decode_data_t decode_data;
-
-	CPU_SkidBuffer #(
-		.DW($bits(decode_data_t))
-	) decode_skid(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-
-		.i_busy(execute_busy | memory_busy),
-		.i_data(decode_data_0),
 		.o_data(decode_data)
 	);
 
@@ -239,6 +226,7 @@ module CPU #(
 		.i_rs2(forward_rs2),
 	
 		// Output
+		.i_memory_busy(memory_busy),
 		.o_data(execute_data)
 	);
 

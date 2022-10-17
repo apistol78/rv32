@@ -27,6 +27,7 @@ module CPU_Execute (
 	input [31:0] i_rs2,
 	
 	// Output
+	input i_memory_busy,
 	output execute_data_t o_data
 );
 
@@ -188,7 +189,12 @@ module CPU_Execute (
 	end
 	
 	always_comb begin
-		o_busy = |cycle;
+		o_busy =
+			(
+				(i_data.strobe != last_strobe) &&
+				//(i_data.complx || i_data.fpu)
+				i_data.complx
+			);
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -211,7 +217,10 @@ module CPU_Execute (
 			o_mret <= 1'b0;
 			o_ecall <= 1'b0;
 
-			if (i_data.strobe != last_strobe) begin
+			if (
+				!i_memory_busy &&
+				i_data.strobe != last_strobe
+			) begin
 
 `ifdef __VERILATOR__
 				trace_pc <= i_data.pc;
