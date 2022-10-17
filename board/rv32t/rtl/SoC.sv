@@ -349,7 +349,9 @@ module SoC(
 	wire [31:0] timer_rdata;
 	wire timer_ready;
 	wire timer_interrupt;
-	Timer timer(
+	Timer #(
+		.FREQUENCY(`FREQUENCY)
+	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(timer_select && bridge_far_request),

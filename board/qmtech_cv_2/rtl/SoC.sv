@@ -242,6 +242,7 @@ module SoC(
 	wire cpu_fault;
 
 	CPU #(
+		.FREQUENCY(`FREQUENCY),
 		.STACK_POINTER(32'h20110000),
 		.ICACHE_SIZE(13),
 		.DCACHE_REGISTERED(0),

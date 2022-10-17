@@ -8,6 +8,7 @@
 #include "Runtime/HAL/SystemRegisters.h"
 #include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
+#include "Runtime/HAL/Video.h"
 
 #include "Console.h"
 #include "ELF.h"
@@ -344,6 +345,11 @@ static void cmd_iotest(const char* args)
 	}
 }
 
+static void cmd_rstvid(const char* args)
+{
+	video_init();
+}
+
 static void cmd_help(const char* args)
 {
 	fb_print("REBOOT  - Cold reboot\n");
@@ -352,8 +358,8 @@ static void cmd_help(const char* args)
 	fb_print("RUN     - Run program\n");
 	fb_print("DL      - Download file\n");
 	fb_print("SYSINFO - System info\n");
-	fb_print("PLAY    - Play sound file\n");
 	fb_print("IOTEST  - I/O test\n");
+	fb_print("RSTVID  - Reset video\n");
 	fb_print("HELP    - Show help\n");
 }
 
@@ -371,6 +377,7 @@ c_cmds[] =
 	{ "dl",			cmd_download	},
 	{ "sysinfo",	cmd_sysinfo		},
 	{ "iotest",		cmd_iotest		},
+	{ "rstvid",		cmd_rstvid		},
 	{ "help",		cmd_help		}
 };
 
