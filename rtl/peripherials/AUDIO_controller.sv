@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 module AUDIO_controller #(
-	parameter BUFFER_SIZE = 32768
+	parameter BUFFER_SIZE = 4096
 )(
 	input i_reset,
 	input i_clock,
