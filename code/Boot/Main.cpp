@@ -13,6 +13,35 @@
 #include "Console.h"
 #include "ELF.h"
 
+static void cmd_reboot(const char* args);
+static void cmd_list(const char* args);
+static void cmd_remove(const char* filename);
+static void cmd_run(const char* filename);
+static void cmd_download(const char* filename);
+static void cmd_sysinfo(const char* args);
+static void cmd_iotest(const char* args);
+static void cmd_rstvid(const char* args);
+static void cmd_help(const char* args);
+
+const struct cmdMap_t
+{
+	const char* name;
+	void (*fn)(const char* args);
+	const char* description;
+}
+c_cmds[] =
+{
+	{ "reboot",		cmd_reboot,		"Cold reboot"	},
+	{ "ls",			cmd_list,		"List files"	},
+	{ "rm",			cmd_remove,		"Remove file"	},
+	{ "run",		cmd_run,		"Run program"	},
+	{ "dl",			cmd_download,	"Download file"	},
+	{ "sysinfo",	cmd_sysinfo,	"System info"	},
+	{ "iotest",		cmd_iotest,		"I/O test"		},
+	{ "rstvid",		cmd_rstvid,		"Reset video"	},
+	{ "help",		cmd_help,		"Show help"		}
+};
+
 static void cmd_reboot(const char* args)
 {
 	runtime_cold_restart();
@@ -352,51 +381,28 @@ static void cmd_rstvid(const char* args)
 
 static void cmd_help(const char* args)
 {
-	fb_print("REBOOT  - Cold reboot\n");
-	fb_print("LS      - List files on SD\n");
-	fb_print("RM      - Remove file from SD\n");
-	fb_print("RUN     - Run program\n");
-	fb_print("DL      - Download file\n");
-	fb_print("SYSINFO - System info\n");
-	fb_print("IOTEST  - I/O test\n");
-	fb_print("RSTVID  - Reset video\n");
-	fb_print("HELP    - Show help\n");
+	for (int i = 0; i < sizeof(c_cmds) / sizeof(c_cmds[0]); ++i)
+	{
+		fb_printf(
+			"%7s - %s\n",
+			c_cmds[i].name,
+			c_cmds[i].description
+		);
+	}
 }
 
-const struct cmdMap_t
-{
-	const char* name;
-	void (*fn)(const char* args);
-}
-c_cmds[] =
-{
-	{ "reboot",		cmd_reboot		},
-	{ "ls",			cmd_list		},
-	{ "rm",			cmd_remove		},
-	{ "run",		cmd_run			},
-	{ "dl",			cmd_download	},
-	{ "sysinfo",	cmd_sysinfo		},
-	{ "iotest",		cmd_iotest		},
-	{ "rstvid",		cmd_rstvid		},
-	{ "help",		cmd_help		}
-};
+// void beforeMain (void) __attribute__((constructor));
+// void beforeMain (void)
+// {
+// 	runtime_init();
+// }
 
 int main(int argc, const char** argv)
 {
 	char cmd[128];
 	int32_t cnt = 0;
 
-	// Until here every single cycle should be deterministic.
-	const uint64_t expected = 52955;
-	const uint64_t cc = timer_get_cycles();
-
 	runtime_init();
-
-	printf("%llu cycles\n", cc);
-	if (cc > expected)
-		printf("WARN: cycles exceeded\n");
-	else if (cc < expected)
-		printf("INFO: cycles reduced\n");
 
 	fb_init();
 	fb_clear();
