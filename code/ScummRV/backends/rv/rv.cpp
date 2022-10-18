@@ -538,7 +538,7 @@ void OSystem_RebelV::update_timer()
 		m_timerExpire = ms + m_timerInterval;
 	}
 	m_lastTime = ms;
-	kernel_sleep(10);
+	kernel_sleep(30);
 }
 
 void OSystem_RebelV::update_frame()
@@ -557,8 +557,6 @@ void OSystem_RebelV::update_frame()
 	// no need to preserve background etc.
 	if (m_mouseVisible)
 		draw_mouse_cursor();
-
-	kernel_sleep(20);
 }
 
 OSystem *OSystem_RebelV_create()
