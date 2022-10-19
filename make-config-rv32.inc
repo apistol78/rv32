@@ -3,7 +3,7 @@
 OPTIMIZE=-O3
 
 C=riscv32-unknown-elf-gcc
-C_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -mbranch-cost=8 -mstrict-align -Wcast-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
+C_FLAGS_COMMON=-march=rv32im -mabi=ilp32 -mbranch-cost=8 -mstrict-align -Wcast-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
 C_FLAGS_DEBUG_SHARED=$(C_FLAGS_COMMON)
 C_FLAGS_RELEASE_SHARED=$(C_FLAGS_COMMON) $(OPTIMIZE)
 C_FLAGS_DEBUG_STATIC=$(C_FLAGS_COMMON)
@@ -13,7 +13,7 @@ C_FLAGS_RELEASE_EXECUTABLE=$(C_FLAGS_COMMON) $(OPTIMIZE)
 C_FLAG_OUTPUT=-o 
 
 CC=riscv32-unknown-elf-g++
-CC_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -mbranch-cost=8 -mstrict-align -fno-rtti -fno-exceptions -fpermissive -Wcast-align -Wno-multichar -Wno-shift-overflow -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
+CC_FLAGS_COMMON=-march=rv32im -mabi=ilp32 -mbranch-cost=8 -mstrict-align -fno-rtti -fno-exceptions -fpermissive -Wcast-align -Wno-multichar -Wno-shift-overflow -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
 CC_FLAGS_DEBUG_SHARED=$(CC_FLAGS_COMMON)
 CC_FLAGS_RELEASE_SHARED=$(CC_FLAGS_COMMON) $(OPTIMIZE)
 CC_FLAGS_DEBUG_STATIC=$(CC_FLAGS_COMMON)
@@ -29,7 +29,7 @@ AR_FLAGS_RELEASE_STATIC=$(AR_FLAGS_COMMON)
 AR_FLAG_OUTPUT=
 
 LINK=riscv32-unknown-elf-g++
-LINK_FLAGS_COMMON=-march=rv32i -mabi=ilp32 -Wl,-gc-sections
+LINK_FLAGS_COMMON=-march=rv32im -mabi=ilp32 -Wl,-gc-sections
 LINK_FLAGS_DEBUG_SHARED=$(LINK_FLAGS_COMMON) -g -shared -fsanitize=address
 LINK_FLAGS_RELEASE_SHARED=$(LINK_FLAGS_COMMON) -shared 
 LINK_FLAGS_DEBUG_STATIC=$(LINK_FLAGS_COMMON) -g -fsanitize=address

@@ -40,6 +40,7 @@
 #include "Rv32/LoadHEX.h"
 #include "Rv32/Memory.h"
 #include "Rv32/PLIC.h"
+#include "Rv32/Profiler.h"
 #include "Rv32/SD.h"
 #include "Rv32/SystemRegisters.h"
 #include "Rv32/Timer.h"
@@ -441,31 +442,31 @@ int main(int argc, const char** argv)
 		form->show();
 	}
 
+	Ref< Profiler > profiler;
+	if (true)
+		profiler = new Profiler();
+
 	Timer timer;
 	while (g_going)
 	{
+		for (int32_t ii = 0; g_going && ii < 100; ++ii)
+		{
+			for (int32_t i = 0; g_going && i < 100; ++i)
+			{
+				if (!cpu.tick())
+					g_going = false;
+				if (bus.error())
+					g_going = false;
+			}
+
+			if (profiler)
+				profiler->record(cpu.pc());
+		}
+
 		if (!headless)
 		{
 			if (!ui::Application::getInstance()->process())
 				break;
-
-			for (int32_t i = 0; i < 10000; ++i)
-			{
-				// if (dbg_pc.full())
-				// 	dbg_pc.pop_front();
-				// dbg_pc.push_back({ cpu.pc(), cpu.sp() });
-
-				if (!cpu.tick())
-				{
-					g_going = false;
-					break;
-				}
-				if (bus.error())
-				{
-					g_going = false;
-					break;
-				}
-			}
 
 			if (timer.getElapsedTime() > 1.0f/60.0f && video.getImage())
 			{
@@ -473,23 +474,6 @@ int main(int argc, const char** argv)
 				image->setImage(uiImage);
 				timer.reset();
 			}
-		}
-		else
-		{
-			// if (dbg_pc.full())
-			// 	dbg_pc.pop_front();
-			// dbg_pc.push_back({ cpu.pc(), cpu.sp() });
-
-			if (!cpu.tick())
-			{
-				g_going = false;
-				break;
-			}
-			if (bus.error())
-			{
-				g_going = false;
-				break;
-			}		
 		}
 	}
 
@@ -500,7 +484,6 @@ int main(int argc, const char** argv)
 		form->destroy();
 		form = nullptr;
 	}
-
 
 	log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu.pc()) << Endl;
 	log::info << L"---" << Endl;
