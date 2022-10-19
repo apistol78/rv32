@@ -297,6 +297,10 @@ int main(int argc, const char** argv)
 			os = new FileOutputStream(f, new Utf8Encoding());
 	}
 
+	Ref< Profiler > profiler;
+	if (cmdLine.hasOption(L'p', L"profiler"))
+		profiler = new Profiler();
+
 	CPU cpu(&bus, os);
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -348,9 +352,6 @@ int main(int argc, const char** argv)
 	// Push arguments.
 	cpu.push(0);
 	cpu.push(0);
-
-	CircularVector< std::pair< uint32_t, uint32_t >, 32 > dbg_pc;
-	uint32_t dbg_sp = cpu.sp();
 
 	Ref< ui::Form > form;
 	Ref< ui::Bitmap > uiImage;
@@ -442,10 +443,6 @@ int main(int argc, const char** argv)
 		form->show();
 	}
 
-	Ref< Profiler > profiler;
-	if (true)
-		profiler = new Profiler();
-
 	Timer timer;
 	while (g_going)
 	{
@@ -490,9 +487,6 @@ int main(int argc, const char** argv)
 
 	for (uint32_t i = 0; i < 32; ++i)
 		log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu.reg(i)) << Endl;
-
-	// for (int i = 0; i < dbg_pc.size(); ++i)
-	// 	log::info << i << L". PC " << str(L"%08x", dbg_pc[i].first) << L", SP " << str(L"%08x", dbg_pc[i].second) << Endl;
 
 	return 0;
 }
