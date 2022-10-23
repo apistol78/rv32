@@ -10,7 +10,7 @@ $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run veri
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode > rtl/cpu/private/generated/Instructions_decode.sv
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_decode_ops > rtl/cpu/private/generated/Instructions_decode_ops.sv
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_execute_ops I J R U B S CSR > rtl/cpu/private/generated/Instructions_execute_ops.sv
-#$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_fpu > rtl/cpu/private/generated/Instructions_fpu.sv
+$TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run verilog_fpu > rtl/cpu/private/generated/Instructions_fpu.sv
 
 # Generate instructions (emulator).
 $TRAKTOR_HOME/bin/linux/releasestatic/Traktor.Run.App code/Instructions.run cpp > code/Rv32/Instructions.inl
@@ -28,13 +28,13 @@ rm Firmware.hex
 
 # Generate verilated code.
 mkdir -p code/Verify/SoC
-verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/gpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/cpu/private/fpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Verify/SoC --top-module SoC board/verify/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi
 
 mkdir -p code/Rv32T/SoC
-verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/gpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC board/rv32t/rtl/SoC.sv
+verilator --trace-fst --trace-structs --cc -Irtl/cpu -Irtl/cpu/private -Irtl/cpu/private/fpu -Irtl/peripherials -D__VERILATOR__ -D__TESTBENCH__ -Wno-WIDTH -Wno-WIDTHCONCAT -Wno-TIMESCALEMOD --Mdir code/Rv32T/SoC --top-module SoC board/rv32t/rtl/SoC.sv
 if [ $? -ne 0 ]; then
 	exit 1
 fi

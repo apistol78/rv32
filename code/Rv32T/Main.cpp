@@ -429,7 +429,7 @@ int main(int argc, const char **argv)
 			if (tfp)
 				tfp->dump(time);
 
-			//++time;
+			++time;
 			soc->CLOCK_125_p = 1;
 			soc->CPU_RESET_n = reset ? 0 : 1;
 			soc->KEY |= key1 ? 2 : 0;

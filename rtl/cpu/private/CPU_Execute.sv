@@ -25,7 +25,8 @@ module CPU_Execute (
 	input decode_data_t i_data,
 	input [31:0] i_rs1,
 	input [31:0] i_rs2,
-	
+	input [31:0] i_rs3,
+
 	// Output
 	input i_memory_busy,
 	output execute_data_t o_data
@@ -42,6 +43,7 @@ module CPU_Execute (
 	`define PC			i_data.pc
 	`define RS1			i_rs1
 	`define RS2			i_rs2
+	`define RS3			i_rs3
 	`define IMM			i_data.imm
 	`define ZERO		0
 
@@ -146,24 +148,26 @@ module CPU_Execute (
 	// ====================
 	// FPU
 
-	// reg fpu_request;
-	// wire fpu_ready;
-	// wire [31:0] fpu_result;
-	// CPU_FPU fpu(
-	// 	.i_reset(i_reset),
-	// 	.i_clock(i_clock),
-	// 	.i_request(fpu_request),
-	// 	.i_op(i_data.fpu_operation),
-	// 	.i_op1(`RS1),
-	// 	.i_op2(`RS2),
-	// 	.i_op3(`RS3),
-	// 	.o_ready(fpu_ready),
-	// 	.o_result(fpu_result)
-	// );
+`ifdef FPU_ENABLE
+	reg fpu_request;
+	wire fpu_ready;
+	wire [31:0] fpu_result;
+	CPU_FPU fpu(
+		.i_reset(i_reset),
+		.i_clock(i_clock),
+		.i_request(fpu_request),
+		.i_op(i_data.fpu_operation),
+		.i_op1(`RS1),
+		.i_op2(`RS2),
+		.i_op3(`RS3),
+		.o_ready(fpu_ready),
+		.o_result(fpu_result)
+	);
 
-	// always_comb begin
-	// 	fpu_request = !i_memory_busy && (i_data.tag != data.tag) && i_data.fpu;
-	// end
+	always_comb begin
+		fpu_request = !i_memory_busy && (i_data.strobe != last_strobe) && i_data.fpu;
+	end
+`endif
 
 	// ====================
 
@@ -192,8 +196,11 @@ module CPU_Execute (
 		o_busy =
 			(
 				(i_data.strobe != last_strobe) &&
-				//(i_data.complx || i_data.fpu)
+`ifdef FPU_ENABLE
+				(i_data.complx || i_data.fpu)
+`else
 				i_data.complx
+`endif
 			);
 	end
 
@@ -277,12 +284,14 @@ module CPU_Execute (
 					// stored in temporary registers.
 					`include "private/generated/Instructions_execute_ops.sv"
 				end
-				// else if (i_data.fpu) begin
-				// 	if (fpu_ready) begin
-				// 		`RD <= fpu_result;
-				// 		`EXECUTE_DONE;
-				// 	end
-				// end
+`ifdef FPU_ENABLE
+				else if (i_data.fpu) begin
+					if (fpu_ready) begin
+						`RD <= fpu_result;
+						`EXECUTE_DONE;
+					end
+				end
+`endif
 				else begin
 					// Invalid condition, should fault since it's
 					// most probably a bug.

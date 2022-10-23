@@ -19,8 +19,29 @@ wire is_DIV       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h02004033);
 wire is_DIVU      = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h02005033);
 wire is_EBREAK    = ((`INSTRUCTION[31:0] & 32'hffffffff) == 32'h00100073);
 wire is_ECALL     = ((`INSTRUCTION[31:0] & 32'hffffffff) == 32'h00000073);
+wire is_FADD      = ((`INSTRUCTION[31:0] & 32'hfe00007f) == 32'h00000053);
+wire is_FCVT_W_S  = ((`INSTRUCTION[31:0] & 32'hfff0007f) == 32'hc0000053);
+wire is_FCVT_S_W  = ((`INSTRUCTION[31:0] & 32'hfff0007f) == 32'hd0000053);
+wire is_FCVT_S_WU = ((`INSTRUCTION[31:0] & 32'hfff0007f) == 32'hd0100053);
+wire is_FDIV      = ((`INSTRUCTION[31:0] & 32'hfe00007f) == 32'h18000053);
 wire is_FENCE     = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h000f    );
+wire is_FEQ       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'ha0002053);
+wire is_FLE       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'ha0000053);
+wire is_FLT       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'ha0001053);
 wire is_FLW       = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h2007    );
+wire is_FMADD     = ((`INSTRUCTION[31:0] & 32'h0600007f) == 32'h00000043);
+wire is_FMSUB     = ((`INSTRUCTION[31:0] & 32'h0600007f) == 32'h00000047);
+wire is_FNMADD    = ((`INSTRUCTION[31:0] & 32'h0600007f) == 32'h0000004f);
+wire is_FNMSUB    = ((`INSTRUCTION[31:0] & 32'h0600007f) == 32'h0000004b);
+wire is_FMIN      = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h28000053);
+wire is_FMAX      = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h28001053);
+wire is_FMUL      = ((`INSTRUCTION[31:0] & 32'hfe00007f) == 32'h10000053);
+wire is_FMV_X_W   = ((`INSTRUCTION[31:0] & 32'hfff0707f) == 32'he0000053);
+wire is_FMV_W_X   = ((`INSTRUCTION[31:0] & 32'hfff0707f) == 32'hf0000053);
+wire is_FSGNJ     = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h20000053);
+wire is_FSGNJN    = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h20001053);
+wire is_FSGNJX    = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h20002053);
+wire is_FSUB      = ((`INSTRUCTION[31:0] & 32'hfe00007f) == 32'h08000053);
 wire is_FSW       = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h2027    );
 wire is_JAL       = ((`INSTRUCTION[ 7:0] &  8'h7f      ) ==  8'h6f      );
 wire is_JALR      = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h0067    );
@@ -56,14 +77,14 @@ wire is_WFI       = ((`INSTRUCTION[31:0] & 32'hffffffff) == 32'h10500073);
 wire is_XOR       = ((`INSTRUCTION[31:0] & 32'hfe00707f) == 32'h00004033);
 wire is_XORI      = ((`INSTRUCTION[15:0] & 16'h707f    ) == 16'h4013    );
 
-wire is_B   = (`INSTRUCTION[6:0] == 7'h63);
-wire is_I   = (`INSTRUCTION[6:0] == 7'h03) || (`INSTRUCTION[6:0] == 7'h13) || (`INSTRUCTION[6:0] == 7'h0f) || (`INSTRUCTION[6:0] == 7'h67);
-wire is_J   = (`INSTRUCTION[6:0] == 7'h6f);
-wire is_R   = (`INSTRUCTION[6:0] == 7'h33);
-wire is_R4  = (`INSTRUCTION[6:0] == 7'h43) || (`INSTRUCTION[6:0] == 7'h4f) || (`INSTRUCTION[6:0] == 7'h47) || (`INSTRUCTION[6:0] == 7'h4b);
-wire is_S   = (`INSTRUCTION[6:0] == 7'h23);
-wire is_U   = (`INSTRUCTION[6:0] == 7'h17) || (`INSTRUCTION[6:0] == 7'h37);
-wire is_CSR = (`INSTRUCTION[6:0] == 7'h73);
+wire is_B = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
+wire is_I = is_ADDI | is_ANDI | is_FENCE | is_FLW | is_JALR | is_LB | is_LBU | is_LH | is_LHU | is_LW | is_ORI | is_SLTI | is_SLTIU | is_XORI;
+wire is_J = is_JAL;
+wire is_R = is_ADD | is_AND | is_DIV | is_DIVU | is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FCVT_S_WU | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMIN | is_FMAX | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB | is_MUL | is_MULH | is_MULHU | is_OR | is_REM | is_REMU | is_SLL | is_SLLI | is_SLT | is_SLTU | is_SRA | is_SRAI | is_SRL | is_SRLI | is_SUB | is_XOR;
+wire is_R4 = is_FMADD | is_FMSUB | is_FNMADD | is_FNMSUB;
+wire is_S = is_FSW | is_SB | is_SH | is_SW;
+wire is_U = is_AUIPC | is_LUI;
+wire is_CSR = is_CSRRC | is_CSRRS | is_CSRRW | is_MRET;
 
 wire is_ARITHMETIC = is_ADD | is_ADDI | is_AND | is_ANDI | is_AUIPC | is_LUI | is_OR | is_ORI | is_SUB | is_XOR | is_XORI;
 wire is_SHIFT = is_SLL | is_SLLI | is_SRA | is_SRAI | is_SRL | is_SRLI;
@@ -72,4 +93,74 @@ wire is_COMPLEX = is_CSRRC | is_CSRRS | is_CSRRW | is_DIV | is_DIVU | is_EBREAK 
 wire is_JUMP = is_JAL | is_JALR;
 wire is_JUMP_CONDITIONAL = is_BEQ | is_BGE | is_BGEU | is_BLT | is_BLTU | is_BNE;
 wire is_MEMORY = is_LB | is_LBU | is_LH | is_LHU | is_LW | is_SB | is_SH | is_SW;
+wire is_FPU = is_FADD | is_FCVT_W_S | is_FCVT_S_W | is_FCVT_S_WU | is_FDIV | is_FEQ | is_FLE | is_FLT | is_FMADD | is_FMSUB | is_FNMADD | is_FNMSUB | is_FMIN | is_FMAX | is_FMUL | is_FMV_X_W | is_FMV_W_X | is_FSGNJ | is_FSGNJN | is_FSGNJX | is_FSUB;
+wire is_FPU_MEMORY = is_FLW | is_FSW;
+
+wire RD_bank =
+	is_FADD      ? 1'd1 :
+	is_FCVT_S_W  ? 1'd1 :
+	is_FCVT_S_WU ? 1'd1 :
+	is_FDIV      ? 1'd1 :
+	is_FLW       ? 1'd1 :
+	is_FMADD     ? 1'd1 :
+	is_FMSUB     ? 1'd1 :
+	is_FNMADD    ? 1'd1 :
+	is_FNMSUB    ? 1'd1 :
+	is_FMIN      ? 1'd1 :
+	is_FMAX      ? 1'd1 :
+	is_FMUL      ? 1'd1 :
+	is_FMV_W_X   ? 1'd1 :
+	is_FSGNJ     ? 1'd1 :
+	is_FSGNJN    ? 1'd1 :
+	is_FSGNJX    ? 1'd1 :
+	is_FSUB      ? 1'd1 :
+	1'b0;
+
+wire RS1_bank =
+	is_FADD      ? 1'd1 :
+	is_FCVT_W_S  ? 1'd1 :
+	is_FDIV      ? 1'd1 :
+	is_FEQ       ? 1'd1 :
+	is_FLE       ? 1'd1 :
+	is_FLT       ? 1'd1 :
+	is_FMADD     ? 1'd1 :
+	is_FMSUB     ? 1'd1 :
+	is_FNMADD    ? 1'd1 :
+	is_FNMSUB    ? 1'd1 :
+	is_FMIN      ? 1'd1 :
+	is_FMAX      ? 1'd1 :
+	is_FMUL      ? 1'd1 :
+	is_FMV_X_W   ? 1'd1 :
+	is_FSGNJ     ? 1'd1 :
+	is_FSGNJN    ? 1'd1 :
+	is_FSGNJX    ? 1'd1 :
+	is_FSUB      ? 1'd1 :
+	1'b0;
+
+wire RS2_bank =
+	is_FADD      ? 1'd1 :
+	is_FDIV      ? 1'd1 :
+	is_FEQ       ? 1'd1 :
+	is_FLE       ? 1'd1 :
+	is_FLT       ? 1'd1 :
+	is_FMADD     ? 1'd1 :
+	is_FMSUB     ? 1'd1 :
+	is_FNMADD    ? 1'd1 :
+	is_FNMSUB    ? 1'd1 :
+	is_FMIN      ? 1'd1 :
+	is_FMAX      ? 1'd1 :
+	is_FMUL      ? 1'd1 :
+	is_FSGNJ     ? 1'd1 :
+	is_FSGNJN    ? 1'd1 :
+	is_FSGNJX    ? 1'd1 :
+	is_FSUB      ? 1'd1 :
+	is_FSW       ? 1'd1 :
+	1'b0;
+
+wire RS3_bank =
+	is_FMADD     ? 1'd1 :
+	is_FMSUB     ? 1'd1 :
+	is_FNMADD    ? 1'd1 :
+	is_FNMSUB    ? 1'd1 :
+	1'b0;
 

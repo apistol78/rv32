@@ -1,8 +1,15 @@
 `ifndef _CPU_DEFINES_SV
 `define _CPU_DEFINES_SV
 
+// Configuration
+`define FPU_ENABLE					1
+
 // Size of register index.
-`define REG_ID_SIZE					4:0
+`ifdef FPU_ENABLE
+	`define REG_ID_SIZE				6
+`else
+	`define REG_ID_SIZE				5
+`endif
 
 // Multiply and divide
 `ifndef __VERILATOR__

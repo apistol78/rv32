@@ -1,4 +1,4 @@
-`include "CPU_Defines.sv"
+`include "../CPU_Defines.sv"
 
 `timescale 1ns/1ns
 

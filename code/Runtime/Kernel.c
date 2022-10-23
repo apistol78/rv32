@@ -67,6 +67,44 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		"sw		x31, 124(sp)		\n"
 	);
 
+#ifdef __riscv_flen
+	__asm__ volatile (
+		"addi	sp, sp, -128		\n"
+		"fsw	f0, 0(sp)			\n"
+		"fsw	f1, 4(sp)			\n"
+		"fsw	f2, 8(sp)			\n"
+		"fsw	f3, 16(sp)			\n"
+		"fsw	f4, 20(sp)			\n"
+		"fsw	f5, 24(sp)			\n"
+		"fsw	f6, 28(sp)			\n"
+		"fsw	f7, 32(sp)			\n"
+		"fsw	f8, 36(sp)			\n"
+		"fsw	f9, 40(sp)			\n"
+		"fsw	f10, 44(sp)			\n"
+		"fsw	f11, 48(sp)			\n"
+		"fsw	f12, 52(sp)			\n"
+		"fsw	f13, 56(sp)			\n"
+		"fsw	f14, 60(sp)			\n"
+		"fsw	f15, 64(sp)			\n"
+		"fsw	f16, 68(sp)			\n"
+		"fsw	f17, 72(sp)			\n"
+		"fsw	f18, 76(sp)			\n"
+		"fsw	f19, 80(sp)			\n"
+		"fsw	f20, 84(sp)			\n"
+		"fsw	f21, 88(sp)			\n"
+		"fsw	f22, 92(sp)			\n"
+		"fsw	f23, 96(sp)			\n"
+		"fsw	f24, 100(sp)		\n"
+		"fsw	f25, 104(sp)		\n"
+		"fsw	f26, 108(sp)		\n"
+		"fsw	f27, 112(sp)		\n"
+		"fsw	f28, 116(sp)		\n"
+		"fsw	f29, 120(sp)		\n"
+		"fsw	f30, 124(sp)		\n"
+		"fsw	f31, 128(sp)		\n"
+	);
+#endif
+
 	// Save current interrupt return address and stack pointer.
 	{
 		volatile kernel_thread_t* t = &g_threads[g_current];
@@ -135,6 +173,45 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 			: "r" (t->epc), "r" (t->sp)
 		);
 	}
+
+
+#ifdef __riscv_flen
+	__asm__ volatile (
+		"flw	f0, 0(sp)			\n"
+		"flw	f1, 4(sp)			\n"
+		"flw	f2, 8(sp)			\n"
+		"flw	f3, 16(sp)			\n"
+		"flw	f4, 20(sp)			\n"
+		"flw	f5, 24(sp)			\n"
+		"flw	f6, 28(sp)			\n"
+		"flw	f7, 32(sp)			\n"
+		"flw	f8, 36(sp)			\n"
+		"flw	f9, 40(sp)			\n"
+		"flw	f10, 44(sp)			\n"
+		"flw	f11, 48(sp)			\n"
+		"flw	f12, 52(sp)			\n"
+		"flw	f13, 56(sp)			\n"
+		"flw	f14, 60(sp)			\n"
+		"flw	f15, 64(sp)			\n"
+		"flw	f16, 68(sp)			\n"
+		"flw	f17, 72(sp)			\n"
+		"flw	f18, 76(sp)			\n"
+		"flw	f19, 80(sp)			\n"
+		"flw	f20, 84(sp)			\n"
+		"flw	f21, 88(sp)			\n"
+		"flw	f22, 92(sp)			\n"
+		"flw	f23, 96(sp)			\n"
+		"flw	f24, 100(sp)		\n"
+		"flw	f25, 104(sp)		\n"
+		"flw	f26, 108(sp)		\n"
+		"flw	f27, 112(sp)		\n"
+		"flw	f28, 116(sp)		\n"
+		"flw	f29, 120(sp)		\n"
+		"flw	f30, 124(sp)		\n"
+		"flw	f31, 128(sp)		\n"
+		"addi	sp, sp, 128			\n"
+	);
+#endif
 
 	__asm__ volatile (
 		"lw		x4, 16(sp)			\n"

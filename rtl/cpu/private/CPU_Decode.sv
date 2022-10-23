@@ -32,8 +32,11 @@ module CPU_Decode(
 	`define PC	 5'b01000
 	`define IMM  5'b10000
 	`include "private/generated/Instructions_alu.sv"
-//	`include "private/generated/Instructions_fpu.sv"
 	`include "private/generated/Instructions_memory.sv"
+
+`ifdef FPU_ENABLE
+	`include "private/generated/Instructions_fpu.sv"
+`endif
 
 	wire have_RS1 = is_B | is_I | is_R | is_S | is_CSR | is_R4;
 	wire have_RS2 = is_B | is_R | is_S | is_R4;
@@ -65,14 +68,14 @@ module CPU_Decode(
 			data.pc <= i_data.pc;
 
 			data.have_rs <= {
-				1'b0, // i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
+				i_data.inst_rs3 != 0 ? 1'b1 : 1'b0,
 				i_data.inst_rs2 != 0 ? 1'b1 : 1'b0,
 				i_data.inst_rs1 != 0 ? 1'b1 : 1'b0
 			};
 
 			data.inst_rs1 <= i_data.inst_rs1;
 			data.inst_rs2 <= i_data.inst_rs2;
-			//data.inst_rs3 <= i_data.inst_rs3;
+			data.inst_rs3 <= i_data.inst_rs3;
 			data.inst_rd <= i_data.inst_rd;
 			
 			data.imm <=
@@ -102,8 +105,10 @@ module CPU_Decode(
 			data.memory_width <= memory_width;
 			data.memory_signed <= memory_signed;
 			
-			// data.fpu <= is_FPU;
-			// data.fpu_operation <= fpu_operation;
+`ifdef FPU_ENABLE
+			data.fpu <= is_FPU;
+			data.fpu_operation <= fpu_operation;
+`endif
 
 			`define OP data.op
 			`include "private/generated/Instructions_decode_ops.sv"

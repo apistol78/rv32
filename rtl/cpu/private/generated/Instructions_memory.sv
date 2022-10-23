@@ -2,6 +2,7 @@
 // ==================================================
 
 wire memory_read = 
+	is_FLW |
 	is_LB  |
 	is_LBU |
 	is_LH  |
@@ -10,12 +11,15 @@ wire memory_read =
 	1'b0;
 
 wire memory_write = 
+	is_FSW |
 	is_SB  |
 	is_SH  |
 	is_SW  |
 	1'b0;
 
 wire [1:0] memory_width = 
+	is_FLW ? 2'b10 :
+	is_FSW ? 2'b10 :
 	is_LB  ? 2'b00 :
 	is_LBU ? 2'b00 :
 	is_LH  ? 2'b01 :

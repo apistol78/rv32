@@ -1747,8 +1747,8 @@ function main(argv)
 		-- Get all verilog instructions.
 		local vi = {}
 		for _, inst in ipairs(instructions) do
-			-- if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil or inst.verilog_fpu ~= nil then
-			if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
+			if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil or inst.verilog_fpu ~= nil then
+			-- if inst.verilog ~= nil or inst.verilog_alu ~= nil or inst.verilog_text ~= nil then
 				table.insert(vi, inst)
 			end
 		end
@@ -1766,7 +1766,6 @@ function main(argv)
 		stdout:printLn("")
 
 		-- Format signals.
---[[
 		for _, prefix in ipairs(P) do
 			local t = {}
 			for i, inst in ipairs(vi) do
@@ -1786,18 +1785,17 @@ function main(argv)
 			end
 		end
 		stdout:printLn("")
-]]
-		stdout:printLn(
-			"wire is_B   = (`INSTRUCTION[6:0] == 7'h63);\n" ..
-			"wire is_I   = (`INSTRUCTION[6:0] == 7'h03) || (`INSTRUCTION[6:0] == 7'h13) || (`INSTRUCTION[6:0] == 7'h0f) || (`INSTRUCTION[6:0] == 7'h67);\n" ..
-			"wire is_J   = (`INSTRUCTION[6:0] == 7'h6f);\n" ..
-			"wire is_R   = (`INSTRUCTION[6:0] == 7'h33);\n" ..
-			"wire is_R4  = (`INSTRUCTION[6:0] == 7'h43) || (`INSTRUCTION[6:0] == 7'h4f) || (`INSTRUCTION[6:0] == 7'h47) || (`INSTRUCTION[6:0] == 7'h4b);\n" ..
-			"wire is_S   = (`INSTRUCTION[6:0] == 7'h23);\n" ..
-			"wire is_U   = (`INSTRUCTION[6:0] == 7'h17) || (`INSTRUCTION[6:0] == 7'h37);\n" ..
-			"wire is_CSR = (`INSTRUCTION[6:0] == 7'h73);"
-		)
-		stdout:printLn("")
+		-- stdout:printLn(
+		-- 	"wire is_B   = (`INSTRUCTION[6:0] == 7'h63);\n" ..
+		-- 	"wire is_I   = (`INSTRUCTION[6:0] == 7'h03) || (`INSTRUCTION[6:0] == 7'h13) || (`INSTRUCTION[6:0] == 7'h0f) || (`INSTRUCTION[6:0] == 7'h67);\n" ..
+		-- 	"wire is_J   = (`INSTRUCTION[6:0] == 7'h6f);\n" ..
+		-- 	"wire is_R   = (`INSTRUCTION[6:0] == 7'h33);\n" ..
+		-- 	"wire is_R4  = (`INSTRUCTION[6:0] == 7'h43) || (`INSTRUCTION[6:0] == 7'h4f) || (`INSTRUCTION[6:0] == 7'h47) || (`INSTRUCTION[6:0] == 7'h4b);\n" ..
+		-- 	"wire is_S   = (`INSTRUCTION[6:0] == 7'h23);\n" ..
+		-- 	"wire is_U   = (`INSTRUCTION[6:0] == 7'h17) || (`INSTRUCTION[6:0] == 7'h37);\n" ..
+		-- 	"wire is_CSR = (`INSTRUCTION[6:0] == 7'h73);"
+		-- )
+		-- stdout:printLn("")
 
 		-- Instruction type signals.
 		for _, it in pairs({
@@ -1808,9 +1806,9 @@ function main(argv)
 			insttype.JUMP,
 			insttype.JUMP_CONDITIONAL,
 			insttype.MEMORY,
---			insttype.FPU,
---			insttype.FPU_CVT,
---			insttype.FPU_MEMORY,
+			insttype.FPU,
+			insttype.FPU_CVT,
+			insttype.FPU_MEMORY,
 		}) do
 			stdout:print("wire is_" .. it .. " =")
 			local count = 0
@@ -1827,41 +1825,41 @@ function main(argv)
 		stdout:printLn("")
 
 		-- Instruction register banks.
---		stdout:printLn("wire RD_bank =");
---		for _, inst in ipairs(vi) do
---			if inst.verilog_rd_bank ~= nil and inst.verilog_rd_bank ~= 0 then
---				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rd_bank .. " :");
---			end
---		end
---		stdout:printLn("\t1'b0;")
---		stdout:printLn("")
+		stdout:printLn("wire RD_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rd_bank ~= nil and inst.verilog_rd_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rd_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
 
---		stdout:printLn("wire RS1_bank =");
---		for _, inst in ipairs(vi) do
---			if inst.verilog_rs1_bank ~= nil and inst.verilog_rs1_bank ~= 0 then
---				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs1_bank .. " :");
---			end
---		end
---		stdout:printLn("\t1'b0;")
---		stdout:printLn("")
+		stdout:printLn("wire RS1_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs1_bank ~= nil and inst.verilog_rs1_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs1_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
 
---		stdout:printLn("wire RS2_bank =");
---		for _, inst in ipairs(vi) do
---			if inst.verilog_rs2_bank ~= nil and inst.verilog_rs2_bank ~= 0 then
---				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
---			end
---		end
---		stdout:printLn("\t1'b0;")
---		stdout:printLn("")
+		stdout:printLn("wire RS2_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs2_bank ~= nil and inst.verilog_rs2_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
 
---		stdout:printLn("wire RS3_bank =");
---		for _, inst in ipairs(vi) do
---			if inst.verilog_rs3_bank ~= nil and inst.verilog_rs3_bank ~= 0 then
---				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
---			end
---		end
---		stdout:printLn("\t1'b0;")
---		stdout:printLn("")
+		stdout:printLn("wire RS3_bank =");
+		for _, inst in ipairs(vi) do
+			if inst.verilog_rs3_bank ~= nil and inst.verilog_rs3_bank ~= 0 then
+				stdout:printLn("\tis_" .. string.format("%-9s", inst.name) .. " ? 1'd" .. inst.verilog_rs2_bank .. " :");
+			end
+		end
+		stdout:printLn("\t1'b0;")
+		stdout:printLn("")
 
 	elseif language == "verilog_alu" then
 		stdout:printLn("// This file is automatically generated, DO NOT EDIT!")
@@ -1905,7 +1903,7 @@ function main(argv)
 		-- Get list of all instructions with a MEMORY specification.
 		local alu = {}
 		for i, inst in ipairs(instructions) do
-			if inst.verilog_memory ~= nil and inst.type == insttype.MEMORY then
+			if inst.verilog_memory ~= nil and (inst.type == insttype.MEMORY or inst.type == insttype.FPU_MEMORY) then
 				table.insert(alu, inst)
 			end
 		end
