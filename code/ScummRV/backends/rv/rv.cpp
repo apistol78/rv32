@@ -95,12 +95,9 @@ void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
 		const uint8_t g = colors[1];
 		const uint8_t b = colors[2];
 		m_palette[start + i] = { r, g, b };
-		video_set_palette(
-			start + i,
-			(r << 16) | (g << 8) | (b)
-		);
 		colors += 4;
 	}
+	m_paletteDirty = true;
 }
 
 void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, int h)
@@ -443,7 +440,7 @@ uint32 OSystem_RebelV::property(int param, Property *value)
 	case PROP_TOGGLE_ASPECT_RATIO:
 		break;
 	case PROP_GET_SAMPLE_RATE:
-		return 11025;
+		return 22050;
 	case PROP_HAS_SCALER:
 		return 0;
 	}
@@ -507,7 +504,7 @@ void OSystem_RebelV::draw_mouse_cursor()
 
 void OSystem_RebelV::update_sound()
 {
-	const int32_t chunkSize = 512;
+	const int32_t chunkSize = 1024;
 	static int16_t buf[chunkSize * 2];
 	if (m_soundProc)
 	{
@@ -525,7 +522,7 @@ void OSystem_RebelV::update_sound()
 			audio_play_stereo(buf, chunkSize * 2);
 		}
 	}
-	kernel_sleep(10);
+	kernel_sleep(4);
 }
 
 void OSystem_RebelV::update_timer()
@@ -547,6 +544,16 @@ void OSystem_RebelV::update_frame()
 
 	runtime_update();
 	input_get_mouse_state(&m_mouseX, &m_mouseY, &buttons);
+
+	if (m_paletteDirty)
+	{
+		m_paletteDirty = false;
+		for (int32_t i = 0; i < 256; ++i)
+		{
+			const auto& c = m_palette[i];
+			video_set_palette(i, (c.r << 16) | (c.g << 8) | (c.b));
+		}
+	}
 
 	if (m_overlayVisible)
 		video_blit(1, m_overlayCopy);

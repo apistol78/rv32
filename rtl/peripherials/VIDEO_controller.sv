@@ -230,7 +230,10 @@ module VIDEO_controller #(
 					column_offset <= column_offset + 1;
 
 					if (column_offset < PPITCH / 4) begin
-						read_state <= WAIT_DELAY;					
+						//read_state <= WAIT_DELAY;
+						o_vram_pb_address <= o_vram_pb_address + 4;
+						o_vram_pb_request <= 1;
+						read_state <= WAIT_MEMORY;
 					end
 					else begin
 						read_state <= WAIT_BLANK;

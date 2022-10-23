@@ -84,22 +84,33 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 			"rdtime %0"
 			: "=r" (ms)
 		);
-		// uint32_t ms = *TIMER_MS;
 
+		// First try to find any thread which are waiting for a ready signal.
+		int32_t next = g_current;
 		for (int32_t i = 0; i < g_count; ++i)
 		{
-			if (++g_current >= g_count)
-				g_current = 0;
-
-			volatile kernel_thread_t* t = &g_threads[g_current];
+			if (++next >= g_count)
+				next = 0;
+			volatile kernel_thread_t* t = &g_threads[next];
 			if (t->waiting != 0 && t->waiting->counter > 0)
 			{
 				t->waiting = 0;
 				break;
 			}
-			else if (t->waiting == 0 && t->sleep <= ms)
-				break;
 		}
+		// Else we select next ready thread.
+		if (next == g_current)
+		{
+			for (int32_t i = 0; i < g_count; ++i)
+			{
+				if (++next >= g_count)
+					next = 0;
+				volatile kernel_thread_t* t = &g_threads[next];
+				if (t->waiting == 0 && t->sleep <= ms)
+					break;
+			}
+		}
+		g_current = next;
 
 		// Write new current thread to scratch so we can debug scheduling.
 		// ++g_schedule;
@@ -198,6 +209,7 @@ void kernel_init()
 
 	// Ensure interrupts are enabled.
 	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+	csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);
 }
 
 uint32_t kernel_create_thread(kernel_thread_fn_t fn)

@@ -106,6 +106,7 @@ public:
 	bool m_overlayVisible = false;
 
 	Color m_palette[256];
+	bool m_paletteDirty = false;
 
 	uint8_t m_lastButtons = 0;
 

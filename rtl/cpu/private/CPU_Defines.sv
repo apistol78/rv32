@@ -6,8 +6,8 @@
 
 // Multiply and divide
 `ifndef __VERILATOR__
-	`define MUL_CYCLE_LATENCY       3
-	`define DIV_CYCLE_LATENCY       15
+	`define MUL_CYCLE_LATENCY       2
+	`define DIV_CYCLE_LATENCY       14
 `else
 	`define MUL_CYCLE_LATENCY       2
 	`define DIV_CYCLE_LATENCY       2

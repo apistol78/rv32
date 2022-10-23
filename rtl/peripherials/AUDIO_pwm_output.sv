@@ -11,7 +11,7 @@
 // 9072		11025 kHz @ 100 Mhz
 //
 module AUDIO_pwm_output #(
-	parameter RELOAD = 9072
+	parameter RELOAD = 4536
 )(
 	input i_clock,
 
