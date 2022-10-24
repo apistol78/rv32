@@ -24,7 +24,11 @@ module CPU_DCache_Comb #(
 	input [31:0] i_address,
 	output bit [31:0] o_rdata,
 	input [31:0] i_wdata,
-	input i_cacheable
+	input i_cacheable,
+
+	// Debug
+	output [31:0] o_hit,
+	output [31:0] o_miss
 );
 
 	localparam RANGE = 1 << SIZE;
@@ -56,6 +60,12 @@ module CPU_DCache_Comb #(
 	bit [31:0] next_hit = 0;
 	bit [31:0] miss = 0;
 	bit [31:0] next_miss = 0;
+	
+	assign o_hit = hit;
+	assign o_miss = miss;
+`else
+	assign o_hit = 0;
+	assign o_miss = 0;
 `endif
 
 	// Cache memory.

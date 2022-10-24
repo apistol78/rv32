@@ -23,16 +23,16 @@ module CPU_FPU_Float(
 		PUT_Z
 	} state_t;
 
-	reg s_output_ready = 0;
-	reg [31:0] s_output_z = 0;
+	bit s_output_ready = 0;
+	bit [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] z;
-	reg [23:0] z_m;
-	reg [7:0] z_r;
-	reg [7:0] z_e;
-	reg z_s;
-	reg guard, round_bit, sticky;
+	bit [31:0] z;
+	bit [23:0] z_m;
+	bit [7:0] z_r;
+	bit [7:0] z_e;
+	bit z_s;
+	bit guard, round_bit, sticky;
 
 	wire [31:0] value = (i_signed & i_op1[31]) ? -i_op1 : i_op1;
 
@@ -78,7 +78,7 @@ module CPU_FPU_Float(
 				if (guard && (round_bit || sticky || z_m[0])) begin
 					z_m <= z_m + 1;
 					if (z_m == 24'hffffff) begin
-						z_e <=z_e + 1;
+						z_e <= z_e + 1;
 					end
 				end
 				state <= PACK;

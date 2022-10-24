@@ -17,7 +17,11 @@ module CPU_ICache_Reg #(
 	output bit o_bus_request,
 	input i_bus_ready,
 	output [31:0] o_bus_address,
-	input [31:0] i_bus_rdata
+	input [31:0] i_bus_rdata,
+
+	// Debug
+	output [31:0] o_hit,
+	output [31:0] o_miss
 );
 
 	localparam RANGE = 1 << SIZE;
@@ -38,6 +42,12 @@ module CPU_ICache_Reg #(
 `ifdef __VERILATOR__
 	bit [31:0] hit = 0;
 	bit [31:0] miss = 0;
+
+	assign o_hit = hit;
+	assign o_miss = miss;
+`else
+	assign o_hit = 0;
+	assign o_miss = 0;
 `endif
 
 	// Cache memory.

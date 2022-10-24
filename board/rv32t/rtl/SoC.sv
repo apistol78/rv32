@@ -1,6 +1,7 @@
 `include "CPU_Defines.sv"
 
 `timescale 1ns/1ns
+`define FREQUENCY 100000000
 
 module SoC(
 
@@ -34,10 +35,16 @@ module SoC(
 	output             	UART_TX,
 
 	input              	UART_1_RX,
-	output             	UART_1_TX
-);
+	output             	UART_1_TX,
 
-`define FREQUENCY 100000000
+	// CPU diagnostics
+	output [31:0] o_icache_hit,
+	output [31:0] o_icache_miss,
+	output [31:0] o_dcache_hit,
+	output [31:0] o_dcache_miss,
+	output o_execute_busy,
+	output o_memory_busy
+);
 
 	// Since we want to share pins with HW
 	// this clock will actually be simulated at 100 MHz.
@@ -60,37 +67,17 @@ module SoC(
 
 	//=====================================
 	// SDRAM
-	// wire w_sdram_request;
-	// wire w_sdram_rw;
-	// wire [31:0] w_sdram_address;
-	// wire [127:0] w_sdram_wdata;
-	// wire [127:0] w_sdram_rdata;
-	// wire w_sdram_ready;
-	// wire w_sdram_valid;
-	
 	wire sdram_select;
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	BRAM_latency #(
+	BRAM #(
 		.WIDTH(32),
 		.SIZE(32'h2000000 / 4),
 		.ADDR_LSH(2)
-		// .SIZE(32'h1000000 / 16),
-		// .ADDR_LSH(4),
-		// .LATENCY(16)
 	) sdram(
 		.i_clock(clock),
-
-		// .i_request(w_sdram_request),
-		// .i_rw(w_sdram_rw),
-		// .i_address(w_sdram_address),
-		// .i_wdata(w_sdram_wdata),
-		// .o_rdata(w_sdram_rdata),
-		// .o_ready(w_sdram_ready),
-		// .o_valid(w_sdram_valid)
-
 		.i_request(sdram_select && bus_request),
 		.i_rw(bus_rw),
 		.i_address(sdram_address),
@@ -99,25 +86,6 @@ module SoC(
 		.o_ready(sdram_ready),
 		.o_valid()		
 	);
-
-	// LRU_cache sdram_lru(
-	// 	.i_clock(clock),
-
-	// 	.i_request(sdram_select && bus_request),
-	// 	.i_rw(bus_rw),
-	// 	.i_address(sdram_address),
-	// 	.i_wdata(bus_wdata),
-	// 	.o_rdata(sdram_rdata),
-	// 	.o_ready(sdram_ready),
-	// 	.i_oddeven(bus_pa_busy),	// Instruction or data request
-
-	// 	.o_sdram_request(w_sdram_request),
-	// 	.o_sdram_rw(w_sdram_rw),
-	// 	.o_sdram_address(w_sdram_address),
-	// 	.o_sdram_wdata(w_sdram_wdata),
-	// 	.i_sdram_rdata(w_sdram_rdata),
-	// 	.i_sdram_ready(w_sdram_ready)
-	// );
 	
 	//====================================================
 	// BUS
@@ -195,13 +163,12 @@ module SoC(
 	wire [31:0] cpu_dbus_address;
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
-	wire cpu_pipeline_disable;
 	wire cpu_fault;
 
 	CPU #(
 		.FREQUENCY(`FREQUENCY),
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(0),
+		.DCACHE_REGISTERED(1),
 		.ICACHE_REGISTERED(0)
 	) cpu(
         .i_reset(reset),
@@ -226,7 +193,12 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.i_pipeline_disable(cpu_pipeline_disable),
+		.o_icache_hit(o_icache_hit),
+		.o_icache_miss(o_icache_miss),
+		.o_dcache_hit(o_dcache_hit),
+		.o_dcache_miss(o_dcache_miss),
+		.o_execute_busy(o_execute_busy),
+		.o_memory_busy(o_memory_busy),
 		.o_fault(cpu_fault)
 	);
 
@@ -495,7 +467,7 @@ module SoC(
 	wire vga_clock;
 	ClockDivider #(
 		.CLOCK_RATE(`FREQUENCY),
-		.BAUD_RATE(25_000_000)
+		.BAUD_RATE(5_000_000)
 	) vga_clock_divider(
 		.i_reset(reset),
 		.i_clock(clock),

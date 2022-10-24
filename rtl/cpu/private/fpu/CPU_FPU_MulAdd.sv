@@ -37,23 +37,23 @@ module CPU_FPU_MulAdd(
 		PUT_Z
 	} state_t;
 
-	reg s_output_ready = 0;
-	reg [31:0] s_output_z = 0;
+	bit s_output_ready = 0;
+	bit [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] t, z;
+	bit [31:0] t, z;
 	
-	reg [23:0] a_m, b_m;
-	reg [26:0] c_m, t_m;
-	reg [23:0] z_m;
+	bit [23:0] a_m, b_m;
+	bit [26:0] c_m, t_m;
+	bit [23:0] z_m;
 
-	reg [9:0] a_e, b_e, c_e, t_e, z_e;
+	bit [9:0] a_e, b_e, c_e, t_e, z_e;
 	
-	reg a_s, b_s, c_s, t_s, z_s;
+	bit a_s, b_s, c_s, t_s, z_s;
 
-	reg guard, round_bit, sticky;
-	reg [47:0] product;
-	reg [27:0] sum;
+	bit guard, round_bit, sticky;
+	bit [47:0] product;
+	bit [27:0] sum;
 
 	assign o_ready = s_output_ready;
 	assign o_result = s_output_z;

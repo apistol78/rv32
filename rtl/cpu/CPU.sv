@@ -43,7 +43,12 @@ module CPU #(
 	output [31:0] o_dbus_wdata,		// Write data
 	
 	// Debug
-	input i_pipeline_disable,
+	output [31:0] o_icache_hit,
+	output [31:0] o_icache_miss,
+	output [31:0] o_dcache_hit,
+	output [31:0] o_dcache_miss,
+	output o_execute_busy,
+	output o_memory_busy,
 	output o_fault
 );
 
@@ -143,7 +148,11 @@ module CPU #(
 
 		// Output
 		.i_busy(execute_busy | memory_busy),
-		.o_data(fetch_data_0)
+		.o_data(fetch_data_0),
+
+		// Debug
+		.o_icache_hit(o_icache_hit),
+		.o_icache_miss(o_icache_miss)
 	);
 
 	fetch_data_t fetch_data;
@@ -266,7 +275,11 @@ module CPU #(
 		.i_data(execute_data),
 
 		// Output
-		.o_data(memory_data)
+		.o_data(memory_data),
+
+		// Debug
+		.o_dcache_hit(o_dcache_hit),
+		.o_dcache_miss(o_dcache_miss)
 	);
 
 	//====================================================
@@ -288,6 +301,8 @@ module CPU #(
 
 	//====================================================
 	
+	assign o_execute_busy = execute_busy;
+	assign o_memory_busy = memory_busy;
 	assign o_fault = decode_fault || execute_fault;
 
 endmodule

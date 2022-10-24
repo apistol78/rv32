@@ -46,20 +46,13 @@ module SystemRegisters #(
 		else if (i_request) begin
 			if (!i_rw) begin
 				case (i_address)
-				3'd0:
-					o_rdata <= { 30'b0, sil9024_reset, boot_mode };
-				3'd1:
-					o_rdata <= { 24'b0, leds };
-				3'd2:
-					o_rdata <= FREQUENCY;
-				3'd3:
-					o_rdata <= DEVICEID;
-				3'd4:
-					o_rdata <= RAM_SIZE;
-				3'd6:
-					o_rdata <= user;
-				default:
-					o_rdata <= 0;
+				3'd0: o_rdata <= { 30'b0, sil9024_reset, boot_mode };
+				3'd1: o_rdata <= { 24'b0, leds };
+				3'd2: o_rdata <= FREQUENCY;
+				3'd3: o_rdata <= DEVICEID;
+				3'd4: o_rdata <= RAM_SIZE;
+				3'd6: o_rdata <= user;
+				default: o_rdata <= 0;
 				endcase
 			end
 			else begin
@@ -68,14 +61,10 @@ module SystemRegisters #(
 					boot_mode <= i_wdata[0];
 					sil9024_reset <= i_wdata[1];
 				end
-				3'd1:
-					leds <= i_wdata[7:0];
-				3'd5:
-					o_reset_switch <= 1'b1;
-				3'd6:
-					user <= i_wdata;
-				default:
-					;
+				3'd1: leds <= i_wdata[7:0];
+				3'd5: o_reset_switch <= 1'b1;
+				3'd6: user <= i_wdata;
+				default:;
 				endcase
 			end
 			o_ready <= 1;

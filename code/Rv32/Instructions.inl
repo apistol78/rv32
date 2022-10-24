@@ -133,6 +133,11 @@ else if ((word & 0xfff0007f) == 0xc0000053)	// FCVT_W_S
 	auto f = parseFormatR(word);
 	R(f.rd) = (int32_t)FR(f.rs1);
 }
+else if ((word & 0xfff0007f) == 0xc0100053)	// FCVT_WU_S
+{
+	auto f = parseFormatR(word);
+	R_u(f.rd) = (uint32_t)FR(f.rs1);
+}
 else if ((word & 0xfff0007f) == 0xd0000053)	// FCVT_S_W
 {
 	auto f = parseFormatR(word);

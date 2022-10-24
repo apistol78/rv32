@@ -145,7 +145,12 @@ module SoC(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.i_pipeline_disable(1'b0),
+		.o_icache_hit(),
+		.o_icache_miss(),
+		.o_dcache_hit(),
+		.o_dcache_miss(),
+		.o_execute_busy(),
+		.o_memory_busy(),
 		.o_fault(cpu_fault)
 	);
 	

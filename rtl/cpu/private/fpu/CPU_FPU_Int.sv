@@ -8,6 +8,7 @@ module CPU_FPU_Int(
 
 	input i_request,
 	input [31:0] i_op1,
+	input i_signed,
 
 	output o_ready,
 	output [31:0] o_result
@@ -21,13 +22,13 @@ module CPU_FPU_Int(
 		PUT_Z
 	} state_t;
 
-	reg s_output_ready = 0;
-	reg [31:0] s_output_z = 0;
+	bit s_output_ready = 0;
+	bit [31:0] s_output_z = 0;
 	state_t state = IDLE;
 
-	reg [31:0] a_m, z;
-	reg [8:0] a_e;
-	reg a_s;
+	bit [31:0] a_m, z;
+	bit [8:0] a_e;
+	bit a_s;
 
 	assign o_ready = s_output_ready;
 	assign o_result = s_output_z;
@@ -62,10 +63,15 @@ module CPU_FPU_Int(
 					a_e <= a_e + 1;
 					a_m <= a_m >> 1;
 				end else begin
-					if (a_m[31]) begin
-						z <= 32'h80000000;
-					end else begin
-						z <= a_s ? -a_m : a_m;
+					if (i_signed) begin
+						if (a_m[31]) begin
+							z <= 32'h80000000;
+						end else begin
+							z <= a_s ? -a_m : a_m;
+						end
+					end
+					else begin
+						z <= a_m;
 					end
 					state <= PUT_Z;
 				end

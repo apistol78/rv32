@@ -19,7 +19,11 @@ module CPU_ICache_Comb#(
 	output bit o_bus_request,
 	input i_bus_ready,
 	output [31:0] o_bus_address,
-	input [31:0] i_bus_rdata
+	input [31:0] i_bus_rdata,
+
+	// Debug
+	output [31:0] o_hit,
+	output [31:0] o_miss
 );
 
 	localparam RANGE = 1 << SIZE;
@@ -44,6 +48,12 @@ module CPU_ICache_Comb#(
 	bit [31:0] next_hit = 0;
 	bit [31:0] miss = 0;
 	bit [31:0] next_miss = 0;
+
+	assign o_hit = hit;
+	assign o_miss = miss;
+`else
+	assign o_hit = 0;
+	assign o_miss = 0;
 `endif
 
 	// Cache memory.
@@ -122,6 +132,8 @@ module CPU_ICache_Comb#(
 						o_rdata = cache_rdata[63:32];
 						cache_pc = i_input_pc + 4;
 `ifdef __VERILATOR__
+						// \fixme I think this increase after a READ_BUS thus
+						// give false reading about hit rate.
 						next_hit = hit + 1;
 `endif
 					end

@@ -28,7 +28,11 @@ module CPU_Fetch #(
 
 	// Output
 	input				i_busy,
-	output fetch_data_t	o_data
+	output fetch_data_t	o_data,
+
+	// Debug
+	output [31:0]		o_icache_hit,
+	output [31:0]		o_icache_miss
 );
 
 	typedef enum bit [1:0]
@@ -68,7 +72,11 @@ module CPU_Fetch #(
 			.o_bus_request(o_bus_request),
 			.i_bus_ready(i_bus_ready),
 			.o_bus_address(o_bus_address),
-			.i_bus_rdata(i_bus_rdata)
+			.i_bus_rdata(i_bus_rdata),
+
+			// Debug
+			.o_hit(o_icache_hit),
+			.o_miss(o_icache_miss)
 		);
 
 	end endgenerate
@@ -93,7 +101,11 @@ module CPU_Fetch #(
 			.o_bus_request(o_bus_request),
 			.i_bus_ready(i_bus_ready),
 			.o_bus_address(o_bus_address),
-			.i_bus_rdata(i_bus_rdata)
+			.i_bus_rdata(i_bus_rdata),
+
+			// Debug
+			.o_hit(o_icache_hit),
+			.o_miss(o_icache_miss)
 		);
 
 	end endgenerate
@@ -139,7 +151,6 @@ module CPU_Fetch #(
 							pc <= i_irq_pc;
 						end
 						else begin
-
 							data.strobe <= ~data.strobe;
 							data.instruction <= icache_rdata;
 							data.pc <= pc;
@@ -177,7 +188,6 @@ module CPU_Fetch #(
 								// for IRQ signal before continue.
 								state <= WAIT_IRQ;
 							end
-
 						end
 					end
 `ifdef __VERILATOR__					

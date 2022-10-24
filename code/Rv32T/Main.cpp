@@ -259,16 +259,13 @@ int main(int argc, const char **argv)
 	soc->CPU_RESET_n = 1;
 	soc->CLOCK_125_p = 0;
 
-	if (cmdLine.hasOption(L"disable-pipeline"))
-		soc->SoC__DOT__cpu_pipeline_disable = 1;
-
 	soc->eval();
 
 	// VL_PRINTF_MT("*");
 
 	// Randomize cache data.
-	for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)
-		soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data[i] = -1;
+	// for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)
+	// 	soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data[i] = -1;
 	// for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__cache__DOT__data); ++i)
 	// 	soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__cache__DOT__data[i] = -1;
 
@@ -381,11 +378,9 @@ int main(int argc, const char **argv)
 	uint64_t lastRetired = 0;
 	uint64_t lastStarve = 0;
 	Measure busActive;
-	Measure busCPUandDMA;
 	Measure busSDRAM;
 	Measure stallExecute;
 	Measure stallMemory;
-	Measure stallVideo;
 	int32_t Tp = 0;
 
 	timer.reset();
@@ -397,8 +392,8 @@ int main(int argc, const char **argv)
 				break;
 		}
 
-		uint64_t Tc = (uint64_t)(timer.getElapsedTime() * 1000);
-		uint64_t count = slow ? std::min< uint64_t >(Tc - Tp, 1000) : 50000;
+		const uint64_t Tc = (uint64_t)(timer.getElapsedTime() * 1000);
+		const uint64_t count = slow ? std::min< uint64_t >(Tc - Tp, 1000) : 50000;
 		Tp = Tc;
 
 		bool shouldDraw = false;
@@ -415,7 +410,7 @@ int main(int argc, const char **argv)
 				log::info << L"TRACE CREATED" << Endl;
 			}
 
-			bool hdmiTxInt = hdmi.shouldDraw();
+			const bool hdmiTxInt = hdmi.shouldDraw();
 			shouldDraw |= hdmiTxInt;
 
 			++time;
@@ -446,17 +441,13 @@ int main(int argc, const char **argv)
 			// Count number of cycles bus is active.
 			// if (soc->SoC__DOT__cpu_ibus_request || soc->SoC__DOT__cpu_dbus_request)
 			// 	busActive++;
-			// if (soc->SoC__DOT__cpu_dbus_request && soc->SoC__DOT__dma_bus_request)
-			// 	busCPUandDMA++;
 			// if (soc->SoC__DOT__sdram_request)
 			//  	busSDRAM++;
 
-			// if (soc->SoC__DOT__cpu__DOT__execute_busy)
-			// 	stallExecute++;
-			// if (soc->SoC__DOT__cpu__DOT__memory__DOT__busy)
-			// 	stallMemory++;
-			// if (soc->SoC__DOT__video_controller__DOT__wbuffer__DOT__stall)
-			// 	stallVideo++;
+			if (soc->o_execute_busy)
+				stallExecute++;
+			if (soc->o_memory_busy)
+				stallMemory++;
 
 			key1 = false;
 			reset = false;
@@ -480,12 +471,6 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;				
 			}
-			// if (!soc->SoC__DOT__w_sdram_valid)
-			// {
-			// 	log::warning << L"MEMORY OUT OF BOUNDS, terminating." << Endl;
-			// 	g_going = false;
-			// 	break;
-			// }
 		}
 
 		if (form)
@@ -498,12 +483,8 @@ int main(int argc, const char **argv)
 
 			if ((Tc % 30) == 0)
 			{
-				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-
-				// uint32_t ich = soc->SoC__DOT__sdram_lru__DOT__hit;
-				// uint32_t icm = soc->SoC__DOT__sdram_lru__DOT__miss;
-				// double icr = (ich * 100.0) / (ich + icm);
+				const uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+				const uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				
@@ -515,14 +496,11 @@ int main(int argc, const char **argv)
 					)
 				);
 
-				//statusBar->setText(2, str(L"%.2f%% BUS & DMA", ((double)busCPUandDMA.delta() * 100.0) / dc));
-
 				statusBar->setText(2, 
 					str(
-						L"%.2f%% / %.2f%% STALL X/M", //, %.2f%% LRU",
+						L"%.2f%% / %.2f%% STALL X/M",
 						((double)stallExecute.delta() * 100.0) / dc,
-						((double)stallMemory.delta() * 100.0) / dc//,
-						//icr
+						((double)stallMemory.delta() * 100.0) / dc
 					)
 				);
 
@@ -538,7 +516,6 @@ int main(int argc, const char **argv)
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 
 				busActive.snapshot();
-				busCPUandDMA.snapshot();
 				busSDRAM.snapshot();
 				stallExecute.snapshot();
 				stallMemory.snapshot();					
@@ -546,53 +523,45 @@ int main(int argc, const char **argv)
 		}
 		else if (!mute)
 		{
-			if ((Tc % 60) == 0)
+			if ((Tc % 600) == 0)
 			{
-				uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-				uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-				uint32_t ds = 0; // soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
+				const uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
+				const uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+				const uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
 
-				uint32_t ich = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__hit;
-				uint32_t icm = soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__miss;
-				double icr = (ich * 100.0) / (ich + icm);
+				const uint32_t ich = soc->o_icache_hit;
+				const uint32_t icm = soc->o_icache_miss;
+				const double icr = (ich * 100.0) / (ich + icm);
 
-				uint32_t dch = 0;//soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__hit;
-				uint32_t dcm = 0;//soc->SoC__DOT__cpu__DOT__memory__DOT__genblk2__DOT__dcache__DOT__miss;
-				double dcr = (dch * 100.0) / (dch + dcm);
+				const uint32_t dch = soc->o_dcache_hit;
+				const uint32_t dcm = soc->o_dcache_miss;
+				const double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
 					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
-					str(L"%.2f%% STALL V", ((double)stallVideo.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
 					str(L"%d MPIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mpie ? 1 : 0) << L", " <<
 					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
 					str(L"%d MEIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_meie ? 1 : 0) << L", " <<
+					str(L"%d MEIP", soc->SoC__DOT__cpu__DOT__csr__DOT__mip_meip ? 1 : 0) << L", " <<
 					str(L"%d MTIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_mtie ? 1 : 0) << L", " <<
 					str(L"%d MTIP", soc->SoC__DOT__cpu__DOT__csr__DOT__mip_mtip ? 1 : 0) << L", " <<
 					str(L"%08x MSCRATCH", soc->SoC__DOT__cpu__DOT__csr__DOT__mscratch) << L", " <<
 					str(L"%d TIME", soc->SoC__DOT__cpu__DOT__csr__DOT__wtime) << L", " <<
 					str(L"%.2f%% I$ HIT", icr) << L", " <<
 					str(L"%.2f%% D$ HIT", dcr) << L", " <<
-					// str(L"%d SAMPLES", audio.written()) <<
-					Endl;
-
-				log::info << L"*** " <<
-					str(L"%d CYCLES", soc->SoC__DOT__timer__DOT__cycles) << L", " <<
-					str(L"%d COMPARE", soc->SoC__DOT__timer__DOT__compare) << L", " <<
 					Endl;
 
 				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
 				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
-				lastStarve = 0; // soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
+				lastStarve = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
 				
 				busActive.snapshot();
-				busCPUandDMA.snapshot();
 				stallExecute.snapshot();
 				stallMemory.snapshot();
-				stallVideo.snapshot();
 			}	
 		}
 	}

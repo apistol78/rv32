@@ -23,21 +23,21 @@ module CPU_FPU_Compare(
 		PUT_Z
 	} state_t;
 
-	logic s_output_ready = 0;
+	bit s_output_ready = 0;
 	state_t state = IDLE;
 
-	logic [31:0] a;
-	logic [22:0] a_m;
-	logic [9:0] a_e;
-	logic a_s;
+	bit [31:0] a;
+	bit [22:0] a_m;
+	bit [9:0] a_e;
+	bit a_s;
 
-	logic [31:0] b;
-	logic [22:0] b_m;
-	logic [9:0] b_e;
-	logic b_s;
+	bit [31:0] b;
+	bit [22:0] b_m;
+	bit [9:0] b_e;
+	bit b_s;
 
-	logic less = 0;
-	logic equal = 0;
+	bit less = 0;
+	bit equal = 0;
 
 	assign o_ready = s_output_ready;
 	assign o_less = less;

@@ -47,6 +47,7 @@ local fpu_operations = {
 	NMADD = "`FPU_OP_NMADD",
 	NMSUB = "`FPU_OP_NMSUB",
 	F2I = "`FPU_OP_F2I",
+	F2UI = "`FPU_OP_F2UI",
 	I2F = "`FPU_OP_I2F",
 	UI2F = "`FPU_OP_UI2F",
 	MOV = "`FPU_OP_MOV",
@@ -526,6 +527,22 @@ local instructions = {
 		verilog_rd_bank = 0,
 		verilog_rs1_bank = 1
 	},
+	{
+		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
+		data = 0xc0100053,	-- 1100 0000 0001 xxxx xxxx xxxx x101 0011
+		name = "FCVT_WU_S",
+		format = "R",
+		type = insttype.FPU,
+		cpp = [[
+			auto f = parseFormatR(word);
+			R_u(f.rd) = (uint32_t)FR(f.rs1);
+		]],
+		verilog_fpu = {
+			operation = fpu_operations.F2UI
+		},
+		verilog_rd_bank = 0,
+		verilog_rs1_bank = 1
+	},	
 	{
 		mask = 0xfff0007f,	-- 1111 1111 1111 0000 0000 0000 0111 1111
 		data = 0xd0000053,	-- 1101 0000 0000 xxxx xxxx xxxx x101 0011
@@ -1883,16 +1900,22 @@ function main(argv)
 
 		stdout:printLn("wire [4:0] alu_operand1 = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand1) .. " :")
+			if inst.verilog_alu.operand1 ~= "`RS1" then
+				stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand1) .. " :")
+			end
 		end
-		stdout:printLn("\t3'd0;")
+		--stdout:printLn("\t3'd0;")
+		stdout:printLn("\t`RS1;")
 		stdout:printLn("")
 
 		stdout:printLn("wire [4:0] alu_operand2 = ")
 		for i, inst in ipairs(alu) do
-			stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand2) .. " :")
+			if inst.verilog_alu.operand2 ~= "`RS2" then
+				stdout:printLn("\tis_" .. string.format("%-5s", inst.name) .. " ? " .. string.format("%-5s", inst.verilog_alu.operand2) .. " :")
+			end
 		end
-		stdout:printLn("\t3'd0;")
+		--stdout:printLn("\t3'd0;")
+		stdout:printLn("\t`RS2;")
 		stdout:printLn("")
 
 	elseif language == "verilog_memory" then

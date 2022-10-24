@@ -29,15 +29,15 @@ module CPU_FPU_Mul(
 		PUT_Z
 	} state_t;
 
-	reg s_output_ready = 0;
+	bit s_output_ready = 0;
 	state_t state = IDLE;
 
-	reg [31:0] z;
-	reg [23:0] a_m, b_m, z_m;
-	reg [9:0] a_e, b_e, z_e;
-	reg a_s, b_s, z_s;
-	reg guard, round_bit, sticky;
-	reg [47:0] product;
+	bit [31:0] z;
+	bit [23:0] a_m, b_m, z_m;
+	bit [9:0] a_e, b_e, z_e;
+	bit a_s, b_s, z_s;
+	bit guard, round_bit, sticky;
+	bit [47:0] product;
 
 	assign o_ready = s_output_ready;
 	assign o_result = z;
