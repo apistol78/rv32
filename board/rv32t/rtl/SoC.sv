@@ -168,8 +168,8 @@ module SoC(
 	CPU #(
 		.FREQUENCY(`FREQUENCY),
 		.STACK_POINTER(32'h20110000),
-		.DCACHE_REGISTERED(1),
-		.ICACHE_REGISTERED(0)
+		.DCACHE_REGISTERED(0),
+		.ICACHE_REGISTERED(1)
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),

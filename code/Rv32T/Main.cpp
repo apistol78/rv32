@@ -538,6 +538,7 @@ int main(int argc, const char **argv)
 				const double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
+					str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", " <<
 					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<

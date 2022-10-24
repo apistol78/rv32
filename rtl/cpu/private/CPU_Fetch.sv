@@ -50,7 +50,6 @@ module CPU_Fetch #(
 	// ICache
 	wire [31:0] icache_rdata;
 	wire icache_ready;
-	bit icache_stall;
 
 	generate if (ICACHE_REGISTERED != 0) begin
 
@@ -66,7 +65,6 @@ module CPU_Fetch #(
 			// Output
 			.o_rdata(icache_rdata),
 			.o_ready(icache_ready),
-			.i_stall(icache_stall),
 
 			// Bus
 			.o_bus_request(o_bus_request),
@@ -95,7 +93,7 @@ module CPU_Fetch #(
 			// Output
 			.o_rdata(icache_rdata),
 			.o_ready(icache_ready),
-			.i_stall(icache_stall),
+			.i_stall(),
 
 			// Bus
 			.o_bus_request(o_bus_request),
@@ -122,18 +120,14 @@ module CPU_Fetch #(
 	
 	assign o_data = data;
 
-	always_comb begin
-		icache_stall = i_busy || !(state == 0);
-	end
-
-	bit last_pending = 1'b0;
+	bit irq_pending_r = 1'b0;
 
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
 			state <= WAIT_ICACHE;
 			pc <= RESET_VECTOR;
 			data <= 0;
-			last_pending <= 1'b0;
+			irq_pending_r <= 1'b0;
 		end
 		else begin
 
@@ -141,57 +135,52 @@ module CPU_Fetch #(
 
 			case (state)
 				WAIT_ICACHE: begin
-					if (icache_ready) begin
+					// Issue interrupt if pending.
+					irq_pending_r <= i_irq_pending;
+					if ({ irq_pending_r, i_irq_pending } == 2'b01) begin
+						o_irq_dispatched <= 1'b1;
+						o_irq_epc <= pc;
+						pc <= i_irq_pc;
+					end
+					else if (!i_busy && icache_ready) begin
+						data.strobe <= ~data.strobe;
+						data.instruction <= icache_rdata;
+						data.pc <= pc;
 
-						// Issue interrupt if pending.
-						last_pending <= i_irq_pending;
-						if ({ last_pending, i_irq_pending } == 2'b01) begin
-							o_irq_dispatched <= 1'b1;
-							o_irq_epc <= pc;
-							pc <= i_irq_pc;
-						end
-						else begin
-							data.strobe <= ~data.strobe;
-							data.instruction <= icache_rdata;
-							data.pc <= pc;
-
-							// Decode register indices here since we
-							// need those for fetching registers while
-							// we are decoding rest of instruction.
+						// Decode register indices here since we
+						// need those for fetching registers while
+						// we are decoding rest of instruction.
 `ifdef FPU_ENABLE
-							data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 0);
-							data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 0);
-							data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 0);
-							data.inst_rd  <= register_t'(have_RD  ? {  RD_bank, `INSTRUCTION[ 11:7] } : 0);
+						data.inst_rs1 <= register_t'(have_RS1 ? { RS1_bank, `INSTRUCTION[19:15] } : 0);
+						data.inst_rs2 <= register_t'(have_RS2 ? { RS2_bank, `INSTRUCTION[24:20] } : 0);
+						data.inst_rs3 <= register_t'(have_RS3 ? { RS3_bank, `INSTRUCTION[31:27] } : 0);
+						data.inst_rd  <= register_t'(have_RD  ? {  RD_bank, `INSTRUCTION[ 11:7] } : 0);
 `else
-							data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 0);
-							data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 0);
-							data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 0);
-							data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 0);
+						data.inst_rs1 <= register_t'(have_RS1 ? { `INSTRUCTION[19:15] } : 0);
+						data.inst_rs2 <= register_t'(have_RS2 ? { `INSTRUCTION[24:20] } : 0);
+						data.inst_rs3 <= register_t'(have_RS3 ? { `INSTRUCTION[31:27] } : 0);
+						data.inst_rd  <= register_t'(have_RD  ? { `INSTRUCTION[ 11:7] } : 0);
 `endif
 
-							// Move PC to next instruction, will
-							// enable to icache to start loading
-							// next instruction.
-							pc <= pc + 4;
-
-							// @todo Bad timing; is there any way we
-							// can skip decoding these...
-							if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
-								// Branch instruction, need to wait
-								// for an explicit "goto" signal before
-								// we can continue feeding the pipeline.
-								state <= WAIT_JUMP;
-							end
-							else if (is_ECALL || is_WFI) begin
-								// Software interrupt, need to wait
-								// for IRQ signal before continue.
-								state <= WAIT_IRQ;
-							end
+						// @todo Bad timing; is there any way we
+						// can skip decoding these...
+						if (is_JUMP || is_JUMP_CONDITIONAL || is_MRET) begin
+							// Branch instruction, need to wait
+							// for an explicit "goto" signal before
+							// we can continue feeding the pipeline.
+							state <= WAIT_JUMP;
 						end
+						else if (is_ECALL || is_WFI) begin
+							// Software interrupt, need to wait
+							// for IRQ signal before continue.
+							state <= WAIT_IRQ;
+						end
+
+						// Move PC to next instruction.
+						pc <= pc + 4;
 					end
 `ifdef __VERILATOR__					
-					else if (!icache_stall)
+					else if (!i_busy && !icache_ready)
 						starve <= starve + 1;
 `endif
 				end
@@ -206,8 +195,8 @@ module CPU_Fetch #(
 
 				WAIT_IRQ: begin
 					// Wait for soft IRQ signal.
-					last_pending <= i_irq_pending;
-					if ({ last_pending, i_irq_pending } == 2'b01) begin
+					irq_pending_r <= i_irq_pending;
+					if ({ irq_pending_r, i_irq_pending } == 2'b01) begin
 						o_irq_dispatched <= 1'b1;
 						o_irq_epc <= pc;
 						pc <= i_irq_pc;
