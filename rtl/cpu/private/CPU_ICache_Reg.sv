@@ -78,6 +78,8 @@ module CPU_ICache_Reg #(
 	always_comb begin
 		o_ready = 0;
 		o_rdata = 0;
+		
+		cache_rd_label = 0;
 
 		if (initialized) begin
 			cache_rd_label = i_input_pc[(SIZE - 1) + 2:2];	// 2 lowest bits are always zero.
