@@ -464,10 +464,10 @@ int main(int argc, const char **argv)
 				g_going = false;
 				break;
 			}
-			if (soc->SoC__DOT__debug_bus_fault)
+			if (soc->o_debug_bus_fault)
 			{
 				const wchar_t* faults[] = { L"NA", L"IBUS", L"DBUS", L"DMA" };
-				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->SoC__DOT__debug_bus_fault_address) << L" (" << faults[soc->SoC__DOT__debug_bus_fault_type] << L"), terminating." << Endl;
+				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->o_debug_bus_fault_address) << L" (" << faults[soc->o_debug_bus_fault_type] << L"), terminating." << Endl;
 				g_going = false;
 				break;				
 			}

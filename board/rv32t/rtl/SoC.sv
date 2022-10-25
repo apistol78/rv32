@@ -43,7 +43,14 @@ module SoC(
 	output [31:0] o_dcache_hit,
 	output [31:0] o_dcache_miss,
 	output o_execute_busy,
-	output o_memory_busy
+	output o_memory_busy,
+
+	// BUS diagnostics
+	output bit o_debug_bus_request,
+	output bit [13:0] o_debug_bus_select,
+	output bit o_debug_bus_fault,
+	output bit [31:0] o_debug_bus_fault_address,
+	output bit [1:0] o_debug_bus_fault_type
 );
 
 	// Since we want to share pins with HW
@@ -708,24 +715,17 @@ module SoC(
 		plic_select				|
 		sysreg_select;
 
-	bit debug_bus_fault = 0;
-	bit [31:0] debug_bus_fault_address = 0;
-	bit [1:0] debug_bus_fault_type = 0;
-
-	bit debug_request = 0;
-	bit [13:0] debug_select = 0;
-
 	always_comb begin
-		debug_bus_fault = !bus_valid_select && bus_request;
-		debug_bus_fault_address = bus_address;
-		debug_bus_fault_type =
+		o_debug_bus_fault = !bus_valid_select && bus_request;
+		o_debug_bus_fault_address = bus_address;
+		o_debug_bus_fault_type =
 			cpu_ibus_request ? 2'd1 :
 			cpu_dbus_request ? 2'd2 :
 			dma_bus_request ? 2'd3 :
 			2'd0;
 
-		debug_request = bus_request;
-		debug_select =
+		o_debug_bus_request = bus_request;
+		o_debug_bus_select =
 		{
 			rom_select,
 			sdram_select,

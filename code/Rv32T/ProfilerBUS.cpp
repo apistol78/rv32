@@ -39,20 +39,21 @@ ProfilerBUS::~ProfilerBUS()
 {
 	for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 	{
-		double p = (m_active[i] * 100.0) / m_total;
-		log::info << str(L"%-7S", c_names[i]) << L": " << str(L"%.2f", p) << L" %" << Endl;
+		const double p = (m_active[i] * 100.0) / m_total;
+		log::info << str(L"%-10S", c_names[i]) << L": " << str(L"%.2f", p) << L" %" << Endl;
 	}
 }
 
 void ProfilerBUS::eval(VSoC* soc, uint64_t time)
 {
-	if (soc->SoC__DOT__debug_request)
+	if (soc->o_debug_bus_request)
 	{
 		for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 		{
-			if ((soc->SoC__DOT__debug_select & (1 << (sizeof_array(c_names) - 1 - i))) != 0)
+			const int32_t bit = (sizeof_array(c_names) - 1 - i);
+			if ((soc->o_debug_bus_select & (1 << bit)) != 0)
 				m_active[i]++;
 		}
+		++m_total;
 	}
-	++m_total;
 }
