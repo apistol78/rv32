@@ -29,19 +29,22 @@ const wchar_t* c_names[] =
 }
 
 ProfilerBUS::ProfilerBUS()
-:   m_total(0)
 {
 	for (int32_t i = 0; i < sizeof_array(c_names); ++i)
-		m_active[i] = 0;
+		m_deviceActive[i] = 0;
 }
 
 ProfilerBUS::~ProfilerBUS()
 {
 	for (int32_t i = 0; i < sizeof_array(c_names); ++i)
 	{
-		const double p = (m_active[i] * 100.0) / m_total;
-		log::info << str(L"%-10S", c_names[i]) << L": " << str(L"%.2f", p) << L" %" << Endl;
+		const double pl = (m_deviceActive[i] * 100.0) / m_total;
+		const double pa = (m_deviceActive[i] * 100.0) / m_totalActive;
+		log::info << str(L"%-10S", c_names[i]) << L": " << str(L"%6.2f", pa) << L" %  " << str(L"%6.2f", pl) << L" %." << Endl;
 	}
+
+	const double p = (m_totalActive * 100.0) / m_total;
+	log::info << L"Bus active " << str(L"%.2f", p) << L" %." << Endl;
 }
 
 void ProfilerBUS::eval(VSoC* soc, uint64_t time)
@@ -52,8 +55,9 @@ void ProfilerBUS::eval(VSoC* soc, uint64_t time)
 		{
 			const int32_t bit = (sizeof_array(c_names) - 1 - i);
 			if ((soc->o_debug_bus_select & (1 << bit)) != 0)
-				m_active[i]++;
+				m_deviceActive[i]++;
 		}
-		++m_total;
+		m_totalActive++;
 	}
+	m_total++;
 }
