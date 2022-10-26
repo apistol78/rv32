@@ -10,6 +10,7 @@ module WriteBuffer #(
 
 	// Control
 	output bit o_empty,
+	output bit o_full,
 
 	// Bus
 	output bit o_bus_rw,
@@ -35,20 +36,38 @@ module WriteBuffer #(
 	bit wq_read = 1'b0;
 	wire [63:0] wq_rdata;
 
-	FIFO_BRAM #(
-		.DEPTH(DEPTH),
-		.WIDTH(64)
-	) wq(
-		.i_reset(i_reset),
-		.i_clock(i_clock),
-		.o_empty(wq_empty),
-		.o_full(wq_full),
-		.i_write(wq_write),
-		.i_wdata(wq_wdata),
-		.i_read(wq_read),
-		.o_rdata(wq_rdata),
-		.o_queued()
-	);
+	generate if (DEPTH > 16) begin
+		FIFO_BRAM #(
+			.DEPTH(DEPTH),
+			.WIDTH(64)
+		) wq(
+			.i_reset(i_reset),
+			.i_clock(i_clock),
+			.o_empty(wq_empty),
+			.o_full(wq_full),
+			.i_write(wq_write),
+			.i_wdata(wq_wdata),
+			.i_read(wq_read),
+			.o_rdata(wq_rdata),
+			.o_queued()
+		);
+	end endgenerate
+
+	generate if (DEPTH <= 16) begin
+		FIFO #(
+			.DEPTH(DEPTH),
+			.WIDTH(64)
+		) wq(
+			.i_clock(i_clock),
+			.o_empty(wq_empty),
+			.o_full(wq_full),
+			.i_write(wq_write),
+			.i_wdata(wq_wdata),
+			.i_read(wq_read),
+			.o_rdata(wq_rdata),
+			.o_queued()
+		);
+	end endgenerate
 
 	initial begin
 		o_bus_rw = 0;
@@ -66,6 +85,7 @@ module WriteBuffer #(
 
 	always_comb begin
 		o_empty = wq_empty;
+		o_full = wq_full;
 	end
 
 	always_ff @(posedge i_clock) begin
@@ -117,8 +137,8 @@ module WriteBuffer #(
 			end
 
 			1: begin
-				wq_wdata = { i_address, i_wdata };
-				wq_write = 1'b1;
+				// wq_wdata = { i_address, i_wdata };
+				// wq_write = 1'b1;
 				o_ready = 1'b1;
 				if (!i_request)
 					next_state = 0;

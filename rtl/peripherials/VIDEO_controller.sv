@@ -100,6 +100,7 @@ module VIDEO_controller #(
 		.i_clock(i_clock),
 
 		.o_empty(),
+		.o_full(),
 
 		.o_bus_rw(o_vram_pa_rw),
 		.o_bus_request(o_vram_pa_request),
@@ -230,10 +231,7 @@ module VIDEO_controller #(
 					column_offset <= column_offset + 1;
 
 					if (column_offset < PPITCH / 4) begin
-						//read_state <= WAIT_DELAY;
-						o_vram_pb_address <= o_vram_pb_address + 4;
-						o_vram_pb_request <= 1;
-						read_state <= WAIT_MEMORY;
+						read_state <= WAIT_DELAY;
 					end
 					else begin
 						read_state <= WAIT_BLANK;
