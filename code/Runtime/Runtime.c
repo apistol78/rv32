@@ -127,7 +127,7 @@ void runtime_cold_restart()
 	video_clear(0);
 	video_swap(0);
 
-	sysreg_write(SR_REG_COLD_RESET, 1);
+	sysreg_modify(SR_REG_FLAGS, 0b100, 0b100);
 
 	for (;;);
 }
