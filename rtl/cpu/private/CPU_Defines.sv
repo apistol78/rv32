@@ -2,7 +2,7 @@
 `define _CPU_DEFINES_SV
 
 // Configuration
-`define FPU_ENABLE					1
+// `define FPU_ENABLE					1
 
 // Size of register index.
 `ifdef FPU_ENABLE
