@@ -45,6 +45,7 @@ OSystem_RebelV::OSystem_RebelV()
 	uint32_t tid;
 
 	runtime_init();
+	audio_set_playback_rate(11025);
 
 	_this = this;
 
@@ -440,7 +441,7 @@ uint32 OSystem_RebelV::property(int param, Property *value)
 	case PROP_TOGGLE_ASPECT_RATIO:
 		break;
 	case PROP_GET_SAMPLE_RATE:
-		return 22050;
+		return 11025;
 	case PROP_HAS_SCALER:
 		return 0;
 	}

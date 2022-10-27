@@ -10,13 +10,12 @@
 // 5670		22050 kHz @ 125 MHz
 // 9072		11025 kHz @ 100 Mhz
 //
-module AUDIO_pwm_output #(
-	parameter RELOAD = 4536
-)(
+module AUDIO_pwm_output(
 	input i_clock,
 
 	output bit o_busy,
 	input [15:0] i_sample,
+	input [31:0] i_reload,
 
 	output o_pwm
 );
@@ -34,7 +33,7 @@ module AUDIO_pwm_output #(
 			reload_counter <= reload_counter - 1;
 		end
 		else begin
-			reload_counter <= RELOAD;
+			reload_counter <= i_reload[15:0];
 			sample <= { !i_sample[15], i_sample[14:0] };
 			o_busy <= 0;
 		end

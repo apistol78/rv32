@@ -21,6 +21,12 @@ void audio_init()
 	}
 }
 
+void audio_set_playback_rate(uint32_t rate)
+{
+	const uint32_t freq = sysreg_read(SR_REG_FREQUENCY);
+	((volatile uint32_t*)AUDIO_BASE)[1] = freq / rate;
+}
+
 uint32_t audio_get_queued()
 {
 	return *(volatile uint32_t*)AUDIO_BASE;

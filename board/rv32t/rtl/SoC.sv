@@ -345,15 +345,18 @@ module SoC(
 	// AUDIO
 	wire audio_output_busy;
 	wire [15:0] audio_output_sample;
+	wire [31:0] audio_output_reload;
 
 	AUDIO_pwm_output audio_pwm_output(
 		.i_clock(clock),
 		.o_busy(audio_output_busy),
 		.i_sample(audio_output_sample),
+		.i_reload(audio_output_reload),
 		.o_pwm(AUDIO_PWM)
 	);
 
 	wire audio_select;
+	wire [3:0] audio_address;
 	wire [31:0] audio_rdata;
 	wire audio_ready;
 	wire audio_interrupt;
@@ -363,13 +366,15 @@ module SoC(
 
 		.i_request(audio_select && bridge_far_request),
 		.i_rw(bridge_far_rw),
+		.i_address(audio_address),
 		.i_wdata(bridge_far_wdata[15:0]),
 		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
 		.o_interrupt(audio_interrupt),
 
 		.i_output_busy(audio_output_busy),
-		.o_output_sample(audio_output_sample)
+		.o_output_sample(audio_output_sample),
+		.o_output_reload(audio_output_reload)
 	);
 
 	// DMA
@@ -659,6 +664,7 @@ module SoC(
 	assign timer_address = bridge_far_address[5:2];
 
 	assign audio_select = bridge_far_address[27:24] == 4'h6;
+	assign audio_address = bridge_far_address[5:2];
 
 	assign dma_select = bridge_far_address[27:24] == 4'h7;
 	assign dma_address = bridge_far_address[3:2];

@@ -10,6 +10,7 @@ module AUDIO_controller #(
 	// CPU interface.
 	input i_request,
 	input i_rw,
+	input [3:0] i_address,
 	input [15:0] i_wdata,
 	output bit [31:0] o_rdata,
 	output bit o_ready,
@@ -17,9 +18,10 @@ module AUDIO_controller #(
 
 	// Audio output
 	input i_output_busy,
-	output [15:0] o_output_sample
+	output [15:0] o_output_sample,
+	output bit [31:0] o_output_reload
 );
-
+	// Sample FIFO.
     wire output_fifo_empty;
 	wire output_fifo_full;
 	bit output_fifo_wr = 0;
@@ -43,24 +45,49 @@ module AUDIO_controller #(
     initial begin
 		o_ready = 0;
 		o_interrupt = 0;
+		o_output_reload = 4536;
 	end
 
 	always_ff @(posedge i_clock) begin
 		output_fifo_wr <= 0;
 		if (i_request && !o_ready) begin
 			if (!i_rw) begin
-				o_rdata <= output_fifo_queued;
-				o_ready <= 1;
+
+				case (i_address)
+					4'h0: begin
+						o_rdata <= output_fifo_queued;
+						o_ready <= 1;
+					end
+					4'h1: begin
+						o_rdata <= o_output_reload;
+						o_ready <= 1'b1;
+					end
+					default:
+						o_ready <= 1'b1;
+				endcase
+
 			end
 			else begin
-				if (!output_fifo_full) begin
-					output_fifo_wr <= 1;
-					o_ready <= 1;
-				end
+
+				case (i_address)
+					4'h0: begin
+						if (!output_fifo_full) begin
+							output_fifo_wr <= 1;
+							o_ready <= 1'b1;
+						end
+					end
+					4'h1: begin
+						o_output_reload <= i_wdata;
+						o_ready <= 1'b1;
+					end
+					default:
+						o_ready <= 1'b1;
+				endcase
+
 			end
 		end
 		else if (!i_request) begin
-			o_ready <= 0;
+			o_ready <= 1'b0;
 		end
 	end
 
