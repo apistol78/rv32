@@ -11,9 +11,13 @@
 #define SD_TRACE_INFO(...)
 #define SD_TRACE_ERROR(...) printf(__VA_ARGS__)
 
+// #define SD_ASSERT(cond) \
+// 	if (!(cond)) { \
+// 		SD_TRACE_ERROR("[SD] Condition \"%s\" failed\n", #cond); \
+// 		return 0; \
+// 	}
 #define SD_ASSERT(cond) \
 	if (!(cond)) { \
-		SD_TRACE_ERROR("[SD] Condition \"%s\" failed\n", #cond); \
 		return 0; \
 	}
 
