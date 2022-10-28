@@ -37,7 +37,6 @@ module CPU_DCache_Reg #(
 	{
 		IDLE,
 		FLUSH_SETUP,
-		FLUSH_DELAY,
 		FLUSH_CHECK,
 		FLUSH_WRITE,
 		PASS_THROUGH,
@@ -100,15 +99,17 @@ module CPU_DCache_Reg #(
 		o_rdata = 0;
 	end
 
+	always_comb begin
+		if (state == FLUSH_SETUP || state == FLUSH_CHECK || state == FLUSH_WRITE || state == INITIALIZE)
+			cache_address = flush_address;
+		else
+			cache_address = i_address[(SIZE - 1) + 2:2];
+	end
+
 	always_ff @(posedge i_clock) begin
 
 		o_ready <= 1'b0;
 		cache_rw <= 1'b0;
-
-		if (state == FLUSH_SETUP || state == FLUSH_CHECK || state == FLUSH_WRITE || state == INITIALIZE)
-			cache_address <= flush_address;
-		else
-			cache_address <= i_address[(SIZE - 1) + 2:2];
 
 		case (state)
 			IDLE: begin
@@ -167,16 +168,12 @@ module CPU_DCache_Reg #(
 			FLUSH_SETUP: begin
 				if (!i_bus_ready) begin
 					if (flush_address < RANGE)
-						state <= FLUSH_DELAY;
+						state <= FLUSH_CHECK;
 					else begin
 						o_ready <= 1'b1;
 						state <= IDLE;
 					end
 				end
-			end
-
-			FLUSH_DELAY: begin
-				state <= FLUSH_CHECK;
 			end
 
 			FLUSH_CHECK: begin
