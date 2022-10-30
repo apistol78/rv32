@@ -39,6 +39,7 @@ module CPU_DCache_Reg #(
 		FLUSH_SETUP,
 		FLUSH_CHECK,
 		FLUSH_WRITE,
+		FLUSH_NEXT,
 		PASS_THROUGH,
 		WRITE_SETUP,
 		WRITE_WAIT,
@@ -194,10 +195,14 @@ module CPU_DCache_Reg #(
 				if (i_bus_ready) begin
 					cache_rw <= 1'b1;
 					cache_wdata <= { cache_entry_data, cache_entry_address[31:2], 2'b01 };
-					flush_address <= flush_address + 1;
 					o_bus_request <= 1'b0;
-					state <= FLUSH_SETUP;
+					state <= FLUSH_NEXT;
 				end
+			end
+
+			FLUSH_NEXT: begin
+				flush_address <= flush_address + 1;
+				state <= FLUSH_SETUP;
 			end
 
 			// ================
