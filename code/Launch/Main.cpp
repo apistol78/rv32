@@ -481,7 +481,7 @@ bool memcheck(IStream* target, uint32_t from, uint32_t to, uint32_t step)
 
 		write< uint8_t >(target, 0x01);
 		write< uint32_t >(target, addr);
-		write< uint8_t >(target, nb);
+		write< uint16_t >(target, nb);
 		write< uint8_t >(target, utd, nb);
 		write< uint8_t >(target, cs);
 
