@@ -580,6 +580,9 @@ int main(int argc, const char **argv)
 	log::info << L"GP        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[3]) << Endl;
 	log::info << L"TP        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[4]) << Endl;
 	log::info << L"T0        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[5]) << Endl;
+	log::info << L"A0        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[10]) << Endl;
+	log::info << L"A1        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[11]) << Endl;
+	log::info << L"A2        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[12]) << Endl;
 	log::info << L"A3        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[13]) << Endl;
 	log::info << L"A4        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[14]) << Endl;
 	log::info << L"A5        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[15]) << Endl;
