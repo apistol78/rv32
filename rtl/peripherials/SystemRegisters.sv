@@ -4,7 +4,8 @@
 module SystemRegisters #(
 	parameter FREQUENCY,
 	parameter DEVICEID,
-	parameter RAM_SIZE
+	parameter RAM_SIZE,
+	parameter BOOTMODE
 )(
 	input i_reset,
 	input i_clock,
@@ -25,7 +26,7 @@ module SystemRegisters #(
 
 	bit sil9024_reset = 1'b0;
 	bit [7:0] leds = 8'h0;
-	bit boot_mode = 1'b0;		//!< 0 - normal (load boot.elf from SD), 1 - remote load through UART.
+	bit boot_mode = BOOTMODE;		//!< 0 - normal (load boot.elf from SD), 1 - remote load through UART.
 	bit [31:0] user = 0;
 
 	assign o_sil9024_reset = sil9024_reset;

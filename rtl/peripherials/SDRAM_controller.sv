@@ -64,11 +64,12 @@ module SDRAM_controller #(
 	localparam Bi = SDRAM_DATA_WIDTH * 8;
 
 	// Timing parameters.
-	localparam STARTUP_COUNT	= 20000; // ( 100 * FREQUENCY) /     1_000_000;	// 100 us
-	localparam tRP_COUNT		= 2; //2; // (  20 * FREQUENCY) / 1_000_000_000;	// 20 ns
-	localparam tRFC_COUNT		= 7; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
-	localparam tMRD_COUNT		= 2000; // (2000 * FREQUENCY) /   100_000_000;	// 2000 cyc @ 100 MHz
-	localparam tRCD_COUNT		= 3 + BURST_COUNT; //7; // (  65 * FREQUENCY) / 1_000_000_000;	// 65 ns
+	localparam STARTUP_COUNT	= 20000;			// startup delay, 100 us
+	localparam tRP_COUNT		= 2;				// wait precharge, 20 ns
+	localparam tRFC_COUNT		= 7; 				// wait refresh, 65 ns
+	localparam tMRD_COUNT		= 2000;				// wait set mode, 2000 cyc @ 100 MHz
+	localparam tRCD_COUNT		= 3 + BURST_COUNT;	// wait read/write, 65 ns
+	localparam tACT_COUNT		= 2;				// wait activate
 	
 	// Types
 	typedef enum bit [3:0]
@@ -95,14 +96,17 @@ module SDRAM_controller #(
 		STATE_IDLE,
 		STATE_REFRESH,
 		STATE_WAIT_REFRESH,
-		STATE_ACTIVATE,			// 11
+		// STATE_ACTIVATE,			// 11
 		STATE_WAIT_ACTIVATE,
-		STATE_READ,				// 13
+		STATE_WAIT_ACTIVATE_END,
+		// STATE_READ,				// 13
 		STATE_WAIT_READ,
-		STATE_WRITE,			// 15
+		// STATE_WRITE,			// 15
 		STATE_WAIT_WRITE,
-		STATE_PRECHARGE,		// 17
-		STATE_WAIT_PRECHARGE
+		// STATE_PRECHARGE,		// 17
+		STATE_WAIT_PRECHARGE,
+		STATE_WAIT_PRECHARGE_ALL,
+		STATE_END_REQUEST
 	} state_t;
 
 	typedef enum bit [0:0]
@@ -137,9 +141,11 @@ module SDRAM_controller #(
 	bit [USER_DATA_WIDTH-1:0] wdata;
 	bit [22:0] address;
 
+	bit [13:0] active_rows [3:0];	// Active row in each bank.
+
 	// Initial
 	initial begin
-		o_ready <= 1'b0;
+		o_ready = 1'b0;
 
 		// Ensure DQM and CKE are high during initial.
 		sdram_dqm = 2'b11;
@@ -150,6 +156,11 @@ module SDRAM_controller #(
 		sdram_addr = 13'b0;
 		sdram_wdata = 0;
 		//sdram_data_rw = 1'b0;
+
+		active_rows[0] = { 1'b1, 13'b0 };
+		active_rows[1] = { 1'b1, 13'b0 };
+		active_rows[2] = { 1'b1, 13'b0 };
+		active_rows[3] = { 1'b1, 13'b0 };
 	end
 
 	// Combinatorial
@@ -158,6 +169,12 @@ module SDRAM_controller #(
 	assign sdram_ras_n = command[2];
 	assign sdram_cas_n = command[1];
 	assign sdram_we_n = command[0];
+
+	//=============================================
+
+	wire [22:0] i_address_dw = i_address[24:2];
+	wire [1:0] i_address_dw_bank = i_address_dw[9:8];
+	wire [12:0] i_address_dw_row = i_address_dw[22:10];
 
 	//=============================================
 
@@ -180,6 +197,11 @@ module SDRAM_controller #(
 			refresh <= 0;
 			should_refresh <= 1'b0;
 			command <= CMD_NOP;
+
+			active_rows[0] <= { 1'b1, 13'b0 };
+			active_rows[1] <= { 1'b1, 13'b0 };
+			active_rows[2] <= { 1'b1, 13'b0 };
+			active_rows[3] <= { 1'b1, 13'b0 };
 		end
 		else begin
 
@@ -302,18 +324,68 @@ module SDRAM_controller #(
 				STATE_IDLE: begin
 					command <= CMD_NOP;
 
-					//sdram_data_rw <= 1'b0;
 					o_ready <= 1'b0;
 
 					if (should_refresh) begin
 						should_refresh <= 1'b0;
-						state <= STATE_REFRESH;
+
+						// Close all active rows, cannot be opened during refresh.
+						active_rows[0] <= { 1'b1, 13'b0 };
+						active_rows[1] <= { 1'b1, 13'b0 };
+						active_rows[2] <= { 1'b1, 13'b0 };
+						active_rows[3] <= { 1'b1, 13'b0 };
+
+						command <= CMD_PRECHARGE;
+
+						sdram_bs <= 2'b00;
+						sdram_addr <= { 4'b0000, 8'b0000_0000, 1'b0 };
+						sdram_addr[10] <= 1'b1;
+
+						count <= tRP_COUNT;
+						state <= STATE_WAIT_PRECHARGE_ALL;
 					end
 					else if (i_request) begin
-						// Got request, start with activating bank/row.
-						address <= i_address[24:2];
+
+						$display("---- request begin (bank %d) ----", i_address_dw_bank);
+
+						address <= i_address_dw;
 						wdata <= i_wdata;
-						state <= STATE_ACTIVATE;
+
+						if (active_rows[i_address_dw_bank] == { 1'b0, i_address_dw_row }) begin
+							// Row already active, do RW immediately.
+							$display("ROW already active (%x)", i_address);
+							count <= 0;
+							state <= STATE_WAIT_ACTIVATE;
+						end
+						else if (active_rows[i_address_dw_bank][13] == 1'b1) begin
+							// No bank active, activate before RW.
+							$display("No ROW active, activate (%x)", i_address);
+							active_rows[i_address_dw_bank] <= { 1'b0, i_address_dw_row };
+
+							command <= CMD_ACTIVATE;
+
+							sdram_bs <= i_address_dw_bank;
+							sdram_addr <= i_address_dw_row;
+
+							count <= tACT_COUNT;
+							state <= STATE_WAIT_ACTIVATE;			
+
+						end
+						else begin
+							// Other bank active, precharge old and activate new before RW.
+							$display("Other ROW active, close old and activate (%x)", i_address);
+							active_rows[i_address_dw_bank] <= { 1'b0, i_address_dw_row };
+
+							command <= CMD_PRECHARGE;
+
+							sdram_bs <= i_address_dw_bank;
+							sdram_addr <= active_rows[i_address_dw_bank][12:0];
+							sdram_addr[10] <= 1'b0;
+
+							count <= tRP_COUNT;
+							state <= STATE_WAIT_PRECHARGE;
+						end
+
 					end
 				end
 
@@ -339,15 +411,15 @@ module SDRAM_controller #(
 				/*
 				Activate row.
 				*/
-				STATE_ACTIVATE: begin
-					command <= CMD_ACTIVATE;
+				// STATE_ACTIVATE: begin
+				// 	command <= CMD_ACTIVATE;
 					
-					sdram_bs <= address[9:8];
-					sdram_addr <= address[22:10];
+				// 	sdram_bs <= address[9:8];
+				// 	sdram_addr <= address[22:10];
 
-					count <= 2; // tRCD_COUNT;
-					state <= STATE_WAIT_ACTIVATE;			
-				end
+				// 	count <= tACT_COUNT;
+				// 	state <= STATE_WAIT_ACTIVATE;			
+				// end
 
 				/*
 				Wait until activation of row finish,
@@ -356,10 +428,11 @@ module SDRAM_controller #(
 				STATE_WAIT_ACTIVATE: begin
 					command <= CMD_NOP;
 					if (count == 0) begin
+						//command <= i_rw ? CMD_WRITE : CMD_READ;
 
+						sdram_bs <= address[9:8];
 						sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
-						//sdram_addr[10] <= 1'b0;
-						sdram_addr[10] <= 1'b1;
+						sdram_addr[10] <= 1'b0;
 						
 						if (BURST_COUNT == 1)
 							sdram_wdata <= wdata;
@@ -370,20 +443,26 @@ module SDRAM_controller #(
 						else if (BURST_COUNT == 8)
 							sdram_wdata <= wdata[Bi-1:Bh];
 
-						//sdram_data_rw <= i_rw;
-
-						state <= i_rw ? STATE_WRITE : STATE_READ;	
+						//count <= tRCD_COUNT;
+						//state <= i_rw ? STATE_WAIT_WRITE : STATE_WAIT_READ;
+						state <= STATE_WAIT_ACTIVATE_END;
 					end
+				end
+
+				STATE_WAIT_ACTIVATE_END: begin
+					command <= i_rw ? CMD_WRITE : CMD_READ;
+					count <= tRCD_COUNT;
+					state <= i_rw ? STATE_WAIT_WRITE : STATE_WAIT_READ;
 				end
 
 				/*
 				Issue read command.
 				*/
-				STATE_READ: begin
-					command <= CMD_READ;
-					count <= tRCD_COUNT;
-					state <= STATE_WAIT_READ;
-				end
+				// STATE_READ: begin
+				// 	command <= CMD_READ;
+				// 	count <= tRCD_COUNT;
+				// 	state <= STATE_WAIT_READ;
+				// end
 
 				/*
 				Wait until read command finishes, latch data.
@@ -447,22 +526,18 @@ module SDRAM_controller #(
 
 					if (count == 0) begin
 						o_ready <= 1'b1;
-						
-						//state <= STATE_PRECHARGE;
-
-						count <= tRP_COUNT;
-						state <= STATE_WAIT_PRECHARGE;						
+						state <= STATE_END_REQUEST;
 					end
 				end
 
 				/*
 				Issue write command.
 				*/
-				STATE_WRITE: begin
-					command <= CMD_WRITE;
-					count <= tRCD_COUNT;
-					state <= STATE_WAIT_WRITE;
-				end
+				// STATE_WRITE: begin
+				// 	command <= CMD_WRITE;
+				// 	count <= tRCD_COUNT;
+				// 	state <= STATE_WAIT_WRITE;
+				// end
 
 				/*
 				Wait until write command finishes.
@@ -510,39 +585,60 @@ module SDRAM_controller #(
 
 					if (count == 0) begin
 						o_ready <= 1'b1;
-
-						//state <= STATE_PRECHARGE;
-						
-						count <= tRP_COUNT;
-						state <= STATE_WAIT_PRECHARGE;						
+						state <= STATE_END_REQUEST;
 					end			
 				end
 
 				/*
 				Issue precharge, aka close, row.
 				*/
-				STATE_PRECHARGE: begin
-					command <= CMD_PRECHARGE;
+				// STATE_PRECHARGE: begin
+				// 	command <= CMD_PRECHARGE;
 
-					sdram_bs <= 2'b00;
-					
-					sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
-					sdram_addr[10] <= 1'b1;
+				// 	// sdram_bs <= 2'b00;
+				// 	// sdram_addr <= { 4'b0000, address[7:0], 1'b0 };
+				// 	// sdram_addr[10] <= 1'b1;
 
-					count <= tRP_COUNT;
-					state <= STATE_WAIT_PRECHARGE;
-				end
+				// 	sdram_bs <= address[9:8];
+				// 	sdram_addr <= address[22:10];
+				// 	sdram_addr[10] <= 1'b0;
+
+				// 	count <= tRP_COUNT;
+				// 	state <= STATE_WAIT_PRECHARGE;
+				// end
 
 				/*
 				Wait until precharge finishes.
 				*/
 				STATE_WAIT_PRECHARGE: begin
 					command <= CMD_NOP;
-
-					if (!i_request)
-						o_ready <= 1'b0;
-
 					if (count == 0) begin
+						command <= CMD_ACTIVATE;
+
+						sdram_bs <= address[9:8];
+						sdram_addr <= address[22:10];
+
+						count <= tACT_COUNT;
+						state <= STATE_WAIT_ACTIVATE;			
+					end
+				end
+
+				/*
+				Wait until precharge all finishes.
+				*/
+				STATE_WAIT_PRECHARGE_ALL: begin
+					command <= CMD_NOP;
+					if (count == 0) begin
+						state <= STATE_REFRESH;
+					end
+				end
+
+				/*
+				*/
+				STATE_END_REQUEST: begin
+					command <= CMD_NOP;
+					if (!i_request) begin
+						o_ready <= 1'b0;
 						state <= STATE_IDLE;
 					end
 				end
