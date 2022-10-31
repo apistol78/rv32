@@ -20,6 +20,7 @@ static void cmd_run(const char* filename);
 static void cmd_download(const char* filename);
 static void cmd_sysinfo(const char* args);
 static void cmd_iotest(const char* args);
+static void cmd_memtest(const char* args);
 static void cmd_rstvid(const char* args);
 static void cmd_help(const char* args);
 
@@ -38,6 +39,7 @@ c_cmds[] =
 	{ "dl",			cmd_download,	"Download file"	},
 	{ "sysinfo",	cmd_sysinfo,	"System info"	},
 	{ "iotest",		cmd_iotest,		"I/O test"		},
+	{ "memtest",	cmd_memtest,	"Memory test"	},
 	{ "rstvid",		cmd_rstvid,		"Reset video"	},
 	{ "help",		cmd_help,		"Show help"		}
 };
@@ -374,6 +376,44 @@ static void cmd_iotest(const char* args)
 	}
 }
 
+static void cmd_memtest(const char* args)
+{
+	volatile uint32_t* mb = (uint32_t*)malloc(2 * 1024 * 1024);
+	if (!mb)
+	{
+		fb_printf("Unable to allocate memory\n");
+		return;
+	}
+
+	kernel_enter_critical();
+
+	const uint32_t t0 = timer_get_ms();
+
+	for (int n = 0; n < 100; ++n)
+	{
+		volatile uint32_t* ptr = mb;
+		for (int i = 0; i < 2 * 1024 * 1024 / 4; i += 8)
+		{
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+			*ptr++ = 0xcafebabe;
+		}
+	}
+
+	const uint32_t t1 = timer_get_ms();
+
+	kernel_leave_critical();
+
+	free((void*)mb);
+
+	fb_printf("%d KiB written in %d ms\n", 2 * 1024 * 100, t1 - t0);
+}
+
 static void cmd_rstvid(const char* args)
 {
 	video_init();
@@ -406,7 +446,7 @@ int main(int argc, const char** argv)
 
 	fb_init();
 	fb_clear();
-	fb_print("  **** XtendOS * SHELL 1.0 ****   \n");
+	fb_print("  **** XtndOS ** Shell 1.0 ****   \n");
 	fb_printf(" %-2d MiB RAM, RISC-V CPU @ %-3d MHz\n", sysreg_read(SR_REG_RAM_SIZE) / (1024 * 1024), sysreg_read(SR_REG_FREQUENCY) / 1000000);
 	fb_print("\n");
 	fb_print("READY.\n");
