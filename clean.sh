@@ -8,3 +8,6 @@ rm *.vmem
 rm *.vmem-range
 rm *.s16
 rm *.png
+
+rm -Rf code/Rv32T/SoC
+rm -Rf code/Verify/SoC

@@ -68,18 +68,18 @@ static void irq_entry()
 		if (cause == RISCV_INT_MASK_MTI)
 		{
 			// Timer interrupt.
-			irq_handler_t handler = g_handlers[IRQ_SOURCE_TIMER];
+			const irq_handler_t handler = g_handlers[IRQ_SOURCE_TIMER];
 			if (handler)
 				handler(IRQ_SOURCE_TIMER);
 		}
 		else if (cause == RISCV_INT_MASK_MEI)
 		{
 			// External interrupt, read PLIC to determine source.
-			uint32_t claimed = *PLIC_CLAIM_0;
+			const uint32_t claimed = *PLIC_CLAIM_0;
 			if (claimed)
 			{
 				// Call appropriate handler for source.
-				irq_handler_t handler = g_handlers[claimed];
+				const irq_handler_t handler = g_handlers[claimed];
 				if (handler)
 					handler(claimed);
 			}
@@ -89,7 +89,7 @@ static void irq_entry()
 	else
 	{
 		// Software interrupt.
-		irq_handler_t handler = g_handlers[IRQ_SOURCE_ECALL];
+		const irq_handler_t handler = g_handlers[IRQ_SOURCE_ECALL];
 		if (handler)
 			handler(IRQ_SOURCE_ECALL);
 	}
