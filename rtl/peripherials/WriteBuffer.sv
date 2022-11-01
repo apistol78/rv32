@@ -28,6 +28,15 @@ module WriteBuffer #(
 	output logic [31:0] o_rdata,
 	input [31:0] i_wdata
 );
+	typedef enum bit [2:0]
+	{
+		IDLE = 3'd0,
+		WRITE_TO_FIFO = 3'd1,
+		READ_FROM_BUS = 3'd2,
+		PROCESS_REQUEST = 3'd3,
+		TERMINATE_REQUEST = 3'd4
+	}
+	state_t;
 
 	wire wq_empty;
 	wire wq_full;
@@ -78,8 +87,8 @@ module WriteBuffer #(
 		o_rdata = 0;
 	end
 
-	bit [1:0] state = 0;
-	bit [1:0] next_state = 0;
+	state_t state = IDLE;
+	state_t next_state = IDLE;
 
 	wire stall_read = STALL_READ && !wq_empty;
 
@@ -98,7 +107,6 @@ module WriteBuffer #(
 
 		wq_wdata = 32'h0;
 		wq_write = 1'b0;
-
 		wq_read = 1'b0;
 
 		o_bus_request = 1'b0;
@@ -106,25 +114,25 @@ module WriteBuffer #(
 		o_bus_address = 32'h0;
 		o_bus_wdata = 32'h0;
 
-		o_rdata = (i_request && !i_rw) ? i_bus_rdata : 32'hz;
+		o_rdata = i_bus_rdata;
 		o_ready = 1'b0;
 
 		case (state)
-			0: begin
+			IDLE: begin
 				if (i_request) begin
 					// Write to fifo; only when not full.
 					if (i_rw && !wq_full) begin
 						wq_wdata = { i_address, i_wdata };
 						wq_write = 1'b1;
 						o_ready = 1'b1;
-						next_state = 1;
+						next_state = WRITE_TO_FIFO;
 					end
 					// Read from bus; only when not stalled.
 					else if (!i_rw && !stall_read) begin
 						o_bus_request = 1'b1;
 						o_bus_rw = 1'b0;
 						o_bus_address = i_address;
-						next_state = 2;
+						next_state = READ_FROM_BUS;
 					end
 				end
 
@@ -132,38 +140,46 @@ module WriteBuffer #(
 				// attempt to write out to bus from fifo.
 				if (!wq_empty) begin
 					wq_read = 1'b1;
-					next_state = 3;
+					next_state = PROCESS_REQUEST;
 				end
 			end
 
-			1: begin
-				// wq_wdata = { i_address, i_wdata };
-				// wq_write = 1'b1;
+			WRITE_TO_FIFO: begin
 				o_ready = 1'b1;
 				if (!i_request)
-					next_state = 0;
+					next_state = IDLE;
 			end
 
-			2: begin
+			READ_FROM_BUS: begin
 				o_bus_request = 1'b1;
 				o_bus_rw = 1'b0;
 				o_bus_address = i_address;
 				o_ready = i_bus_ready;
 				if (!i_request)
-					next_state = 0;		
+					next_state = IDLE;		
 			end
 
-			3: begin
+			PROCESS_REQUEST: begin
 				o_bus_request = 1'b1;
 				o_bus_rw = 1'b1;
 				o_bus_address = wq_rdata[63:32];
 				o_bus_wdata = wq_rdata[31:0];
+
+				// We need to terminate request, ie no bus request for
+				// at least one cycle so it won't collide with a pending read
+				// request when going back to IDLE.
 				if (i_bus_ready)
-					next_state = 0;
+					next_state = TERMINATE_REQUEST;
 			end
 
-		endcase
+			TERMINATE_REQUEST: begin
+				next_state = IDLE;
+			end
 
+			default: begin
+				next_state = IDLE;
+			end
+		endcase
 	end
 
 endmodule

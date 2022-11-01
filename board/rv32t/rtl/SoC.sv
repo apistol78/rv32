@@ -74,10 +74,12 @@ module SoC(
 
 	//=====================================
 	// SDRAM
-	wire sdram_select;
-	wire [31:0] sdram_address;
-	wire [31:0] sdram_rdata;
-	wire sdram_ready;
+	wire sdram_rw_0;
+	wire sdram_request_0;
+	wire [31:0] sdram_address_0;
+	wire [31:0] sdram_wdata_0;
+	wire [31:0] sdram_rdata_0;
+	wire sdram_ready_0;
 
 	BRAM #(
 		.WIDTH(32),
@@ -85,15 +87,46 @@ module SoC(
 		.ADDR_LSH(2)
 	) sdram(
 		.i_clock(clock),
-		.i_request(sdram_select && bus_request),
-		.i_rw(bus_rw),
-		.i_address(sdram_address),
-		.i_wdata(bus_wdata),
-		.o_rdata(sdram_rdata),
-		.o_ready(sdram_ready),
+		.i_request(sdram_request_0),
+		.i_rw(sdram_rw_0),
+		.i_address(sdram_address_0),
+		.i_wdata(sdram_wdata_0),
+		.o_rdata(sdram_rdata_0),
+		.o_ready(sdram_ready_0),
 		.o_valid()		
 	);
 	
+
+	wire sdram_select;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+
+	WriteBuffer #(
+		.DEPTH(4),
+		.STALL_READ(1)
+	) sdram_wb(
+		.i_reset(reset),
+		.i_clock(clock),
+		
+		.o_empty(),
+		.o_full(),
+
+		.o_bus_rw(sdram_rw_0),
+		.o_bus_request(sdram_request_0),
+		.i_bus_ready(sdram_ready_0),
+		.o_bus_address(sdram_address_0),
+		.i_bus_rdata(sdram_rdata_0),
+		.o_bus_wdata(sdram_wdata_0),
+
+		.i_rw(bus_rw),
+		.i_request(sdram_select && bus_request),
+		.o_ready(sdram_ready),
+		.i_address(sdram_address),
+		.o_rdata(sdram_rdata),
+		.i_wdata(bus_wdata)
+	);
+
 	//====================================================
 	// BUS
 
