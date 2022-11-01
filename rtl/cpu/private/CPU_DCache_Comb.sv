@@ -35,17 +35,18 @@ module CPU_DCache_Comb #(
 
 	typedef enum bit [3:0]
 	{
-		IDLE			= 4'd0,
-		FLUSH_SETUP		= 4'd1,
-		FLUSH_CHECK		= 4'd2,
-		FLUSH_WRITE		= 4'd3,
-		PASS_THROUGH	= 4'd4,
-		WRITE_SETUP		= 4'd5,
-		WRITE_WAIT		= 4'd6,
-		READ_SETUP		= 4'd7,
-		READ_WB_WAIT	= 4'd8,
-		READ_BUS_WAIT	= 4'd9,
-		INITIALIZE		= 4'd10
+		IDLE,
+		FLUSH_SETUP,
+		FLUSH_CHECK,
+		FLUSH_WRITE,
+		FLUSH_NEXT,
+		PASS_THROUGH,
+		WRITE_SETUP,
+		WRITE_WAIT,
+		READ_SETUP,
+		READ_WB_WAIT,
+		READ_BUS_WAIT,
+		INITIALIZE
 	} state_t;
 
 	state_t state = INITIALIZE;
@@ -197,9 +198,13 @@ module CPU_DCache_Comb #(
 				if (i_bus_ready) begin
 					cache_rw = 1;
 					cache_wdata = { cache_entry_data, cache_entry_address[31:2], 2'b01 };
-					next_flush_address = flush_address + 1;
-					next = FLUSH_SETUP;
+					next = FLUSH_NEXT;
 				end
+			end
+
+			FLUSH_NEXT: begin
+				next_flush_address = flush_address + 1;
+				next = FLUSH_SETUP;
 			end
 
 			// ================

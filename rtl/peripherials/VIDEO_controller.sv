@@ -121,6 +121,8 @@ module VIDEO_controller #(
 	//===============================
 	// CPU
 
+	bit [31:0] vram_read_offset = 0;
+
 	always_ff @(posedge i_clock) begin
 		palette_cpu_request <= 0;
 		o_cpu_ready <= 0;
@@ -147,11 +149,16 @@ module VIDEO_controller #(
 				o_cpu_ready <= i_vram_pa_ready;
 `endif
 			end
-			else if (i_cpu_address < 32'h00810000) begin
+			else if (i_cpu_address < 32'h00800400) begin
 				// Access palette.
 				palette_cpu_request <= 1;
 				palette_cpu_address <= (i_cpu_address - 32'h00800000) >> 2;
 				palette_cpu_wdata <= i_cpu_wdata[23:0];
+				o_cpu_ready <= 1;
+			end
+			else begin
+				// Access control registers.
+				vram_read_offset <= i_cpu_wdata;
 				o_cpu_ready <= 1;
 			end
 		end
@@ -196,10 +203,10 @@ module VIDEO_controller #(
 			WAIT_BLANK: begin
 				o_vram_pb_request <= 0;
 				if (vblank) begin	// Enter vblank, read first line.
-					o_vram_pb_address <= 0;
+					o_vram_pb_address <= vram_read_offset;
 					o_vram_pb_request <= 1;
 					column_offset <= 0;
-					row_offset <= 0;
+					row_offset <= vram_read_offset;
 					read_state <= WAIT_MEMORY;
 					vblank <= 1'b0;
 					hblank <= 1'b0;

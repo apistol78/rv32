@@ -15,10 +15,14 @@
 
 #define VIDEO_DATA_BASE     VIDEO_BASE
 #define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
+#define VIDEO_CONTROL_BASE	(VIDEO_BASE + 0x00800400)
 
 static void* primary_target = 0;
 static void* secondary_target = 0;
-static int32_t current = 0;
+
+static uint32_t s_visible_offset = 0;
+static uint32_t s_hidden_offset = WIDTH * HEIGHT;
+
 static volatile kernel_sig_t vblank_signal;
 static volatile int vblank = 0;
 
@@ -97,11 +101,32 @@ void video_swap(int32_t waitVblank)
 
 void video_blit(int32_t waitVblank, const uint8_t* source)
 {
+	uint8_t* ptr = (uint8_t*)primary_target;
+
+	// Copy data onto hidden part of framebuffer.
+	// __asm__ volatile ( "fence" );
+	// dma_copy(ptr + s_hidden_offset, source, WIDTH * HEIGHT / 4);
+	memcpy(ptr + s_hidden_offset, source, WIDTH * HEIGHT);
+
+	// Wait until vblank occurs.
+	// \todo in case vblank occurs during "fence" we should
+	// track number of vblanks when entering this function and compensate...
 	while (waitVblank > 0)
 	{
 		if (kernel_sig_try_wait(&vblank_signal, 400) == 0)
 			printf("WARN: vblank wait failed (%d)\n", vblank);
 		--waitVblank;
 	}
-	memcpy(primary_target, source, WIDTH * HEIGHT);
+
+	// Ensure DMA transfer is complete.
+	// dma_wait();
+
+	// Swap offsets.
+	uint32_t tmp = s_hidden_offset;
+	s_hidden_offset = s_visible_offset;
+	s_visible_offset = tmp;
+
+	// Set video offset to start reading from previously hidden part.
+	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
+	control[0] = s_visible_offset;
 }
