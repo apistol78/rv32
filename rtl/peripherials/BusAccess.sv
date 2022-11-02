@@ -9,7 +9,7 @@ module BusAccess #(
 
 	// Bus
 	output bit o_bus_rw,				// Data read/write
-	output o_bus_request,				// IO request.
+	output bit o_bus_request,			// IO request.
 	input i_bus_ready,					// IO request ready.
 	output bit [31:0] o_bus_address,	// Address
 	input [31:0] i_bus_rdata,			// Read data
@@ -46,6 +46,7 @@ module BusAccess #(
 
 	initial begin
 		o_bus_rw = 1'b0;
+		o_bus_request = 1'b0;
 		o_bus_address = 0;
 		o_bus_wdata = 0;
 	end
@@ -64,7 +65,9 @@ module BusAccess #(
 		assign o_pb_busy = (state == 2'd2);
 		assign o_pc_busy = (state == 2'd3);
 
-		assign o_bus_request = (state != 2'd0) & (i_pa_request | i_pb_request | i_pc_request);
+		always_comb begin
+			o_bus_request = (state != 2'd0) & (i_pa_request | i_pb_request | i_pc_request);
+		end
 
 		always_ff @(posedge i_clock) begin
 			state <= next_state;
@@ -146,12 +149,11 @@ module BusAccess #(
 		assign o_pb_busy = (state == 2'd2);
 		assign o_pc_busy = (state == 2'd3);
 
-		assign o_bus_request = (state != 2'd0) ? 1'b1 : 1'b0;
-
 		always_ff @(posedge i_clock) begin
 			if (i_reset) begin
 				state <= 2'd0;
 				o_bus_rw <= 1'b0;
+				o_bus_request <= 1'b0;
 				o_bus_address <= 0;
 				o_bus_wdata <= 0;
 			end
@@ -162,17 +164,20 @@ module BusAccess #(
 					2'd0: begin
 						if (i_pb_request) begin
 							o_bus_rw <= i_pb_rw;
+							o_bus_request <= 1'b1;
 							o_bus_address <= i_pb_address;
 							o_bus_wdata <= i_pb_wdata;
 							state <= 2'd2;
 						end
 						else if (i_pa_request) begin
 							o_bus_rw <= 1'b0;
+							o_bus_request <= 1'b1;
 							o_bus_address <= i_pa_address;
 							state <= 2'd1;		
 						end
 						else if (i_pc_request) begin
 							o_bus_rw <= i_pc_rw;
+							o_bus_request <= 1'b1;
 							o_bus_address <= i_pc_address;
 							o_bus_wdata <= i_pc_wdata;
 							state <= 2'd3;
@@ -182,6 +187,7 @@ module BusAccess #(
 					// Wait until request has been processed.
 					2'd1, 2'd2, 2'd3: begin
 						if (i_bus_ready) begin
+							o_bus_request <= 1'b0;
 							state <= 2'd0;
 						end
 					end
