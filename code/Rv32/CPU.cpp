@@ -6,7 +6,8 @@
 #include "Rv32/CPU.h"
 #include "Rv32/DCache.h"
 #include "Rv32/Helpers.h"
-#include "Rv32/ICache.h"
+#include "Rv32/ICache1W.h"
+#include "Rv32/ICache2W.h"
 
 using namespace traktor;
 
@@ -186,16 +187,20 @@ inline FormatR4 parseFormatR4(uint32_t word)
 
 T_IMPLEMENT_RTTI_CLASS(L"CPU", CPU, Object)
 
-CPU::CPU(Bus* bus, OutputStream* trace)
+CPU::CPU(Bus* bus, OutputStream* trace, bool twoWayICache)
 :   m_bus(bus)
 ,	m_trace(trace)
 ,   m_pc(0x00000000)
-,	m_interrupt(false)
+,	m_interrupt(0)
 ,	m_waitForInterrupt(false)
 ,	m_cycles(0)
 {
 	m_dcache = new DCache(bus);
-	m_icache = new ICache(bus);
+
+	if (twoWayICache)
+		m_icache = new ICache2W(bus);
+	else
+		m_icache = new ICache1W(bus);
 
 	m_busAccess = new BusAccess(m_dcache);
 
@@ -222,13 +227,19 @@ bool CPU::tick()
 {
 	// Check if CPU in low power mode and
 	// are waiting for interrupt.
-	if (m_waitForInterrupt && !m_interrupt)
+	if (m_waitForInterrupt && m_interrupt == 0)
 		return true;
 
-	if (m_interrupt)
+	if (m_interrupt != 0)
 	{
 		writeCSR(CSR::MEPC, m_pc);
-		writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Machine timer
+
+		if ((m_interrupt & TIMER) != 0)
+			writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Timer
+		else if ((m_interrupt & EXTERNAL) != 0)
+			writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 11));	// External
+		else if ((m_interrupt & SOFT) != 0)
+			writeCSR(CSR::MCAUSE, 0x00000000 | (1 << 11));	// Software
 
 		// Push MIE and then disable interrupts.
 		uint32_t mstatus = readCSR(CSR::MSTATUS);
@@ -243,7 +254,13 @@ bool CPU::tick()
 		const uint32_t mtvec = readCSR(CSR::MTVEC);
 		m_pc = mtvec;
 
-		m_interrupt = false;
+		if ((m_interrupt & TIMER) != 0)
+			m_interrupt &= ~TIMER;
+		else if ((m_interrupt & EXTERNAL) != 0)
+			m_interrupt &= ~EXTERNAL;
+		else if ((m_interrupt & SOFT) != 0)
+			m_interrupt &= ~SOFT;
+
 		m_waitForInterrupt = false;
 	}
 
@@ -280,12 +297,12 @@ bool CPU::tick()
 	return true;
 }
 
-void CPU::interrupt()
+void CPU::interrupt(uint32_t mask)
 {
 	const uint32_t mstatus = readCSR(CSR::MSTATUS);
 	const bool mie = (bool)((mstatus & (1 << 3)) != 0);
 	if (mie)
-		m_interrupt = true;
+		m_interrupt |= mask;
 }
 
 void CPU::reset()

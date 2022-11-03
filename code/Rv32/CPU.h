@@ -24,12 +24,19 @@ enum CSR
 	MCAUSE = 0x342
 };
 
+enum InterruptMask
+{
+	TIMER = 1,
+	EXTERNAL = 2,
+	SOFT = 4
+};
+
 class CPU : public traktor::Object
 {
 	T_RTTI_CLASS;
 
 public:
-	explicit CPU(Bus* bus, traktor::OutputStream* trace);
+	explicit CPU(Bus* bus, traktor::OutputStream* trace, bool twoWayICache);
 
 	void jump(uint32_t address);
 
@@ -37,7 +44,7 @@ public:
 
 	bool tick();
 
-	void interrupt();
+	void interrupt(uint32_t mask);
 
 	void reset();
 
@@ -60,7 +67,7 @@ private:
 	uint32_t m_registers[32];
 	float m_flt_registers[32];
 	uint32_t m_csr[4096];
-	bool m_interrupt;
+	uint32_t m_interrupt;
 	bool m_waitForInterrupt;
 
 	uint64_t m_cycles;

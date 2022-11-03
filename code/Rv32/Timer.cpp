@@ -1,6 +1,5 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
-#include "Rv32/CPU.h"
 #include "Rv32/Timer.h"
 
 using namespace traktor;
@@ -51,14 +50,19 @@ uint32_t TimerD::readU32(uint32_t address) const
 bool TimerD::tick(CPU* cpu)
 {
 	if (++m_cycles == m_compare && m_compare != 0)
-		cpu->interrupt();
+		m_callback();
 
 	if (m_countdown > 0)
 	{
 		if (--m_countdown == 0)
-			cpu->interrupt();
+			m_callback();
 	}
 
 	m_ms = (uint32_t)(m_timer.getElapsedTime() * 1000.0);
 	return true;
+}
+
+void TimerD::setCallback(const std::function< void() >& callback)
+{
+	m_callback = callback;
 }

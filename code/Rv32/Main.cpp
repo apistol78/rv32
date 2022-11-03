@@ -301,7 +301,7 @@ int main(int argc, const char** argv)
 	if (cmdLine.hasOption(L'p', L"profiler"))
 		profiler = new Profiler();
 
-	CPU cpu(&bus, os);
+	CPU cpu(&bus, os, cmdLine.hasOption(L"icache-2w"));
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -348,6 +348,12 @@ int main(int argc, const char** argv)
 		cpu.setSP(sp);
 		log::info << L"Initial stack " << str(L"%08x", sp) << Endl;
 	}
+
+	// Timer callback to raise PLIC interrupt.
+	tmr.setCallback([&](){
+		// log::info << L"Timer callback" << Endl;
+		cpu.interrupt(TIMER);
+	});
 
 	// Push arguments.
 	cpu.push(0);
@@ -470,6 +476,15 @@ int main(int argc, const char** argv)
 				uiImage->copyImage(video.getImage());
 				image->setImage(uiImage);
 				timer.reset();
+				plic.raise(0);
+			}
+		}
+		else
+		{
+			if (timer.getElapsedTime() > 1.0f/60.0f)
+			{
+				timer.reset();
+				plic.raise(0);
 			}
 		}
 	}

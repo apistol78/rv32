@@ -12,4 +12,9 @@ public:
 	virtual uint32_t readU32(uint32_t address) const override final;
 
 	virtual bool tick(CPU* cpu) override final;
+
+	void raise(uint32_t channel);
+
+private:
+	bool m_interrupt = false;
 };
