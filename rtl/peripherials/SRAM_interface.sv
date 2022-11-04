@@ -21,7 +21,7 @@ module SRAM_interface(
 );
 
 	// Number of cycles for entire transaction.
-	localparam CYCLES = 12;
+	localparam CYCLES = 8;
 
 	bit [5:0] count;
 	bit [15:0] wdata;
