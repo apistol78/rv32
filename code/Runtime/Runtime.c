@@ -105,7 +105,7 @@ void runtime_warm_restart()
 
 	video_set_palette(0, 0x00000000);
 	video_clear(0);
-	video_swap(0);
+	video_present(0);
 
 	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
 	__asm__ volatile (
@@ -125,7 +125,7 @@ void runtime_cold_restart()
 {
 	video_set_palette(0, 0x00000000);
 	video_clear(0);
-	video_swap(0);
+	video_present(0);
 
 	sysreg_modify(SR_REG_FLAGS, 0b100, 0b100);
 

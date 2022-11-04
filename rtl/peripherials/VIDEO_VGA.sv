@@ -24,6 +24,8 @@ module VIDEO_VGA #(
 	output bit o_hblank,		//!< 1 when output enable.
 	output bit o_vblank,		//!< 1 when output enable.
 
+	output bit o_data_enable,
+
 	output bit [10:0] o_pos_x,
 	output bit [10:0] o_pos_y
 );
@@ -86,6 +88,14 @@ module VIDEO_VGA #(
 		pl_pos_y_a <= vga_v - VBACK;
 		o_pos_x <= pl_pos_x_a;
 		o_pos_y <= pl_pos_y_a;
+	end
+
+	bit pl_data_enable = 0;
+	always_ff @(posedge i_clock_out) begin
+		pl_data_enable <=
+			((vga_h >= HBACK && vga_h < (HLINE - HPULSE - HFRONT - 1)) ? 1 : 0) &
+			((vga_v >= VBACK && vga_v < (VLINE - VPULSE - VFRONT - 1)) ? 1 : 0);
+		o_data_enable <= pl_data_enable;
 	end
 
 endmodule

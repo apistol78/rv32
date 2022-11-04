@@ -140,7 +140,7 @@ void	VID_Update (vrect_t *rects){
 		count = 0;
 	}
 
-  video_swap(0);
+  video_present(0);
 
   runtime_update();
 }

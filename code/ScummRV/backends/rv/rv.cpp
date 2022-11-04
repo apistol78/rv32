@@ -69,6 +69,8 @@ OSystem_RebelV::OSystem_RebelV()
 		}
 	});	
 	printf("update thread %d\n", tid);
+
+	m_target = (byte*)video_create_target();
 }
 
 void OSystem_RebelV::init_size(uint w, uint h)
@@ -85,7 +87,7 @@ void OSystem_RebelV::init_size(uint w, uint h)
 		);
 	}
 
-	m_overlayCopy = (byte*)malloc(320 * 200);
+	m_overlayTarget = (byte*)video_create_target();
 }
 
 void OSystem_RebelV::set_palette(const byte *colors, uint start, uint num)
@@ -128,8 +130,7 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 	if (w <= 0 || h <= 0)
 		return;
 
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	byte *dst = framebuffer + y * 320 + x;
+	byte *dst = m_target + y * 320 + x;
 	do {
 		memcpy(dst, src, w);
 		dst += 320;
@@ -360,9 +361,7 @@ void OSystem_RebelV::show_overlay()
 	if (m_overlayVisible)
 		return;
 
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	memcpy(m_overlayCopy, framebuffer, 320 * 200);
-
+	memcpy(m_overlayTarget, m_target, 320 * 200);
 	m_overlayVisible = true;
 }
 
@@ -380,13 +379,12 @@ void OSystem_RebelV::clear_overlay()
 	if (!m_overlayVisible)
 		return;
 
-	uint8_t* framebuffer = (uint8_t*)video_get_secondary_target();
-	memcpy(m_overlayCopy, framebuffer, 320 * 200);
+	memcpy(m_overlayTarget, m_target, 320 * 200);
 }
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
 {
-	const uint8_t* src = m_overlayCopy;
+	const uint8_t* src = m_overlayTarget;
 	for (int32_t i = 0; i < 200; ++i)
 	{
 		memcpy(buf, src, 320);
@@ -420,7 +418,7 @@ void OSystem_RebelV::copy_rect_overlay(const NewGuiColor *buf, int pitch, int x,
 	if (w <= 0 || h <= 0)
 		return;
 
-	uint8_t* dst = m_overlayCopy + y * 320 + x;
+	uint8_t* dst = m_overlayTarget + y * 320 + x;
 	do
 	{
 		memcpy(dst, buf, w);
@@ -483,7 +481,7 @@ void OSystem_RebelV::draw_mouse_cursor()
 	if (w <= 0 || h <= 0)
 		return;
 
-	byte* dst = (uint8_t*)video_get_primary_target();
+	byte* dst = (uint8_t*)video_get_secondary_target();
 	dst += y * 320 + x;
 
 	while (h > 0)
@@ -557,14 +555,16 @@ void OSystem_RebelV::update_frame()
 	}
 
 	if (m_overlayVisible)
-		video_blit(1, m_overlayCopy);
+		video_blit(m_overlayTarget);
 	else
-	 	video_swap(2);
+	  	video_blit(m_target);
 
 	// Mouse is drawn directly onto primary target, thus
 	// no need to preserve background etc.
 	if (m_mouseVisible)
 		draw_mouse_cursor();
+
+	video_present(1);
 }
 
 OSystem *OSystem_RebelV_create()

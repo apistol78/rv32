@@ -1,7 +1,7 @@
 
 `timescale 1ns/1ns
 
-`define ENABLE_WBUFFER 0
+`define ENABLE_WBUFFER 1
 
 module VIDEO_controller #(
 	parameter PPITCH = 320
@@ -93,8 +93,8 @@ module VIDEO_controller #(
 	wire [31:0] wbuffer_rdata;
 
 	WriteBuffer #(
-		.DEPTH(1024),
-		.STALL_READ(0)
+		.DEPTH(128),
+		.STALL_READ(1)
 	) wbuffer(
 		.i_reset(0),
 		.i_clock(i_clock),

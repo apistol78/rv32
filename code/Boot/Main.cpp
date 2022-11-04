@@ -446,9 +446,6 @@ int main(int argc, const char** argv)
 
 	fb_init();
 	fb_clear();
-	fb_print("  **** XtndOS ** Shell 1.0 ****   \n");
-	fb_printf(" %-2d MiB RAM, RISC-V CPU @ %-3d MHz\n", sysreg_read(SR_REG_RAM_SIZE) / (1024 * 1024), sysreg_read(SR_REG_FREQUENCY) / 1000000);
-	fb_print("\n");
 	fb_print("READY.\n");
 
 	sysreg_write(SR_REG_LEDS, 0);

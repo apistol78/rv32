@@ -548,7 +548,7 @@ module SoC(
 	// VIDEO
 	assign hdmi_hsync = ~vga_hsync;
 	assign hdmi_vsync = ~vga_vsync;
-	assign hdmi_de = vga_hblank && vga_vblank;
+	assign hdmi_de = vga_data_enable;
 	assign hdmi_idck = vga_clock;
 	assign hdmi_r = vmode_video_rdata[7:0];
 	assign hdmi_g = vmode_video_rdata[15:8];
@@ -560,6 +560,7 @@ module SoC(
 	wire vga_vsync;
 	wire vga_hblank;
 	wire vga_vblank;
+	wire vga_data_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
 	VIDEO_VGA #(
@@ -596,6 +597,7 @@ module SoC(
 		.o_vsync(vga_vsync),
 		.o_hblank(vga_hblank),
 		.o_vblank(vga_vblank),
+		.o_data_enable(vga_data_enable),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y)
 	);

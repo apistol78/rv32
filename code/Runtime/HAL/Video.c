@@ -18,11 +18,8 @@
 #define VIDEO_CONTROL_BASE	(VIDEO_BASE + 0x00800400)
 
 static void* primary_target = 0;
-static void* secondary_target = 0;
-
 static uint32_t s_visible_offset = 0;
 static uint32_t s_hidden_offset = WIDTH * HEIGHT;
-
 static volatile kernel_sig_t vblank_signal;
 static volatile int vblank = 0;
 
@@ -51,15 +48,22 @@ int32_t video_init()
 	}
 
 	primary_target = (uint32_t*)VIDEO_DATA_BASE;
-	if ((secondary_target = malloc(WIDTH * HEIGHT)) == 0)
-		return 1;		
-
-	video_clear(0);
-	memcpy(primary_target, secondary_target, WIDTH * HEIGHT);
 
 	kernel_sig_init(&vblank_signal);
 	interrupt_set_handler(IRQ_SOURCE_PLIC_0, video_interrupt_handler);
 	return 0;
+}
+
+void* video_create_target()
+{
+	void* target = malloc(WIDTH * HEIGHT);
+	memset(target, 0, WIDTH * HEIGHT);
+	return target;
+}
+
+void video_destroy_target(void* target)
+{
+	free(target);
 }
 
 int32_t video_get_resolution_width()
@@ -80,12 +84,14 @@ void video_set_palette(uint8_t index, uint32_t color)
 
 void* video_get_primary_target()
 {
-	return primary_target;
+	uint8_t* ptr = (uint8_t*)primary_target;
+	return ptr + s_visible_offset;
 }
 
 void* video_get_secondary_target()
 {
-	return secondary_target;
+	uint8_t* ptr = (uint8_t*)primary_target;
+	return ptr + s_hidden_offset;
 }
 
 void video_clear(uint8_t idx)
@@ -94,23 +100,22 @@ void video_clear(uint8_t idx)
 	memset(framebuffer, idx, WIDTH * HEIGHT);
 }
 
-void video_swap(int32_t waitVblank)
+void video_blit(const void* source)
 {
-	video_blit(waitVblank, secondary_target);
-}
-
-void video_blit(int32_t waitVblank, const uint8_t* source)
-{
-	uint8_t* ptr = (uint8_t*)primary_target;
+	void* target = video_get_secondary_target();
 
 	// Copy data onto hidden part of framebuffer.
 	// __asm__ volatile ( "fence" );
 	// dma_copy(ptr + s_hidden_offset, source, WIDTH * HEIGHT / 4);
-	memcpy(ptr + s_hidden_offset, source, WIDTH * HEIGHT);
+	memcpy(target, source, WIDTH * HEIGHT);
 
+	// Ensure DMA transfer is complete.
+	// dma_wait();
+}
+
+void video_present(int32_t waitVblank)
+{
 	// Wait until vblank occurs.
-	// \todo in case vblank occurs during "fence" we should
-	// track number of vblanks when entering this function and compensate...
 	while (waitVblank > 0)
 	{
 		if (kernel_sig_try_wait(&vblank_signal, 400) == 0)
@@ -118,11 +123,8 @@ void video_blit(int32_t waitVblank, const uint8_t* source)
 		--waitVblank;
 	}
 
-	// Ensure DMA transfer is complete.
-	// dma_wait();
-
 	// Swap offsets.
-	uint32_t tmp = s_hidden_offset;
+	const uint32_t tmp = s_hidden_offset;
 	s_hidden_offset = s_visible_offset;
 	s_visible_offset = tmp;
 

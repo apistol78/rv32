@@ -152,19 +152,7 @@ static void remote_control()
 				// Write data to memory.
 				for (uint16_t i = 0; i < nb; ++i)
 					*(uint8_t*)(addr + i) = r[i];
-/*
-				// Verify data written to memory.
-				uint32_t result = 0x80;
-				for (uint16_t i = 0; i < nb; ++i)
-				{
-					if (*(uint8_t*)(addr + i) != r[i])
-					{
-						result = 0x83;
-						break;
-					}
-				}
-				uart_tx_u8(0, result);
-*/
+
 				uart_tx_u8(0, 0x80);
 			}
 			else

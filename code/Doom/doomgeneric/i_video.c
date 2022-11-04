@@ -219,8 +219,8 @@ void I_InitGraphics (void)
 
 
     /* Allocate screen to draw to */
-    extern void* video_get_secondary_target();
-    I_VideoBuffer = (byte*)video_get_secondary_target();
+    extern void* video_create_target();
+    I_VideoBuffer = (byte*)video_create_target();
 
 	screenvisible = true;
 
@@ -256,9 +256,6 @@ void I_FinishUpdate (void)
 {
     extern void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors);
     DG_DrawFrame2((const uint8_t*)I_VideoBuffer, (const uint32_t*)colors);
-
-    extern void* video_get_secondary_target();
-    I_VideoBuffer = (byte*)video_get_secondary_target();
 }
 
 //

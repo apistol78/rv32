@@ -123,30 +123,14 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 			: "=r" (ms)
 		);
 
-		// First try to find any thread which are waiting for a ready signal.
 		int32_t next = g_current;
 		for (int32_t i = 0; i < g_count; ++i)
 		{
 			if (++next >= g_count)
 				next = 0;
 			volatile kernel_thread_t* t = &g_threads[next];
-			if (t->waiting != 0 && t->waiting->counter > 0)
-			{
-				t->waiting = 0;
+			if (t->sleep <= ms)
 				break;
-			}
-		}
-		// Else we select next ready thread.
-		if (next == g_current)
-		{
-			for (int32_t i = 0; i < g_count; ++i)
-			{
-				if (++next >= g_count)
-					next = 0;
-				volatile kernel_thread_t* t = &g_threads[next];
-				if (t->waiting == 0 && t->sleep <= ms)
-					break;
-			}
 		}
 		g_current = next;
 
@@ -322,6 +306,7 @@ void kernel_sleep(uint32_t ms)
 		kernel_yield();
 	}
 	while (t->sleep >= timer_get_ms());
+	t->sleep = 0;
 }
 
 void kernel_enter_critical()
@@ -395,15 +380,14 @@ int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	t->waiting = sig;
 
 	const uint32_t fin_ms = timer_get_ms() + timeout;
-	do
+	while (fin_ms >= timer_get_ms())
 	{
-		if (!t->waiting)
+		if (sig->counter > 0)
 			break;
 		kernel_yield();
 	}
-	while (fin_ms >= timer_get_ms());
 
-	const int32_t result = (t->waiting == 0) ? 1 : 0;
+	const int32_t result = (sig->counter > 0) ? 1 : 0;
 	t->waiting = 0;
 
 	return result;

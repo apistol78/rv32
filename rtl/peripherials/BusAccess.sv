@@ -65,10 +65,6 @@ module BusAccess #(
 		assign o_pb_busy = (state == 2'd2);
 		assign o_pc_busy = (state == 2'd3);
 
-		always_comb begin
-			o_bus_request = (state != 2'd0) & (i_pa_request | i_pb_request | i_pc_request);
-		end
-
 		always_ff @(posedge i_clock) begin
 			state <= next_state;
 		end
@@ -77,6 +73,7 @@ module BusAccess #(
 
 			next_state = state;
 
+			o_bus_request = 0;
 			o_bus_rw = 0;
 			o_bus_address = 0;
 			o_bus_wdata = 0;
@@ -106,12 +103,14 @@ module BusAccess #(
 
 				// Wait until request has been processed.
 				2'd1: begin
+					o_bus_request = i_pa_request;
 					o_bus_address = i_pa_address;
 					if (i_bus_ready) begin
 						next_state = 2'd0;
 					end
 				end
 				2'd2: begin
+					o_bus_request = i_pb_request;
 					o_bus_rw = i_pb_rw;
 					o_bus_address = i_pb_address;
 					o_bus_wdata = i_pb_wdata;
@@ -120,6 +119,7 @@ module BusAccess #(
 					end
 				end
 				2'd3: begin
+					o_bus_request = i_pc_request;
 					o_bus_rw = i_pc_rw;
 					o_bus_address = i_pc_address;
 					o_bus_wdata = i_pc_wdata;

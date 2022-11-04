@@ -41,7 +41,7 @@ void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 	{
 		const int32_t x = m_hpos - (48 + 96);	// back + pulse
 		const int32_t y = m_vpos - (35 + 2);
-		if (x >= 0 && x < m_image->getWidth() && y >= 0 && y < m_image->getHeight())
+		if (de && x >= 0 && x < m_image->getWidth() && y >= 0 && y < m_image->getHeight())
 		{
 			uint32_t* id = (uint32_t*)m_image->getData();
 			id[x + y * m_image->getWidth()] = d;

@@ -93,6 +93,8 @@ public:
 	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 
+	uint8_t* m_target = nullptr;
+
 	const uint8_t* m_mouseBits = nullptr;
 	int32_t m_mouseW = 0;
 	int32_t m_mouseH = 0;
@@ -102,7 +104,7 @@ public:
 	int32_t m_mouseY = 100;
 	bool m_mouseVisible = false;
 
-	uint8_t* m_overlayCopy = nullptr;
+	uint8_t* m_overlayTarget = nullptr;
 	bool m_overlayVisible = false;
 
 	Color m_palette[256];
