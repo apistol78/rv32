@@ -359,6 +359,7 @@ void kernel_sig_init(volatile kernel_sig_t* sig)
 void kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
+	kernel_yield();
 }
 
 void kernel_sig_wait(volatile kernel_sig_t* sig)
