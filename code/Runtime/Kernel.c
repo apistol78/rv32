@@ -124,14 +124,46 @@ static __attribute__((naked)) void kernel_scheduler(uint32_t source)
 		);
 
 		int32_t next = g_current;
+
+		// Prioritize thread which are waiting for a signal.
 		for (int32_t i = 0; i < g_count; ++i)
 		{
 			if (++next >= g_count)
 				next = 0;
 			volatile kernel_thread_t* t = &g_threads[next];
-			if (t->sleep <= ms)
-				break;
+			if (t->waiting != 0)
+			{
+				if (t->sleep == 0 || ms < t->sleep)
+				{
+					if (t->waiting->counter > 0)
+					{
+						t->waiting = 0;
+						break;
+					}
+				}
+				else
+				{
+					// Wait has timed out; do not select immediately
+					// since it's no longer prioritized.
+					t->waiting = 0;
+				}
+			}
 		}
+
+		// If no thread awoken from signals then we
+		// select next thread round-robin style.
+		if (next == g_current)
+		{
+			for (int32_t i = 0; i < g_count; ++i)
+			{
+				if (++next >= g_count)
+					next = 0;
+				volatile kernel_thread_t* t = &g_threads[next];
+				if (t->waiting == 0 && t->sleep <= ms)
+					break;
+			}
+		}
+
 		g_current = next;
 
 		// Write new current thread to scratch so we can debug scheduling.
@@ -299,13 +331,17 @@ void kernel_yield()
 void kernel_sleep(uint32_t ms)
 {
 	const uint32_t fin_ms = timer_get_ms() + ms;
+
 	volatile kernel_thread_t* t = &g_threads[g_current];
+	t->waiting = 0;
 	t->sleep = fin_ms;
+
 	do
 	{
 		kernel_yield();
 	}
 	while (t->sleep >= timer_get_ms());
+
 	t->sleep = 0;
 }
 
@@ -368,28 +404,32 @@ void kernel_sig_wait(volatile kernel_sig_t* sig)
 
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
+	t->sleep = 0;
 	
-	while (t->waiting)
+	while (t->waiting != 0)
 		kernel_yield();
+
+	t->waiting = 0;
+	t->sleep = 0;
 }
 
 int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
 	sig->counter = 0;
 
+	const uint32_t fin_ms = timer_get_ms() + timeout;
+
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
+	t->sleep = fin_ms;
 
-	const uint32_t fin_ms = timer_get_ms() + timeout;
-	while (fin_ms >= timer_get_ms())
-	{
-		if (sig->counter > 0)
-			break;
+	while (t->waiting != 0)
 		kernel_yield();
-	}
 
-	const int32_t result = (sig->counter > 0) ? 1 : 0;
+	const int32_t result = (t->waiting == 0) ? 1 : 0;
+
 	t->waiting = 0;
+	t->sleep = 0;
 
 	return result;
 }
