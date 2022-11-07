@@ -16,12 +16,15 @@ module SoC(
 	wire [31:0] rom_address;
 	wire [31:0] rom_rdata;
 	wire rom_ready;
-	BROM rom(
+	BRAM rom(
 		.i_clock(clock),
 		.i_request(rom_select && bus_request),
+		.i_rw(1'b0),
 		.i_address(rom_address),
+		.i_wdata(0),
 		.o_rdata(rom_rdata),
-		.o_ready(rom_ready)
+		.o_ready(rom_ready),
+		.o_valid()
 	);
 
 	// RAM
@@ -121,7 +124,10 @@ module SoC(
 
 	CPU #(
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(0)
+		.DCACHE_SIZE(0),
+		.DCACHE_REGISTERED(1),
+		.ICACHE_SIZE(1),
+		.ICACHE_REGISTERED(1)		
 	) cpu(
         .i_reset(reset),
 		.i_clock(clock),
