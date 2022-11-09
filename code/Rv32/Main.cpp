@@ -270,7 +270,7 @@ int main(int argc, const char** argv)
 	Unknown i2c(L"I2C", true);
 	SD sd;
 	Unknown dma(L"DMA", true);
-	TimerD tmr;
+	::Timer tmr;
 	PLIC plic;
 	SystemRegisters sysreg(c_memoryAvail);
 	Audio audio;
@@ -444,16 +444,14 @@ int main(int argc, const char** argv)
 		form->show();
 	}
 
-	Timer timer;
+	traktor::Timer timer;
 	while (g_going)
 	{
 		for (int32_t ii = 0; g_going && ii < 100; ++ii)
 		{
 			for (int32_t i = 0; g_going && i < 100; ++i)
 			{
-				if (!cpu.tick())
-					g_going = false;
-				if (bus.error())
+				if (!cpu.tick() || bus.error())
 					g_going = false;
 			}
 

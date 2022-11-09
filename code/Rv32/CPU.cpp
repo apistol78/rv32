@@ -19,130 +19,130 @@ struct FormatCSR
 	uint32_t rd;
 	uint32_t rs1;
 	uint16_t csr;
-};
 
-inline FormatCSR parseFormatCSR(uint32_t word)
-{
-	return FormatCSR {
-		(word >> 7) & 0x1f,
-		(word >> 15) & 0x1f,
-		(uint16_t)((word >> 20) & 0xfff)
-	};
-}
+	inline static FormatCSR parse(uint32_t word)
+	{
+		return FormatCSR {
+			(word >> 7) & 0x1f,
+			(word >> 15) & 0x1f,
+			(uint16_t)((word >> 20) & 0xfff)
+		};
+	}
+};
 
 struct FormatI
 {
 	uint32_t rd;
 	uint32_t rs1;
 	int32_t imm;
+
+	inline static FormatI parse(uint32_t word)
+	{
+		FormatI f = {
+			(word >> 7) & 0x1f,
+			(word >> 15) & 0x1f,
+			(int32_t)((word >> 20) & 0x000007ff)
+		};
+
+		if ((word & 0x80000000) == 0x80000000)
+			f.imm |= 0xfffff800;
+		
+		return f;
+	}
 };
-
-inline FormatI parseFormatI(uint32_t word)
-{
-	FormatI f = {
-		(word >> 7) & 0x1f,
-		(word >> 15) & 0x1f,
-		(int32_t)((word >> 20) & 0x000007ff)
-	};
-
-	if ((word & 0x80000000) == 0x80000000)
-		f.imm |= 0xfffff800;
-	
-	return f;
-}
 
 struct FormatJ
 {
 	uint32_t rd;
 	int32_t imm;
+
+	inline static FormatJ parse(uint32_t word)
+	{
+		FormatJ f = {
+			(word >> 7) & 0x1f,
+			(int32_t)((word & 0x000ff000) | ((word & 0x00100000) >> 9) | ((word & 0x7fe00000) >> 20))
+		};
+
+		if ((word & 0x80000000) == 0x80000000)
+			f.imm |= 0xfff00000;
+		
+		return f;
+	}
 };
-
-inline FormatJ parseFormatJ(uint32_t word)
-{
-	FormatJ f = {
-		(word >> 7) & 0x1f,
-		(int32_t)((word & 0x000ff000) | ((word & 0x00100000) >> 9) | ((word & 0x7fe00000) >> 20))
-	};
-
-	if ((word & 0x80000000) == 0x80000000)
-		f.imm |= 0xfff00000;
-	
-	return f;
-}
 
 struct FormatR
 {
 	uint32_t rd;
 	uint32_t rs1;
 	uint32_t rs2;
-};
 
-inline FormatR parseFormatR(uint32_t word)
-{
-	return FormatR {
-		(word >> 7) & 0x1f,
-		(word >> 15) & 0x1f,
-		(word >> 20) & 0x1f
-	};
-}
+	inline static FormatR parse(uint32_t word)
+	{
+		return FormatR {
+			(word >> 7) & 0x1f,
+			(word >> 15) & 0x1f,
+			(word >> 20) & 0x1f
+		};
+	}
+};
 
 struct FormatS
 {
 	uint32_t rs1;
 	uint32_t rs2;
 	int32_t imm;
+
+	inline static FormatS parse(uint32_t word)
+	{
+		FormatS f = {
+			(word >> 15) & 0x1f,
+			(word >> 20) & 0x1f,
+			(int32_t)(((word >> 20) & 0xfe0) | ((word >> 7) & 0x1f))
+		};
+
+		if ((word & 0x80000000) == 0x80000000)
+			f.imm |= 0xfffff000;
+		
+		return f;
+	}
 };
-
-inline FormatS parseFormatS(uint32_t word)
-{
-	FormatS f = {
-		(word >> 15) & 0x1f,
-		(word >> 20) & 0x1f,
-		(int32_t)(((word >> 20) & 0xfe0) | ((word >> 7) & 0x1f))
-	};
-
-	if ((word & 0x80000000) == 0x80000000)
-		f.imm |= 0xfffff000;
-	
-	return f;
-}
 
 struct FormatB
 {
 	uint32_t rs1;
 	uint32_t rs2;
 	int32_t imm;
+
+	inline static FormatB parse(uint32_t word)
+	{
+		FormatB f = {
+			(word >> 15) & 0x1f,
+			(word >> 20) & 0x1f,
+			(int32_t)(((word << 4) & 0x00000800) | ((word >> 20) & 0x000007e0) | ((word >> 7) & 0x0000001e))
+		};
+
+		if ((word & 0x80000000) == 0x80000000)
+			f.imm |= 0xfffff000;
+		
+		return f;
+	}
 };
-
-inline FormatB parseFormatB(uint32_t word)
-{
-	FormatB f = {
-		(word >> 15) & 0x1f,
-		(word >> 20) & 0x1f,
-		(int32_t)(((word << 4) & 0x00000800) | ((word >> 20) & 0x000007e0) | ((word >> 7) & 0x0000001e))
-	};
-
-	if ((word & 0x80000000) == 0x80000000)
-		f.imm |= 0xfffff000;
-	
-	return f;
-}
 
 struct FormatU
 {
 	uint32_t rd;
 	int32_t imm;
-};
 
-inline FormatU parseFormatU(uint32_t word)
-{
-	FormatU f = {
-		(word >> 7) & 0x1f,
-		(int32_t)(word & 0xfffff000)
-	};
-	// check this!
-	return f;
-}
+	inline static FormatU parse(uint32_t word)
+	{
+		FormatU f = {
+			(word >> 7) & 0x1f,
+			(int32_t)(word & 0xfffff000)
+		};
+		// check this!
+		return f;
+	}
+};
 
 struct FormatR4
 {
@@ -150,17 +150,17 @@ struct FormatR4
 	uint32_t rs1;
 	uint32_t rs2;
 	uint32_t rs3;
-};
 
-inline FormatR4 parseFormatR4(uint32_t word)
-{
-	return FormatR4 {
-		(word >> 7) & 0x1f,
-		(word >> 15) & 0x1f,
-		(word >> 20) & 0x1f,
-		(word >> 27) & 0x1f
-	};
-}
+	inline static FormatR4 parse(uint32_t word)
+	{
+		return FormatR4 {
+			(word >> 7) & 0x1f,
+			(word >> 15) & 0x1f,
+			(word >> 20) & 0x1f,
+			(word >> 27) & 0x1f
+		};
+	}
+};
 
 #define PC m_pc
 #define PC_NEXT m_next
@@ -236,14 +236,10 @@ bool CPU::tick()
 	if (mie)
 	{
 		const uint32_t mie = readCSR(CSR::MIE);
-
-		uint32_t mask = 0;
-		if (mie & 0b000000000001000)	// msie
-			mask |= SOFT;
-		if (mie & 0b000000010000000)	// mtie
-			mask |= TIMER;
-		if (mie & 0b000100000000000)	// meie
-			mask |= EXTERNAL;
+		const uint32_t mask =
+			((mie & 0b000000000001000) ? SOFT : 0) |
+			((mie & 0b000000010000000) ? TIMER : 0) |
+			((mie & 0b000100000000000) ? EXTERNAL : 0);
 
 		const uint32_t pending = m_interrupt & mask;
 		if (pending != 0)
@@ -316,19 +312,14 @@ bool CPU::tick()
 
 void CPU::interrupt(uint32_t mask)
 {
-	// const uint32_t mstatus = readCSR(CSR::MSTATUS);
-	// const bool mie = (bool)((mstatus & (1 << 3)) != 0);
-	// if (mie)
-		m_interrupt |= mask;
-	// else
-	// 	log::info << L"[CPU] Interrupt prohibited" << Endl;
+	m_interrupt |= mask;
 }
 
 void CPU::reset()
 {
 	m_pc = 0x000000000;
 	for (uint32_t i = 0; i < sizeof_array(m_registers); ++i)
-		m_registers[i] = 0x00000000;
+		m_registers[i] = i;
 	m_registers[2] = 0x20110000;	
 }
 
@@ -356,7 +347,7 @@ uint32_t CPU::readCSR(uint16_t csr) const
 		return (uint32_t)(m_cycles >> 32);
 	else if (csr == 0xc01 || csr == 0xc81)
 	{
-		uint64_t time = (uint64_t)(m_timer.getElapsedTime() * 1000);
+		const uint64_t time = (uint64_t)(m_timer.getElapsedTime() * 1000);
 		if (csr == 0xc01)
 			return (uint32_t)time;
 		else

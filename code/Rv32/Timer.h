@@ -4,7 +4,7 @@
 #include <Core/Timer/Timer.h>
 #include "Rv32/Device.h"
 
-class TimerD : public Device
+class Timer : public Device
 {
 	T_RTTI_CLASS;
 

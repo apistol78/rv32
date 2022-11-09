@@ -2,11 +2,11 @@
 #include <Core/Misc/String.h>
 #include "Rv32/Timer.h"
 
-using namespace traktor;
+namespace tk = traktor;
 
-T_IMPLEMENT_RTTI_CLASS(L"TimerD", TimerD, Device)
+T_IMPLEMENT_RTTI_CLASS(L"Timer", Timer, Device)
 
-bool TimerD::writeU32(uint32_t address, uint32_t value)
+bool Timer::writeU32(uint32_t address, uint32_t value)
 {
 	switch (address >> 2)
 	{
@@ -20,12 +20,12 @@ bool TimerD::writeU32(uint32_t address, uint32_t value)
 		m_countdown = value;
 		break;
 	default:
-		log::info << L"Invalid timer address " << str(L"%08x", address) << L", write" << Endl;
+		tk::log::info << L"Invalid timer address " << tk::str(L"%08x", address) << L", write" << tk::Endl;
 	}
 	return true;
 }
 
-uint32_t TimerD::readU32(uint32_t address) const
+uint32_t Timer::readU32(uint32_t address) const
 {
 	switch (address >> 2)
 	{
@@ -42,12 +42,12 @@ uint32_t TimerD::readU32(uint32_t address) const
 	case 0x5:
 		return m_countdown;
 	default:
-		log::info << L"Invalid timer address " << str(L"%08x", address) << L", read" << Endl;
+		tk::log::info << L"Invalid timer address " << tk::str(L"%08x", address) << L", read" << tk::Endl;
 	}
 	return 0;
 }
 
-bool TimerD::tick(CPU* cpu)
+bool Timer::tick(CPU* cpu)
 {
 	if (++m_cycles == m_compare && m_compare != 0)
 		m_callback();
@@ -62,7 +62,7 @@ bool TimerD::tick(CPU* cpu)
 	return true;
 }
 
-void TimerD::setCallback(const std::function< void() >& callback)
+void Timer::setCallback(const std::function< void() >& callback)
 {
 	m_callback = callback;
 }
