@@ -77,7 +77,7 @@ local instructions = {
 		format = "R",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_s(f.rd) = R_s(f.rs1) + R_s(f.rs2);
 		]],
 		verilog_alu = {
@@ -93,7 +93,7 @@ local instructions = {
 		format = "I",
 		type = insttype.ARITHMETIC,
         cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_s(f.rd) = R_s(f.rs1) + f.imm;
         ]],
 		verilog_alu = {
@@ -181,7 +181,7 @@ local instructions = {
 		format = "R",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = R_u(f.rs1) & R_u(f.rs2);
 		]],
 		verilog_alu = {
@@ -197,7 +197,7 @@ local instructions = {
 		format = "I",
  		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = R_u(f.rs1) & f.imm;
         ]],
 		verilog_alu = {
@@ -213,7 +213,7 @@ local instructions = {
 		format = "U",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatU(word);
+			const auto f = FormatU::parse(word);
 			R_u(f.rd) = PC + f.imm;
 		]],
 		verilog_alu = {
@@ -229,7 +229,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_s(f.rs1) == R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -246,7 +246,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_s(f.rs1) >= R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -263,7 +263,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_u(f.rs1) >= R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -280,7 +280,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_s(f.rs1) < R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -297,7 +297,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_u(f.rs1) < R_u(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -314,7 +314,7 @@ local instructions = {
 		format = "B",
 		type = insttype.JUMP_CONDITIONAL,
 		cpp = [[
-			auto f = parseFormatB(word);
+			const auto f = FormatB::parse(word);
 			if (R_s(f.rs1) != R_s(f.rs2))
 				PC_NEXT = PC + f.imm;
 		]],
@@ -331,9 +331,9 @@ local instructions = {
 		format = "CSR",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatCSR(word);
-			uint32_t data = readCSR(f.csr);
-			uint32_t tmp = R_u(f.rs1);
+			const auto f = FormatCSR::parse(word);
+			const uint32_t data = readCSR(f.csr);
+			const uint32_t tmp = R_u(f.rs1);
 			R_u(f.rd) = data;
 			writeCSR(f.csr, R_u(f.rd) & ~tmp);
 		]],
@@ -361,9 +361,9 @@ local instructions = {
 		format = "CSR",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatCSR(word);
-			uint32_t data = readCSR(f.csr);
-			uint32_t tmp = R_u(f.rs1);
+			const auto f = FormatCSR::parse(word);
+			const uint32_t data = readCSR(f.csr);
+			const uint32_t tmp = R_u(f.rs1);
 			R_u(f.rd) = data;
 			writeCSR(f.csr, R_u(f.rd) | tmp);
 		]],
@@ -391,7 +391,7 @@ local instructions = {
 		format = "CSR",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatCSR(word);
+			const auto f = FormatCSR::parse(word);
 			R_s(f.rd) = readCSR(f.csr);
 			writeCSR(f.csr, R_s(f.rs1));
 		]],
@@ -418,9 +418,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			int32_t dividend = R_s(f.rs1);
-			int32_t divisor = R_s(f.rs2);
+			const auto f = FormatR::parse(word);
+			const int32_t dividend = R_s(f.rs1);
+			const int32_t divisor = R_s(f.rs2);
 			if (divisor == 0)
 				R_s(f.rd) = -1;
 			else if (dividend == std::numeric_limits< int32_t >::lowest() && divisor == -1)
@@ -442,9 +442,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint32_t dividend = R_u(f.rs1);
+			const uint32_t divisor = R_u(f.rs2);
 			if (divisor ==  0)
 				R_u(f.rd) = 0xffffffff;
 			else		
@@ -501,7 +501,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = FR(f.rs1) + FR(f.rs2);
 		]],
 		verilog_fpu = {
@@ -518,7 +518,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R(f.rd) = (int32_t)FR(f.rs1);
 		]],
 		verilog_fpu = {
@@ -534,7 +534,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = (uint32_t)FR(f.rs1);
 		]],
 		verilog_fpu = {
@@ -550,7 +550,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = (float)R(f.rs1);
 		]],
 		verilog_fpu = {
@@ -567,7 +567,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = (float)R(f.rs1);
 		]],
 		verilog_fpu = {
@@ -584,7 +584,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = FR(f.rs1) / FR(f.rs2);
 		]],
 		verilog_fpu = {
@@ -621,7 +621,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R(f.rd) = (FR(f.rs1) == FR(f.rs2) ? 1 : 0);
 		]],
 		verilog_fpu = {
@@ -644,7 +644,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R(f.rd) = (FR(f.rs1) <= FR(f.rs2) ? 1 : 0);
 		]],
 		verilog_fpu = {
@@ -661,7 +661,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R(f.rd) = (FR(f.rs1) < FR(f.rs2) ? 1 : 0);
 		]],		
 		verilog_fpu = {
@@ -678,7 +678,7 @@ local instructions = {
 		format = "I",
 		type = insttype.FPU_MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			FR_u(f.rd) = (uint32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
 		verilog_alu = {
@@ -702,7 +702,7 @@ local instructions = {
 		format = "R4",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR4(word);
+			const auto f = FormatR4::parse(word);
 			FR(f.rd) = FR(f.rs1) * FR(f.rs2) + FR(f.rs3);
 		]],
 		verilog_fpu = {
@@ -720,7 +720,7 @@ local instructions = {
 		format = "R4",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR4(word);
+			const auto f = FormatR4::parse(word);
 			FR(f.rd) = FR(f.rs1) * FR(f.rs2) - FR(f.rs3);
 		]],
 		verilog_fpu = {
@@ -738,7 +738,7 @@ local instructions = {
 		format = "R4",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR4(word);
+			const auto f = FormatR4::parse(word);
 			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) - FR(f.rs3);
 		]],
 		verilog_fpu = {
@@ -756,7 +756,7 @@ local instructions = {
 		format = "R4",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR4(word);
+			const auto f = FormatR4::parse(word);
 			FR(f.rd) = -(FR(f.rs1) * FR(f.rs2)) + FR(f.rs3);
 		]],
 		verilog_fpu = {
@@ -774,7 +774,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = std::min(FR(f.rs1), FR(f.rs2));
 		]],
 		verilog_fpu = {
@@ -791,7 +791,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = std::max(FR(f.rs1), FR(f.rs2));
 		]],
 		verilog_fpu = {
@@ -808,7 +808,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = FR(f.rs1) * FR(f.rs2);
 		]],
 		verilog_fpu = {
@@ -825,7 +825,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R(f.rd) = FR_u(f.rs1);
 		]],
 		verilog_fpu = {
@@ -842,7 +842,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR_u(f.rd) = R(f.rs1);
 		]],
 		verilog_fpu = {
@@ -865,9 +865,9 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint32_t tmp1 = FR_u(f.rs1);
+			const uint32_t tmp2 = FR_u(f.rs2);
 			FR_u(f.rd) = (tmp1 & 0x7fffffff) | (tmp2 & 0x80000000);
 		]],
 		verilog_fpu = {
@@ -884,9 +884,9 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint32_t tmp1 = FR_u(f.rs1);
+			const uint32_t tmp2 = FR_u(f.rs2);
 			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ 0x80000000);
 		]],
 		verilog_fpu = {
@@ -903,9 +903,9 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t tmp1 = FR_u(f.rs1);
-			uint32_t tmp2 = FR_u(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint32_t tmp1 = FR_u(f.rs1);
+			const uint32_t tmp2 = FR_u(f.rs2);
 			FR_u(f.rd) = (tmp1 & 0x7fffffff) | ((tmp2 & 0x80000000) ^ (tmp1 & 0x80000000));
 		]],		
 		verilog_fpu = {
@@ -922,7 +922,7 @@ local instructions = {
 		format = "R",
 		type = insttype.FPU,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			FR(f.rd) = FR(f.rs1) - FR(f.rs2);
 		]],
 		verilog_fpu = {
@@ -939,7 +939,7 @@ local instructions = {
 		format = "S",
 		type = insttype.FPU_MEMORY,
 		cpp = [[
-			auto f = parseFormatS(word);
+			const auto f = FormatS::parse(word);
 			MEM_WR(R_u(f.rs1) + f.imm, FR_u(f.rs2));
 		]],
 		verilog_alu = {
@@ -963,7 +963,7 @@ local instructions = {
 		format = "J",
 		type = insttype.JUMP,
 		cpp = [[
-			auto f = parseFormatJ(word);
+			const auto f = FormatJ::parse(word);
 			R_u(f.rd) = PC_NEXT;
 			PC_NEXT = PC + f.imm;
 		]],
@@ -985,8 +985,8 @@ local instructions = {
 		format = "I",
 		type = insttype.JUMP,
 		cpp = [[
-			auto f = parseFormatI(word);
-			uint32_t tmp = PC_NEXT;
+			const auto f = FormatI::parse(word);
+			const uint32_t tmp = PC_NEXT;
 			PC_NEXT = (R(f.rs1) + f.imm) & ~1;
 			R_u(f.rd) = tmp;
 		]],
@@ -1008,7 +1008,7 @@ local instructions = {
 		format = "I",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_s(f.rd) = (int8_t)MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
 		verilog_alu = {
@@ -1029,7 +1029,7 @@ local instructions = {
 		format = "I",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = MEM_RD_U8(R_u(f.rs1) + f.imm);
 		]],
 		verilog_alu = {
@@ -1056,7 +1056,7 @@ local instructions = {
 		format = "I",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_s(f.rd) = (int16_t)MEM_RD_U16(R_u(f.rs1) + f.imm);
 		]],
 		verilog_alu = {
@@ -1077,7 +1077,7 @@ local instructions = {
 		format = "I",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R(f.rd) = MEM_RD_U16(R(f.rs1) + f.imm);			
 		]],
 		verilog_alu = {
@@ -1110,7 +1110,7 @@ local instructions = {
 		format = "U",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatU(word);
+			const auto f = FormatU::parse(word);
 			R_s(f.rd) = f.imm;
 		]],
 		verilog_alu = {
@@ -1126,7 +1126,7 @@ local instructions = {
 		format = "I",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_s(f.rd) = (int32_t)MEM_RD(R_u(f.rs1) + f.imm);
 		]],
 		verilog_alu = {
@@ -1153,7 +1153,7 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_s(f.rd) = R_s(f.rs1) * R_s(f.rs2);
 		]],
 		verilog_text = [[
@@ -1170,9 +1170,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			int64_t lh = (int64_t)R_s(f.rs1);
-			int64_t rh = (int64_t)R_s(f.rs2);
+			const auto f = FormatR::parse(word);
+			const int64_t lh = (int64_t)R_s(f.rs1);
+			const int64_t rh = (int64_t)R_s(f.rs2);
 			R_s(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog_text = [[
@@ -1189,9 +1189,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint64_t lh = (uint64_t)R(f.rs1);
-			uint64_t rh = (uint64_t)R(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint64_t lh = (uint64_t)R(f.rs1);
+			const uint64_t rh = (uint64_t)R(f.rs2);
 			R(f.rd) = (lh * rh) >> 32;
 		]],
 		verilog_text = [[
@@ -1236,7 +1236,7 @@ local instructions = {
 		format = "R",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = R_u(f.rs1) | R_u(f.rs2);
 		]],
 		verilog_alu = {
@@ -1252,7 +1252,7 @@ local instructions = {
 		format = "I",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = R_u(f.rs1) | f.imm;
 		]],
 		verilog_alu = {
@@ -1268,9 +1268,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			int32_t dividend = R_s(f.rs1);
-			int32_t divisor = R_s(f.rs2);
+			const auto f = FormatR::parse(word);
+			const int32_t dividend = R_s(f.rs1);
+			const int32_t divisor = R_s(f.rs2);
 			if (divisor == 0)
 				R_s(f.rd) = dividend;
 			else if (dividend == std::numeric_limits< int32_t >::lowest() && divisor == -1)
@@ -1292,9 +1292,9 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPLEX,
 		cpp = [[
-			auto f = parseFormatR(word);
-			uint32_t dividend = R_u(f.rs1);
-			uint32_t divisor = R_u(f.rs2);
+			const auto f = FormatR::parse(word);
+			const uint32_t dividend = R_u(f.rs1);
+			const uint32_t divisor = R_u(f.rs2);
 			if (divisor == 0)
 				R_u(f.rd) = dividend;
 			else
@@ -1326,7 +1326,7 @@ local instructions = {
 		format = "S",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatS(word);
+			const auto f = FormatS::parse(word);
 			MEM_WR_U8(R_u(f.rs1) + f.imm, (uint8_t)R_u(f.rs2));
 		]],
 		verilog_alu = {
@@ -1371,7 +1371,7 @@ local instructions = {
 		format = "S",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatS(word);
+			const auto f = FormatS::parse(word);
 			MEM_WR_U16(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
 		verilog_alu = {
@@ -1392,7 +1392,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_s(f.rd) = R_s(f.rs1) << R_u(f.rs2);
 		]],
 		verilog_alu = {
@@ -1408,7 +1408,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_s(f.rd) = R_s(f.rs1) << ((word >> 20) & 0x1f);
 		]],
 		verilog_alu = {
@@ -1436,7 +1436,7 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPARE,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = (R_s(f.rs1) < R_s(f.rs2)) ? 1 : 0;
 		]],
 		verilog_alu = {
@@ -1452,7 +1452,7 @@ local instructions = {
 		format = "I",
 		type = insttype.COMPARE,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = (R_s(f.rs1) < f.imm) ? 1 : 0;
 		]],
 		verilog_alu = {
@@ -1468,7 +1468,7 @@ local instructions = {
 		format = "I",
 		type = insttype.COMPARE,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = (R_u(f.rs1) < f.imm) ? 1 : 0;
 		]],
 		verilog_alu = {
@@ -1484,7 +1484,7 @@ local instructions = {
 		format = "R",
 		type = insttype.COMPARE,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = (R_u(f.rs1) < R_u(f.rs2)) ? 1 : 0;
 		]],
 		verilog_alu = {
@@ -1500,7 +1500,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			const int32_t sh = R_s(f.rs2);
 			if (sh >= 0)
 				R_s(f.rd) = R_s(f.rs1) >> sh;
@@ -1520,7 +1520,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			const int32_t sh = (int32_t)((word >> 20) & 0x1f);
 			R_s(f.rd) = R_s(f.rs1) >> sh;
 		]],
@@ -1555,7 +1555,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = R_u(f.rs1) >> R_u(f.rs2);
 		]],
 		verilog_alu = {
@@ -1571,7 +1571,7 @@ local instructions = {
 		format = "R",
 		type = insttype.SHIFT,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = R_u(f.rs1) >> ((word >> 20) & 0x1f);
 		]],
 		verilog_alu = {
@@ -1599,7 +1599,7 @@ local instructions = {
 		format = "R",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_s(f.rd) = R_s(f.rs1) - R_s(f.rs2);
 		]],
 		verilog_alu = {
@@ -1621,7 +1621,7 @@ local instructions = {
 		format = "S",
 		type = insttype.MEMORY,
 		cpp = [[
-			auto f = parseFormatS(word);
+			const auto f = FormatS::parse(word);
 			MEM_WR(R_u(f.rs1) + f.imm, R_u(f.rs2));
 		]],
 		verilog_alu = {
@@ -1659,7 +1659,7 @@ local instructions = {
 		format = "R",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatR(word);
+			const auto f = FormatR::parse(word);
 			R_u(f.rd) = R_u(f.rs1) ^ R_u(f.rs2);
 		]],
 		verilog_alu = {
@@ -1675,7 +1675,7 @@ local instructions = {
 		format = "I",
 		type = insttype.ARITHMETIC,
 		cpp = [[
-			auto f = parseFormatI(word);
+			const auto f = FormatI::parse(word);
 			R_u(f.rd) = R_u(f.rs1) ^ f.imm;
 		]],
 		verilog_alu = {
