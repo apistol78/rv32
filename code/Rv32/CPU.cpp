@@ -230,38 +230,55 @@ bool CPU::tick()
 	if (m_waitForInterrupt && m_interrupt == 0)
 		return true;
 
-	if (m_interrupt != 0)
+	// Handle interrupts.
+	const uint32_t mstatus = readCSR(CSR::MSTATUS);
+	const bool mie = (bool)((mstatus & (1 << 3)) != 0);
+	if (mie)
 	{
-		writeCSR(CSR::MEPC, m_pc);
+		const uint32_t mie = readCSR(CSR::MIE);
 
-		if ((m_interrupt & TIMER) != 0)
-			writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Timer
-		else if ((m_interrupt & EXTERNAL) != 0)
-			writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 11));	// External
-		else if ((m_interrupt & SOFT) != 0)
-			writeCSR(CSR::MCAUSE, 0x00000000 | (1 << 11));	// Software
+		uint32_t mask = 0;
+		if (mie & 0b000000000001000)	// msie
+			mask |= SOFT;
+		if (mie & 0b000000010000000)	// mtie
+			mask |= TIMER;
+		if (mie & 0b000100000000000)	// meie
+			mask |= EXTERNAL;
 
-		// Push MIE and then disable interrupts.
-		uint32_t mstatus = readCSR(CSR::MSTATUS);
-		const bool mie = (bool)((mstatus & (1 << 3)) != 0);
-		mstatus &= ~(1 << 3);
-		if (mie)
-			mstatus |= 1 << 4;
-		else
-			mstatus &= ~(1 << 4);
-		writeCSR(CSR::MSTATUS, mstatus);
+		const uint32_t pending = m_interrupt & mask;
+		if (pending != 0)
+		{
+			writeCSR(CSR::MEPC, m_pc);
 
-		const uint32_t mtvec = readCSR(CSR::MTVEC);
-		m_pc = mtvec;
+			if ((pending & TIMER) != 0)
+				writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 7));	// Timer
+			else if ((pending & EXTERNAL) != 0)
+				writeCSR(CSR::MCAUSE, 0x80000000 | (1 << 11));	// External
+			else if ((pending & SOFT) != 0)
+				writeCSR(CSR::MCAUSE, 0x00000000 | (1 << 11));	// Software
 
-		if ((m_interrupt & TIMER) != 0)
-			m_interrupt &= ~TIMER;
-		else if ((m_interrupt & EXTERNAL) != 0)
-			m_interrupt &= ~EXTERNAL;
-		else if ((m_interrupt & SOFT) != 0)
-			m_interrupt &= ~SOFT;
+			// Push MIE and then disable interrupts.
+			uint32_t mstatus = readCSR(CSR::MSTATUS);
+			const bool mie = (bool)((mstatus & (1 << 3)) != 0);
+			mstatus &= ~(1 << 3);
+			if (mie)
+				mstatus |= 1 << 4;
+			else
+				mstatus &= ~(1 << 4);
+			writeCSR(CSR::MSTATUS, mstatus);
 
-		m_waitForInterrupt = false;
+			const uint32_t mtvec = readCSR(CSR::MTVEC);
+			m_pc = mtvec;
+
+			if ((pending & TIMER) != 0)
+				m_interrupt &= ~TIMER;
+			else if ((pending & EXTERNAL) != 0)
+				m_interrupt &= ~EXTERNAL;
+			else if ((pending & SOFT) != 0)
+				m_interrupt &= ~SOFT;
+
+			m_waitForInterrupt = false;
+		}
 	}
 
 	const uint32_t word = m_icache->readU32(m_pc);
@@ -299,10 +316,12 @@ bool CPU::tick()
 
 void CPU::interrupt(uint32_t mask)
 {
-	const uint32_t mstatus = readCSR(CSR::MSTATUS);
-	const bool mie = (bool)((mstatus & (1 << 3)) != 0);
-	if (mie)
+	// const uint32_t mstatus = readCSR(CSR::MSTATUS);
+	// const bool mie = (bool)((mstatus & (1 << 3)) != 0);
+	// if (mie)
 		m_interrupt |= mask;
+	// else
+	// 	log::info << L"[CPU] Interrupt prohibited" << Endl;
 }
 
 void CPU::reset()

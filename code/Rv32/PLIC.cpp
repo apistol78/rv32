@@ -9,40 +9,43 @@ T_IMPLEMENT_RTTI_CLASS(L"PLIC", PLIC, Device)
 
 bool PLIC::writeU32(uint32_t address, uint32_t value)
 {
-	log::info << L"PLIC write " << str(L"%08x", address) << L", value " << value << Endl;
+	log::info << L"[PLIC] Write " << str(L"%08x", address) << L", value " << str(L"%08x", value) << Endl;
 	if (address == 0x00002000)
-	{
-		log::info << L"[PLIC] Set enable bits" << Endl;
-	}
+		m_enable = value >> 1;
 	else if (address == 0x00200004)
 	{
 		log::info << L"[PLIC] Complete context" << Endl;
+		m_raised &= ~(1 << (value & 3));
 	}	
 	return true;
 }
 
 uint32_t PLIC::readU32(uint32_t address) const
 {
-	log::info << L"PLIC read " << str(L"%08x", address) << Endl;
+	log::info << L"[PLIC] Read " << str(L"%08x", address) << Endl;
 	if (address == 0x00200004)
 	{
 		log::info << L"[PLIC] Claim context" << Endl;
+		for (int i = 0; i < 4; ++i)
+		{
+			if ((m_raised & (1 << i)) != 0)
+				return i;
+		}
 	}
 	return 0;
 }
 
 bool PLIC::tick(CPU* cpu)
 {
-	if (m_interrupt)
+	if (m_raised != m_issued)
 	{
 		cpu->interrupt(EXTERNAL);
-		m_interrupt = false;
+		m_issued = m_raised;
 	}
 	return true;
 }
 
 void PLIC::raise(uint32_t channel)
 {
-	// log::info << L"[PLIC] Raise " << channel << Endl;
-	m_interrupt = true;
+	m_raised |= 1 << channel;
 }

@@ -17,5 +17,6 @@ public:
 
 private:
 	uint32_t m_memoryAvail;
+	uint32_t m_user;
 	bool m_rebootPending;
 };

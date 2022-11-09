@@ -28,9 +28,11 @@ public:
 
 	virtual bool tick(CPU* cpu) override final;
 
-	traktor::drawing::Image* getImage() const { return m_image; }
+	traktor::drawing::Image* getImage();
 
 private:
-	traktor::Ref< traktor::drawing::Image > m_image;
+	traktor::AlignedVector< uint8_t > m_framebuffer;
 	traktor::Color4f m_palette[256];
+	uint32_t m_readOffset;
+	traktor::Ref< traktor::drawing::Image > m_image;
 };

@@ -351,7 +351,6 @@ int main(int argc, const char** argv)
 
 	// Timer callback to raise PLIC interrupt.
 	tmr.setCallback([&](){
-		// log::info << L"Timer callback" << Endl;
 		cpu.interrupt(TIMER);
 	});
 
@@ -375,8 +374,7 @@ int main(int argc, const char** argv)
 		
 		image = new ui::Image();
 		image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
-		image->addEventHandler< ui::MouseButtonDownEvent >([&](ui::MouseButtonDownEvent* event){
-
+		image->addEventHandler< ui::MouseButtonDownEvent >([&](ui::MouseButtonDownEvent* event) {
 			auto d = event->getPosition() - mousePosition;
 			mousePosition = event->getPosition();
 
@@ -392,8 +390,7 @@ int main(int argc, const char** argv)
 			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');
 		});
-		image->addEventHandler< ui::MouseButtonUpEvent >([&](ui::MouseButtonUpEvent* event){
-
+		image->addEventHandler< ui::MouseButtonUpEvent >([&](ui::MouseButtonUpEvent* event) {
 			auto d = event->getPosition() - mousePosition;
 			mousePosition = event->getPosition();
 
@@ -409,8 +406,7 @@ int main(int argc, const char** argv)
 			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');
 		});
-		image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event){
-
+		image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event) {
 			auto d = event->getPosition() - mousePosition;
 			mousePosition = event->getPosition();
 
@@ -421,8 +417,7 @@ int main(int argc, const char** argv)
 			uart2.enqueue(mouseButton);
 			uart2.enqueue('E');			
 		});
-
-		image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event){
+		image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
 			const uint8_t kc = virtualToKey(event->getVirtualKey());
 			if (kc != 0)
 			{

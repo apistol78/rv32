@@ -16,5 +16,7 @@ public:
 	void raise(uint32_t channel);
 
 private:
-	bool m_interrupt = false;
+	uint32_t m_enable = 0;
+	uint32_t m_raised = 0;
+	uint32_t m_issued = 0;
 };
