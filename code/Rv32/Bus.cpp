@@ -55,7 +55,7 @@ uint32_t Bus::readU32(uint32_t address) const
 		return mappedDevice->device->readU32(address - mappedDevice->start);
 	else
 	{
-		log::error << L"No device at " << str(L"%08x", address) << L", trying to read U32." << Endl;
+		log::error << L"No device at 0x" << str(L"%08x", address) << L", trying to read." << Endl;
 		m_error = true;
 		return 0;
 	}
