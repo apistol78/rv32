@@ -704,8 +704,8 @@ module SoC(
 		// Video signal interface.
 		.i_video_hblank(vga_hblank),
 		.i_video_vblank(vga_vblank),
-		.i_video_pos_x(vga_pos_x[9:1]),
-		.i_video_pos_y(vga_pos_y[9:1]),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
 		.o_video_rdata(vmode_video_rdata),
 		
 		// Video RAM interface.

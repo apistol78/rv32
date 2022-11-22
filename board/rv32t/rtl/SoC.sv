@@ -526,8 +526,8 @@ module SoC(
 	wire vga_hblank;
 	wire vga_vblank;
 	wire vga_data_enable;
-	wire [9:0] vga_pos_x;
-	wire [9:0] vga_pos_y;
+	wire [10:0] vga_pos_x;
+	wire [10:0] vga_pos_y;
 
 	VIDEO_VGA #(
 		/*
@@ -587,7 +587,7 @@ module SoC(
 
 	BRAM_dual #(
 		.WIDTH(32),
-		.SIZE(2*320*200),
+		.SIZE(2*640*400),
 		.ADDR_LSH(2)
 	) vram(
 		.i_clock(clock),
@@ -614,7 +614,7 @@ module SoC(
 	wire vram_ready;	
 
 	VIDEO_controller #(
-		.PPITCH(320)
+		.MAX_PITCH(640)
 	) video_controller(
 		.i_clock(clock),
 		
@@ -629,8 +629,8 @@ module SoC(
 		// Video signal interface.
 		.i_video_hblank(vga_hblank),
 		.i_video_vblank(vga_vblank),
-		.i_video_pos_x(vga_pos_x[9:1]),
-		.i_video_pos_y(vga_pos_y[9:1]),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
 		.o_video_rdata(HDMI_TX_D),
 		
 		// Video RAM interface.

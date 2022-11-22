@@ -9,22 +9,21 @@
 // C64 style font.
 #include "font8x8_c64.h"
 
-#define FW 320
-#define FH 200
+#define FW 640
+#define FH 400
 
-#define CC 40
-#define CR 25
+#define CC 80
+#define CR 50
 
 namespace
 {
 
+uint32_t s_thread = 0;
 kernel_sig_t s_redraw;
-char fb[CC * CR];
+char s_cbuffer[CC * CR];
 int s_x = 0;
 int s_y = 0;
 int s_cursor = 1;
-
-}
 
 static void draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
@@ -34,7 +33,7 @@ static void draw_character(const unsigned char* font, char ch, int32_t col, int3
 		{
 			const bool set = font[(ch - ' ') * 8 + y] & (1 << x);
 			if (set)
-				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 1;
+				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 2;
 		}
 	}
 }
@@ -49,7 +48,7 @@ static void draw_console()
 	{
 		for (int x = 0; x < CC; ++x)
 		{
-			const char ch = fb[x + y * CC];
+			const char ch = s_cbuffer[x + y * CC];
 			if (ch >= ' ')
 				draw_character(font8x8_c64, ch, x, y, framebuffer);
 		}
@@ -60,7 +59,7 @@ static void draw_console()
 		for (int y = 0; y < 8; ++y)
 		{
 			for (int x = 1; x < 7; ++x)
-				framebuffer[s_x * 8 + x + (s_y * 8 + y) * FW] = 1;
+				framebuffer[s_x * 8 + x + (s_y * 8 + y) * FW] = 2;
 		}
 	}
 
@@ -77,8 +76,8 @@ static void putchar(char c)
 		else
 		{
 			for (int i = 0; i < (CR - 1); ++i)
-				memmove(&fb[i * CC], &fb[(i + 1) * CC], CC);
-			memset(&fb[(CR - 1) * CC], 0, CC);
+				memmove(&s_cbuffer[i * CC], &s_cbuffer[(i + 1) * CC], CC);
+			memset(&s_cbuffer[(CR - 1) * CC], 0, CC);
 		}
 	}
     else if (c == '\r')
@@ -90,31 +89,36 @@ static void putchar(char c)
 		if (s_x > 0)
 		{
 			s_x--;
-			fb[s_x + s_y * CC] = 0;
+			s_cbuffer[s_x + s_y * CC] = 0;
 		}
 	}
 	else
     {
 		if (s_x < CC && s_y < CR) {
-			fb[s_x + s_y * CC] = c;
+			s_cbuffer[s_x + s_y * CC] = c;
 		}
 		s_x++;
 	}
+}
+
 }
 
 // public
 
 void fb_init()
 {
+	video_set_mode(VMODE_640_400_8);
+
 	video_set_palette(0, 0xb11a79);
-  	video_set_palette(1, 0xffffff);
+	video_set_palette(1, 0xee77c3);
+  	video_set_palette(2, 0xffffff);
 	video_set_palette(255, 0x887ecb); 
 
 	video_clear(0);
 
 	kernel_sig_init(&s_redraw);
 
-	kernel_create_thread([]()
+	s_thread = kernel_create_thread([]()
 	{
 		for (;;)
 		{
@@ -125,9 +129,15 @@ void fb_init()
 	});
 }
 
+void fb_shutdown()
+{
+	kernel_destroy_thread(s_thread);
+	video_clear(0);
+}
+
 void fb_clear()
 {
-	memset(fb, 0, CC * CR);
+	memset(s_cbuffer, 0, CC * CR);
 	s_x = 0;
 	s_y = 0;
 	kernel_sig_raise(&s_redraw);

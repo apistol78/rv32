@@ -2,7 +2,14 @@
 
 #include "Runtime/HAL/Common.h"
 
+#define VMODE_320_200_8 0
+#define VMODE_640_200_8 1
+#define VMODE_320_400_8 2
+#define VMODE_640_400_8 3
+
 EXTERN_C int32_t video_init();
+
+EXTERN_C int32_t video_set_mode(int32_t mode);
 
 EXTERN_C void* video_create_target();
 

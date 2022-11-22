@@ -2,6 +2,8 @@
 
 void fb_init();
 
+void fb_shutdown();
+
 void fb_clear();
 
 void fb_putc(char c);
