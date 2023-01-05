@@ -60,7 +60,7 @@ module CPU_ICache_Reg #(
 	bit [SET_BITS-1:0] cache_wr_set;
 	cache_entry_t cache_wr_wdata;
 
-	BRAM_dual #(
+	BRAM_1r1w #(
 		.WIDTH($bits(cache_entry_t)),
 		.SIZE(RANGE),
 		.ADDR_LSH(0)
@@ -69,18 +69,14 @@ module CPU_ICache_Reg #(
 
 		// Read port
 		.i_pa_request(1'b1),
-		.i_pa_rw(1'b0),
 		.i_pa_address(cache_rd_set),
-		.i_pa_wdata(0),
 		.o_pa_rdata(cache_rd_rdata),
 		.o_pa_ready(),
 
 		// Write port
 		.i_pb_request(cache_wr_request),
-		.i_pb_rw(1'b1),
 		.i_pb_address(cache_wr_set),
 		.i_pb_wdata(cache_wr_wdata),
-		.o_pb_rdata(),
 		.o_pb_ready()
 	);
 

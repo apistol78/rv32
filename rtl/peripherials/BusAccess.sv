@@ -20,7 +20,6 @@ module BusAccess #(
 	output o_pa_ready,
 	input [31:0] i_pa_address,
 	output [31:0] o_pa_rdata,
-	output o_pa_busy,
 
 	// Port B
 	input i_pb_rw,
@@ -29,7 +28,6 @@ module BusAccess #(
 	input [31:0] i_pb_address,
 	output [31:0] o_pb_rdata,
 	input [31:0] i_pb_wdata,
-	output o_pb_busy,
 
 	// Port C
 	input i_pc_rw,
@@ -37,8 +35,7 @@ module BusAccess #(
 	output o_pc_ready,
 	input [31:0] i_pc_address,
 	output [31:0] o_pc_rdata,
-	input [31:0] i_pc_wdata,
-	output o_pc_busy
+	input [31:0] i_pc_wdata
 );
 
 	bit [1:0] state = 0;
@@ -60,10 +57,6 @@ module BusAccess #(
 		assign o_pa_rdata = i_bus_rdata;
 		assign o_pb_rdata = i_bus_rdata;
 		assign o_pc_rdata = i_bus_rdata;
-
-		assign o_pa_busy = (state == 2'd1);
-		assign o_pb_busy = (state == 2'd2);
-		assign o_pc_busy = (state == 2'd3);
 
 		always_ff @(posedge i_clock) begin
 			state <= next_state;
@@ -145,23 +138,23 @@ module BusAccess #(
 		assign o_pb_rdata = i_bus_rdata;
 		assign o_pc_rdata = i_bus_rdata;
 
-		assign o_pa_busy = (state == 2'd1);
-		assign o_pb_busy = (state == 2'd2);
-		assign o_pc_busy = (state == 2'd3);
-
 		always_ff @(posedge i_clock) begin
 			if (i_reset) begin
 				state <= 2'd0;
+
 				o_bus_rw <= 1'b0;
 				o_bus_request <= 1'b0;
 				o_bus_address <= 0;
 				o_bus_wdata <= 0;
 			end
 			else begin
+
 				case (state)
 
 					// Wait for any request.
 					2'd0: begin
+						o_bus_request <= 1'b0;
+
 						if (i_pb_request) begin
 							o_bus_rw <= i_pb_rw;
 							o_bus_request <= 1'b1;

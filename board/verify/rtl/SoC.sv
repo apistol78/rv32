@@ -88,7 +88,6 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
-		.o_pa_busy(),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
@@ -97,7 +96,6 @@ module SoC(
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
 		.i_pb_wdata(cpu_dbus_wdata),
-		.o_pb_busy(),
 
 		// Port C (DMA)
 		.i_pc_rw(),
@@ -105,8 +103,7 @@ module SoC(
 		.o_pc_ready(),
 		.i_pc_address(),
 		.o_pc_rdata(),
-		.i_pc_wdata(),
-		.o_pc_busy()
+		.i_pc_wdata()
 	);
 
 	// CPU

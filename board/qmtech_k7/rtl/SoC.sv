@@ -587,7 +587,7 @@ module SoC(
 	wire [31:0] vram_pb_rdata;
 	wire vram_pb_ready;
 
-	BRAM_dual #(
+	BRAM_1rw1rw #(
 		.WIDTH(32),
 		.SIZE(2*320*240),
 		.ADDR_LSH(2)

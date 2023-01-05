@@ -123,15 +123,15 @@ void fb_init()
 		for (;;)
 		{
 			kernel_sig_try_wait(&s_redraw, 200);
-			s_cursor = 1 - s_cursor;
 			draw_console();
+			s_cursor = 1 - s_cursor;
 		}
 	});
 }
 
 void fb_shutdown()
 {
-	kernel_destroy_thread(s_thread);
+	// kernel_destroy_thread(s_thread);
 	video_clear(0);
 }
 

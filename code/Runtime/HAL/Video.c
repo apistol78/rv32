@@ -13,9 +13,9 @@
 #define MAX_WIDTH 640
 #define MAX_HEIGHT 400
 
-#define VIDEO_DATA_BASE     VIDEO_BASE
-#define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00800000)
-#define VIDEO_CONTROL_BASE	(VIDEO_BASE + 0x00800400)
+#define VIDEO_DATA_BASE     (VIDEO_BASE + 0x00000000)
+#define VIDEO_PALETTE_BASE  (VIDEO_BASE + 0x00e00000)
+#define VIDEO_CONTROL_BASE	(VIDEO_BASE + 0x00f00000)
 
 static void* s_primary_target = 0;
 static uint32_t s_visible_offset = 0;
@@ -128,15 +128,8 @@ void video_clear(uint8_t idx)
 
 void video_blit(const void* source)
 {
-	void* target = video_get_secondary_target();
-
-	// Copy data onto hidden part of framebuffer.
-	// __asm__ volatile ( "fence" );
-	// dma_copy(ptr + s_hidden_offset, source, WIDTH * HEIGHT / 4);
+	uint8_t* target = (uint8_t*)video_get_secondary_target();
 	memcpy(target, source, c_modes[s_mode].pixels);
-
-	// Ensure DMA transfer is complete.
-	// dma_wait();
 }
 
 void video_present(int32_t waitVblank)
@@ -157,4 +150,9 @@ void video_present(int32_t waitVblank)
 	// Set video offset to start reading from previously hidden part.
 	volatile uint32_t* control = (volatile uint32_t*)VIDEO_CONTROL_BASE;
 	control[0] = s_visible_offset;
+}
+
+void video_wait_vblank()
+{
+	kernel_sig_try_wait(&s_vblank_signal, 400);
 }

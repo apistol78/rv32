@@ -52,7 +52,6 @@ module AUDIO_controller #(
 		output_fifo_wr <= 0;
 		if (i_request && !o_ready) begin
 			if (!i_rw) begin
-
 				case (i_address)
 					4'h0: begin
 						o_rdata <= output_fifo_queued;
@@ -65,10 +64,8 @@ module AUDIO_controller #(
 					default:
 						o_ready <= 1'b1;
 				endcase
-
 			end
 			else begin
-
 				case (i_address)
 					4'h0: begin
 						if (!output_fifo_full) begin
@@ -83,7 +80,6 @@ module AUDIO_controller #(
 					default:
 						o_ready <= 1'b1;
 				endcase
-
 			end
 		end
 		else if (!i_request) begin

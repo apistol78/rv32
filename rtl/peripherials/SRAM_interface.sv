@@ -47,16 +47,17 @@ module SRAM_interface(
 		else begin
 
 			SRAM_WE_n <= 1'b1;
+			o_ready <= 1'b0;
 
 			if (i_request) begin
 
 				SRAM_OE_n <= i_rw;
 
 				if (count < CYCLES / 2) begin
-					SRAM_A <= { i_address[18:1], 1'b0 };
+					SRAM_A <= { i_address[18:2], 1'b0 };
 				end
 				else begin
-					SRAM_A <= { i_address[18:1], 1'b1 };
+					SRAM_A <= { i_address[18:2], 1'b1 };
 				end
 				
 				if (count < CYCLES / 2) begin
@@ -68,9 +69,9 @@ module SRAM_interface(
 
 				if (!i_rw) begin
 					if (count == 3)
-						o_rdata[15:0] <= SRAM_D; // sram_d;
+						o_rdata[15:0] <= SRAM_D;
 					else if (count == CYCLES / 2 + 3)
-						o_rdata[31:16] <= SRAM_D; // sram_d;
+						o_rdata[31:16] <= SRAM_D;
 				end
 				else begin
 					if (count == 3)
@@ -79,14 +80,15 @@ module SRAM_interface(
 						SRAM_WE_n <= 1'b0;
 				end
 
-				if (count >= CYCLES - 1)
+				if (count >= CYCLES - 1) begin
 					o_ready <= 1'b1;
-
-				count <= count + 1;
+					//count <= 0;
+				end
+				else
+				 	count <= count + 1;
 			end
 			else begin
 				count <= 0;
-				o_ready <= 1'b0;
 			end
 		end
 	end

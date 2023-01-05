@@ -13,6 +13,7 @@
 #include "Console.h"
 #include "ELF.h"
 
+static void cmd_clear(const char* args);
 static void cmd_reboot(const char* args);
 static void cmd_list(const char* args);
 static void cmd_remove(const char* filename);
@@ -32,6 +33,7 @@ const struct cmdMap_t
 }
 c_cmds[] =
 {
+	{ "clear",		cmd_clear,		"Clear console"	},
 	{ "reboot",		cmd_reboot,		"Cold reboot"	},
 	{ "ls",			cmd_list,		"List files"	},
 	{ "rm",			cmd_remove,		"Remove file"	},
@@ -43,6 +45,11 @@ c_cmds[] =
 	{ "rstvid",		cmd_rstvid,		"Reset video"	},
 	{ "help",		cmd_help,		"Show help"		}
 };
+
+static void cmd_clear(const char* args)
+{
+	fb_clear();
+}
 
 static void cmd_reboot(const char* args)
 {
@@ -446,6 +453,7 @@ int main(int argc, const char** argv)
 
 	fb_init();
 	fb_clear();
+	fb_print("BurkenOS 1.0\n");
 	fb_print("READY.\n");
 
 	sysreg_write(SR_REG_LEDS, 0);

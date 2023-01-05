@@ -21,25 +21,21 @@ module FIFO_BRAM #(
 );
 	localparam DB = $clog2(DEPTH) - 1;
 
-	BRAM_dual #(
+	BRAM_1r1w #(
 		.WIDTH(WIDTH),
 		.SIZE(DEPTH),
 		.ADDR_LSH(0)
 	) bram(
 		.i_clock(i_clock),
 
-		.i_pa_request(i_write),
-		.i_pa_rw(1'b1),
-		.i_pa_address(in),
-		.i_pa_wdata(i_wdata),
-		.o_pa_rdata(),
+		.i_pa_request(i_read),
+		.i_pa_address(out),
+		.o_pa_rdata(o_rdata),
 		.o_pa_ready(),
 
-		.i_pb_request(i_read),
-		.i_pb_rw(1'b0),
-		.i_pb_address(out),
-		.i_pb_wdata(0),
-		.o_pb_rdata(o_rdata),
+		.i_pb_request(i_write),
+		.i_pb_address(in),
+		.i_pb_wdata(i_wdata),
 		.o_pb_ready()
 	);
 

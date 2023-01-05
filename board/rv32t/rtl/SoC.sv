@@ -138,19 +138,6 @@ module SoC(
 	wire [31:0] bus_rdata;
 	wire [31:0] bus_wdata;
 
-	wire bus_pa_request;
-	wire bus_pa_ready;
-	wire [31:0] bus_pa_address;
-	wire [31:0] bus_pa_rdata;
-	wire bus_pa_busy;
-
-	wire bus_pb_rw;
-	wire bus_pb_request;
-	wire bus_pb_ready;
-	wire [31:0] bus_pb_address;
-	wire [31:0] bus_pb_rdata;
-	wire [31:0] bus_pb_wdata;
-
 	BusAccess #(
 		.REGISTERED(1)
 	) bus(
@@ -170,7 +157,6 @@ module SoC(
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
-		.o_pa_busy(bus_pa_busy),
 
 		// Port B (Data bus)
 		.i_pb_rw(cpu_dbus_rw),
@@ -179,7 +165,6 @@ module SoC(
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
 		.i_pb_wdata(cpu_dbus_wdata),
-		.o_pb_busy(),
 
 		// Port C (DMA)
 		.i_pc_rw(dma_bus_rw),
@@ -187,8 +172,7 @@ module SoC(
 		.o_pc_ready(dma_bus_ready),
 		.i_pc_address(dma_bus_address),
 		.o_pc_rdata(dma_bus_rdata),
-		.i_pc_wdata(dma_bus_wdata),
-		.o_pc_busy()
+		.i_pc_wdata(dma_bus_wdata)
 	);
 
 	//=====================================
@@ -513,7 +497,7 @@ module SoC(
 	wire vga_clock;
 	ClockDivider #(
 		.CLOCK_RATE(`FREQUENCY),
-		.BAUD_RATE(5_000_000)
+		.BAUD_RATE(25_000_000)
 	) vga_clock_divider(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -570,6 +554,73 @@ module SoC(
 	assign HDMI_TX_HS = vga_hsync;
 	assign HDMI_TX_VS = vga_vsync;
 	
+	// Video physical memory.
+	wire video_sram_request;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+	BRAM_latency #(
+		.WIDTH(32),
+		.SIZE(640 * 400 * 2),
+		.ADDR_LSH(2),
+		.LATENCY(11)
+	) video_sram(
+		.i_clock(clock),
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready),
+		.o_valid()
+	);
+
+	// Video memory dual port.
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	DualPort vram_bus(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(video_sram_rw),
+		.o_bus_request(video_sram_request),
+		.i_bus_ready(video_sram_ready),
+		.o_bus_address(video_sram_address),
+		.i_bus_rdata(video_sram_rdata),
+		.o_bus_wdata(video_sram_wdata),
+
+		// Video output access.
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_request(vram_pb_request),
+		.o_pb_ready(vram_pb_ready),
+		.i_pb_address(vram_pb_address),
+		.o_pb_rdata(vram_pb_rdata),
+		.i_pb_wdata(vram_pb_wdata),
+
+		// Video CPU access.
+		.i_pc_rw(vram_pa_rw),
+		.i_pc_request(vram_pa_request),
+		.o_pc_ready(vram_pa_ready),
+		.i_pc_address(vram_pa_address),
+		.o_pc_rdata(vram_pa_rdata),
+		.i_pc_wdata(vram_pa_wdata)
+	);
+
+/*
 	// Video memory.
 	wire vram_pa_request;
 	wire vram_pa_rw;
@@ -585,7 +636,7 @@ module SoC(
 	wire [31:0] vram_pb_rdata;
 	wire vram_pb_ready;
 
-	BRAM_dual #(
+	BRAM_1rw1rw #(
 		.WIDTH(32),
 		.SIZE(2*640*400),
 		.ADDR_LSH(2)
@@ -606,6 +657,7 @@ module SoC(
 		.o_pb_rdata(vram_pb_rdata),
 		.o_pb_ready(vram_pb_ready)
 	);
+*/
 
 	// Video mode; chunky 8-bit palette.
 	wire vram_select;

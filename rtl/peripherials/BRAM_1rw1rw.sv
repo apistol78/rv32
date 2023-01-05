@@ -1,14 +1,14 @@
 
 `timescale 1ns/1ns
 
-module BRAM_dual #(
+module BRAM_1rw1rw #(
 	parameter WIDTH = 32,
 	parameter SIZE = 32'h400,
 	parameter ADDR_LSH = 2
 )(
 	input i_clock,
 
-    // Port A
+    // Port A (read/write)
 	input i_pa_request,
 	input i_pa_rw,
 	input [31:0] i_pa_address,
@@ -16,7 +16,7 @@ module BRAM_dual #(
 	output logic [WIDTH - 1:0] o_pa_rdata,
 	output bit o_pa_ready,
 
-    // Port B
+    // Port B (read/write)
 	input i_pb_request,
 	input i_pb_rw,
 	input [31:0] i_pb_address,
@@ -33,6 +33,8 @@ module BRAM_dual #(
     end
 
 	always_ff @(posedge i_clock) begin
+		o_pa_ready <= 1'b0;
+		o_pb_ready <= 1'b0;
 		if (i_pa_request) begin
 			if (!i_pa_rw) begin
 				o_pa_rdata <= data[i_pa_address >> ADDR_LSH];
@@ -40,11 +42,8 @@ module BRAM_dual #(
 			else begin
 				data[i_pa_address >> ADDR_LSH] <= i_pa_wdata;
 			end
+			o_pa_ready <= 1'b1;
 		end
-		o_pa_ready <= i_pa_request;
-	end
-
-	always_ff @(posedge i_clock) begin
 		if (i_pb_request) begin
 			if (!i_pb_rw) begin
 				o_pb_rdata <= data[i_pb_address >> ADDR_LSH];
@@ -52,8 +51,8 @@ module BRAM_dual #(
 			else begin
 				data[i_pb_address >> ADDR_LSH] <= i_pb_wdata;
 			end
+			o_pb_ready <= 1'b1;
 		end
-		o_pb_ready <= i_pb_request;
 	end
 
 endmodule

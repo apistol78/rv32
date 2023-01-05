@@ -152,7 +152,7 @@ module CPU_Memory #(
 	end
 
 	always_ff @(posedge i_clock) begin
-		case (state)
+		unique case (state)
 			IDLE: begin
 				dcache_request <= 0;
 				dcache_rw <= 0;
@@ -242,7 +242,7 @@ module CPU_Memory #(
 				dcache_request <= 1;
 				dcache_rw <= 1;
 				if (i_data.mem_width == `MEMW_1) begin
-					case (address_byte_index)
+					unique case (address_byte_index)
 						2'd0: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16], rmw_rdata[15:8], i_data.rd[7:0] };
 						2'd1: dcache_wdata <= { rmw_rdata[31:24], rmw_rdata[23:16],  i_data.rd[7:0], rmw_rdata[7:0] };
 						2'd2: dcache_wdata <= { rmw_rdata[31:24],   i_data.rd[7:0], rmw_rdata[15:8], rmw_rdata[7:0] };
@@ -250,7 +250,7 @@ module CPU_Memory #(
 					endcase
 				end
 				else begin	// width must be 2
-					case (address_byte_index)
+					unique case (address_byte_index)
 						2'd0: dcache_wdata <= { rmw_rdata[31:16], i_data.rd[15:0] };
 						2'd2: dcache_wdata <= {  i_data.rd[15:0], rmw_rdata[15:0] };
 						default: dcache_wdata <= 0;

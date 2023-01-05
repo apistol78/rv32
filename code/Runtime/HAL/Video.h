@@ -30,3 +30,5 @@ EXTERN_C void video_clear(uint8_t idx);
 EXTERN_C void video_blit(const void* source);
 
 EXTERN_C void video_present(int32_t waitVblank);
+
+EXTERN_C void video_wait_vblank();

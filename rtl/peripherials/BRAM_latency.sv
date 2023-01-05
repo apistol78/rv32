@@ -25,9 +25,17 @@ module BRAM_latency #(
 		o_valid = 1;
 	end
 
-	always_comb begin
-		o_ready = i_request && (counter >= LATENCY);
-	end
+	generate if (LATENCY > 0) begin
+		always_comb begin
+			o_ready = i_request && (counter >= LATENCY);
+		end
+	end endgenerate
+
+	generate if (LATENCY <= 0) begin
+		always_comb begin
+			o_ready = i_request;
+		end
+	end endgenerate
 
 	always_ff @(posedge i_clock) begin
 		if (i_request) begin
