@@ -17,6 +17,8 @@ public:
 
 	bool shouldDraw();
 
+	uint32_t frameCount() const { return m_count; }
+
 private:
 	traktor::Ref< traktor::drawing::Image > m_image;
 	bool m_vsync = false;
@@ -25,4 +27,5 @@ private:
 	int32_t m_vpos = 0;
 	bool m_clk = false;
 	bool m_dirty = false;
+	uint32_t m_count = 0;
 };

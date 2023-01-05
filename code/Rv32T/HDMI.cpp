@@ -29,6 +29,7 @@ void HDMI::eval(VSoC* soc, uint64_t /*time*/)
 	{
 		m_vpos = 0;
 		m_dirty = true;
+		m_count++;
 	}
 
 	if (hs && !m_hsync)

@@ -249,6 +249,7 @@ int main(int argc, const char **argv)
 		statusBar->addColumn(ui::dpi96(200));	// BUS
 		statusBar->addColumn(ui::dpi96(240));	// STALL
 		statusBar->addColumn(ui::dpi96(200));	// PC
+		statusBar->addColumn(ui::dpi96(200));	// FRAME COUNT
 
 		form->update();
 		form->show();
@@ -509,6 +510,14 @@ int main(int argc, const char **argv)
 					str(
 						L"%08x PC",
 						soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
+					)
+				);
+
+				statusBar->setText(
+					4,
+					str(
+						L"%d FRAMES",
+						hdmi.frameCount()
 					)
 				);
 
