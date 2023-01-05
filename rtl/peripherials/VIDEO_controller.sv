@@ -125,11 +125,9 @@ module VIDEO_controller #(
 				o_cpu_rdata <= i_vram_pa_rdata;
 				o_vram_pa_request <= 1'b0;
 				state <= 4;
-				// state <= 0;
 			end
 		end
 
-		DO WE NEED TO WAIT HERE?
 		// wait until request finishes.
 		4: begin
 			if (!i_cpu_request) begin
