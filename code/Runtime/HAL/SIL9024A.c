@@ -74,7 +74,7 @@ static int sil9024a_reset()
 		timer_wait_ms(500);
 	}
 
-	printf("SIL90242 device found; id %02x, %02x, %02x.\n", deviceId, deviceProdRevId, tpiScheme);
+	//printf("SIL90242 device found; id %02x, %02x, %02x.\n", deviceId, deviceProdRevId, tpiScheme);
 
 	// select input bus characteristics.
 	const uint16_t clk = 2500;
@@ -130,8 +130,6 @@ static int sil9024a_reset()
 
 	// enable TMDS
 	i2c_write(TPI_ADDRESS, 0x1a, 0x01);
-
-	printf("SIL90242 device initialized.\n");
 	return 0;
 }
 
