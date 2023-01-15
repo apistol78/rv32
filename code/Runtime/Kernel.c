@@ -20,6 +20,8 @@
 
 typedef struct
 {
+	uint32_t id;
+	void* stack;
 	uint32_t sp;
 	uint32_t epc;
 	uint32_t sleep;
@@ -32,8 +34,9 @@ static volatile int32_t g_current = 0;
 static volatile int32_t g_count = 0;
 static volatile int32_t g_critical = 0;
 static volatile int32_t g_schedule = 0;
+static uint32_t g_next_id = 1;
 
-static __attribute__((naked)) void kernel_scheduler(uint32_t source)
+static __attribute__((naked)) __attribute__((optimize("O3"))) void kernel_scheduler(uint32_t source)
 {
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
@@ -285,6 +288,8 @@ void kernel_init()
 
 	// Initialize main thread.
 	t = &g_threads[0];
+	t->id = 0;
+	t->stack = 0;
 	t->sp = 0;
 	t->epc = 0;
 	t->sleep = 0;
@@ -308,19 +313,56 @@ void kernel_init()
 uint32_t kernel_create_thread(kernel_thread_fn_t fn)
 {
 	kernel_enter_critical();
+	
 	volatile kernel_thread_t* t = &g_threads[g_count];
-	t->sp = (uint32_t)kernel_alloc_stack();
+	t->id = g_next_id++;
+	t->stack = kernel_alloc_stack();
+	t->sp = (uint32_t)t->stack;
 	t->epc = (uint32_t)fn;
 	t->sleep = 0;
 	t->waiting = 0;
-	const uint32_t tid = g_count++;
+
+	g_count++;
+
 	kernel_leave_critical();
-	return tid;
+	return t->id;
+}
+
+void kernel_destroy_thread(uint32_t tid)
+{
+	kernel_enter_critical();
+
+	volatile kernel_thread_t* t = 0;
+	uint32_t i = 0;
+
+	// Find thread entry.
+	for (; i < g_count; ++i)
+	{
+		if (tid == g_threads[i].id)
+		{
+			t = &g_threads[i];
+			break;
+		}
+	}
+	
+	if (t)
+	{
+		free(t->stack);
+
+		if (i >= g_current)
+			g_current--;
+
+		// Replace with last thread entry.
+		g_count--;
+		*t = g_threads[g_count];
+	}
+
+	kernel_leave_critical();
 }
 
 uint32_t kernel_current_thread()
 {
-	return g_current;
+	return g_threads[g_current].id;
 }
 
 void kernel_yield()
