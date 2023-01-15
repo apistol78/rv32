@@ -120,6 +120,9 @@ module VIDEO_controller #(
 
 		// wait on vram.
 		1: begin
+			if (!i_cpu_request)
+				$error("cpu request cancelled unexpectedly");
+
 			if (i_vram_pa_ready) begin
 				o_cpu_ready <= 1'b1;
 				o_cpu_rdata <= i_vram_pa_rdata;
@@ -128,18 +131,11 @@ module VIDEO_controller #(
 			end
 		end
 
-		// wait until request finishes.
-		4: begin
-			if (!i_cpu_request) begin
-				state <= 0;
-			end
-		end
-
 		// access palette.
 		2: begin
 			palette_cpu_request <= 1'b0;
 			o_cpu_ready <= 1'b1;
-			state <= 0;
+			state <= 4;
 		end
 
 		// access registers.
@@ -153,8 +149,16 @@ module VIDEO_controller #(
 			else if (i_cpu_address[3:2] == 2'd2) begin
 				vram_skip <= i_cpu_wdata[1:0];
 			end
-			o_cpu_ready <= 1;
-			state <= 0;
+			o_cpu_ready <= 1'b1;
+			state <= 4;
+		end
+
+		// wait until request finishes.
+		4: begin
+			o_cpu_ready <= i_cpu_request;
+			if (!i_cpu_request) begin
+				state <= 0;
+			end
 		end
 
 		endcase
@@ -241,14 +245,14 @@ module VIDEO_controller #(
 	bit [8:0] pixel_x;
 	bit [1:0] switch_x;
 
-	always_ff @(posedge i_clock) begin
+	always_comb begin
 		if (vram_skip[0] == 1'b0) begin
-			pixel_x <= i_video_pos_x[10:2];
-			switch_x <= i_video_pos_x[1:0];
+			pixel_x = i_video_pos_x[10:2];
+			switch_x = i_video_pos_x[1:0];
 		end
 		else begin
-			pixel_x <= i_video_pos_x[10:3];
-			switch_x <= i_video_pos_x[2:1];
+			pixel_x = i_video_pos_x[10:3];
+			switch_x = i_video_pos_x[2:1];
 		end
 	end
 
@@ -265,8 +269,8 @@ module VIDEO_controller #(
 		endcase
 	end
 
-	always_comb begin
-		o_video_rdata = { 8'h00, palette_video_rdata };
+	always_ff @(posedge i_clock) begin
+		o_video_rdata <= { 8'h00, palette_video_rdata };
 	end
 
 endmodule

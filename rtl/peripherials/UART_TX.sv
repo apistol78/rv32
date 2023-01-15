@@ -47,9 +47,7 @@ module UART_TX #(
 	// Write to FIFO.
 	always_ff @(posedge i_clock) begin
 		tx_fifo_write <= 0;
-		if (!i_request) begin
-			o_ready <= 0;
-		end
+		o_ready <= 0;
 		if (i_request) begin
 			if (!tx_fifo_full) begin
 				if (!o_ready)

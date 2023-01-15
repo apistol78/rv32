@@ -62,6 +62,8 @@ using namespace traktor;
 const uint32_t c_memoryAvail = 0x2000000;
 bool g_going = true;
 
+double sc_time_stamp() { return 0.0; }
+
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
 void abortHandler(int s)
 {
@@ -262,7 +264,7 @@ int main(int argc, const char **argv)
 
 	soc->eval();
 
-	// VL_PRINTF_MT("*");
+	//VL_PRINTF_MT("*");
 
 	// Randomize cache data.
 	// for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)

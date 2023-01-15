@@ -95,10 +95,8 @@ module DualPort(
 				end
 
 				2'd3: begin
-
 					o_pb_ready <= 1'b0;
 					o_pc_ready <= 1'b0;
-
 					if (!i_bus_ready)
 						state <= 2'd0;
 				end

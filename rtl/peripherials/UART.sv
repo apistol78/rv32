@@ -49,10 +49,9 @@ module UART #(
 		.UART_TX(UART_TX)
 	);
 	
-	always_ff @(posedge i_clock)
-	begin
-		rx_request <= i_request && !i_rw;
-		tx_request <= i_request && i_rw;
+	always_comb begin
+		rx_request = i_request && !i_rw;
+		tx_request = i_request && i_rw;
 	end
 	
 	assign o_ready = rx_ready | tx_ready;

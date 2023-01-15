@@ -175,6 +175,22 @@ module SoC(
 		.i_pc_wdata(dma_bus_wdata)
 	);
 
+	// check bus signals
+	bit [1:0] _bus_request = 0;
+	bit [31:0] _bus_ready_count = 0;
+	always_ff @(posedge clock) begin
+		_bus_ready_count <= 0;
+		if (bus_request && bus_ready) begin
+			_bus_ready_count <= _bus_ready_count + 1;
+		end
+		if (_bus_ready_count >= 2)
+			$error("bus request held too long");
+
+		_bus_request <= { _bus_request[0], bus_request };
+		if (_bus_request == 2'b10 && bus_ready)
+			$error("bus ready without request %08x", bus_address);
+	end
+
 	//=====================================
 	// CPU
 	wire cpu_ibus_request;
@@ -225,6 +241,42 @@ module SoC(
 		.o_memory_busy(o_memory_busy),
 		.o_fault(cpu_fault)
 	);
+
+	// check data bus signals
+	bit [31:0] _dbus_ready_count = 0;
+	bit _dbus_wait_ready = 0;
+	always_ff @(posedge clock) begin
+		_dbus_ready_count <= 0;
+		if (cpu_dbus_request && cpu_dbus_ready) begin
+			_dbus_ready_count <= _dbus_ready_count + 1;
+		end
+		if (_dbus_ready_count >= 2)
+			$error("dbus request held too long");
+		if (!cpu_dbus_request && cpu_dbus_ready)
+			$error("dbus ready without request");
+
+		if (cpu_dbus_request)
+			_dbus_wait_ready <= 1;
+		else if (_dbus_wait_ready)
+			$error("dbus request cancelled before ready");
+		if (cpu_dbus_ready) begin
+			assert(_dbus_wait_ready);
+			_dbus_wait_ready <= 0;
+		end
+	end
+
+	// check instruction bus signals
+	bit [31:0] _ibus_ready_count = 0;
+	always_ff @(posedge clock) begin
+		_ibus_ready_count <= 0;
+		if (cpu_ibus_request && cpu_ibus_ready) begin
+			_ibus_ready_count <= _ibus_ready_count + 1;
+		end
+		if (_ibus_ready_count >= 2)
+			$error("ibus request held too long");
+		if (!cpu_ibus_request && cpu_ibus_ready)
+			$error("ibus ready without request");
+	end
 
 	//=====================================
 
@@ -620,44 +672,18 @@ module SoC(
 		.i_pc_wdata(vram_pa_wdata)
 	);
 
-/*
-	// Video memory.
-	wire vram_pa_request;
-	wire vram_pa_rw;
-	wire [31:0] vram_pa_address;
-	wire [31:0] vram_pa_wdata;
-	wire [31:0] vram_pa_rdata;
-	wire vram_pa_ready;
-
-	wire vram_pb_request;
-	wire vram_pb_rw;
-	wire [31:0] vram_pb_address;
-	wire [31:0] vram_pb_wdata;
-	wire [31:0] vram_pb_rdata;
-	wire vram_pb_ready;
-
-	BRAM_1rw1rw #(
-		.WIDTH(32),
-		.SIZE(2*640*400),
-		.ADDR_LSH(2)
-	) vram(
-		.i_clock(clock),
-
-		.i_pa_request(vram_pa_request),
-		.i_pa_rw(vram_pa_rw),
-		.i_pa_address(vram_pa_address),
-		.i_pa_wdata(vram_pa_wdata),
-		.o_pa_rdata(vram_pa_rdata),
-		.o_pa_ready(vram_pa_ready),
-
-		.i_pb_request(vram_pb_request),
-		.i_pb_rw(vram_pb_rw),
-		.i_pb_address(vram_pb_address),
-		.i_pb_wdata(vram_pb_wdata),
-		.o_pb_rdata(vram_pb_rdata),
-		.o_pb_ready(vram_pb_ready)
-	);
-*/
+	// check video bus signals
+	bit [31:0] _vbus_ready_count = 0;
+	always_ff @(posedge clock) begin
+		_vbus_ready_count <= 0;
+		if (vram_pb_request && vram_pb_ready) begin
+			_vbus_ready_count <= _vbus_ready_count + 1;
+		end
+		if (_vbus_ready_count >= 2)
+			$error("vbus request held too long");
+		if (!vram_pb_request && vram_pb_ready)
+			$error("vbus ready without request");
+	end
 
 	// Video mode; chunky 8-bit palette.
 	wire vram_select;
@@ -715,7 +741,7 @@ module SoC(
 	wire bridge_far_ready;
 
 	BRIDGE #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) bridge(
 		.i_clock		(clock),
 		.i_reset		(reset),
@@ -736,6 +762,24 @@ module SoC(
 		.i_far_rdata	(bridge_far_rdata),
 		.i_far_ready	(bridge_far_ready)
 	);
+
+	/*
+	// check far bus signals
+	bit [1:0] _far_bus_request = 0;
+	bit [31:0] _far_bus_ready_count = 0;
+	always_ff @(posedge clock) begin
+		_far_bus_ready_count <= 0;
+		if (bridge_far_request && bridge_far_ready) begin
+			_far_bus_ready_count <= _far_bus_ready_count + 1;
+		end
+		if (_far_bus_ready_count >= 2)
+			$error("far bus request held too long");
+
+		_far_bus_request <= { _far_bus_request[0], bridge_far_request };
+		if (_far_bus_request == 2'b10 && bridge_far_ready)
+			$error("far bus ready without request %08x", bus_address);			
+	end
+	*/
 
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];

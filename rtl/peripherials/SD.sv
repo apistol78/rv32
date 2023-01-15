@@ -281,6 +281,7 @@ module SD (
 				// End of transmission
 
 				WAIT_EOT: begin
+					o_ready <= i_request;
 					if (!i_request) begin
 						state <= IDLE;
 					end

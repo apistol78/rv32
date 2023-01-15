@@ -124,7 +124,6 @@ module WriteBuffer #(
 					if (i_rw && !wq_full) begin
 						wq_wdata = { i_address, i_wdata };
 						wq_write = 1'b1;
-						o_ready = 1'b1;
 						next_state = WRITE_TO_FIFO;
 					end
 					// Read from bus; only when not stalled.
