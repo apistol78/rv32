@@ -548,13 +548,26 @@ module SoC(
 	assign hdmi_nreset = ~sysreg_sil9024_reset;
 
 	// VIDEO
-	assign hdmi_hsync = ~vga_hsync;
-	assign hdmi_vsync = ~vga_vsync;
-	assign hdmi_de = vga_data_enable;
-	assign hdmi_idck = vga_clock;
 	assign hdmi_r = vmode_video_rdata[7:0];
 	assign hdmi_g = vmode_video_rdata[15:8];
 	assign hdmi_b = vmode_video_rdata[23:16];
+
+	// Delay video signals to improve timing with controller.
+	bit [7:0] dly_vga_data_enable;
+	bit [7:0] dly_vga_clock;
+	bit [7:0] dly_vga_hsync;
+	bit [7:0] dly_vga_vsync;
+	always_ff @(posedge clock) begin
+		dly_vga_data_enable <= { dly_vga_data_enable[6:0], vga_data_enable };
+		dly_vga_clock <= { dly_vga_clock[6:0], vga_clock };
+		dly_vga_hsync <= { dly_vga_hsync[6:0], vga_hsync };
+		dly_vga_vsync <= { dly_vga_vsync[6:0], vga_vsync };
+	end
+
+	assign hdmi_de = dly_vga_data_enable[1];
+	assign hdmi_idck = dly_vga_clock[1];
+	assign hdmi_hsync = ~dly_vga_hsync[1];
+	assign hdmi_vsync = ~dly_vga_vsync[1];
 
 	// Video signal generator.
 	wire vga_clock;
@@ -569,13 +582,13 @@ module SoC(
 		
 		// 640 * 480 * 60hz (vs: neg, hs: neg)
 		// .HLINE(800),	// whole line
-		// .HBACK(48),		// back porch
+		// .HBACK(48),	// back porch
 		// .HFRONT(16),	// front porch
 		// .HPULSE(96),	// sync pulse
 		// .VLINE(524),	// whole frame
-		// .VBACK(31),		// back porch
+		// .VBACK(31),	// back porch
 		// .VFRONT(11),	// front porch
-		// .VPULSE(2),		// sync pulse
+		// .VPULSE(2),	// sync pulse
 		// .VSPOL(0),
 		// .HSPOL(0)
 

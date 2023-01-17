@@ -120,9 +120,6 @@ module VIDEO_controller #(
 
 		// wait on vram.
 		1: begin
-			if (!i_cpu_request)
-				$error("cpu request cancelled unexpectedly");
-
 			if (i_vram_pa_ready) begin
 				o_cpu_ready <= 1'b1;
 				o_cpu_rdata <= i_vram_pa_rdata;
@@ -211,7 +208,7 @@ module VIDEO_controller #(
 			o_vram_pb_request <= 1'b1;			
 		end
 
-		// Begin read new line.
+		// At hblank we start read next line.
 		if (hs == 2'b10 && i_video_vblank) begin
 			if (vram_skip[1] == 1'b0 || line_odd_even) begin
 				column <= 0;
@@ -235,10 +232,10 @@ module VIDEO_controller #(
 
 				if (column < vram_pitch / 4) begin
 					o_vram_pb_address <= o_vram_pb_address + 4;
-					o_vram_pb_request <= 1;
+					o_vram_pb_request <= 1'b1;
 				end
 				else begin
-					o_vram_pb_request <= 0;
+					o_vram_pb_request <= 1'b0;
 				end
 			end
 		end

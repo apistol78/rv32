@@ -555,10 +555,10 @@ module SoC(
 		dly_vga_vsync <= { dly_vga_vsync[6:0], vga_vsync };
 	end
 
-	assign HDMI_TX_DE = dly_vga_data_enable[7];
-	assign HDMI_TX_CLK = dly_vga_clock[7];
-	assign HDMI_TX_HS = dly_vga_hsync[7];
-	assign HDMI_TX_VS = dly_vga_vsync[7];
+	assign HDMI_TX_DE = dly_vga_data_enable[2];
+	assign HDMI_TX_CLK = dly_vga_clock[2];
+	assign HDMI_TX_HS = dly_vga_hsync[2];
+	assign HDMI_TX_VS = dly_vga_vsync[2];
 
 	// Video clock generator.
 	wire vga_clock;
