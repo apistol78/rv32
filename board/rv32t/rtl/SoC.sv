@@ -47,6 +47,7 @@ module SoC(
 
 	// BUS diagnostics
 	output bit o_debug_bus_request,
+	output bit o_debug_bus_rw,
 	output bit [13:0] o_debug_bus_select,
 	output bit o_debug_bus_fault,
 	output bit [31:0] o_debug_bus_fault_address,
@@ -542,8 +543,22 @@ module SoC(
 	);
 
 	// VIDEO
-	assign HDMI_TX_DE = vga_data_enable; //vga_hblank && vga_vblank;
-	assign HDMI_TX_CLK = vga_clock;
+	// Delay video signals to improve timing with controller.
+	bit [7:0] dly_vga_data_enable;
+	bit [7:0] dly_vga_clock;
+	bit [7:0] dly_vga_hsync;
+	bit [7:0] dly_vga_vsync;
+	always_ff @(posedge clock) begin
+		dly_vga_data_enable <= { dly_vga_data_enable[6:0], vga_data_enable };
+		dly_vga_clock <= { dly_vga_clock[6:0], vga_clock };
+		dly_vga_hsync <= { dly_vga_hsync[6:0], vga_hsync };
+		dly_vga_vsync <= { dly_vga_vsync[6:0], vga_vsync };
+	end
+
+	assign HDMI_TX_DE = dly_vga_data_enable[7];
+	assign HDMI_TX_CLK = dly_vga_clock[7];
+	assign HDMI_TX_HS = dly_vga_hsync[7];
+	assign HDMI_TX_VS = dly_vga_vsync[7];
 
 	// Video clock generator.
 	wire vga_clock;
@@ -603,9 +618,6 @@ module SoC(
 		.o_pos_y(vga_pos_y)
 	);
 
-	assign HDMI_TX_HS = vga_hsync;
-	assign HDMI_TX_VS = vga_vsync;
-	
 	// Video physical memory.
 	wire video_sram_request;
 	wire video_sram_rw;
@@ -863,6 +875,7 @@ module SoC(
 			2'd0;
 
 		o_debug_bus_request = bus_request;
+		o_debug_bus_rw = bus_rw;
 		o_debug_bus_select =
 		{
 			rom_select,

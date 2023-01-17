@@ -206,7 +206,9 @@ module VIDEO_controller #(
 		if (vs == 2'b10) begin
 			column <= 0;
 			row <= vram_read_offset;
-			line_odd_even <= 1'b0;
+			line_odd_even <= 1'b1;
+			o_vram_pb_address <= vram_read_offset;
+			o_vram_pb_request <= 1'b1;			
 		end
 
 		// Begin read new line.
@@ -214,7 +216,7 @@ module VIDEO_controller #(
 			if (vram_skip[1] == 1'b0 || line_odd_even) begin
 				column <= 0;
 				row <= row + vram_pitch;
-				o_vram_pb_address <= row;
+				o_vram_pb_address <= row + vram_pitch;
 				o_vram_pb_request <= 1'b1;
 			end
 			line_odd_even <= !line_odd_even;
