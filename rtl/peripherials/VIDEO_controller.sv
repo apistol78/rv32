@@ -40,6 +40,7 @@ module VIDEO_controller #(
 	bit [31:0] vram_read_offset = 0;
 	bit [31:0] vram_pitch = 0;
 	bit [1:0] vram_skip = 0;
+	bit [31:0] frame_counter = 0;
 
 	//===============================
 
@@ -179,14 +180,18 @@ module VIDEO_controller #(
 
 		// access registers.
 		3: begin
-			if (i_cpu_address[3:2] == 2'd0) begin
-				vram_read_offset <= i_cpu_wdata;
-			end
-			else if (i_cpu_address[3:2] == 2'd1) begin
-				vram_pitch <= i_cpu_wdata;
-			end
-			else if (i_cpu_address[3:2] == 2'd2) begin
-				vram_skip <= i_cpu_wdata[1:0];
+			if (i_cpu_rw) begin
+				if (i_cpu_address[3:2] == 2'd0) begin
+					if (i_video_vblank)
+						$display("modifying read offset while scanning out screen (%d)", frame_counter);
+					vram_read_offset <= i_cpu_wdata;
+				end
+				else if (i_cpu_address[3:2] == 2'd1) begin
+					vram_pitch <= i_cpu_wdata;
+				end
+				else if (i_cpu_address[3:2] == 2'd2) begin
+					vram_skip <= i_cpu_wdata[1:0];
+				end
 			end
 			o_cpu_ready <= 1'b1;
 			state <= 4;
@@ -244,8 +249,9 @@ module VIDEO_controller #(
 		// Check if we have entered vblank.
 		if (vs == 2'b10) begin
 			column <= 0;
-			row <= vram_read_offset;
+			row <= 0; // vram_read_offset;
 			line_odd_even <= 1'b1;
+			frame_counter <= frame_counter + 1;
 			o_vram_pb_address <= vram_read_offset;
 			o_vram_pb_request <= 1'b1;			
 		end
@@ -255,7 +261,7 @@ module VIDEO_controller #(
 			if (vram_skip[1] == 1'b0 || line_odd_even) begin
 				column <= 0;
 				row <= row + vram_pitch;
-				o_vram_pb_address <= row + vram_pitch;
+				o_vram_pb_address <= vram_read_offset + row + vram_pitch;
 				o_vram_pb_request <= 1'b1;
 			end
 			line_odd_even <= !line_odd_even;
