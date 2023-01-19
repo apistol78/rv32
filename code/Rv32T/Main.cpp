@@ -19,6 +19,7 @@
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/SafeDestroy.h>
 #include <Core/Misc/String.h>
+#include <Core/Misc/TString.h>
 #include <Core/Timer/Timer.h>
 #include <Net/Network.h>
 #include <Net/SocketAddressIPv4.h>
@@ -63,6 +64,15 @@ const uint32_t c_memoryAvail = 0x2000000;
 bool g_going = true;
 
 double sc_time_stamp() { return 0.0; }
+
+class CustomLogTarget : public ILogTarget
+{
+public:
+	virtual void log(uint32_t threadId, int32_t level, const wchar_t* str) override final
+	{
+		VL_PRINTF_MT("%s\n", wstombs(str).c_str());
+	}	
+};
 
 #if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
 void abortHandler(int s)
@@ -186,6 +196,11 @@ int main(int argc, const char **argv)
 	}
 #endif
 
+	Ref< CustomLogTarget > logTarget = new CustomLogTarget();
+	log::info.setGlobalTarget(logTarget);
+	log::warning.setGlobalTarget(logTarget);
+	log::error.setGlobalTarget(logTarget);
+
 	bool trace = false;
 	bool reset = false;
 	bool key1 = false;
@@ -264,7 +279,7 @@ int main(int argc, const char **argv)
 
 	soc->eval();
 
-	//VL_PRINTF_MT("*");
+	// VL_PRINTF_MT("*");
 
 	// Randomize cache data.
 	// for (int i = 0; i < sizeof_array(soc->SoC__DOT__cpu__DOT__fetch__DOT__genblk2__DOT__icache__DOT__cache__DOT__data); ++i)

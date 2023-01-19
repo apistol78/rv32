@@ -24,7 +24,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-Os</additionalCompilerOptions>
+					<additionalCompilerOptions/>
 					<additionalLinkerOptions/>
 					<debugExecutable/>
 					<debugArguments/>
@@ -48,7 +48,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-Os</additionalCompilerOptions>
+					<additionalCompilerOptions/>
 					<additionalLinkerOptions/>
 					<debugExecutable/>
 					<debugArguments/>

@@ -176,21 +176,11 @@ module SoC(
 		.i_pc_wdata(dma_bus_wdata)
 	);
 
-	// check bus signals
-	bit [1:0] _bus_request = 0;
-	bit [31:0] _bus_ready_count = 0;
-	always_ff @(posedge clock) begin
-		_bus_ready_count <= 0;
-		if (bus_request && bus_ready) begin
-			_bus_ready_count <= _bus_ready_count + 1;
-		end
-		if (_bus_ready_count >= 2)
-			$error("bus request held too long");
-
-		_bus_request <= { _bus_request[0], bus_request };
-		if (_bus_request == 2'b10 && bus_ready)
-			$error("bus ready without request %08x", bus_address);
-	end
+	BusValidator #(.NAME("BUS")) bus_validator(
+		.i_clock(clock),
+		.i_bus_request(bus_request),
+		.i_bus_ready(bus_ready)
+	);
 
 	//=====================================
 	// CPU
@@ -243,41 +233,16 @@ module SoC(
 		.o_fault(cpu_fault)
 	);
 
-	// check data bus signals
-	bit [31:0] _dbus_ready_count = 0;
-	bit _dbus_wait_ready = 0;
-	always_ff @(posedge clock) begin
-		_dbus_ready_count <= 0;
-		if (cpu_dbus_request && cpu_dbus_ready) begin
-			_dbus_ready_count <= _dbus_ready_count + 1;
-		end
-		if (_dbus_ready_count >= 2)
-			$error("dbus request held too long");
-		if (!cpu_dbus_request && cpu_dbus_ready)
-			$error("dbus ready without request");
-
-		if (cpu_dbus_request)
-			_dbus_wait_ready <= 1;
-		else if (_dbus_wait_ready)
-			$error("dbus request cancelled before ready");
-		if (cpu_dbus_ready) begin
-			assert(_dbus_wait_ready);
-			_dbus_wait_ready <= 0;
-		end
-	end
-
-	// check instruction bus signals
-	bit [31:0] _ibus_ready_count = 0;
-	always_ff @(posedge clock) begin
-		_ibus_ready_count <= 0;
-		if (cpu_ibus_request && cpu_ibus_ready) begin
-			_ibus_ready_count <= _ibus_ready_count + 1;
-		end
-		if (_ibus_ready_count >= 2)
-			$error("ibus request held too long");
-		if (!cpu_ibus_request && cpu_ibus_ready)
-			$error("ibus ready without request");
-	end
+	BusValidator #(.NAME("DBUS")) dbus_validator(
+		.i_clock(clock),
+		.i_bus_request(cpu_dbus_request),
+		.i_bus_ready(cpu_dbus_ready)
+	);
+	BusValidator #(.NAME("IBUS")) ibus_validator(
+		.i_clock(clock),
+		.i_bus_request(cpu_ibus_request),
+		.i_bus_ready(cpu_ibus_ready)
+	);
 
 	//=====================================
 
@@ -684,18 +649,11 @@ module SoC(
 		.i_pc_wdata(vram_pa_wdata)
 	);
 
-	// check video bus signals
-	bit [31:0] _vbus_ready_count = 0;
-	always_ff @(posedge clock) begin
-		_vbus_ready_count <= 0;
-		if (vram_pb_request && vram_pb_ready) begin
-			_vbus_ready_count <= _vbus_ready_count + 1;
-		end
-		if (_vbus_ready_count >= 2)
-			$error("vbus request held too long");
-		if (!vram_pb_request && vram_pb_ready)
-			$error("vbus ready without request");
-	end
+	BusValidator #(.NAME("VBUS")) vbus_validator(
+		.i_clock(clock),
+		.i_bus_request(vram_pb_request),
+		.i_bus_ready(vram_pb_ready)
+	);
 
 	// Video mode; chunky 8-bit palette.
 	wire vram_select;
@@ -775,23 +733,11 @@ module SoC(
 		.i_far_ready	(bridge_far_ready)
 	);
 
-	/*
-	// check far bus signals
-	bit [1:0] _far_bus_request = 0;
-	bit [31:0] _far_bus_ready_count = 0;
-	always_ff @(posedge clock) begin
-		_far_bus_ready_count <= 0;
-		if (bridge_far_request && bridge_far_ready) begin
-			_far_bus_ready_count <= _far_bus_ready_count + 1;
-		end
-		if (_far_bus_ready_count >= 2)
-			$error("far bus request held too long");
-
-		_far_bus_request <= { _far_bus_request[0], bridge_far_request };
-		if (_far_bus_request == 2'b10 && bridge_far_ready)
-			$error("far bus ready without request %08x", bus_address);			
-	end
-	*/
+	// BusValidator #(.NAME("BRIDGE FAR")) bridge_far_validator(
+	// 	.i_clock(clock),
+	// 	.i_bus_request(bridge_far_request),
+	// 	.i_bus_ready(bridge_far_ready)
+	// );
 
 	assign uart_0_select = bridge_far_address[27:24] == 4'h1;
 	assign uart_0_address = bridge_far_address[3:2];
