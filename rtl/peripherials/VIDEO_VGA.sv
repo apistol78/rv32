@@ -68,8 +68,8 @@ module VIDEO_VGA #(
 	bit pl_vsync_b = 0;
 
 	always_ff @(posedge i_clock_out) begin
-		pl_hsync_a <= (vga_h >= HLINE - HPULSE - 1) ? HSPOL : (1 - HSPOL);
-		pl_vsync_a <= (vga_v >= VLINE - VPULSE - 1) ? VSPOL : (1 - VSPOL);
+		pl_hsync_a <= (vga_h >= HLINE - HPULSE) ? HSPOL : (1 - HSPOL);
+		pl_vsync_a <= (vga_v >= VLINE - VPULSE) ? VSPOL : (1 - VSPOL);
 		pl_hsync_b <= pl_hsync_a;
 		pl_vsync_b <= pl_vsync_a;
 		o_hsync <= pl_hsync_b;
