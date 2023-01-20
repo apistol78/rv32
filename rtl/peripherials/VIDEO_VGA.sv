@@ -82,8 +82,8 @@ module VIDEO_VGA #(
 	bit pl_vblank_b = 0;
 
 	always_ff @(posedge i_clock_out) begin
-		pl_hblank_a <= (vga_h > HBACK + 1 && vga_h < (HLINE - HPULSE - HFRONT - 1)) ? 1 : 0;
-		pl_vblank_a <= (vga_v > VBACK + 1 && vga_v < (VLINE - VPULSE - VFRONT - 1)) ? 1 : 0;
+		pl_hblank_a <= (vga_h >= HBACK && vga_h < (HLINE - HPULSE - HFRONT - 1)) ? 1 : 0;
+		pl_vblank_a <= (vga_v >= VBACK - 1 && vga_v < (VLINE - VPULSE - VFRONT - 1)) ? 1 : 0;
 		pl_hblank_b <= pl_hblank_a;
 		pl_vblank_b <= pl_vblank_a;
 		o_hblank <= pl_hblank_b;

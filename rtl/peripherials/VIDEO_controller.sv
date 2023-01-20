@@ -249,15 +249,13 @@ module VIDEO_controller #(
 		// Check if we have entered vblank.
 		if (vs == 2'b10) begin
 			column <= 0;
-			row <= vram_pitch; // vram_read_offset;
-			line_odd_even <= 1'b0;
+			row <= 0;
+			line_odd_even <= 1'b1;
 			frame_counter <= frame_counter + 1;
-			o_vram_pb_address <= vram_read_offset;
-			o_vram_pb_request <= 1'b1;			
 		end
 
 		// At hblank we start read next line.
-		if (hs == 2'b10 && i_video_vblank) begin
+		if (hs == 2'b10 && vs == 2'b11) begin
 			if (vram_skip[1] == 1'b0 || line_odd_even) begin
 				column <= 0;
 				row <= row + vram_pitch;
