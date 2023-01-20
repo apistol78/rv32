@@ -37,9 +37,9 @@
 <generic name="gui_actual_phase_shift1" value="0" />
 <generic name="gui_duty_cycle1" value="50" />
 <generic name="gui_cascade_counter2" value="false" />
-<generic name="gui_output_clock_frequency2" value="25.17" />
+<generic name="gui_output_clock_frequency2" value="25.2" />
 <generic name="gui_divide_factor_c2" value="1" />
-<generic name="gui_actual_output_clock_frequency2" value="25.396825 MHz" />
+<generic name="gui_actual_output_clock_frequency2" value="25.581395 MHz" />
 <generic name="gui_ps_units2" value="ps" />
 <generic name="gui_phase_shift2" value="0" />
 <generic name="gui_phase_shift_deg2" value="0.0" />

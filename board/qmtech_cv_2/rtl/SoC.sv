@@ -524,7 +524,7 @@ module SoC(
 		.FREQUENCY(`FREQUENCY),
 		.DEVICEID(6),
 		.RAM_SIZE(32'h1000000),
-		.BOOTMODE(1)
+		.BOOTMODE(0)
 	) sysreg(
 		.i_reset(reset),
 		.i_clock(clock),
