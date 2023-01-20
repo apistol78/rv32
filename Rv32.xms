@@ -59,12 +59,14 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.h</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
 				<item type="Filter">
@@ -73,20 +75,24 @@
 						<item type="Filter">
 							<name>source</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>FatFs/source/ff.c</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>FatFs/source/ff.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>FatFs/source/ffconf.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>FatFs/source/ffunicode.c</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
@@ -96,12 +102,14 @@
 				<item type="Filter">
 					<name>printf</name>
 					<items>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>printf/*.c</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>printf/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -109,12 +117,14 @@
 				<item type="Filter">
 					<name>HAL</name>
 					<items>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>HAL/*.c</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>HAL/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -171,344 +181,429 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.h</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>am_map.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_event.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_items.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_iwad.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_loop.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_main.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_mode.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>d_net.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>doomdef.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>doomgeneric.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>doomgeneric_rv32.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>doomstat.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>dstrings.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>dummy.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>f_finale.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>f_wipe.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>g_game.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>gusconf.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>hu_lib.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>hu_stuff.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_cdmus.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_endoom.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_input.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_joystick.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_main.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_scale.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_sound.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_system.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_timer.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>i_video.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>icon.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>info.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_argv.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_bbox.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_cheat.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_config.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_controls.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_fixed.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_menu.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_misc.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>m_random.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>memio.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_ceilng.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_doors.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_enemy.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_floor.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_inter.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_lights.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_map.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_maputl.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_mobj.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_plats.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_pspr.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_saveg.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_setup.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_sight.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_spec.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_switch.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_telept.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_tick.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>p_user.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_bsp.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_data.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_draw.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_main.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_plane.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_segs.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_sky.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>r_things.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>s_sound.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>sha1.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>sounds.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>st_lib.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>st_stuff.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>statdump.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>tables.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>v_video.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>w_checksum.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>w_file.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>w_file_stdc.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>w_main.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>w_wad.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>wi_stuff.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>z_zone.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
 			</items>
@@ -573,12 +668,14 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.cpp</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.h</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
 			</items>
@@ -645,16 +742,19 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.s</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.h</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
 			</items>
@@ -719,12 +819,14 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.h</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
-				<item type="File">
+				<item type="File" version="1">
 					<fileName>*.c</fileName>
+					<excludeFilter/>
 					<items/>
 				</item>
 			</items>
@@ -833,12 +935,14 @@
 						<item type="Filter">
 							<name>rv</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/rv/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/rv/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
@@ -849,22 +953,26 @@
 								<item type="Filter">
 									<name>rv</name>
 									<items>
-										<item type="File">
+										<item type="File" version="1">
 											<fileName>backends/fs/rv/*.cpp</fileName>
+											<excludeFilter/>
 											<items/>
 										</item>
-										<item type="File">
+										<item type="File" version="1">
 											<fileName>backends/fs/rv/*.h</fileName>
+											<excludeFilter/>
 											<items/>
 										</item>
 									</items>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/fs/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/fs/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
@@ -872,22 +980,26 @@
 						<item type="Filter">
 							<name>midi</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/midi/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>backends/midi/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>backends/*.cpp</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>backends/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -895,13 +1007,14 @@
 				<item type="Filter">
 					<name>base</name>
 					<items>
-						<item type="File" version="2">
+						<item type="File" version="1">
 							<fileName>base/*.cpp</fileName>
 							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>base/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -909,12 +1022,14 @@
 				<item type="Filter">
 					<name>common</name>
 					<items>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>common/*.cpp</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>common/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -922,13 +1037,14 @@
 				<item type="Filter">
 					<name>gui</name>
 					<items>
-						<item type="File" version="2">
+						<item type="File" version="1">
 							<fileName>gui/*.cpp</fileName>
 							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>gui/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -936,16 +1052,17 @@
 				<item type="Filter">
 					<name>scumm</name>
 					<items>
-
 						<item type="Filter">
 							<name>imuse_digi</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/imuse_digi/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/imuse_digi/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
@@ -953,12 +1070,14 @@
 						<item type="Filter">
 							<name>insane</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/insane/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/insane/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
@@ -966,24 +1085,26 @@
 						<item type="Filter">
 							<name>smush</name>
 							<items>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/smush/*.cpp</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
-								<item type="File">
+								<item type="File" version="1">
 									<fileName>scumm/smush/*.h</fileName>
+									<excludeFilter/>
 									<items/>
 								</item>
 							</items>
 						</item>
-
-						<item type="File" version="2">
+						<item type="File" version="1">
 							<fileName>scumm/*.cpp</fileName>
 							<excludeFilter>resource_converter.*</excludeFilter>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>scumm/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
@@ -991,16 +1112,80 @@
 				<item type="Filter">
 					<name>sound</name>
 					<items>
-						<item type="File" version="2">
+						<item type="File" version="1">
 							<fileName>sound/*.cpp</fileName>
 							<excludeFilter/>
 							<items/>
 						</item>
-						<item type="File">
+						<item type="File" version="1">
 							<fileName>sound/*.h</fileName>
+							<excludeFilter/>
 							<items/>
 						</item>
 					</items>
+				</item>
+			</items>
+			<dependencies>
+				<item type="ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
+		<item type="Project" version="1">
+			<enable>true</enable>
+			<name>Demo</name>
+			<sourcePath>code/Demo</sourcePath>
+			<configurations>
+				<item type="Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code</item>
+					</includePaths>
+					<definitions/>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code</item>
+					</includePaths>
+					<definitions/>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(GAME_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="File" version="1">
+					<fileName>*.*</fileName>
+					<excludeFilter/>
+					<items/>
 				</item>
 			</items>
 			<dependencies>
