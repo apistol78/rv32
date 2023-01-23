@@ -2,8 +2,6 @@
 
 `timescale 1ns/1ns
 
-`define ENABLE_ICACHE
-
 module CPU_ICache_Comb#(
 	parameter SIZE = 13
 )(
@@ -82,10 +80,6 @@ module CPU_ICache_Comb#(
 
 	assign o_bus_address = i_input_pc;
 
-	initial begin
-		o_bus_request = 0;
-	end
-
 	always_ff @(posedge i_clock) begin
 		state <= next;
 		clear_address <= next_clear_address;
@@ -116,12 +110,7 @@ module CPU_ICache_Comb#(
 		case (state)
 			IDLE: begin
 				if (!i_stall) begin
-`ifdef ENABLE_ICACHE				
 					next = READ_SETUP;
-`else
-					o_bus_request = 1;
-					next = READ_BUS;
-`endif
 				end
 			end
 			

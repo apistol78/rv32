@@ -22,6 +22,7 @@ module SRAM_interface(
 
 	// Number of cycles for entire transaction.
 	localparam CYCLES = 8;
+	localparam FETCH_OFFSET = 3;
 
 	bit [5:0] count;
 	bit [15:0] wdata;
@@ -68,21 +69,20 @@ module SRAM_interface(
 				end
 
 				if (!i_rw) begin
-					if (count == 3)
+					if (count == FETCH_OFFSET)
 						o_rdata[15:0] <= SRAM_D;
-					else if (count == CYCLES / 2 + 3)
+					else if (count == CYCLES / 2 + FETCH_OFFSET)
 						o_rdata[31:16] <= SRAM_D;
 				end
 				else begin
-					if (count == 3)
+					if (count == FETCH_OFFSET)
 						SRAM_WE_n <= 1'b0;
-					else if (count == CYCLES / 2 + 3)
+					else if (count == CYCLES / 2 + FETCH_OFFSET)
 						SRAM_WE_n <= 1'b0;
 				end
 
 				if (count >= CYCLES - 1) begin
 					o_ready <= 1'b1;
-					//count <= 0;
 				end
 				else
 				 	count <= count + 1;

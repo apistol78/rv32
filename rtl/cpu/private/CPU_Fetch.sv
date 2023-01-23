@@ -51,7 +51,7 @@ module CPU_Fetch #(
 	wire [31:0] icache_rdata;
 	wire icache_ready;
 
-	generate if (ICACHE_REGISTERED != 0) begin
+	generate if (ICACHE_SIZE > 0 && ICACHE_REGISTERED != 0) begin
 
 		CPU_ICache_Reg #(
 			.SIZE(ICACHE_SIZE)
@@ -79,11 +79,38 @@ module CPU_Fetch #(
 
 	end endgenerate
 
-	generate if (ICACHE_REGISTERED == 0) begin
+	generate if (ICACHE_SIZE > 0 && ICACHE_REGISTERED == 0) begin
 
 		CPU_ICache_Comb #(
 			.SIZE(ICACHE_SIZE)
 		) icache(
+			.i_reset(i_reset),
+			.i_clock(i_clock),
+
+			// Input
+			.i_input_pc(pc),
+
+			// Output
+			.o_rdata(icache_rdata),
+			.o_ready(icache_ready),
+			.i_stall(),
+
+			// Bus
+			.o_bus_request(o_bus_request),
+			.i_bus_ready(i_bus_ready),
+			.o_bus_address(o_bus_address),
+			.i_bus_rdata(i_bus_rdata),
+
+			// Debug
+			.o_hit(o_icache_hit),
+			.o_miss(o_icache_miss)
+		);
+
+	end endgenerate
+
+	generate if (ICACHE_SIZE == 0) begin
+
+		CPU_ICache_None icache(
 			.i_reset(i_reset),
 			.i_clock(i_clock),
 
