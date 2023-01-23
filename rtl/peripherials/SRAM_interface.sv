@@ -21,8 +21,9 @@ module SRAM_interface(
 );
 
 	// Number of cycles for entire transaction.
-	localparam CYCLES = 8;
-	localparam FETCH_OFFSET = 3;
+	localparam CYCLES = 6;
+	localparam READ_OFFSET = 2;
+	localparam WRITE_OFFSET = 1;
 
 	bit [5:0] count;
 	bit [15:0] wdata;
@@ -39,6 +40,17 @@ module SRAM_interface(
 	// Output 
 	assign SRAM_D = i_rw ? wdata : 16'hz;
 
+	always_comb begin
+		SRAM_OE_n = i_request && i_rw;	
+
+		if (count < CYCLES / 2) begin
+			SRAM_A = { i_address[18:2], 1'b0 };
+		end
+		else begin
+			SRAM_A = { i_address[18:2], 1'b1 };
+		end
+	end
+
 	// Increment counter, store data read from SRAM.
 	always_ff @(posedge i_clock) begin
 		if (i_reset) begin
@@ -51,15 +63,6 @@ module SRAM_interface(
 			o_ready <= 1'b0;
 
 			if (i_request) begin
-
-				SRAM_OE_n <= i_rw;
-
-				if (count < CYCLES / 2) begin
-					SRAM_A <= { i_address[18:2], 1'b0 };
-				end
-				else begin
-					SRAM_A <= { i_address[18:2], 1'b1 };
-				end
 				
 				if (count < CYCLES / 2) begin
 					wdata <= i_wdata[15:0];
@@ -69,23 +72,23 @@ module SRAM_interface(
 				end
 
 				if (!i_rw) begin
-					if (count == FETCH_OFFSET)
+					if (count == READ_OFFSET)
 						o_rdata[15:0] <= SRAM_D;
-					else if (count == CYCLES / 2 + FETCH_OFFSET)
+					else if (count == CYCLES / 2 + READ_OFFSET)
 						o_rdata[31:16] <= SRAM_D;
 				end
 				else begin
-					if (count == FETCH_OFFSET)
+					if (count == WRITE_OFFSET)
 						SRAM_WE_n <= 1'b0;
-					else if (count == CYCLES / 2 + FETCH_OFFSET)
+					else if (count == CYCLES / 2 + WRITE_OFFSET)
 						SRAM_WE_n <= 1'b0;
 				end
 
 				if (count >= CYCLES - 1) begin
 					o_ready <= 1'b1;
 				end
-				else
-				 	count <= count + 1;
+
+			 	count <= count + 1;
 			end
 			else begin
 				count <= 0;
