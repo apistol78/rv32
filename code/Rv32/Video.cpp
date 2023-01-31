@@ -12,33 +12,43 @@ using namespace traktor;
 T_IMPLEMENT_RTTI_CLASS(L"Video", Video, Device)
 
 Video::Video()
-:	m_readOffset(0)
 {
-	m_image = new drawing::Image(
-		drawing::PixelFormat::getR8G8B8X8(),
-		320,
-		200
-	);
-	m_image->clear(Color4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-	m_framebuffer.resize(320 * 400);
+	m_framebuffer.resize(640 * 400 * 2);
 }
 
 bool Video::writeU32(uint32_t address, uint32_t value)
 {
-	if (address < 0x00800000)
-		*(uint32_t*)&m_framebuffer[address] = value;
-	else if (address < 0x00800400)
-		m_palette[(address / 4) & 255] = Color4f::fromColor4ub(Color4ub(value));
+	if ((address & 0x00f00000) == 0x00f00000)
+	{
+		if ((address & 0xf) == 0x0)
+			m_readOffset = value;
+		else if ((address & 0xf) == 0x4)
+		{
+			m_width = value;
+			m_image = nullptr;
+		}
+		else if ((address & 0xf) == 0x8)
+		{
+			m_skip = value;
+			m_image = nullptr;
+		}
+	}
+	else if ((address & 0x00f00000) == 0x00e00000)
+	{
+		const uint32_t idx = (address >> 2) & 255;
+		m_palette[idx] = Color4f::fromColor4ub(Color4ub(value));
+	}
 	else
-		m_readOffset = value;
-
+	{
+		if (address < 640 * 400 * 2)
+			*(uint32_t*)&m_framebuffer[address] = value;
+	}
 	return true;
 }
 
 uint32_t Video::readU32(uint32_t address) const
 {
-	if (address < 0x00800000)
+	if (address < 640 * 400 * 2)
 		return *(uint32_t*)&m_framebuffer[address];
 	else
 		return 0;
@@ -51,16 +61,29 @@ bool Video::tick(CPU* cpu)
 
 drawing::Image* Video::getImage()
 {
-	for (uint32_t y = 0; y < 200; ++y)
+	const uint32_t w = (m_skip & 0b01) ? 320 : 640;
+	const uint32_t h = (m_skip & 0b10) ? 200 : 400;
+
+	if (!m_image)
 	{
-		for (uint32_t x = 0; x < 320; x += 4)
+		m_image = new drawing::Image(
+			drawing::PixelFormat::getR8G8B8X8(),
+			w,
+			h
+		);
+	}
+
+	uint32_t offset = m_readOffset;
+	for (uint32_t y = 0; y < h; ++y)
+	{
+		for (uint32_t x = 0; x < w; x += 4)
 		{
-			const uint32_t offset = m_readOffset + x + y * 320;
 			const uint32_t value = *(uint32_t*)&m_framebuffer[offset];
 			m_image->setPixelUnsafe(x + 3, y, m_palette[(value & 0xff000000) >> 24]);
 			m_image->setPixelUnsafe(x + 2, y, m_palette[(value & 0x00ff0000) >> 16]);
 			m_image->setPixelUnsafe(x + 1, y, m_palette[(value & 0x0000ff00) >> 8]);
 			m_image->setPixelUnsafe(x + 0, y, m_palette[(value & 0x000000ff)]);
+			offset += 4;
 		}
 	}
 	return m_image;

@@ -305,14 +305,14 @@ int main(int argc, const char** argv)
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
-		std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
+		const std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
 		if (!loadELF(fileName, cpu, bus))
 			return 1;
 	}
 
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{
-		std::wstring fileName = cmdLine.getOption(L'h', L"hex").getString();
+		const std::wstring fileName = cmdLine.getOption(L'h', L"hex").getString();
 		if (!loadHEX(fileName, cpu, bus))
 			return 1;
 	}
@@ -322,7 +322,7 @@ int main(int argc, const char** argv)
 
 	if (cmdLine.hasOption(L's', L"start"))
 	{
-		int32_t start = cmdLine.getOption(L's', L"start").getInteger();
+		const int32_t start = cmdLine.getOption(L's', L"start").getInteger();
 		if (start < 0)
 		{
 			log::error << L"Invalid start address." << Endl;
@@ -333,7 +333,7 @@ int main(int argc, const char** argv)
 
 	if (cmdLine.hasOption(L"stack"))
 	{
-		int32_t sp = cmdLine.getOption(L"stack").getInteger();
+		const int32_t sp = cmdLine.getOption(L"stack").getInteger();
 		if (sp < 0)
 		{
 			log::error << L"Invalid stack address." << Endl;
@@ -367,7 +367,7 @@ int main(int argc, const char** argv)
 		form = new ui::Form();
 		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
 
-		uiImage = new ui::Bitmap(320, 200);
+		uiImage = new ui::Bitmap(640, 400);
 
 		ui::Point mousePosition(0, 0);
 		uint8_t mouseButton = 0;
@@ -464,10 +464,14 @@ int main(int argc, const char** argv)
 			if (!ui::Application::getInstance()->process())
 				break;
 
-			if (timer.getElapsedTime() > 1.0f/60.0f && video.getImage())
+			if (timer.getElapsedTime() > 1.0f/60.0f)
 			{
-				uiImage->copyImage(video.getImage());
-				image->setImage(uiImage);
+				drawing::Image* videoImage = video.getImage();
+				if (videoImage)
+				{
+					uiImage->copyImage(videoImage);
+					image->setImage(uiImage);
+				}
 				timer.reset();
 				plic.raise(0);
 			}

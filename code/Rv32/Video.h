@@ -33,6 +33,8 @@ public:
 private:
 	traktor::AlignedVector< uint8_t > m_framebuffer;
 	traktor::Color4f m_palette[256];
-	uint32_t m_readOffset;
+	uint32_t m_width = 320;
+	uint32_t m_skip = 0b11;
+	uint32_t m_readOffset = 0;
 	traktor::Ref< traktor::drawing::Image > m_image;
 };
