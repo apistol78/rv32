@@ -469,7 +469,17 @@ int main(int argc, const char** argv)
 				drawing::Image* videoImage = video.getImage();
 				if (videoImage)
 				{
-					uiImage->copyImage(videoImage);
+					if (uiImage)
+					{
+						ui::Size sz = uiImage->getSize();
+						if (sz.cx != videoImage->getWidth() || sz.cy != videoImage->getHeight())
+						{
+							uiImage->destroy();
+							uiImage->create(videoImage);
+						}
+						else
+							uiImage->copyImage(videoImage);
+					}
 					image->setImage(uiImage);
 				}
 				timer.reset();
