@@ -132,11 +132,15 @@ void R_DrawColumn (void)
     // Inner loop that does the actual texture mapping,
     //  e.g. a DDA-lile scaling.
     // This is as fast as it gets.
+
+    const byte* l_dc_source = dc_source;
+    const lighttable_t* l_dc_colormap = dc_colormap;
+
     do 
     {
 	// Re-map color indices from wall texture column
 	//  using a lighting/special effects LUT.
-	*dest = dc_colormap[dc_source[(frac>>FRACBITS)&127]];
+	*dest = l_dc_colormap[l_dc_source[(frac>>FRACBITS)&127]];
 	
 	dest += SCREENWIDTH; 
 	frac += fracstep;
@@ -239,10 +243,12 @@ void R_DrawColumnLow (void)
     fracstep = dc_iscale; 
     frac = dc_texturemid + (dc_yl-centery)*fracstep;
     
+    const byte* l_dc_source = dc_source;
+    const lighttable_t* l_dc_colormap = dc_colormap;    
     do 
     {
 	// Hack. Does not work corretly.
-	*dest2 = *dest = dc_colormap[dc_source[(frac>>FRACBITS)&127]];
+	*dest2 = *dest = l_dc_colormap[l_dc_source[(frac>>FRACBITS)&127]];
 	dest += SCREENWIDTH;
 	dest2 += SCREENWIDTH;
 	frac += fracstep; 
@@ -451,6 +457,10 @@ void R_DrawTranslatedColumn (void)
     frac = dc_texturemid + (dc_yl-centery)*fracstep; 
 
     // Here we do an additional index re-mapping.
+    const byte* l_dc_source = dc_source;
+    const lighttable_t* l_dc_colormap = dc_colormap;
+    const byte* l_dc_translation = dc_translation;
+
     do 
     {
 	// Translation tables are used
@@ -458,7 +468,7 @@ void R_DrawTranslatedColumn (void)
 	//  used with PLAY sprites.
 	// Thus the "green" ramp of the player 0 sprite
 	//  is mapped to gray, red, black/indigo. 
-	*dest = dc_colormap[dc_translation[dc_source[frac>>FRACBITS]]];
+	*dest = l_dc_colormap[l_dc_translation[l_dc_source[frac>>FRACBITS]]];
 	dest += SCREENWIDTH;
 	
 	frac += fracstep; 
@@ -501,6 +511,10 @@ void R_DrawTranslatedColumnLow (void)
     frac = dc_texturemid + (dc_yl-centery)*fracstep; 
 
     // Here we do an additional index re-mapping.
+    const byte* l_dc_source = dc_source;
+    const lighttable_t* l_dc_colormap = dc_colormap;
+    const byte* l_dc_translation = dc_translation;
+
     do 
     {
 	// Translation tables are used
@@ -508,8 +522,8 @@ void R_DrawTranslatedColumnLow (void)
 	//  used with PLAY sprites.
 	// Thus the "green" ramp of the player 0 sprite
 	//  is mapped to gray, red, black/indigo. 
-	*dest = dc_colormap[dc_translation[dc_source[frac>>FRACBITS]]];
-	*dest2 = dc_colormap[dc_translation[dc_source[frac>>FRACBITS]]];
+	*dest = l_dc_colormap[l_dc_translation[l_dc_source[frac>>FRACBITS]]];
+	*dest2 = l_dc_colormap[l_dc_translation[l_dc_source[frac>>FRACBITS]]];
 	dest += SCREENWIDTH;
 	dest2 += SCREENWIDTH;
 	
@@ -622,6 +636,9 @@ void R_DrawSpan (void)
     // We do not check for zero spans here?
     count = ds_x2 - ds_x1;
 
+    const byte* l_ds_source = ds_source;
+    const lighttable_t* l_ds_colormap = ds_colormap;
+    
     do
     {
 	// Calculate current texture index in u,v.
@@ -631,7 +648,7 @@ void R_DrawSpan (void)
 
 	// Lookup pixel from flat texture tile,
 	//  re-index using light/colormap.
-	*dest++ = ds_colormap[ds_source[spot]];
+	*dest++ = l_ds_colormap[l_ds_source[spot]];
 
         position += step;
 
@@ -749,6 +766,9 @@ void R_DrawSpanLow (void)
 
     dest = ylookup[ds_y] + columnofs[ds_x1];
 
+    const byte* l_ds_source = ds_source;
+    const lighttable_t* l_ds_colormap = ds_colormap;
+
     do
     {
 	// Calculate current texture index in u,v.
@@ -758,8 +778,8 @@ void R_DrawSpanLow (void)
 
 	// Lowres/blocky mode does it twice,
 	//  while scale is adjusted appropriately.
-	*dest++ = ds_colormap[ds_source[spot]];
-	*dest++ = ds_colormap[ds_source[spot]];
+	*dest++ = l_ds_colormap[l_ds_source[spot]];
+	*dest++ = l_ds_colormap[l_ds_source[spot]];
 
 	position += step;
 
