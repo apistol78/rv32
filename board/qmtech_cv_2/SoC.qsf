@@ -397,6 +397,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/FIFO_BRAM.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/I2C.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LED.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/LRU_cache.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/PLIC.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/RESET.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/peripherials/SD.sv
@@ -418,6 +419,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_PreDeco
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Multiply.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Memory.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ICache_Comb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ICache_None.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_ICache_Reg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Forward.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/private/CPU_Fetch.sv
