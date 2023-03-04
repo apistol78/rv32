@@ -131,7 +131,7 @@ void fb_init()
 
 void fb_shutdown()
 {
-	// kernel_destroy_thread(s_thread);
+	kernel_destroy_thread(s_thread);
 	video_clear(0);
 }
 
