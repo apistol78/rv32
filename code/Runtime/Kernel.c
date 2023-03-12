@@ -36,7 +36,7 @@ static volatile int32_t g_critical = 0;
 static volatile int32_t g_schedule = 0;
 static uint32_t g_next_id = 1;
 
-static __attribute__((naked)) __attribute__((optimize("O3"))) void kernel_scheduler(uint32_t source)
+static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_scheduler(uint32_t source)
 {
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
@@ -129,41 +129,57 @@ static __attribute__((naked)) __attribute__((optimize("O3"))) void kernel_schedu
 		int32_t next = g_current;
 
 		// Prioritize thread which are waiting for a signal.
-		for (int32_t i = 0; i < g_count; ++i)
-		{
-			if (++next >= g_count)
-				next = 0;
-			volatile kernel_thread_t* t = &g_threads[next];
-			if (t->waiting != 0)
-			{
-				if (t->sleep == 0 || ms < t->sleep)
-				{
-					if (t->waiting->counter > 0)
-					{
-						t->waiting = 0;
-						break;
-					}
-				}
-				else
-				{
-					// Wait has timed out; do not select immediately
-					// since it's no longer prioritized.
-					t->waiting = 0;
-				}
-			}
-		}
+		// for (int32_t i = 0; i < g_count; ++i)
+		// {
+		// 	if (++next >= g_count)
+		// 		next = 0;
+		// 	volatile kernel_thread_t* t = &g_threads[next];
+		// 	if (t->waiting != 0)
+		// 	{
+		// 		if (t->sleep == 0 || ms < t->sleep)
+		// 		{
+		// 			if (t->waiting->counter > 0)
+		// 			{
+		// 				t->waiting = 0;
+		// 				break;
+		// 			}
+		// 		}
+		// 		else
+		// 		{
+		// 			// Wait has timed out; do not select immediately
+		// 			// since it's no longer prioritized.
+		// 			t->waiting = 0;
+		// 		}
+		// 	}
+		// }
 
 		// If no thread awoken from signals then we
 		// select next thread round-robin style.
-		if (next == g_current)
+		// if (next == g_current)
 		{
-			for (int32_t i = 0; i < g_count; ++i)
+			for (int32_t i = 0; i < g_count + 1; ++i)
 			{
 				if (++next >= g_count)
 					next = 0;
+
 				volatile kernel_thread_t* t = &g_threads[next];
-				if (t->waiting == 0 && t->sleep <= ms)
+				if (t->waiting != 0 || t->sleep <= ms)
 					break;
+
+				// if (t->waiting == 0 && t->sleep <= ms)
+				// 	break;
+				// else if (t->waiting != 0)
+				// {
+				// 	if (t->sleep == 0 || t->sleep <= ms)
+				// 	{
+				// 		if (t->waiting->counter > 0)
+				// 		{
+				// 			t->waiting = 0;
+				// 			break;
+				// 		}
+				// 	}
+				// 	else if(t->sleep != 0 && t->sleep > ms)
+				// 		t->waiting = 0;
 			}
 		}
 
@@ -442,13 +458,12 @@ void kernel_sig_raise(volatile kernel_sig_t* sig)
 
 void kernel_sig_wait(volatile kernel_sig_t* sig)
 {
-	sig->counter = 0;
-
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = 0;
 	
-	while (t->waiting != 0)
+	sig->counter = 0;
+	while (sig->counter == 0)
 		kernel_yield();
 
 	t->waiting = 0;
@@ -457,18 +472,21 @@ void kernel_sig_wait(volatile kernel_sig_t* sig)
 
 int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
-	sig->counter = 0;
-
 	const uint32_t fin_ms = timer_get_ms() + timeout;
 
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = fin_ms;
 
-	while (t->waiting != 0)
+	sig->counter = 0;
+	while (sig->counter == 0)
+	{
 		kernel_yield();
+		if (timer_get_ms() >= fin_ms)
+			break;
+	}
 
-	const int32_t result = (t->waiting == 0) ? 1 : 0;
+	const int32_t result = (sig->counter != 0) ? 1 : 0;
 
 	t->waiting = 0;
 	t->sleep = 0;
