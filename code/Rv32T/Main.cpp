@@ -230,10 +230,10 @@ int main(int argc, const char **argv)
 	if (!cmdLine.hasOption(L'h', L"headless"))
 	{
 		form = new ui::Form();
-		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4, 4));
+		form->create(L"RV32", 640_ut, 400_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 4_ut, 4_ut));
 
 		Ref< ui::Container > container = new ui::Container();
-		container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*,*", L"*", 0, 4));
+		container->create(form, ui::WsNone, new ui::TableLayout(L"*,*,*,*", L"*", 0_ut, 4_ut));
 
 		Ref< ui::Button > buttonTrace = new ui::Button();
 		buttonTrace->create(container, L"Trace");
@@ -270,11 +270,11 @@ int main(int argc, const char **argv)
 
 		statusBar = new ui::StatusBar();
 		statusBar->create(form);
-		statusBar->addColumn(ui::dpi96(100));	// IPC
-		statusBar->addColumn(ui::dpi96(200));	// BUS
-		statusBar->addColumn(ui::dpi96(240));	// STALL
-		statusBar->addColumn(ui::dpi96(200));	// PC
-		statusBar->addColumn(ui::dpi96(200));	// FRAME COUNT
+		statusBar->addColumn(100);	// IPC
+		statusBar->addColumn(200);	// BUS
+		statusBar->addColumn(240);	// STALL
+		statusBar->addColumn(200);	// PC
+		statusBar->addColumn(200);	// FRAME COUNT
 
 		form->update();
 		form->show();

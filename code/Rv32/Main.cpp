@@ -373,7 +373,7 @@ int main(int argc, const char** argv)
 	if (!headless)
 	{
 		form = new ui::Form();
-		form->create(L"RV32", ui::dpi96(640), ui::dpi96(400), ui::Form::WsDefault, new ui::FloodLayout());
+		form->create(L"RV32", 640_ut, 400_ut, ui::Form::WsDefault, new ui::FloodLayout());
 
 		uiImage = new ui::Bitmap(640, 400);
 
@@ -479,7 +479,7 @@ int main(int argc, const char** argv)
 				{
 					if (uiImage)
 					{
-						ui::Size sz = uiImage->getSize();
+						ui::Size sz = uiImage->getSize(form);
 						if (sz.cx != videoImage->getWidth() || sz.cy != videoImage->getHeight())
 						{
 							uiImage->destroy();
