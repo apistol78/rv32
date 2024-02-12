@@ -1,8 +1,8 @@
 # Configuration file
 
 OPTIMIZE=-O3
-#ARCH=rv32imf
-ARCH=rv32im
+ARCH=rv32imf
+#ARCH=rv32im
 
 C=riscv32-unknown-elf-gcc
 C_FLAGS_COMMON=-march=$(ARCH) -mabi=ilp32 -mbranch-cost=8 -mstrict-align -Wcast-align -ffast-math -fdata-sections -ffunction-sections -Wl,--gc-sections
