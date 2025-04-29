@@ -109,7 +109,11 @@ traktor::Random g_rnd;
 int32_t rnd12()
 {
 	int32_t r = (int32_t)g_rnd.next();
-	int32_t v = (r & 0xfff) - 2047;
+	int32_t v = (r & 0x7ff);
+
+	if (g_rnd.nextFloat() > 0.5f)
+		v = -v;
+		
 	return v;
 }
 
