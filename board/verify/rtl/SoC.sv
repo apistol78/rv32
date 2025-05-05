@@ -189,9 +189,6 @@ module SoC(
 		rom_select |
 		ram_select;
 
-	reg bus_fault = 0;
-	always_comb begin
-		bus_fault = !bus_valid_select && bus_request;
-	end
+	wire bus_fault = !bus_valid_select && bus_request;
 
 endmodule

@@ -74,7 +74,7 @@ module CPU_DCache_Reg #(
 
 	// Cache memory.
 	bit cache_rw = 0;
-	bit [SIZE - 1:0] cache_address = 0;
+	bit [SIZE - 1:0] cache_address;
 	bit [63:0] cache_wdata;
 	wire [63:0] cache_rdata;
 

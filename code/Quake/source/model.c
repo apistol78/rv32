@@ -1569,7 +1569,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 //
 // set base s and t vertices
 //
-	pstverts = &pmodel[1];
+	pstverts = (stvert_t *)&pmodel[1];
 	pinstverts = (stvert_t *)pskintype;
 	pheader->stverts = (byte *)pstverts - (byte *)pheader;
 

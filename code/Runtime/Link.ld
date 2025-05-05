@@ -142,7 +142,7 @@ SECTIONS
 
 	/* bss: Uninitialized writeable data section */
 	. = .;
-	_bss_start = .;
+	__bss_start = .;
 	.bss : 
 	{
 		*(.bss)

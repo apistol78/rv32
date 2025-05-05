@@ -10,6 +10,7 @@
 #include <Core/Misc/String.h>
 #include "Rv32T/TracePC.h"
 #include "Rv32T/SoC/VSoC.h"
+#include "Rv32T/SoC/VSoC___024root.h"
 
 using namespace traktor;
 
@@ -23,15 +24,16 @@ TracePC::TracePC(OutputStream* os)
 
 void TracePC::eval(VSoC* soc, uint64_t time)
 {
-	if (soc->SoC__DOT__cpu__DOT__execute__DOT__trace_pc != 0 && soc->SoC__DOT__cpu__DOT__execute__DOT__trace_pc != m_lastTracePC)
+	auto root = soc->rootp;
+	if (root->SoC__DOT__cpu__DOT__execute__DOT__trace_pc != 0 && root->SoC__DOT__cpu__DOT__execute__DOT__trace_pc != m_lastTracePC)
 	{
-		//*m_os << str(L"%8d", time/2) << L", " << str(L"%08x", soc->SoC__DOT__cpu__DOT__execute__DOT__trace_pc);
-		*m_os << str(L"%08x", soc->SoC__DOT__cpu__DOT__execute__DOT__trace_pc);
+		//*m_os << str(L"%8d", time/2) << L", " << str(L"%08x", root->SoC__DOT__cpu__DOT__execute__DOT__trace_pc);
+		*m_os << str(L"%08x", root->SoC__DOT__cpu__DOT__execute__DOT__trace_pc);
 
 		for (uint32_t i = 1; i < 32; ++i)
-			*m_os << str(L" %08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[i]);
+			*m_os << str(L" %08x", root->SoC__DOT__cpu__DOT__registers__DOT__r[i]);
 		
 		*m_os << Endl;
-		m_lastTracePC = soc->SoC__DOT__cpu__DOT__execute__DOT__trace_pc;
+		m_lastTracePC = root->SoC__DOT__cpu__DOT__execute__DOT__trace_pc;
 	}
 }

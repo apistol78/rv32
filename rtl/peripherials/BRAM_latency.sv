@@ -29,7 +29,6 @@ module BRAM_latency #(
 	bit [15:0] counter;
 
 	initial begin
-		o_ready = 0;
 		o_valid = 1;
 	end
 

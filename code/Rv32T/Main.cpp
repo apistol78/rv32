@@ -65,6 +65,7 @@
 #include "verilated.h"
 #include "verilated_fst_c.h"
 #include "SoC/VSoC.h"
+#include "SoC/VSoC___024root.h"
 
 using namespace traktor;
 
@@ -93,6 +94,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName, bool jumpTo)
 {
 	AlignedVector< uint8_t > elf;
 	uint32_t start = -1;
+	auto root = soc->rootp;
 
 	// Read entire ELF into memory.
 	{
@@ -135,7 +137,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName, bool jumpTo)
 
 				const uint32_t base = 0x20000000;
 
-				uint8_t* dst = (uint8_t*)soc->SoC__DOT__sdram__DOT__data;
+				uint8_t* dst = 0; // (uint8_t*)root->SoC__DOT__sdram__DOT__data;
 				for (uint32_t j = 0; j < shdr[i].sh_size; ++j)
 					dst[addr - base + j] = pbits[j];
 			}
@@ -158,7 +160,7 @@ bool loadELF(VSoC* soc, const std::wstring& fileName, bool jumpTo)
 	}
 
 	if (start != -1)
-		soc->SoC__DOT__cpu__DOT__fetch__DOT__pc = start;
+		root->SoC__DOT__cpu__DOT__fetch__DOT__pc = start;
 
 	return true;
 }
@@ -282,8 +284,8 @@ int main(int argc, const char **argv)
 
 	// Create SoC simulation.
 	VSoC* soc = new VSoC();
-	soc->CPU_RESET_n = 1;
-	soc->CLOCK_125_p = 0;
+	soc->rootp->CPU_RESET_n = 1;
+	soc->rootp->CLOCK_125_p = 0;
 
 	soc->eval();
 
@@ -312,14 +314,14 @@ int main(int argc, const char **argv)
 	if (cmdLine.hasOption('s', L"stack"))
 	{
 		const uint32_t sp = (uint32_t)cmdLine.getOption('s', L"stack").getInteger();
-		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
+		soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
 		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
 	}
 	else
 	{
 		// Initialize stack at end of SDRAM, this is same as firmware does when launching applications.
 		const uint32_t sp = 0x20000000 + c_memoryAvail - 0x8;		
-		soc->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
+		soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[2] = sp;
 		log::info << L"Inital SP " << str(L"0x%08x", sp) << Endl;
 	}
 
@@ -335,8 +337,8 @@ int main(int argc, const char **argv)
 	RefArray< Device > devices;
 	devices.push_back(&hdmi);
 	devices.push_back(new LEDR());
-	devices.push_back(new UART_TX(soc->UART_TX));
-	devices.push_back(new UART_TX(soc->UART_1_TX));
+	devices.push_back(new UART_TX(soc->rootp->UART_TX));
+	devices.push_back(new UART_TX(soc->rootp->UART_1_TX));
 	devices.push_back(new SD());
 
 	// Create receiving UART.
@@ -350,7 +352,7 @@ int main(int argc, const char **argv)
 		}
 
 		Ref< IStream > target = new net::SocketStream(socket, true, true, 1000);
-		devices.push_back(new UART_RX(target, soc->UART_RX));
+		devices.push_back(new UART_RX(target, soc->rootp->UART_RX));
 	}
 
 	// Add audio device to record PWM audio.
@@ -440,10 +442,10 @@ int main(int argc, const char **argv)
 			shouldDraw |= hdmiTxInt;
 
 			++time;
-			soc->CLOCK_125_p = 0;
-			soc->CPU_RESET_n = reset ? 0 : 1;
-			soc->KEY |= key1 ? 2 : 0;
-			soc->HDMI_TX_INT = hdmiTxInt;
+			soc->rootp->CLOCK_125_p = 0;
+			soc->rootp->CPU_RESET_n = reset ? 0 : 1;
+			soc->rootp->KEY |= key1 ? 2 : 0;
+			soc->rootp->HDMI_TX_INT = hdmiTxInt;
 
 			soc->eval();
 
@@ -451,10 +453,10 @@ int main(int argc, const char **argv)
 				tfp->dump(time);
 
 			++time;
-			soc->CLOCK_125_p = 1;
-			soc->CPU_RESET_n = reset ? 0 : 1;
-			soc->KEY |= key1 ? 2 : 0;
-			soc->HDMI_TX_INT = hdmiTxInt;
+			soc->rootp->CLOCK_125_p = 1;
+			soc->rootp->CPU_RESET_n = reset ? 0 : 1;
+			soc->rootp->KEY |= key1 ? 2 : 0;
+			soc->rootp->HDMI_TX_INT = hdmiTxInt;
 
 			soc->eval();
 
@@ -470,30 +472,30 @@ int main(int argc, const char **argv)
 			// if (soc->SoC__DOT__sdram_request)
 			//  	busSDRAM++;
 
-			if (soc->o_execute_busy)
+			if (soc->rootp->o_execute_busy)
 				stallExecute++;
-			if (soc->o_memory_busy)
+			if (soc->rootp->o_memory_busy)
 				stallMemory++;
 
 			key1 = false;
 			reset = false;
 
-			if (soc->SoC__DOT__cpu__DOT__decode_fault)
+			if (soc->rootp->SoC__DOT__cpu__DOT__decode_fault)
 			{
 				log::warning << L"DECODE fault, terminating." << Endl;
 				g_going = false;
 				break;
 			}
-			if (soc->SoC__DOT__cpu__DOT__execute_fault)
+			if (soc->rootp->SoC__DOT__cpu__DOT__execute_fault)
 			{
 				log::warning << L"EXECUTE fault, terminating." << Endl;
 				g_going = false;
 				break;
 			}
-			if (soc->o_debug_bus_fault)
+			if (soc->rootp->o_debug_bus_fault)
 			{
 				const wchar_t* faults[] = { L"NA", L"IBUS", L"DBUS", L"DMA" };
-				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->o_debug_bus_fault_address) << L" (" << faults[soc->o_debug_bus_fault_type] << L"), terminating." << Endl;
+				log::warning << L"BUS fault, invalid address " << str(L"0x%08x", soc->rootp->o_debug_bus_fault_address) << L" (" << faults[soc->rootp->o_debug_bus_fault_type] << L"), terminating." << Endl;
 				g_going = false;
 				break;				
 			}
@@ -509,8 +511,8 @@ int main(int argc, const char **argv)
 
 			if ((Tc % 30) == 0)
 			{
-				const uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-				const uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+				const uint32_t dc = soc->rootp->SoC__DOT__timer__DOT__cycles - lastCycles;
+				const uint32_t dr = soc->rootp->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
 
 				statusBar->setText(0, str(L"%.2f IPC", ((double)dr) / dc));
 				
@@ -534,7 +536,7 @@ int main(int argc, const char **argv)
 					3,
 					str(
 						L"%08x PC",
-						soc->SoC__DOT__cpu__DOT__fetch__DOT__pc
+						soc->rootp->SoC__DOT__cpu__DOT__fetch__DOT__pc
 					)
 				);
 
@@ -546,8 +548,8 @@ int main(int argc, const char **argv)
 					)
 				);
 
-				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+				lastCycles = soc->rootp->SoC__DOT__timer__DOT__cycles;
+				lastRetired = soc->rootp->SoC__DOT__cpu__DOT__writeback__DOT__retired;
 
 				busActive.snapshot();
 				busSDRAM.snapshot();
@@ -559,40 +561,40 @@ int main(int argc, const char **argv)
 		{
 			if ((Tc % 600) == 0)
 			{
-				const uint32_t dc = soc->SoC__DOT__timer__DOT__cycles - lastCycles;
-				const uint32_t dr = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
-				const uint32_t ds = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
+				const uint32_t dc = soc->rootp->SoC__DOT__timer__DOT__cycles - lastCycles;
+				const uint32_t dr = soc->rootp->SoC__DOT__cpu__DOT__writeback__DOT__retired - lastRetired;
+				const uint32_t ds = soc->rootp->SoC__DOT__cpu__DOT__fetch__DOT__starve - lastStarve;
 
-				const uint32_t ich = soc->o_icache_hit;
-				const uint32_t icm = soc->o_icache_miss;
+				const uint32_t ich = soc->rootp->o_icache_hit;
+				const uint32_t icm = soc->rootp->o_icache_miss;
 				const double icr = (ich * 100.0) / (ich + icm);
 
-				const uint32_t dch = soc->o_dcache_hit;
-				const uint32_t dcm = soc->o_dcache_miss;
+				const uint32_t dch = soc->rootp->o_dcache_hit;
+				const uint32_t dcm = soc->rootp->o_dcache_miss;
 				const double dcr = (dch * 100.0) / (dch + dcm);
 
 				log::info << L"### " <<
-					str(L"%08x PC", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", " <<
+					str(L"%08x PC", soc->rootp->SoC__DOT__cpu__DOT__fetch__DOT__pc) << L", " <<
 					str(L"%.2f IPC", ((double)dr) / dc) << L", " <<
 					str(L"%.2f%% BUS", ((double)busActive.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL X", ((double)stallExecute.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STALL M", ((double)stallMemory.delta() * 100.0) / dc) << L", " <<
 					str(L"%.2f%% STARVE", ((double)ds * 100.0) / dc) << L", " <<
-					str(L"%d MPIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mpie ? 1 : 0) << L", " <<
-					str(L"%d MIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
-					str(L"%d MEIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_meie ? 1 : 0) << L", " <<
-					str(L"%d MEIP", soc->SoC__DOT__cpu__DOT__csr__DOT__mip_meip ? 1 : 0) << L", " <<
-					str(L"%d MTIE", soc->SoC__DOT__cpu__DOT__csr__DOT__mie_mtie ? 1 : 0) << L", " <<
-					str(L"%d MTIP", soc->SoC__DOT__cpu__DOT__csr__DOT__mip_mtip ? 1 : 0) << L", " <<
-					str(L"%08x MSCRATCH", soc->SoC__DOT__cpu__DOT__csr__DOT__mscratch) << L", " <<
-					str(L"%d TIME", soc->SoC__DOT__cpu__DOT__csr__DOT__wtime) << L", " <<
+					str(L"%d MPIE", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mpie ? 1 : 0) << L", " <<
+					str(L"%d MIE", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mstatus_mie ? 1 : 0) << L", " <<
+					str(L"%d MEIE", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mie_meie ? 1 : 0) << L", " <<
+					str(L"%d MEIP", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mip_meip ? 1 : 0) << L", " <<
+					str(L"%d MTIE", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mie_mtie ? 1 : 0) << L", " <<
+					str(L"%d MTIP", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mip_mtip ? 1 : 0) << L", " <<
+					str(L"%08x MSCRATCH", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__mscratch) << L", " <<
+					str(L"%d TIME", soc->rootp->SoC__DOT__cpu__DOT__csr__DOT__wtime) << L", " <<
 					str(L"%.2f%% I$ HIT", icr) << L", " <<
 					str(L"%.2f%% D$ HIT", dcr) << L", " <<
 					Endl;
 
-				lastCycles = soc->SoC__DOT__timer__DOT__cycles;
-				lastRetired = soc->SoC__DOT__cpu__DOT__writeback__DOT__retired;
-				lastStarve = soc->SoC__DOT__cpu__DOT__fetch__DOT__starve;
+				lastCycles = soc->rootp->SoC__DOT__timer__DOT__cycles;
+				lastRetired = soc->rootp->SoC__DOT__cpu__DOT__writeback__DOT__retired;
+				lastStarve = soc->rootp->SoC__DOT__cpu__DOT__fetch__DOT__starve;
 				
 				busActive.snapshot();
 				stallExecute.snapshot();
@@ -603,24 +605,24 @@ int main(int argc, const char **argv)
 
 	log::info << Endl;
 	log::info << L"--- Terminated ---" << Endl;
-	log::info << L"PC        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
-	log::info << L"CYCLES    : " << soc->SoC__DOT__timer__DOT__cycles << Endl;
-	log::info << L"RETIRE    : " << soc->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
-	log::info << L"BUS       : " << busActive.value() << L", " << (busActive.value() * 100) / soc->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
+	log::info << L"PC        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__fetch__DOT__pc) << Endl;
+	log::info << L"CYCLES    : " << soc->rootp->SoC__DOT__timer__DOT__cycles << Endl;
+	log::info << L"RETIRE    : " << soc->rootp->SoC__DOT__cpu__DOT__writeback__DOT__retired << Endl;
+	log::info << L"BUS       : " << busActive.value() << L", " << (busActive.value() * 100) / soc->rootp->SoC__DOT__timer__DOT__cycles << L"%" << Endl;
 
 	log::info << Endl;
-	log::info << L"RA        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[1]) << Endl;
-	log::info << L"SP        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[2]) << Endl;
-	log::info << L"GP        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[3]) << Endl;
-	log::info << L"TP        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[4]) << Endl;
-	log::info << L"T0        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[5]) << Endl;
-	log::info << L"A0        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[10]) << Endl;
-	log::info << L"A1        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[11]) << Endl;
-	log::info << L"A2        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[12]) << Endl;
-	log::info << L"A3        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[13]) << Endl;
-	log::info << L"A4        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[14]) << Endl;
-	log::info << L"A5        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[15]) << Endl;
-	log::info << L"S2        : " << str(L"%08x", soc->SoC__DOT__cpu__DOT__registers__DOT__r[18]) << Endl;
+	log::info << L"RA        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[1]) << Endl;
+	log::info << L"SP        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[2]) << Endl;
+	log::info << L"GP        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[3]) << Endl;
+	log::info << L"TP        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[4]) << Endl;
+	log::info << L"T0        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[5]) << Endl;
+	log::info << L"A0        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[10]) << Endl;
+	log::info << L"A1        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[11]) << Endl;
+	log::info << L"A2        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[12]) << Endl;
+	log::info << L"A3        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[13]) << Endl;
+	log::info << L"A4        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[14]) << Endl;
+	log::info << L"A5        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[15]) << Endl;
+	log::info << L"S2        : " << str(L"%08x", soc->rootp->SoC__DOT__cpu__DOT__registers__DOT__r[18]) << Endl;
 
 	hdmi.getImage()->save(L"Rv32T.png");
 

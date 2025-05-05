@@ -131,6 +131,7 @@ SECTIONS
 	/* Start of uninitialized data segment */
 	. = ALIGN(16);
     
+	__bss_start = .;
 	.bss (NOLOAD) : 
 	{
 	    BSS_START = .;

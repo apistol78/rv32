@@ -52,7 +52,6 @@ module AUDIO_controller #(
 
     initial begin
 		o_ready = 0;
-		o_interrupt = 0;
 		o_output_reload = 4536;
 	end
 

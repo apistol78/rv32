@@ -73,7 +73,7 @@ module VIDEO_controller #(
 	bit palette_cpu_request = 0;
 	bit [7:0] palette_cpu_address = 0;
 	bit [23:0] palette_cpu_wdata = 0;
-	bit [7:0] palette_video_address = 0;
+	bit [7:0] palette_video_address;
 	wire [23:0] palette_video_rdata;
 
 	BRAM_1r1w #(

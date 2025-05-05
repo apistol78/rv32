@@ -681,6 +681,10 @@
 								<fileName>verilated_fst_c.cpp</fileName>
 								<items/>
 							</item>
+							<item type="File">
+								<fileName>verilated_threads.cpp</fileName>
+								<items/>
+							</item>							
 						</items>
 						<dependencies/>
 					</project>
@@ -695,7 +699,7 @@
 		</item>
 		<item ref="/object/projects/item[3]/dependencies/item[4]/project"/>
 		<item type="Project" version="1">
-			<enable>true</enable>
+			<enable>false</enable>
 			<name>Verify</name>
 			<sourcePath>code/Verify</sourcePath>
 			<configurations>

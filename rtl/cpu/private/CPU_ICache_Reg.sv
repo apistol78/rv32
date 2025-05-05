@@ -57,7 +57,7 @@ module CPU_ICache_Reg #(
 
 	bit initialized = 1'b0;
 	bit [31:0] clear_set = 0;
-	bit cache_invalid = 0;
+	bit cache_invalid;
 
 	wire [SET_BITS-1:0] i_set = i_input_pc[(SET_BITS - 1) + 2 : 2];
 	wire [TAG_BITS-1:0] i_tag = i_input_pc[(TAG_BITS - 1) + SET_BITS + 2: SET_BITS + 2];

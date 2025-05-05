@@ -39,14 +39,7 @@ module DualPort(
 );
 
 	bit [1:0] state = 0;
-	bit [1:0] next_state = 0;
-
-	initial begin
-		o_bus_rw = 1'b0;
-		o_bus_request = 1'b0;
-		o_bus_address = 0;
-		o_bus_wdata = 0;
-	end
+	bit [1:0] next_state;
 
 	assign o_pb_ready = i_pb_request && (state == 2'd1) ? i_bus_ready : 1'b0;
 	assign o_pc_ready = i_pc_request && (state == 2'd2) ? i_bus_ready : 1'b0;

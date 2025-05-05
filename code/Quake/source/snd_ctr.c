@@ -67,6 +67,8 @@ int snd_inited;
 	/* DSP_FlushDataCache(data, size); */
 /* } */
 
+extern uint64_t svcGetSystemTick();
+
 qboolean SNDDMA_Init(void)
 {
   /* snd_initialized = 0; */
@@ -84,7 +86,7 @@ qboolean SNDDMA_Init(void)
   shm->samples = CSND_BUFSIZE;
   shm->samplepos = 0;
   shm->submission_chunk = 1;
-  shm->buffer = audiobuffer;
+  shm->buffer = (unsigned char*)audiobuffer;
 	
   initial_tick = svcGetSystemTick();
 

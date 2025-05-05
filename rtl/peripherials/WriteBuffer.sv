@@ -48,9 +48,9 @@ module WriteBuffer #(
 
 	wire wq_empty;
 	wire wq_full;
-	bit wq_write = 1'b0;
+	bit wq_write;
 	bit [63:0] wq_wdata;
-	bit wq_read = 1'b0;
+	bit wq_read;
 	wire [63:0] wq_rdata;
 
 	generate if (DEPTH > 16) begin
@@ -86,17 +86,8 @@ module WriteBuffer #(
 		);
 	end endgenerate
 
-	initial begin
-		o_bus_rw = 0;
-		o_bus_request = 0;
-		o_bus_address = 0;
-		o_bus_wdata = 0;
-		o_ready = 0;
-		o_rdata = 0;
-	end
-
 	state_t state = IDLE;
-	state_t next_state = IDLE;
+	state_t next_state;
 
 	wire stall_read = STALL_READ && !wq_empty;
 
